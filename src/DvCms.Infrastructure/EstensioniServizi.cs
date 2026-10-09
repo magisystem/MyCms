@@ -108,6 +108,7 @@ public static class EstensioniServizi
         servizi.TryAddSingleton<ElaboratoreOutbox>();
         servizi.AddScoped<IGestoreOutbox, GestorePaginaPubblicata>();
         servizi.AddScoped<IGestoreOutbox, GestorePaginaRitirata>();
+        servizi.AddScoped<IGestoreOutbox, GestorePaginaRinominata>();
         servizi.AddHostedService<ServizioOutbox>();
     }
 

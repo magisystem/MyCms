@@ -80,6 +80,67 @@ public sealed class ServizioPaginePubbliche : IServizioPaginePubbliche
             trovata.revisione.VersioneModello,
             trovata.revisione.DatiModello,
             LingueDelSito.Percorso(lingua.Codice, lingua.Predefinita, trovata.pagina.Slug, trovata.pagina.PaginaIniziale),
-            traduzioni);
+            traduzioni,
+            trovata.revisione.TitoloSeo,
+            trovata.revisione.DescrizioneSeo,
+            trovata.revisione.NonIndicizzare);
+    }
+
+    public async Task<RisoluzionePagina> RisolviAsync(string? slug, string? codiceLingua, CancellationToken annullamento)
+    {
+        var cercaIniziale = string.IsNullOrWhiteSpace(slug);
+        var slugNormalizzato = string.Empty;
+        if (!cercaIniziale && !NormalizzatoreSlug.TentaNormalizza(slug, out slugNormalizzato))
+        {
+            return new RisoluzionePagina(null, null);
+        }
+
+        var idSito = _tenant.IdSito;
+        var lingueSito = await LingueDelSito.ElencaAsync(_contesto, idSito, annullamento);
+        var lingua = string.IsNullOrWhiteSpace(codiceLingua)
+            ? lingueSito.FirstOrDefault(abilitata => abilitata.Predefinita)
+            : lingueSito.FirstOrDefault(abilitata => string.Equals(abilitata.Codice, codiceLingua, StringComparison.OrdinalIgnoreCase));
+        if (lingua is null)
+        {
+            return new RisoluzionePagina(null, null);
+        }
+
+        var richiesto = LingueDelSito.Percorso(lingua.Codice, lingua.Predefinita, slugNormalizzato, cercaIniziale);
+        var pagina = await TrovaAsync(slug, codiceLingua, annullamento);
+        if (pagina is not null)
+        {
+            // La pagina iniziale ha un solo indirizzo canonico (la radice): chiamarla per slug porta lì.
+            return string.Equals(pagina.Percorso, richiesto, StringComparison.Ordinal)
+                ? new RisoluzionePagina(pagina, null)
+                : new RisoluzionePagina(null, pagina.Percorso);
+        }
+
+        if (cercaIniziale)
+        {
+            return new RisoluzionePagina(null, null);
+        }
+
+        // Vecchio slug lasciato da un cambio di slug: il reindirizzamento punta alla pagina, quindi sempre allo slug attuale
+        // (mai catene) e solo se la pagina è ancora pubblicata, nella stessa lingua e dello stesso sito.
+        var destinazione = await (
+            from redirect in _contesto.RedirectPagine.AsNoTracking()
+            join altra in _contesto.Pagine.AsNoTracking() on redirect.IdPagina equals altra.Id
+            where redirect.IdSito == idSito
+                && redirect.IdLingua == lingua.IdLingua
+                && redirect.SlugOrigine == slugNormalizzato
+                && altra.IdSito == idSito
+                && altra.IdLingua == lingua.IdLingua
+                && altra.Stato == StatoPagina.Pubblicata
+            select new { altra.Slug, altra.PaginaIniziale })
+            .SingleOrDefaultAsync(annullamento);
+        if (destinazione is null)
+        {
+            return new RisoluzionePagina(null, null);
+        }
+
+        var percorso = LingueDelSito.Percorso(lingua.Codice, lingua.Predefinita, destinazione.Slug, destinazione.PaginaIniziale);
+        return string.Equals(percorso, richiesto, StringComparison.Ordinal)
+            ? new RisoluzionePagina(null, null)
+            : new RisoluzionePagina(null, percorso);
     }
 }

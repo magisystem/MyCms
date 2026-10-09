@@ -59,6 +59,8 @@ public class ContestoDatabase : DbContext
 
     public DbSet<RevisionePagina> RevisioniPagina => Set<RevisionePagina>();
 
+    public DbSet<RedirectPagina> RedirectPagine => Set<RedirectPagina>();
+
     public DbSet<ImpostazioniEmailTenant> ImpostazioniEmailTenant => Set<ImpostazioniEmailTenant>();
 
     public DbSet<ChiaveSegreta> ChiaviSegrete => Set<ChiaveSegreta>();
@@ -82,6 +84,7 @@ public class ContestoDatabase : DbContext
         modelBuilder.Entity<ProfiloGuest>().HasQueryFilter(profilo => profilo.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<Pagina>().HasQueryFilter(pagina => pagina.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<RevisionePagina>().HasQueryFilter(revisione => revisione.IdTenant == IdTenantCorrente);
+        modelBuilder.Entity<RedirectPagina>().HasQueryFilter(redirect => redirect.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<ImpostazioniEmailTenant>().HasQueryFilter(impostazioni => impostazioni.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<RichiestaRecuperoPassword>().HasQueryFilter(richiesta => richiesta.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<MessaggioOutbox>().HasQueryFilter(messaggio => messaggio.IdTenant == IdTenantCorrente);

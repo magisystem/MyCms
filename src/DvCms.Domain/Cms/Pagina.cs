@@ -43,6 +43,9 @@ public class Pagina
 
     public DateTime? PubblicatoIlUtc { get; set; }
 
+    /// <summary>Vero se la pagina è stata pubblicata almeno una volta: il suo indirizzo è (stato) pubblico, quindi un cambio di slug richiede un reindirizzamento.</summary>
+    public bool PubblicataInPassato { get; set; }
+
     public byte[] TokenConcorrenza { get; set; } = [];
 
     /// <summary>Crea la pagina con la sua prima revisione (bozza), con il modello predefinito.</summary>
@@ -124,6 +127,7 @@ public class Pagina
 
         var adesso = orologio.GetUtcNow().UtcDateTime;
         IdRevisionePubblicata = revisione.Id;
+        PubblicataInPassato = true;
         Stato = StatoPagina.Pubblicata;
         PubblicatoIlUtc = adesso;
         AggiornatoIlUtc = adesso;

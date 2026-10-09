@@ -43,10 +43,10 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label" for="Slug">@_L["Indirizzo (slug)"]</label>
-                        <input class="form-control" id="Slug" name="Slug" value="@pagina.Slug" maxlength="100" readonly="@(pagina.Stato == StatoPagina.Pubblicata)" />
+                        <input class="form-control" id="Slug" name="Slug" value="@pagina.Slug" maxlength="100" />
                         @if (pagina.Stato == StatoPagina.Pubblicata)
                         {
-                            <div class="form-hint">@_L["L'indirizzo di una pagina pubblicata non si può cambiare."]</div>
+                            <div class="form-hint">@_L["Se cambi l'indirizzo di una pagina pubblicata, il vecchio indirizzo reindirizza al nuovo."]</div>
                         }
                     </div>
                     <p class="text-secondary small mb-3">
@@ -72,6 +72,22 @@
                         <textarea class="form-control" id="Contenuto" name="Contenuto" rows="14" maxlength="100000">@pagina.Contenuto</textarea>
                         <div class="form-hint">@_L["Testo semplice: separa i paragrafi con una riga vuota."]</div>
                     </div>
+                    <fieldset class="mb-3">
+                        <legend class="form-label">@_L["Motori di ricerca"]</legend>
+                        <div class="mb-3">
+                            <label class="form-label" for="TitoloSeo">@_L["Titolo per i motori di ricerca"]</label>
+                            <input class="form-control @(Model.CampiNonValidi.Contains("TitoloSeo") ? "is-invalid" : null)" id="TitoloSeo" name="TitoloSeo" value="@pagina.TitoloSeo" maxlength="200" />
+                            <div class="form-hint">@_L["Se vuoto si usa il titolo della pagina."]</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="DescrizioneSeo">@_L["Descrizione per i motori di ricerca"]</label>
+                            <textarea class="form-control @(Model.CampiNonValidi.Contains("DescrizioneSeo") ? "is-invalid" : null)" id="DescrizioneSeo" name="DescrizioneSeo" rows="2" maxlength="500">@pagina.DescrizioneSeo</textarea>
+                        </div>
+                        <label class="form-check">
+                            <input type="checkbox" class="form-check-input" name="NonIndicizzare" value="true" @(pagina.NonIndicizzare ? "checked" : null) />
+                            <span class="form-check-label">@_L["Non indicizzare questa pagina"]</span>
+                        </label>
+                    </fieldset>
                     <div class="mb-3">
                         <label class="form-label" for="Nota">@_L["Nota sulla modifica"]</label>
                         <input class="form-control" id="Nota" name="Nota" maxlength="500" />
@@ -128,6 +144,23 @@
                 }
             </div>
         </div>
+        @if (pagina.Reindirizzamenti is { Count: > 0 } reindirizzamenti)
+        {
+            <div class="card mb-3">
+                <div class="card-header"><h3 class="card-title">@_L["Reindirizzamenti"]</h3></div>
+                <div class="list-group list-group-flush">
+                    @foreach (var reindirizzamento in reindirizzamenti)
+                    {
+                        <div class="list-group-item d-flex align-items-center justify-content-between">
+                            <span><code>/@reindirizzamento.SlugOrigine</code> &rarr; <code>/@pagina.Slug</code></span>
+                            <form method="post" asp-page-handler="EliminaReindirizzamento" asp-route-id="@pagina.Id" asp-route-idReindirizzamento="@reindirizzamento.Id" class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">@_L["Elimina"]</button>
+                            </form>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
         <div class="card">
             <div class="card-header"><h3 class="card-title">@_L["Revisioni"]</h3></div>
             <div class="list-group list-group-flush">

@@ -160,4 +160,25 @@ public class IsolamentoPagineTest
         Assert.Contains("Contatti di A", daA, StringComparison.Ordinal);
         Assert.Contains("Contatti di B", daB, StringComparison.Ordinal);
     }
+
+    [Fact]
+    public async Task IReindirizzamentiDiBNonValgonoNeSiEliminanoDaA()
+    {
+        await using var d = await DatiIsolamento.CreaAsync();
+        var lettaB = (await d.ComeAsync(d.B, (s, a) => s.LeggiAsync(a, d.PaginaB, Ct)))!;
+        var rinomina = await d.ComeAsync(d.B, (s, a) => s.SalvaAsync(a, d.PaginaB, new DatiModificaPagina("contatti-b", lettaB.Titolo, lettaB.Contenuto, null, lettaB.PaginaIniziale, lettaB.TokenConcorrenza), Ct));
+        Assert.True(rinomina.Riuscito, rinomina.Codice.ToString());
+        var idRedirect = (await d.ComeAsync(d.B, (s, a) => s.LeggiAsync(a, d.PaginaB, Ct)))!.Reindirizzamenti![0].Id;
+
+        using var daB = await d.Web.SessioneB().GetAsync("/contatti");
+        using var daA = await d.Web.SessioneA().GetAsync("/contatti");
+        var eliminaDaA = await d.ComeAsync(d.A, (s, a) => s.EliminaReindirizzamentoAsync(a, d.PaginaB, idRedirect, Ct));
+
+        Assert.Equal(HttpStatusCode.MovedPermanently, daB.StatusCode);
+        Assert.Equal("/contatti-b", SessioneProva.Destinazione(daB));
+        Assert.Equal(HttpStatusCode.OK, daA.StatusCode);
+        Assert.Contains("Contatti di A", await daA.Content.ReadAsStringAsync(Ct), StringComparison.Ordinal);
+        Assert.Equal(CodiceEsito.NonTrovato, eliminaDaA.Codice);
+        Assert.Single((await d.ComeAsync(d.B, (s, a) => s.LeggiAsync(a, d.PaginaB, Ct)))!.Reindirizzamenti!);
+    }
 }

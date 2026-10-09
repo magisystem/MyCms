@@ -7,7 +7,11 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>@(vista?.Titolo ?? _L["Pagina non trovata"])</title>
+    <title>@(vista?.TitoloDocumento ?? _L["Pagina non trovata"])</title>
+    @if (vista is { DescrizioneSeo: { } descrizione })
+    {
+        <meta name="description" content="@descrizione" />
+    }
     <link rel="stylesheet" href="~/css/pubblico.css" />
     @if (vista is { NonIndicizzare: false, UrlCanonico: { } canonico })
     {
@@ -25,9 +29,31 @@
             }
         }
     }
-    @if (vista is null || vista.NonIndicizzare)
+    @if (vista is { EtichettaAnteprima: null, UrlCanonico: { } urlOg })
+    {
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content="@vista.TitoloDocumento" />
+        <meta property="og:url" content="@urlOg" />
+        <meta property="og:locale" content="@vista.CodiceLingua" />
+        @if (vista.DescrizioneSeo is { } descrizioneOg)
+        {
+            <meta property="og:description" content="@descrizioneOg" />
+        }
+
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content="@vista.TitoloDocumento" />
+        @if (vista.DescrizioneSeo is { } descrizioneTw)
+        {
+            <meta name="twitter:description" content="@descrizioneTw" />
+        }
+    }
+    @if (vista is null || vista.EtichettaAnteprima is not null)
     {
         <meta name="robots" content="noindex, nofollow" />
+    }
+    else if (vista.NonIndicizzare)
+    {
+        <meta name="robots" content="noindex, follow" />
     }
 </head>
 <body>

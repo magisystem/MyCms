@@ -11,7 +11,10 @@ public sealed record DatiNuovaPagina(
     bool PaginaIniziale,
     string? IdModello = null,
     IReadOnlyDictionary<string, string>? DatiModello = null,
-    Guid? IdPaginaOrigine = null);
+    Guid? IdPaginaOrigine = null,
+    string? TitoloSeo = null,
+    string? DescrizioneSeo = null,
+    bool NonIndicizzare = false);
 
 public sealed record DatiModificaPagina(
     string? Slug,
@@ -20,7 +23,10 @@ public sealed record DatiModificaPagina(
     string? Nota,
     bool PaginaIniziale,
     string? TokenConcorrenza,
-    IReadOnlyDictionary<string, string>? DatiModello = null);
+    IReadOnlyDictionary<string, string>? DatiModello = null,
+    string? TitoloSeo = null,
+    string? DescrizioneSeo = null,
+    bool NonIndicizzare = false);
 
 public sealed record RiepilogoPagina(
     Guid Id,
@@ -45,6 +51,9 @@ public sealed record RevisioneInElenco(
 /// <summary>Un'altra versione linguistica della stessa pagina (stesso gruppo di traduzione).</summary>
 public sealed record TraduzionePagina(Guid IdPagina, string CodiceLingua, string Slug, StatoPagina Stato);
 
+/// <summary>Reindirizzamento permanente da un vecchio slug della pagina, lasciato da un cambio di slug.</summary>
+public sealed record ReindirizzamentoPagina(Guid Id, string SlugOrigine, DateTime CreatoIlUtc);
+
 public sealed record DettaglioPagina(
     Guid Id,
     string Slug,
@@ -61,7 +70,11 @@ public sealed record DettaglioPagina(
     IReadOnlyDictionary<string, string> DatiModello,
     int? VersioneModelloRecente,
     IReadOnlyList<TraduzionePagina> Traduzioni,
-    IReadOnlyList<LinguaDisponibile> LingueMancanti);
+    IReadOnlyList<LinguaDisponibile> LingueMancanti,
+    string? TitoloSeo = null,
+    string? DescrizioneSeo = null,
+    bool NonIndicizzare = false,
+    IReadOnlyList<ReindirizzamentoPagina>? Reindirizzamenti = null);
 
 /// <summary>Contenuto di una revisione per l'anteprima (la bozza più recente, oppure una revisione precisa).</summary>
 public sealed record AnteprimaPagina(
@@ -96,7 +109,8 @@ public interface IServizioPagine
 
     /// <summary>
     /// Salva una nuova revisione (bozza). Il token è quello letto con la pagina: se la pagina è cambiata nel frattempo
-    /// l'esito è <see cref="CodiceEsito.Conflitto"/>. Lo slug di una pagina pubblicata non si cambia.
+    /// l'esito è <see cref="CodiceEsito.Conflitto"/>. Se la pagina è stata pubblicata e lo slug cambia, il vecchio indirizzo
+    /// reindirizza (301) al nuovo; un reindirizzamento il cui slug torna in uso viene tolto.
     /// </summary>
     Task<EsitoOperazione> SalvaAsync(Guid idAttore, Guid idPagina, DatiModificaPagina dati, CancellationToken annullamento);
 
@@ -120,6 +134,9 @@ public interface IServizioPagine
     /// la nuova versione non ha più vengono scartati; se i valori restanti non sono validi per la nuova versione, nulla cambia.
     /// </summary>
     Task<EsitoOperazione> AggiornaModelloAsync(Guid idAttore, Guid idPagina, string? tokenConcorrenza, CancellationToken annullamento);
+
+    /// <summary>Toglie un reindirizzamento della pagina (il vecchio indirizzo torna a rispondere 404).</summary>
+    Task<EsitoOperazione> EliminaReindirizzamentoAsync(Guid idAttore, Guid idPagina, Guid idReindirizzamento, CancellationToken annullamento);
 
     /// <summary>Pubblica l'ultima bozza.</summary>
     Task<EsitoOperazione> PubblicaAsync(Guid idAttore, Guid idPagina, string? tokenConcorrenza, CancellationToken annullamento);

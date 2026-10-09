@@ -108,4 +108,60 @@ public class PaginaTest
         Assert.True(RevisionePagina.TentaValidaTesto("t", "riga uno\r\n\r\nriga due\tcon tab", out _, out var normalizzato));
         Assert.DoesNotContain('\r', normalizzato);
     }
+
+    [Fact]
+    public void LaPubblicazioneRicordaChelaPaginaEStataPubblicataAncheDopoIlRitiro()
+    {
+        var (pagina, revisione) = Nuova();
+        Assert.False(pagina.PubblicataInPassato);
+
+        pagina.Pubblica(revisione, TimeProvider.System);
+        pagina.Ritira(TimeProvider.System);
+
+        Assert.True(pagina.PubblicataInPassato);
+        Assert.Equal(StatoPagina.Bozza, pagina.Stato);
+    }
+
+    [Fact]
+    public void ICampiSeoSonoNormalizzatiELimitati()
+    {
+        Assert.True(RevisionePagina.TentaValidaSeo("  Titolo  ", "   ", out var titolo, out var descrizione));
+        Assert.Equal("Titolo", titolo);
+        Assert.Null(descrizione);
+        Assert.True(RevisionePagina.TentaValidaSeo(new string('t', RevisionePagina.LunghezzaMassimaTitoloSeo), new string('d', RevisionePagina.LunghezzaMassimaDescrizioneSeo), out _, out _));
+        Assert.False(RevisionePagina.TentaValidaSeo(new string('t', RevisionePagina.LunghezzaMassimaTitoloSeo + 1), null, out _, out _));
+        Assert.False(RevisionePagina.TentaValidaSeo(null, new string('d', RevisionePagina.LunghezzaMassimaDescrizioneSeo + 1), out _, out _));
+        Assert.False(RevisionePagina.TentaValidaSeo("a\nb", null, out _, out _));
+        Assert.False(RevisionePagina.TentaValidaSeo(null, "a\u0000b", out _, out _));
+    }
+
+    [Fact]
+    public void LaRevisioneConservaICampiSeo()
+    {
+        var (pagina, _) = Nuova();
+
+        var revisione = pagina.AggiungiRevisione(new ContenutoRevisione("T", "C", TitoloSeo: " Seo ", DescrizioneSeo: "Descr", NonIndicizzare: true), null, _autore, TimeProvider.System);
+
+        Assert.Equal("Seo", revisione.TitoloSeo);
+        Assert.Equal("Descr", revisione.DescrizioneSeo);
+        Assert.True(revisione.NonIndicizzare);
+        Assert.Throws<ArgumentException>(() =>
+            pagina.AggiungiRevisione(new ContenutoRevisione("T", "C", TitoloSeo: new string('t', 201)), null, _autore, TimeProvider.System));
+    }
+
+    [Fact]
+    public void UnReindirizzamentoNonPuoPuntareAlloStessoSlugEPuntaAllaPagina()
+    {
+        var (pagina, _) = Nuova();
+
+        var redirect = RedirectPagina.Crea(pagina, "Vecchio-Slug", TimeProvider.System);
+
+        Assert.Equal("vecchio-slug", redirect.SlugOrigine);
+        Assert.Equal(pagina.Id, redirect.IdPagina);
+        Assert.Equal(pagina.IdLingua, redirect.IdLingua);
+        Assert.Equal(pagina.IdSito, redirect.IdSito);
+        Assert.Equal(pagina.IdTenant, redirect.IdTenant);
+        Assert.Throws<ArgumentException>(() => RedirectPagina.Crea(pagina, "chi-siamo", TimeProvider.System));
+        Assert.Throws<ArgumentException>(() => RedirectPagina.Crea(pagina, "admin", TimeProvider.System));
+    }
 }

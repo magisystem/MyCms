@@ -32,6 +32,15 @@ public class NuovaModel : PaginaAdmin
     [BindProperty]
     public bool PaginaIniziale { get; set; }
 
+    [BindProperty]
+    public string? TitoloSeo { get; set; }
+
+    [BindProperty]
+    public string? DescrizioneSeo { get; set; }
+
+    [BindProperty]
+    public bool NonIndicizzare { get; set; }
+
     /// <summary>Modello scelto (parametro <c>modello</c> dell'indirizzo oppure campo del modulo).</summary>
     [BindProperty(SupportsGet = true, Name = "modello")]
     public string? IdModello { get; set; }
@@ -60,7 +69,7 @@ public class NuovaModel : PaginaAdmin
 
     public async Task<IActionResult> OnPostAsync(CancellationToken annullamento)
     {
-        var esito = await _pagine.CreaAsync(IdAttore, new DatiNuovaPagina(Slug, Titolo, Contenuto, CodiceLingua, PaginaIniziale, Modello.Id, DatiDelModulo(), TraduzioneDi), annullamento);
+        var esito = await _pagine.CreaAsync(IdAttore, new DatiNuovaPagina(Slug, Titolo, Contenuto, CodiceLingua, PaginaIniziale, Modello.Id, DatiDelModulo(), TraduzioneDi, TitoloSeo, DescrizioneSeo, NonIndicizzare), annullamento);
         if (esito.Riuscito)
         {
             Messaggio = Localizzatore.Traduci("Bozza creata.");

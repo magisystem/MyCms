@@ -101,6 +101,11 @@ public sealed class ServizioPagine : IServizioPagine
             orderby lingua.Codice
             select new TraduzionePagina(altra.Id, lingua.Codice, altra.Slug, altra.Stato))
             .ToListAsync(annullamento);
+        var reindirizzamenti = await _contesto.RedirectPagine.AsNoTracking()
+            .Where(redirect => redirect.IdPagina == idPagina)
+            .OrderBy(redirect => redirect.SlugOrigine)
+            .Select(redirect => new ReindirizzamentoPagina(redirect.Id, redirect.SlugOrigine, redirect.CreatoIlUtc))
+            .ToListAsync(annullamento);
         var lingueSito = await LingueDelSito.ElencaAsync(_contesto, idSito, annullamento);
         var mancanti = lingueSito
             .Where(abilitata => abilitata.Codice != codiceLingua && gruppo.All(t => t.CodiceLingua != abilitata.Codice))
@@ -123,7 +128,11 @@ public sealed class ServizioPagine : IServizioPagine
             bozza.DatiModello,
             _modelli.Ultimo(bozza.IdModello) is { } recente && recente.Versione > bozza.VersioneModello ? recente.Versione : null,
             gruppo,
-            mancanti);
+            mancanti,
+            bozza.TitoloSeo,
+            bozza.DescrizioneSeo,
+            bozza.NonIndicizzare,
+            reindirizzamenti);
     }
 
     public Task<EsitoOperazione> CreaAsync(Guid idAttore, DatiNuovaPagina dati, CancellationToken annullamento)
@@ -136,6 +145,12 @@ public sealed class ServizioPagine : IServizioPagine
                 || !TentaSlug(dati.Slug, titolo, out var slug))
             {
                 return new EsitoOperazione(CodiceEsito.DatiNonValidi);
+            }
+
+            var erroriSeo = ErroriSeo(dati.TitoloSeo, dati.DescrizioneSeo, out var titoloSeo, out var descrizioneSeo);
+            if (erroriSeo.Count > 0)
+            {
+                return new EsitoOperazione(CodiceEsito.DatiNonValidi, null, erroriSeo);
             }
 
             var idSito = _tenant.IdSito;
@@ -194,11 +209,16 @@ public sealed class ServizioPagine : IServizioPagine
                 idSito,
                 lingua.IdLingua,
                 slug,
-                new ContenutoRevisione(titolo, contenuto, modello.Id, modello.Versione, RegistroModelliPagina.Normalizza(dati.DatiModello)),
+                new ContenutoRevisione(titolo, contenuto, modello.Id, modello.Versione, RegistroModelliPagina.Normalizza(dati.DatiModello), titoloSeo, descrizioneSeo, dati.NonIndicizzare),
                 dati.PaginaIniziale,
                 attore.Id,
                 _orologio,
                 idGruppo);
+
+            // Una pagina nuova che prende uno slug lasciato da un'altra pagina vince sul vecchio reindirizzamento.
+            _contesto.RedirectPagine.RemoveRange(await _contesto.RedirectPagine
+                .Where(redirect => redirect.IdSito == idSito && redirect.IdLingua == lingua.IdLingua && redirect.SlugOrigine == slug)
+                .ToListAsync(annullamento));
             await _contesto.SalvaNuovaPaginaAsync(pagina, revisione, annullamento);
             return new EsitoOperazione(CodiceEsito.Riuscito, pagina.Id);
         });
@@ -222,16 +242,18 @@ public sealed class ServizioPagine : IServizioPagine
                 return new EsitoOperazione(CodiceEsito.NonTrovato);
             }
 
+            var erroriSeo = ErroriSeo(dati.TitoloSeo, dati.DescrizioneSeo, out var titoloSeo, out var descrizioneSeo);
+            if (erroriSeo.Count > 0)
+            {
+                return new EsitoOperazione(CodiceEsito.DatiNonValidi, null, erroriSeo);
+            }
+
             _contesto.Entry(pagina).Property(candidata => candidata.TokenConcorrenza).OriginalValue = token;
 
-            // Lo slug di una pagina pubblicata non cambia: il cambio richiederà redirect e canonical (domain-model.md).
+            // Il cambio di slug di una pagina già pubblicata lascia un reindirizzamento 301 dal vecchio indirizzo (C-005).
+            string? slugPrecedente = null;
             if (!string.IsNullOrWhiteSpace(dati.Slug) && !string.Equals(dati.Slug.Trim(), pagina.Slug, StringComparison.OrdinalIgnoreCase))
             {
-                if (pagina.Stato == StatoPagina.Pubblicata)
-                {
-                    return new EsitoOperazione(CodiceEsito.NonConsentito);
-                }
-
                 if (!NormalizzatoreSlug.TentaNormalizza(dati.Slug, out var nuovoSlug) || await SlugRiservatoDaLinguaAsync(nuovoSlug, annullamento))
                 {
                     return new EsitoOperazione(CodiceEsito.DatiNonValidi);
@@ -243,7 +265,21 @@ public sealed class ServizioPagine : IServizioPagine
                     return new EsitoOperazione(CodiceEsito.GiaPresente);
                 }
 
-                pagina.Slug = nuovoSlug;
+                if (!string.Equals(nuovoSlug, pagina.Slug, StringComparison.Ordinal))
+                {
+                    slugPrecedente = pagina.Slug;
+                    pagina.Slug = nuovoSlug;
+
+                    // Se il nuovo slug era un vecchio indirizzo (anche di questa stessa pagina) torna in uso: niente più reindirizzamento da esso.
+                    var daTogliere = await _contesto.RedirectPagine
+                        .Where(redirect => redirect.IdSito == idSito && redirect.IdLingua == pagina.IdLingua && redirect.SlugOrigine == nuovoSlug)
+                        .ToListAsync(annullamento);
+                    _contesto.RedirectPagine.RemoveRange(daTogliere);
+                    if (pagina.PubblicataInPassato)
+                    {
+                        _contesto.RedirectPagine.Add(RedirectPagina.Crea(pagina, slugPrecedente, _orologio));
+                    }
+                }
             }
 
             if (dati.PaginaIniziale != pagina.PaginaIniziale)
@@ -267,13 +303,24 @@ public sealed class ServizioPagine : IServizioPagine
             var datiNormalizzati = RegistroModelliPagina.Normalizza(dati.DatiModello);
             var invariati = datiNormalizzati.Count == bozza.DatiModello.Count
                 && datiNormalizzati.All(coppia => bozza.DatiModello.TryGetValue(coppia.Key, out var valore) && valore == coppia.Value);
-            if (!string.Equals(bozza.Titolo, titolo, StringComparison.Ordinal) || !string.Equals(bozza.Contenuto, contenuto, StringComparison.Ordinal) || !invariati)
+            if (!string.Equals(bozza.Titolo, titolo, StringComparison.Ordinal)
+                || !string.Equals(bozza.Contenuto, contenuto, StringComparison.Ordinal)
+                || !invariati
+                || !string.Equals(bozza.TitoloSeo, titoloSeo, StringComparison.Ordinal)
+                || !string.Equals(bozza.DescrizioneSeo, descrizioneSeo, StringComparison.Ordinal)
+                || bozza.NonIndicizzare != dati.NonIndicizzare)
             {
                 _contesto.RevisioniPagina.Add(pagina.AggiungiRevisione(
-                    new ContenutoRevisione(titolo, contenuto, bozza.IdModello, bozza.VersioneModello, datiNormalizzati),
+                    new ContenutoRevisione(titolo, contenuto, bozza.IdModello, bozza.VersioneModello, datiNormalizzati, titoloSeo, descrizioneSeo, dati.NonIndicizzare),
                     dati.Nota,
                     attore.Id,
                     _orologio));
+            }
+
+            // Per una pagina pubblicata che cambia indirizzo l'evento è scritto con la stessa SaveChanges (ADR-0010).
+            if (slugPrecedente is not null && pagina.Stato == StatoPagina.Pubblicata)
+            {
+                _outbox.Accoda(pagina.IdTenant, TipiEventoPagina.Rinominata, new EventoPaginaRinominata(pagina.Id, pagina.IdSito, slugPrecedente, pagina.Slug));
             }
 
             pagina.AggiornatoIlUtc = _orologio.GetUtcNow().UtcDateTime;
@@ -346,7 +393,7 @@ public sealed class ServizioPagine : IServizioPagine
 
             _contesto.Entry(pagina).Property(candidata => candidata.TokenConcorrenza).OriginalValue = token;
             var nuova = pagina.AggiungiRevisione(
-                new ContenutoRevisione(origine.Titolo, origine.Contenuto, origine.IdModello, origine.VersioneModello, origine.DatiModello),
+                new ContenutoRevisione(origine.Titolo, origine.Contenuto, origine.IdModello, origine.VersioneModello, origine.DatiModello, origine.TitoloSeo, origine.DescrizioneSeo, origine.NonIndicizzare),
                 $"Ripristino della revisione {origine.NumeroRevisione}",
                 attore.Id,
                 _orologio);
@@ -387,13 +434,35 @@ public sealed class ServizioPagine : IServizioPagine
 
             _contesto.Entry(pagina).Property(candidata => candidata.TokenConcorrenza).OriginalValue = token;
             var nuova = pagina.AggiungiRevisione(
-                new ContenutoRevisione(bozza.Titolo, bozza.Contenuto, recente.Id, recente.Versione, dati),
+                new ContenutoRevisione(bozza.Titolo, bozza.Contenuto, recente.Id, recente.Versione, dati, bozza.TitoloSeo, bozza.DescrizioneSeo, bozza.NonIndicizzare),
                 $"Passaggio al modello {recente.Id} versione {recente.Versione}",
                 attore.Id,
                 _orologio);
             _contesto.RevisioniPagina.Add(nuova);
             await _contesto.SaveChangesAsync(annullamento);
             return new EsitoOperazione(CodiceEsito.Riuscito, nuova.Id);
+        });
+
+    public Task<EsitoOperazione> EliminaReindirizzamentoAsync(Guid idAttore, Guid idPagina, Guid idReindirizzamento, CancellationToken annullamento) =>
+        EseguiAsync(idAttore, "EliminazioneReindirizzamento", async _ =>
+        {
+            var pagina = await TrovaPaginaAsync(idPagina, annullamento);
+            if (pagina is null)
+            {
+                return new EsitoOperazione(CodiceEsito.NonTrovato);
+            }
+
+            var redirect = await _contesto.RedirectPagine.SingleOrDefaultAsync(
+                candidato => candidato.Id == idReindirizzamento && candidato.IdPagina == pagina.Id,
+                annullamento);
+            if (redirect is null)
+            {
+                return new EsitoOperazione(CodiceEsito.NonTrovato);
+            }
+
+            _contesto.RedirectPagine.Remove(redirect);
+            await _contesto.SaveChangesAsync(annullamento);
+            return new EsitoOperazione(CodiceEsito.Riuscito, pagina.Id);
         });
 
     /// <summary>Pubblica la revisione indicata o, se nulla, l'ultima bozza.</summary>
@@ -520,6 +589,25 @@ public sealed class ServizioPagine : IServizioPagine
         _contesto.Pagine.AnyAsync(
             pagina => pagina.IdSito == idSito && pagina.IdLingua == idLingua && pagina.PaginaIniziale && pagina.Id != esclusa,
             annullamento);
+
+    /// <summary>Normalizza i campi SEO e restituisce i nomi di quelli non validi (nessuno se vanno bene).</summary>
+    private static List<string> ErroriSeo(string? titoloSeo, string? descrizioneSeo, out string? titolo, out string? descrizione)
+    {
+        var errori = new List<string>();
+        RevisionePagina.TentaValidaSeo(titoloSeo, null, out titolo, out _);
+        RevisionePagina.TentaValidaSeo(null, descrizioneSeo, out _, out descrizione);
+        if (!RevisionePagina.TentaValidaSeo(titoloSeo, null, out _, out _))
+        {
+            errori.Add("TitoloSeo");
+        }
+
+        if (!RevisionePagina.TentaValidaSeo(null, descrizioneSeo, out _, out _))
+        {
+            errori.Add("DescrizioneSeo");
+        }
+
+        return errori;
+    }
 
     private static bool TentaSlug(string? slugInserito, string titolo, out string slug) =>
         NormalizzatoreSlug.TentaNormalizza(string.IsNullOrWhiteSpace(slugInserito) ? NormalizzatoreSlug.DaTitolo(titolo) : slugInserito, out slug);

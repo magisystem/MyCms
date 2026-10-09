@@ -15,8 +15,13 @@ public sealed record VistaPagina(
     IReadOnlyDictionary<string, string>? DatiModello = null,
     string? UrlCanonico = null,
     IReadOnlyList<VoceLingua>? Lingue = null,
-    string? UrlPredefinito = null)
+    string? UrlPredefinito = null,
+    string? TitoloSeo = null,
+    string? DescrizioneSeo = null)
 {
+    /// <summary>Titolo del documento: quello per i motori di ricerca se presente, altrimenti il titolo della pagina.</summary>
+    public string TitoloDocumento => string.IsNullOrWhiteSpace(TitoloSeo) ? Titolo : TitoloSeo;
+
     /// <summary>Le versioni linguistiche pubblicate (per hreflang e selettore); vuoto se la pagina esiste in una sola lingua.</summary>
     public IReadOnlyList<VoceLingua> VociLingua => Lingue ?? [];
 

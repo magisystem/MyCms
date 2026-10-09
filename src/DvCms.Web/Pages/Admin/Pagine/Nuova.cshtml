@@ -72,6 +72,22 @@
                         <textarea class="form-control" id="Contenuto" name="Contenuto" rows="12" maxlength="100000">@Model.Contenuto</textarea>
                         <div class="form-hint">@_L["Testo semplice: separa i paragrafi con una riga vuota."]</div>
                     </div>
+                    <fieldset class="mb-3">
+                        <legend class="form-label">@_L["Motori di ricerca"]</legend>
+                        <div class="mb-3">
+                            <label class="form-label" for="TitoloSeo">@_L["Titolo per i motori di ricerca"]</label>
+                            <input class="form-control @(Model.CampiNonValidi.Contains("TitoloSeo") ? "is-invalid" : null)" id="TitoloSeo" name="TitoloSeo" value="@Model.TitoloSeo" maxlength="200" />
+                            <div class="form-hint">@_L["Se vuoto si usa il titolo della pagina."]</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="DescrizioneSeo">@_L["Descrizione per i motori di ricerca"]</label>
+                            <textarea class="form-control @(Model.CampiNonValidi.Contains("DescrizioneSeo") ? "is-invalid" : null)" id="DescrizioneSeo" name="DescrizioneSeo" rows="2" maxlength="500">@Model.DescrizioneSeo</textarea>
+                        </div>
+                        <label class="form-check">
+                            <input type="checkbox" class="form-check-input" name="NonIndicizzare" value="true" @(Model.NonIndicizzare ? "checked" : null) />
+                            <span class="form-check-label">@_L["Non indicizzare questa pagina"]</span>
+                        </label>
+                    </fieldset>
                     <div class="mb-3">
                         <label class="form-check">
                             <input type="checkbox" class="form-check-input" name="PaginaIniziale" value="true" @(Model.PaginaIniziale ? "checked" : null) />

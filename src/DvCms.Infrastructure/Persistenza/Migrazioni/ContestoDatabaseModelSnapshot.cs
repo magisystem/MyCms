@@ -251,6 +251,11 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.Property<bool>("PaginaIniziale")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("PubblicataInPassato")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
                     b.Property<DateTime?>("PubblicatoIlUtc")
                         .HasColumnType("datetime2");
 
@@ -300,6 +305,48 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                         });
                 });
 
+            modelBuilder.Entity("DvCms.Domain.Cms.RedirectPagina", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatoIlUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("IdLingua")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdPagina")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdSito")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdTenant")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("SlugOrigine")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdLingua");
+
+                    b.HasIndex("IdPagina");
+
+                    b.HasIndex("IdSito", "IdLingua", "SlugOrigine")
+                        .IsUnique();
+
+                    b.HasIndex("IdTenant", "IdSito", "IdPagina");
+
+                    b.ToTable("RedirectPagine", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_RedirectPagine_SlugMinuscolo", "[SlugOrigine] COLLATE Latin1_General_BIN2 = LOWER([SlugOrigine]) COLLATE Latin1_General_BIN2");
+                        });
+                });
+
             modelBuilder.Entity("DvCms.Domain.Cms.RevisionePagina", b =>
                 {
                     b.Property<Guid>("Id")
@@ -321,6 +368,10 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                         .HasColumnType("nvarchar(max)")
                         .HasDefaultValue("{}");
 
+                    b.Property<string>("DescrizioneSeo")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
                     b.Property<string>("IdModello")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
@@ -337,6 +388,11 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.Property<Guid>("IdTenant")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<bool>("NonIndicizzare")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
                     b.Property<string>("NotaRevisione")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
@@ -346,6 +402,10 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
 
                     b.Property<string>("Titolo")
                         .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("TitoloSeo")
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
@@ -846,6 +906,22 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                         .WithMany()
                         .HasForeignKey("IdTenant", "IdSito")
                         .HasPrincipalKey("IdTenant", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DvCms.Domain.Cms.RedirectPagina", b =>
+                {
+                    b.HasOne("DvCms.Domain.Localizzazione.Lingua", null)
+                        .WithMany()
+                        .HasForeignKey("IdLingua")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("DvCms.Domain.Cms.Pagina", null)
+                        .WithMany()
+                        .HasForeignKey("IdTenant", "IdSito", "IdPagina")
+                        .HasPrincipalKey("IdTenant", "IdSito", "Id")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

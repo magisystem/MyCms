@@ -22,6 +22,7 @@ internal sealed class ConfigurazionePagina : IEntityTypeConfiguration<Pagina>
         entita.Property(pagina => pagina.TipoPagina).HasMaxLength(50).IsRequired();
         entita.Property(pagina => pagina.Stato).HasConversion<string>().HasMaxLength(20).IsRequired();
         entita.Property(pagina => pagina.TokenConcorrenza).IsRowVersion();
+        entita.Property(pagina => pagina.PubblicataInPassato).HasDefaultValue(false);
 
         // Il sito deve essere dello stesso tenant (chiave esterna composta).
         entita.HasOne<Sito>()
@@ -66,6 +67,9 @@ internal sealed class ConfigurazioneRevisionePagina : IEntityTypeConfiguration<R
         entita.Property(revisione => revisione.IdModello).HasMaxLength(RevisionePagina.LunghezzaMassimaIdModello).IsRequired().HasDefaultValue(RevisionePagina.ModelloPredefinito);
         entita.Property(revisione => revisione.VersioneModello).HasDefaultValue(1);
         entita.Property(revisione => revisione.DatiModelloJson).IsRequired().HasDefaultValue("{}");
+        entita.Property(revisione => revisione.TitoloSeo).HasMaxLength(RevisionePagina.LunghezzaMassimaTitoloSeo);
+        entita.Property(revisione => revisione.DescrizioneSeo).HasMaxLength(RevisionePagina.LunghezzaMassimaDescrizioneSeo);
+        entita.Property(revisione => revisione.NonIndicizzare).HasDefaultValue(false);
         entita.Property(revisione => revisione.NotaRevisione).HasMaxLength(RevisionePagina.LunghezzaMassimaNota);
 
         entita.HasOne<Pagina>()
@@ -77,5 +81,32 @@ internal sealed class ConfigurazioneRevisionePagina : IEntityTypeConfiguration<R
 
         entita.HasAlternateKey(revisione => new { revisione.IdPagina, revisione.Id });
         entita.HasIndex(revisione => new { revisione.IdPagina, revisione.NumeroRevisione }).IsUnique();
+    }
+}
+
+internal sealed class ConfigurazioneRedirectPagina : IEntityTypeConfiguration<RedirectPagina>
+{
+    public void Configure(EntityTypeBuilder<RedirectPagina> entita)
+    {
+        entita.ToTable(
+            "RedirectPagine",
+            tabella => tabella.HasCheckConstraint(
+                "CK_RedirectPagine_SlugMinuscolo",
+                "[SlugOrigine] COLLATE Latin1_General_BIN2 = LOWER([SlugOrigine]) COLLATE Latin1_General_BIN2"));
+        entita.HasKey(redirect => redirect.Id);
+        entita.Property(redirect => redirect.Id).ValueGeneratedNever();
+        entita.Property(redirect => redirect.SlugOrigine).HasMaxLength(NormalizzatoreSlug.LunghezzaMassima).IsRequired();
+
+        // La pagina di destinazione deve essere dello stesso tenant e sito.
+        entita.HasOne<Pagina>()
+            .WithMany()
+            .HasForeignKey(redirect => new { redirect.IdTenant, redirect.IdSito, redirect.IdPagina })
+            .HasPrincipalKey(pagina => new { pagina.IdTenant, pagina.IdSito, pagina.Id })
+            .OnDelete(DeleteBehavior.Restrict);
+        entita.HasOne<Lingua>().WithMany().HasForeignKey(redirect => redirect.IdLingua).OnDelete(DeleteBehavior.Restrict);
+
+        // Un vecchio slug porta a una sola pagina, per sito e lingua.
+        entita.HasIndex(redirect => new { redirect.IdSito, redirect.IdLingua, redirect.SlugOrigine }).IsUnique();
+        entita.HasIndex(redirect => redirect.IdPagina);
     }
 }

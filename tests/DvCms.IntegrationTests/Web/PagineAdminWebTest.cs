@@ -50,6 +50,56 @@ public partial class PagineAdminWebTest
     }
 
     [Fact]
+    public async Task SeoCambioSlugERedirectDalModulo()
+    {
+        await using var scenario = await ScenarioWeb.CreaAsync();
+        await scenario.CreaTenantAdminAsync("anna@esempio.it");
+        var sessione = scenario.SessioneA();
+        await sessione.AccediAsync("anna@esempio.it", DatiProva.PasswordProva);
+        using var creazione = await sessione.InviaModuloAsync(
+            "/admin/pagine/nuova",
+            [new("Titolo", "Pagina"), new("Slug", "vecchia"), new("CodiceLingua", "it"), new("Contenuto", "uno"), new("TitoloSeo", "Titolo SEO"), new("DescrizioneSeo", "Descrizione SEO"), new("NonIndicizzare", "true")]);
+        var percorso = SessioneProva.Destinazione(creazione)!;
+        var token = await LeggiTokenAsync(sessione, percorso);
+        using var pubblica = await sessione.InviaModuloAsync(percorso, [new("TokenConcorrenza", token)], $"{percorso}?handler=Pubblica");
+        Assert.True(SessioneProva.EReindirizzamento(pubblica));
+
+        // I campi SEO tornano nel modulo; un valore troppo lungo è rifiutato senza perdere ciò che si è scritto.
+        using var modulo = await sessione.GetAsync(percorso);
+        var html = await modulo.Content.ReadAsStringAsync(Ct);
+        Assert.Contains("value=\"Titolo SEO\"", html, StringComparison.Ordinal);
+        Assert.Contains("Descrizione SEO</textarea>", html, StringComparison.Ordinal);
+        token = await LeggiTokenAsync(sessione, percorso);
+        using var troppoLungo = await sessione.InviaModuloAsync(
+            percorso,
+            [new("Titolo", "Pagina"), new("Slug", "vecchia"), new("Contenuto", "uno"), new("TitoloSeo", new string('x', 201)), new("TokenConcorrenza", token)],
+            $"{percorso}?handler=Salva");
+        Assert.Equal(HttpStatusCode.OK, troppoLungo.StatusCode);
+        Assert.Contains("is-invalid", await troppoLungo.Content.ReadAsStringAsync(Ct), StringComparison.Ordinal);
+
+        // Una pagina pubblicata può cambiare indirizzo: il vecchio compare tra i reindirizzamenti e si può eliminare.
+        token = await LeggiTokenAsync(sessione, percorso);
+        using var rinomina = await sessione.InviaModuloAsync(
+            percorso,
+            [new("Titolo", "Pagina"), new("Slug", "nuova"), new("Contenuto", "uno"), new("TitoloSeo", "Titolo SEO"), new("TokenConcorrenza", token)],
+            $"{percorso}?handler=Salva");
+        Assert.True(SessioneProva.EReindirizzamento(rinomina));
+        using var dopo = await sessione.GetAsync(percorso);
+        var htmlDopo = await dopo.Content.ReadAsStringAsync(Ct);
+        Assert.Contains("/vecchia", htmlDopo, StringComparison.Ordinal);
+        using var pubblico = await scenario.SessioneA().GetAsync("/vecchia");
+        Assert.Equal(HttpStatusCode.MovedPermanently, pubblico.StatusCode);
+        Assert.Equal("/nuova", SessioneProva.Destinazione(pubblico));
+
+        var idRedirect = System.Text.RegularExpressions.Regex.Match(htmlDopo, "idReindirizzamento=([0-9a-f-]{36})").Groups[1].Value;
+        Assert.NotEmpty(idRedirect);
+        using var elimina = await sessione.InviaModuloAsync(percorso, [], $"{percorso}?handler=EliminaReindirizzamento&idReindirizzamento={idRedirect}");
+        Assert.True(SessioneProva.EReindirizzamento(elimina));
+        using var eliminato = await scenario.SessioneA().GetAsync("/vecchia");
+        Assert.Equal(HttpStatusCode.NotFound, eliminato.StatusCode);
+    }
+
+    [Fact]
     public async Task IlContenutoEMostratoCodificatoNonComeMarkup()
     {
         await using var scenario = await ScenarioWeb.CreaAsync();

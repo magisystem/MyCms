@@ -28,6 +28,7 @@ Piano di implementazione richiesto da `docs/AI_START_HERE.md`, preparato prima d
 | C-004 Preview e rollback (M2) | Completata (anteprima protetta e noindex, pubblicazione di una revisione passata, ripristino come nuova bozza) |
 | C-006 Template guidati (M2) | Completata (registro versionato e immutabile, modelli `testo-semplice` e `presentazione`, form Razor, policy di editing, passaggio di versione su richiesta) |
 | C-008 Pagine in più lingue (M2) | Completata (`LingueSito`, prefisso di lingua, traduzioni collegate, 404 per lingua, canonical/hreflang, selettore, gestione lingue nel menu Platform) |
+| C-005 SEO base e redirect (M2) | Completata (titolo/descrizione SEO e `noindex` per revisione, canonical e Open Graph, cambio slug con reindirizzamento 301 senza catene né cicli, elenco ed eliminazione dei reindirizzamenti) |
 | B-010 Gestione testi statici | Completata (`/admin/platform/testi`: ricerca, filtri, modifica, cache e audit) |
 | B-007 Creazione TenantAdmin e non-escalation | Completata (password temporanea mostrata una volta; elevazione `Utente` → `TenantAdmin`) |
 

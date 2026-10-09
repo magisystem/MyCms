@@ -6,6 +6,7 @@ using DvCms.Domain.Accessi;
 using DvCms.Domain.Cms;
 using DvCms.Domain.Localizzazione;
 using DvCms.Domain.Tenancy;
+using DvCms.Infrastructure.Outbox;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Supporto;
 using Microsoft.EntityFrameworkCore;
@@ -143,7 +144,7 @@ public class ServizioPagineTest
     }
 
     [Fact]
-    public async Task LoSlugSiCambiaInBozzaMaNonSeLaPaginaEPubblicata()
+    public async Task LoSlugSiCambiaSoloSeLibero()
     {
         await using var s = await Scenario.CreaAsync();
         var id = await s.CreaPaginaAsync(s.A, s.AdminA, "vecchio");
@@ -161,8 +162,165 @@ public class ServizioPagineTest
         Assert.Equal(CodiceEsito.GiaPresente, occupato.Codice);
         Assert.Equal(CodiceEsito.DatiNonValidi, riservato.Codice);
         Assert.True(nuovo.Riuscito);
-        Assert.Equal(CodiceEsito.NonConsentito, dopoPubblicazione.Codice);
+        letta = (await s.ComeAsync(s.A, servizio => servizio.LeggiAsync(s.AdminA, id, Ct)))!;
+        Assert.True(dopoPubblicazione.Riuscito);
+        Assert.Equal("altro", letta.Slug);
+    }
+
+    [Fact]
+    public async Task CambiareSlugDiUnaPaginaPubblicataLasciaUnReindirizzamento()
+    {
+        await using var s = await Scenario.CreaAsync();
+        var id = await s.CreaPaginaAsync(s.A, s.AdminA, "vecchio");
+        await s.PubblicaAsync(s.A, id);
+
+        await s.RinominaAsync(s.A, id, "nuovo");
+
+        var letta = (await s.ComeAsync(s.A, servizio => servizio.LeggiAsync(s.AdminA, id, Ct)))!;
         Assert.Equal("nuovo", letta.Slug);
+        Assert.Equal(["vecchio"], letta.Reindirizzamenti!.Select(r => r.SlugOrigine));
+        Assert.Equal(1, await s.ContaOutboxAsync(TipiEventoPagina.Rinominata));
+    }
+
+    [Fact]
+    public async Task UnaPaginaMaiPubblicataCheCambiaSlugNonLasciaReindirizzamenti()
+    {
+        await using var s = await Scenario.CreaAsync();
+        var id = await s.CreaPaginaAsync(s.A, s.AdminA, "bozza");
+
+        await s.RinominaAsync(s.A, id, "bozza-nuova");
+
+        var letta = (await s.ComeAsync(s.A, servizio => servizio.LeggiAsync(s.AdminA, id, Ct)))!;
+        Assert.Empty(letta.Reindirizzamenti!);
+        Assert.Equal(0, await s.ContaOutboxAsync(TipiEventoPagina.Rinominata));
+    }
+
+    [Fact]
+    public async Task PiuCambiDiSlugNonFormanoCatene()
+    {
+        await using var s = await Scenario.CreaAsync();
+        var id = await s.CreaPaginaAsync(s.A, s.AdminA, "a");
+        await s.PubblicaAsync(s.A, id);
+
+        await s.RinominaAsync(s.A, id, "b");
+        await s.RinominaAsync(s.A, id, "c");
+
+        // Entrambi i vecchi indirizzi puntano alla pagina (quindi allo slug attuale), nessuno punta a un altro reindirizzamento.
+        var letta = (await s.ComeAsync(s.A, servizio => servizio.LeggiAsync(s.AdminA, id, Ct)))!;
+        Assert.Equal(["a", "b"], letta.Reindirizzamenti!.Select(r => r.SlugOrigine));
+        Assert.Equal(1, await s.ContaRedirectAsync(r => r.IdPagina == id && r.SlugOrigine == "a"));
+        Assert.Equal(0, await s.ContaRedirectAsync(r => r.SlugOrigine == "c"));
+    }
+
+    [Fact]
+    public async Task TornareAlloSlugOriginaleTogliIlReindirizzamentoCheSarebbeUnCiclo()
+    {
+        await using var s = await Scenario.CreaAsync();
+        var id = await s.CreaPaginaAsync(s.A, s.AdminA, "a");
+        await s.PubblicaAsync(s.A, id);
+        await s.RinominaAsync(s.A, id, "b");
+
+        await s.RinominaAsync(s.A, id, "a");
+
+        var letta = (await s.ComeAsync(s.A, servizio => servizio.LeggiAsync(s.AdminA, id, Ct)))!;
+        Assert.Equal("a", letta.Slug);
+        Assert.Equal(["b"], letta.Reindirizzamenti!.Select(r => r.SlugOrigine));
+    }
+
+    [Fact]
+    public async Task UnaPaginaNuovaCheUsaUnVecchioSlugPrendeIlPostoDelReindirizzamento()
+    {
+        await using var s = await Scenario.CreaAsync();
+        var id = await s.CreaPaginaAsync(s.A, s.AdminA, "vecchio");
+        await s.PubblicaAsync(s.A, id);
+        await s.RinominaAsync(s.A, id, "nuovo");
+
+        var altra = await s.CreaPaginaAsync(s.A, s.AdminA, "vecchio");
+
+        Assert.NotEqual(id, altra);
+        Assert.Equal(0, await s.ContaRedirectAsync(r => r.SlugOrigine == "vecchio"));
+    }
+
+    [Fact]
+    public async Task UnaPaginaCheRinominaOccupandoUnVecchioSlugDiUnAltraPrendeIlPosto()
+    {
+        await using var s = await Scenario.CreaAsync();
+        var prima = await s.CreaPaginaAsync(s.A, s.AdminA, "vecchio");
+        await s.PubblicaAsync(s.A, prima);
+        await s.RinominaAsync(s.A, prima, "nuovo");
+        var seconda = await s.CreaPaginaAsync(s.A, s.AdminA, "altra");
+
+        await s.RinominaAsync(s.A, seconda, "vecchio");
+
+        Assert.Equal(0, await s.ContaRedirectAsync(r => r.IdPagina == prima));
+    }
+
+    [Fact]
+    public async Task IReindirizzamentiSonoPerSitoELinguaENonSiEliminanoDaAltrePagine()
+    {
+        await using var s = await Scenario.CreaAsync();
+        var id = await s.CreaPaginaAsync(s.A, s.AdminA, "vecchio");
+        await s.PubblicaAsync(s.A, id);
+        await s.RinominaAsync(s.A, id, "nuovo");
+        var altraDiA = await s.CreaPaginaAsync(s.A, s.AdminA, "altra");
+        var idRedirect = (await s.ComeAsync(s.A, servizio => servizio.LeggiAsync(s.AdminA, id, Ct)))!.Reindirizzamenti![0].Id;
+
+        var altraPagina = await s.ComeAsync(s.A, servizio => servizio.EliminaReindirizzamentoAsync(s.AdminA, altraDiA, idRedirect, Ct));
+        var altroTenant = await s.ComeAsync(s.B, servizio => servizio.EliminaReindirizzamentoAsync(s.AdminB, id, idRedirect, Ct));
+        var attoreAltrui = await s.ComeAsync(s.A, servizio => servizio.EliminaReindirizzamentoAsync(s.AdminB, id, idRedirect, Ct));
+
+        Assert.Equal(CodiceEsito.NonTrovato, altraPagina.Codice);
+        Assert.Equal(CodiceEsito.NonTrovato, altroTenant.Codice);
+        Assert.Equal(CodiceEsito.NonAutorizzato, attoreAltrui.Codice);
+        Assert.Equal(1, await s.ContaRedirectAsync(r => r.Id == idRedirect));
+
+        var eliminato = await s.ComeAsync(s.A, servizio => servizio.EliminaReindirizzamentoAsync(s.AdminA, id, idRedirect, Ct));
+        Assert.True(eliminato.Riuscito);
+        Assert.Equal(0, await s.ContaRedirectAsync(r => r.Id == idRedirect));
+    }
+
+    [Fact]
+    public async Task ICampiSeoSiSalvanoNelleRevisioniEUnaModificaSoloSeoCreaUnaRevisione()
+    {
+        await using var s = await Scenario.CreaAsync();
+        var id = await s.ComeAsync(s.A, servizio => servizio.CreaAsync(
+            s.AdminA,
+            new DatiNuovaPagina("seo", "Titolo", "Testo", null, false, null, null, null, "  Titolo per Google  ", "Descrizione breve", true),
+            Ct));
+        Assert.True(id.Riuscito, id.Codice.ToString());
+
+        var letta = (await s.ComeAsync(s.A, servizio => servizio.LeggiAsync(s.AdminA, id.Id!.Value, Ct)))!;
+        Assert.Equal("Titolo per Google", letta.TitoloSeo);
+        Assert.Equal("Descrizione breve", letta.DescrizioneSeo);
+        Assert.True(letta.NonIndicizzare);
+
+        var salvata = await s.ComeAsync(s.A, servizio => servizio.SalvaAsync(
+            s.AdminA,
+            id.Id!.Value,
+            new DatiModificaPagina(null, "Titolo", "Testo", null, false, letta.TokenConcorrenza, null, "", null, false),
+            Ct));
+        Assert.True(salvata.Riuscito);
+        letta = (await s.ComeAsync(s.A, servizio => servizio.LeggiAsync(s.AdminA, id.Id!.Value, Ct)))!;
+        Assert.Null(letta.TitoloSeo);
+        Assert.Null(letta.DescrizioneSeo);
+        Assert.False(letta.NonIndicizzare);
+        Assert.Equal(2, letta.Revisioni.Count);
+    }
+
+    [Theory]
+    [InlineData(201, 0, "TitoloSeo")]
+    [InlineData(0, 501, "DescrizioneSeo")]
+    public async Task ICampiSeoTroppoLunghiSonoRifiutati(int lunghezzaTitolo, int lunghezzaDescrizione, string campo)
+    {
+        await using var s = await Scenario.CreaAsync();
+
+        var esito = await s.ComeAsync(s.A, servizio => servizio.CreaAsync(
+            s.AdminA,
+            new DatiNuovaPagina("seo", "Titolo", "Testo", null, false, null, null, null, new string('t', lunghezzaTitolo), new string('d', lunghezzaDescrizione)),
+            Ct));
+
+        Assert.Equal(CodiceEsito.DatiNonValidi, esito.Codice);
+        Assert.Equal([campo], esito.CampiNonValidi);
     }
 
     [Fact]
@@ -705,6 +863,25 @@ public class ServizioPagineTest
             await ambito.ServiceProvider.GetRequiredService<ContestoDatabase>().LingueSito.IgnoreQueryFilters()
                 .Where(ls => ls.IdSito == host.IdSito && !ls.Predefinita).ExecuteDeleteAsync(Ct);
         }
+
+        public async Task PubblicaAsync(DatiTenantRisolto host, Guid id) => await PubblicaUltimaAsync(host, id);
+
+        public async Task RinominaAsync(DatiTenantRisolto host, Guid id, string slug)
+        {
+            var dettaglio = (await ComeAsync(host, servizio => servizio.LeggiAsync(AdminA, id, Ct)))!;
+            var esito = await ComeAsync(host, servizio => servizio.SalvaAsync(
+                AdminA,
+                id,
+                new DatiModificaPagina(slug, dettaglio.Titolo, dettaglio.Contenuto, null, dettaglio.PaginaIniziale, dettaglio.TokenConcorrenza),
+                Ct));
+            Assert.True(esito.Riuscito, esito.Codice.ToString());
+        }
+
+        public Task<int> ContaRedirectAsync(System.Linq.Expressions.Expression<Func<RedirectPagina, bool>> condizione) =>
+            ContaAsync(contesto => contesto.RedirectPagine.IgnoreQueryFilters().CountAsync(condizione, Ct));
+
+        public Task<int> ContaOutboxAsync(string tipo) =>
+            ContaAsync(contesto => contesto.MessaggiOutbox.IgnoreQueryFilters().CountAsync(m => m.Tipo == tipo, Ct));
 
         public async Task PubblicaUltimaAsync(DatiTenantRisolto host, Guid id)
         {

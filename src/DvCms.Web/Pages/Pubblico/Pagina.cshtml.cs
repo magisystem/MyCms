@@ -50,14 +50,25 @@ public class PaginaModel : PageModel
             HttpContext.Items[ContestoLinguaRichiesta.ChiaveElemento] = codice;
         }
 
-        var contenuto = await _pagine.TrovaAsync(slug, prefissata?.Codice, annullamento);
-        if (contenuto is null)
+        var risoluzione = await _pagine.RisolviAsync(slug, prefissata?.Codice, annullamento);
+        if (risoluzione.PercorsoReindirizzamento is { } percorso)
+        {
+            // Vecchio slug o pagina iniziale chiamata per slug: un solo salto verso il percorso canonico (C-005).
+            return RedirectPermanent(percorso);
+        }
+
+        if (risoluzione.Pagina is not { } contenuto)
         {
             return NonTrovata(codice);
         }
 
+        if (contenuto.NonIndicizzare)
+        {
+            Response.Headers["X-Robots-Tag"] = "noindex, follow";
+        }
+
         var origine = $"{Request.Scheme}://{Request.Host}";
-        var voci = contenuto.Traduzioni.Count > 1
+        var voci = contenuto.Traduzioni.Count > 1 && !contenuto.NonIndicizzare
             ? contenuto.Traduzioni
                 .Select(t => new VoceLingua(t.CodiceLingua, t.NomeLingua, origine + t.Percorso, t.CodiceLingua == contenuto.CodiceLingua))
                 .ToList()
@@ -66,14 +77,16 @@ public class PaginaModel : PageModel
             contenuto.Titolo,
             contenuto.CodiceLingua,
             VistaPagina.DividiParagrafi(contenuto.Contenuto),
-            NonIndicizzare: false,
+            contenuto.NonIndicizzare,
             null,
             contenuto.IdModello,
             contenuto.VersioneModello,
             contenuto.DatiModello,
             origine + contenuto.Percorso,
             voci,
-            contenuto.Traduzioni.FirstOrDefault(t => t.Predefinita) is { } predefinitaTradotta ? origine + predefinitaTradotta.Percorso : null);
+            contenuto.Traduzioni.FirstOrDefault(t => t.Predefinita) is { } predefinitaTradotta ? origine + predefinitaTradotta.Percorso : null,
+            contenuto.TitoloSeo,
+            contenuto.DescrizioneSeo);
         return Page();
     }
 

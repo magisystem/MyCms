@@ -276,6 +276,189 @@ public class SitoPubblicoWebTest
         Assert.Equal(HttpStatusCode.ServiceUnavailable, risposta.StatusCode);
     }
 
+    [Fact]
+    public async Task UnVecchioSlugRispondeConRedirectPermanenteAlloSlugAttuale()
+    {
+        await using var s = await Contesto.CreaAsync();
+        var id = await s.CreaPaginaAsync(s.A, "vecchio", "Titolo", "x", pubblica: true);
+        await s.RinominaAsync(s.A, id, "nuovo");
+        await s.PubblicaAsync(s.A, id);
+
+        using var vecchio = await s.SessioneA().GetAsync("/vecchio");
+        using var nuovo = await s.SessioneA().GetAsync("/nuovo");
+
+        Assert.Equal(HttpStatusCode.MovedPermanently, vecchio.StatusCode);
+        Assert.Equal("/nuovo", SessioneProva.Destinazione(vecchio));
+        Assert.Equal(HttpStatusCode.OK, nuovo.StatusCode);
+    }
+
+    [Fact]
+    public async Task IlRedirectSegueLaPaginaAncheDopoPiuCambiENonFormaCatene()
+    {
+        await using var s = await Contesto.CreaAsync();
+        var id = await s.CreaPaginaAsync(s.A, "a", "Titolo", "x", pubblica: true);
+        await s.RinominaAsync(s.A, id, "b");
+        await s.RinominaAsync(s.A, id, "c");
+        await s.PubblicaAsync(s.A, id);
+
+        using var primo = await s.SessioneA().GetAsync("/a");
+        using var secondo = await s.SessioneA().GetAsync("/b");
+
+        Assert.Equal("/c", SessioneProva.Destinazione(primo));
+        Assert.Equal("/c", SessioneProva.Destinazione(secondo));
+    }
+
+    [Fact]
+    public async Task TornareAlloSlugOriginaleNonCreaCicli()
+    {
+        await using var s = await Contesto.CreaAsync();
+        var id = await s.CreaPaginaAsync(s.A, "a", "Titolo", "x", pubblica: true);
+        await s.RinominaAsync(s.A, id, "b");
+        await s.RinominaAsync(s.A, id, "a");
+        await s.PubblicaAsync(s.A, id);
+
+        using var originale = await s.SessioneA().GetAsync("/a");
+        using var intermedio = await s.SessioneA().GetAsync("/b");
+
+        Assert.Equal(HttpStatusCode.OK, originale.StatusCode);
+        Assert.Equal("/a", SessioneProva.Destinazione(intermedio));
+    }
+
+    [Fact]
+    public async Task UnVecchioSlugDiUnaPaginaRitirataEUn404()
+    {
+        await using var s = await Contesto.CreaAsync();
+        var id = await s.CreaPaginaAsync(s.A, "vecchio", "Titolo", "x", pubblica: true);
+        await s.RinominaAsync(s.A, id, "nuovo");
+        await s.PubblicaAsync(s.A, id);
+        await s.RitiraAsync(s.A, id);
+
+        using var risposta = await s.SessioneA().GetAsync("/vecchio");
+
+        Assert.Equal(HttpStatusCode.NotFound, risposta.StatusCode);
+    }
+
+    [Fact]
+    public async Task IRedirectNonSuperanoTenantNeLingue()
+    {
+        await using var s = await Contesto.CreaAsync();
+        var id = await s.CreaPaginaAsync(s.A, "vecchio", "Titolo", "x", pubblica: true);
+        await s.RinominaAsync(s.A, id, "nuovo");
+        await s.PubblicaAsync(s.A, id);
+
+        using var altroTenant = await s.SessioneB().GetAsync("/vecchio");
+        using var altraLingua = await s.SessioneA().GetAsync("/en/vecchio");
+
+        Assert.Equal(HttpStatusCode.NotFound, altroTenant.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, altraLingua.StatusCode);
+    }
+
+    [Fact]
+    public async Task IlRedirectInUnaLinguaNonDefaultMantieneIlPrefisso()
+    {
+        await using var s = await Contesto.CreaAsync();
+        var id = await s.CreaPaginaAsync(s.A, "old-news", "News", "x", lingua: "en", pubblica: true);
+        await s.RinominaAsync(s.A, id, "news");
+        await s.PubblicaAsync(s.A, id);
+
+        using var risposta = await s.SessioneA().GetAsync("/en/old-news");
+
+        Assert.Equal(HttpStatusCode.MovedPermanently, risposta.StatusCode);
+        Assert.Equal("/en/news", SessioneProva.Destinazione(risposta));
+    }
+
+    [Fact]
+    public async Task LaPaginaInizialeChiamataPerSlugReindirizzaAllaRadice()
+    {
+        await using var s = await Contesto.CreaAsync();
+        await s.CreaPaginaAsync(s.A, "home", "Benvenuti", "x", iniziale: true, pubblica: true);
+
+        using var perSlug = await s.SessioneA().GetAsync("/home");
+        using var radice = await s.SessioneA().GetAsync("/");
+
+        Assert.Equal(HttpStatusCode.MovedPermanently, perSlug.StatusCode);
+        Assert.Equal("/", SessioneProva.Destinazione(perSlug));
+        Assert.Equal(HttpStatusCode.OK, radice.StatusCode);
+    }
+
+    [Fact]
+    public async Task UnaPaginaInizialeRinominataReindirizzaAllaRadice()
+    {
+        await using var s = await Contesto.CreaAsync();
+        var id = await s.CreaPaginaAsync(s.A, "home", "Benvenuti", "x", iniziale: true, pubblica: true);
+        await s.RinominaAsync(s.A, id, "inizio");
+        await s.PubblicaAsync(s.A, id);
+
+        using var vecchio = await s.SessioneA().GetAsync("/home");
+
+        Assert.Equal("/", SessioneProva.Destinazione(vecchio));
+    }
+
+    [Fact]
+    public async Task LeInformazioniSeoSonoNelDocumentoPubblico()
+    {
+        await using var s = await Contesto.CreaAsync();
+        var id = await s.CreaPaginaAsync(s.A, "seo", "Titolo pagina", "x");
+        await s.ImpostaSeoAsync(s.A, id, "Titolo per Google", "Una <descrizione> \"corta\"", false);
+        await s.PubblicaAsync(s.A, id);
+
+        using var risposta = await s.SessioneA().GetAsync("/seo");
+        var html = await risposta.Content.ReadAsStringAsync(Ct);
+
+        Assert.Contains("<title>Titolo per Google</title>", html, StringComparison.Ordinal);
+        Assert.Contains("<h1>Titolo pagina</h1>", html, StringComparison.Ordinal);
+        Assert.Contains("<meta name=\"description\" content=\"Una &lt;descrizione&gt; &quot;corta&quot;\" />", html, StringComparison.Ordinal);
+        Assert.Contains("<link rel=\"canonical\" href=\"http://a.esempio.it/seo\" />", html, StringComparison.Ordinal);
+        Assert.Contains("<meta property=\"og:title\" content=\"Titolo per Google\" />", html, StringComparison.Ordinal);
+        Assert.Contains("<meta property=\"og:url\" content=\"http://a.esempio.it/seo\" />", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("noindex", html, StringComparison.Ordinal);
+        Assert.False(risposta.Headers.Contains("X-Robots-Tag"));
+    }
+
+    [Fact]
+    public async Task SenzaTitoloSeoSiUsaIlTitoloDellaPaginaESenzaDescrizioneNonCeMeta()
+    {
+        await using var s = await Contesto.CreaAsync();
+        await s.CreaPaginaAsync(s.A, "base", "Titolo base", "x", pubblica: true);
+
+        var html = await (await s.SessioneA().GetAsync("/base")).Content.ReadAsStringAsync(Ct);
+
+        Assert.Contains("<title>Titolo base</title>", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("name=\"description\"", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task UnaPaginaNonIndicizzabileHaNoindexNeiMetaENellIntestazioneENessunHreflang()
+    {
+        await using var s = await Contesto.CreaAsync();
+        var it = await s.CreaPaginaAsync(s.A, "privata", "Privata", "x", pubblica: true);
+        await s.CreaPaginaAsync(s.A, "private", "Private", "x", lingua: "en", pubblica: true, traduzioneDi: it);
+        await s.ImpostaSeoAsync(s.A, it, null, null, true);
+        await s.PubblicaAsync(s.A, it);
+
+        using var risposta = await s.SessioneA().GetAsync("/privata");
+        var html = await risposta.Content.ReadAsStringAsync(Ct);
+
+        Assert.Equal(HttpStatusCode.OK, risposta.StatusCode);
+        Assert.Contains("<meta name=\"robots\" content=\"noindex, follow\" />", html, StringComparison.Ordinal);
+        Assert.Equal("noindex, follow", Assert.Single(risposta.Headers.GetValues("X-Robots-Tag")));
+        Assert.DoesNotContain("hreflang", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task LaBozzaSeoNonSiVedeFinoAllaPubblicazione()
+    {
+        await using var s = await Contesto.CreaAsync();
+        var id = await s.CreaPaginaAsync(s.A, "seo", "Titolo", "x", pubblica: true);
+        await s.ImpostaSeoAsync(s.A, id, "Titolo nuovo", "Descrizione nuova", true);
+
+        var html = await (await s.SessioneA().GetAsync("/seo")).Content.ReadAsStringAsync(Ct);
+
+        Assert.Contains("<title>Titolo</title>", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("Descrizione nuova", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("noindex", html, StringComparison.Ordinal);
+    }
+
     private sealed class Contesto : IAsyncDisposable
     {
         private Contesto(ScenarioWeb web, Guid adminA, Guid adminB)
@@ -348,6 +531,26 @@ public class SitoPubblicoWebTest
             var dettaglio = (await ComeAsync(tenant, (servizio, attore) => servizio.LeggiAsync(attore, id, Ct)))!;
             var esito = await ComeAsync(tenant, (servizio, attore) =>
                 servizio.SalvaAsync(attore, id, new DatiModificaPagina(null, titolo, contenuto, null, dettaglio.PaginaIniziale, dettaglio.TokenConcorrenza), Ct));
+            Assert.True(esito.Riuscito, esito.Codice.ToString());
+        }
+
+        public async Task RinominaAsync(DatiProva.TenantCreato tenant, Guid id, string slug)
+        {
+            var dettaglio = (await ComeAsync(tenant, (servizio, attore) => servizio.LeggiAsync(attore, id, Ct)))!;
+            var esito = await ComeAsync(tenant, (servizio, attore) =>
+                servizio.SalvaAsync(attore, id, new DatiModificaPagina(slug, dettaglio.Titolo, dettaglio.Contenuto, null, dettaglio.PaginaIniziale, dettaglio.TokenConcorrenza), Ct));
+            Assert.True(esito.Riuscito, esito.Codice.ToString());
+        }
+
+        public async Task ImpostaSeoAsync(DatiProva.TenantCreato tenant, Guid id, string? titoloSeo, string? descrizioneSeo, bool nonIndicizzare)
+        {
+            var dettaglio = (await ComeAsync(tenant, (servizio, attore) => servizio.LeggiAsync(attore, id, Ct)))!;
+            var esito = await ComeAsync(tenant, (servizio, attore) =>
+                servizio.SalvaAsync(
+                    attore,
+                    id,
+                    new DatiModificaPagina(null, dettaglio.Titolo, dettaglio.Contenuto, null, dettaglio.PaginaIniziale, dettaglio.TokenConcorrenza, null, titoloSeo, descrizioneSeo, nonIndicizzare),
+                    Ct));
             Assert.True(esito.Riuscito, esito.Codice.ToString());
         }
 

@@ -40,6 +40,9 @@ public class ModificaModel : PaginaAdmin
         string? nota,
         bool paginaIniziale,
         string? tokenConcorrenza,
+        string? titoloSeo,
+        string? descrizioneSeo,
+        bool nonIndicizzare,
         CancellationToken annullamento)
     {
         var datiModello = Request.Form
@@ -48,7 +51,7 @@ public class ModificaModel : PaginaAdmin
         var esito = await _pagine.SalvaAsync(
             IdAttore,
             id,
-            new DatiModificaPagina(slug, titolo, contenuto, nota, paginaIniziale, tokenConcorrenza, datiModello),
+            new DatiModificaPagina(slug, titolo, contenuto, nota, paginaIniziale, tokenConcorrenza, datiModello, titoloSeo, descrizioneSeo, nonIndicizzare),
             annullamento);
         if (esito.Codice == CodiceEsito.DatiNonValidi && esito.CampiNonValidi is { Count: > 0 } campi)
         {
@@ -64,7 +67,9 @@ public class ModificaModel : PaginaAdmin
                 Titolo = titolo ?? string.Empty,
                 Contenuto = contenuto ?? string.Empty,
                 DatiModello = datiModello,
-                Slug = Pagina.Slug,
+                TitoloSeo = titoloSeo,
+                DescrizioneSeo = descrizioneSeo,
+                NonIndicizzare = nonIndicizzare,
             };
             CampiNonValidi = campi;
             Errore = TestoErrore(esito.Codice);
@@ -72,6 +77,12 @@ public class ModificaModel : PaginaAdmin
         }
 
         return Concludi(id, esito, Localizzatore.Traduci("Bozza salvata."));
+    }
+
+    public async Task<IActionResult> OnPostEliminaReindirizzamentoAsync(Guid id, Guid idReindirizzamento, CancellationToken annullamento)
+    {
+        var esito = await _pagine.EliminaReindirizzamentoAsync(IdAttore, id, idReindirizzamento, annullamento);
+        return Concludi(id, esito, Localizzatore.Traduci("Reindirizzamento eliminato."));
     }
 
     public async Task<IActionResult> OnPostAggiornaModelloAsync(Guid id, string? tokenConcorrenza, CancellationToken annullamento)
