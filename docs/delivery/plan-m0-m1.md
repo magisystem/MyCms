@@ -14,6 +14,7 @@ Piano di implementazione richiesto da `docs/AI_START_HERE.md`, preparato prima d
 | B-001 Tenant, Sito, DominioSito, ProfiloGuest | Completata |
 | B-002 Risoluzione host | Completata |
 | B-003 Account locali e autenticazione | Completata |
+| B-005 Seeding | Completata (comando `seed`, `Seed:EseguiAllAvvio`) |
 
 ## 1. Stato attuale del repository
 

@@ -70,12 +70,20 @@ Senza la variabile i test sul database risultano saltati (non passati); con `CI=
 2. Avviare SQL Server.
 3. Configurare la connection string tramite user-secrets o environment variables.
 4. Applicare le migrazioni EF Core con `dotnet run --project src/DvCms.Web -- migra`.
-5. Eseguire il seeding del tenant primario e del primo `PlatformAdmin` (ADR-0014): configurazione `Seed:TenantPrimario` e password del `PlatformAdmin` da user-secrets o environment variable, nessuna credenziale predefinita. In `Development` il seeding può creare anche i tenant di test `cms1`/`cms2` da `Seed:TenantSviluppo`.
+5. Eseguire il popolamento (seeding) del tenant primario e del primo `PlatformAdmin` (ADR-0014) con `dotnet run --project src/DvCms.Web -- seed`. I dati non segreti stanno in `appsettings.json` (`Seed:TenantPrimario`: nome, sito, domini); email e nome del `PlatformAdmin` e la sua password non sono versionati e vanno impostati con user-secrets o variabili d'ambiente, senza credenziali predefinite:
+
+   ```bash
+   dotnet user-secrets --project src/DvCms.Web set "Seed:PlatformAdmin:Email" "operatore@esempio.it"
+   dotnet user-secrets --project src/DvCms.Web set "Seed:PlatformAdmin:NomeVisualizzato" "Operatore"
+   dotnet user-secrets --project src/DvCms.Web set "Seed:PlatformAdmin:Password" "<password-di-almeno-12-caratteri>"
+   ```
+
+   In produzione si usano le variabili `Seed__PlatformAdmin__Email`, `Seed__PlatformAdmin__NomeVisualizzato` e `Seed__PlatformAdmin__Password`. Se la password non è configurata e il terminale è interattivo, il comando la chiede senza mostrarla; negli altri casi, se il `PlatformAdmin` deve essere creato, fallisce. Il comando è idempotente: crea solo ciò che manca, non reimposta password né modifica dati esistenti e segnala nel log le divergenze. Si può anche eseguire all'avvio con `Seed:EseguiAllAvvio=true` (default falso). In `Development` crea inoltre l'alias `localhost` (solo sviluppo) e i tenant di prova `cms1`/`cms2.davidemartelli.dev` da `Seed:TenantSviluppo` (in `appsettings.Development.json`): la password di ciascun `TenantAdmin` è un segreto (`Seed:TenantSviluppo:0:TenantAdmin:Password`, `Seed:TenantSviluppo:1:TenantAdmin:Password`). Fuori da `Development` queste parti sono ignorate.
 6. Avviare `DvCms.Web`.
 7. Eseguire test unitari e d'integrazione.
 8. Per il builder, entrare in `frontend/page-builder`, installare le dipendenze dal lockfile e avviare/buildare l'asset secondo lo script documentato.
 
-Gli agenti non devono inventare comandi non ancora implementati (seeding, builder). Aggiornare questa pagina nello stesso PR che li introduce.
+Gli agenti non devono inventare comandi non ancora implementati (builder). Aggiornare questa pagina nello stesso PR che li introduce.
 
 Per i dettagli su migrazioni e test, consultare [Database SQL Server](../architecture/database.md).
 

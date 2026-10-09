@@ -4,6 +4,7 @@ using DvCms.Application.Tenancy;
 using DvCms.Infrastructure.Accessi;
 using DvCms.Infrastructure.Localizzazione;
 using DvCms.Infrastructure.Persistenza;
+using DvCms.Infrastructure.Popolamento;
 using DvCms.Infrastructure.Tenancy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -56,6 +57,7 @@ public static class EstensioniServizi
         servizi.TryAddSingleton<HashFinto>();
         servizi.TryAddScoped<IServizioAudit, ServizioAudit>();
         servizi.TryAddScoped<IServizioAccesso, ServizioAccesso>();
+        servizi.TryAddScoped<ServizioPopolamento>();
     }
 
     private static OpzioniSicurezza LeggiOpzioniSicurezza(IConfiguration configurazione)

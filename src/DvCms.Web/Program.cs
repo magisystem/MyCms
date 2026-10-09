@@ -28,9 +28,24 @@ if (args is [ComandoMigra.Nome])
     return await ComandoMigra.EseguiAsync(applicazione.Services);
 }
 
+if (args is [ComandoSeed.Nome])
+{
+    return await ComandoSeed.EseguiAsync(applicazione.Services, consentiRichiestaInterattiva: true);
+}
+
 if (usaProxyAttendibili)
 {
     applicazione.UseForwardedHeaders();
+}
+
+// Popolamento all'avvio: solo se richiesto esplicitamente (default falso); in produzione va disattivato dopo il primo successo.
+if (applicazione.Configuration.GetValue<bool>("Seed:EseguiAllAvvio"))
+{
+    var esito = await ComandoSeed.EseguiAsync(applicazione.Services, consentiRichiestaInterattiva: false);
+    if (esito != 0)
+    {
+        return esito;
+    }
 }
 
 applicazione.UseMiddleware<MiddlewareIdCorrelazione>();
