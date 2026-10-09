@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\DvCms.Application\DvCms.Application.csproj" />
+    <ProjectReference Include="..\DvCms.Domain\DvCms.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

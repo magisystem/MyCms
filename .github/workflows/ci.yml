@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-e-test:
+    name: Build e test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      # Checkout parziale: la cartella admin-theme (kit grafico, centinaia di MB) non serve alla build.
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          filter: blob:none
+          sparse-checkout: |
+            src
+            tests
+
+      - name: Installa .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore
+        run: dotnet restore DvCms.sln
+
+      - name: Verifica formattazione
+        run: dotnet format DvCms.sln --no-restore --verify-no-changes
+
+      - name: Build
+        run: dotnet build DvCms.sln --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test --solution DvCms.sln --configuration Release --no-build

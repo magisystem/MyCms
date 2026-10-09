@@ -18,6 +18,19 @@ Questo file descrive il target di setup; i comandi precisi vanno completati dura
 - In sviluppo usare domini locali documentati oppure un middleware/test host esplicito; non introdurre bypass non sicuri nella configurazione produzione.
 - Lo storage file system è esclusivamente un adapter per lo sviluppo.
 
+## Comandi disponibili (A-001)
+
+Dalla radice del repository, con il .NET 10 SDK installato (`global.json` fissa la versione minima; su Ubuntu è disponibile il pacchetto `dotnet-sdk-10.0`):
+
+```bash
+dotnet restore DvCms.sln
+dotnet build DvCms.sln --configuration Release --no-restore
+dotnet test --solution DvCms.sln --configuration Release --no-build
+dotnet format DvCms.sln --verify-no-changes   # controllo di formattazione e stile, usato anche dalla CI
+```
+
+I test usano xUnit v3 con Microsoft Testing Platform (impostato in `global.json`, richiesto da .NET 10): `dotnet test` richiede l'opzione `--solution`. Le versioni dei pacchetti NuGet sono centralizzate in `Directory.Packages.props`. La CI (`.github/workflows/ci.yml`) esegue gli stessi passaggi.
+
 ## Flusso previsto dopo il bootstrap
 
 1. Ripristinare i pacchetti NuGet.

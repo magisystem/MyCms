@@ -426,3 +426,13 @@ FodyWeavers.xsd
 
 # Official VS Code C# Dev Kit Extension exclusion
 #*.lscache
+
+# DvCms: configurazione di ambiente con segreti (mai nel repository, vedi docs/development/local-setup.md)
+appsettings.Production.json
+appsettings.Staging.json
+appsettings.*.local.json
+appsettings.Local.json
+secrets.json
+*.pfx
+*.p12
+*.snk
