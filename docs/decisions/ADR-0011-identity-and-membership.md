@@ -95,5 +95,5 @@ Le email passano dall'outbox (ADR-0010) e dagli adapter di ADR-0015 (Microsoft G
 - Servono gli adapter email (ADR-0015) già per il recupero password dei `TenantAdmin`.
 - Tutti gli account tranne il `PlatformAdmin` hanno `TenantId`; il `PlatformAdmin` accede a tutti i tenant.
 - Login, recupero password e registrazione usano sempre il tenant dell'host; i test devono provare che un account non può accedere dall'host di un altro tenant.
-- Resta da decidere quale host usa il `PlatformAdmin` per il primo accesso (vedi `docs/open-questions.md`).
+- Il `PlatformAdmin` accede da un host registrato: il primo è quello del tenant di gestione creato dal bootstrap (ADR-0014).
 - Non serve una tabella di membership multi-tenant; verrà introdotta solo se un giorno un account dovrà lavorare su più tenant (nuovo ADR).

@@ -14,7 +14,7 @@ Questo file descrive il target di setup; i comandi precisi vanno completati dura
 
 - Copiare un file di esempio non segreto in configurazione locale, oppure usare user-secrets/environment variables.
 - Non committare password, connection string reali, API key, chiavi di cifratura, certificati o dati cliente. I file di configurazione con segreti (es. `appsettings.Development.json` locale, `appsettings.Production.json`) restano fuori dal repository.
-- Il tenant è deciso dall'host: per provare più tenant in locale servono host distinti registrati (da fissare al bootstrap).
+- Il tenant è deciso dall'host: per provare più tenant in locale servono host distinti registrati (vedi "Tenant di test in locale").
 - In sviluppo usare domini locali documentati oppure un middleware/test host esplicito; non introdurre bypass non sicuri nella configurazione produzione.
 - Lo storage file system è esclusivamente un adapter per lo sviluppo.
 
@@ -24,7 +24,7 @@ Questo file descrive il target di setup; i comandi precisi vanno completati dura
 2. Avviare SQL Server.
 3. Configurare la connection string tramite user-secrets o environment variables.
 4. Applicare le migrazioni EF Core con il comando documentato dalla solution.
-5. Creare il primo `PlatformAdmin` con il comando di bootstrap documentato (nessuna credenziale predefinita).
+5. Creare il primo `PlatformAdmin` e il tenant di gestione con il comando di bootstrap documentato (nessuna credenziale predefinita; il dominio del tenant di gestione è un parametro).
 6. Avviare `DvCms.Web`.
 7. Eseguire test unitari e d'integrazione.
 8. Per il builder, entrare in `frontend/page-builder`, installare le dipendenze dal lockfile e avviare/buildare l'asset secondo lo script documentato.
@@ -33,6 +33,15 @@ Gli agenti non devono inventare comandi finali prima che i file di progetto sian
 
 
 Per i dettagli su migrazioni e test, consultare [Database SQL Server](../architecture/database.md).
+
+## Tenant di test in locale
+
+Il tenant è deciso solo dall'host (ADR-0011), quindi in sviluppo si usano host distinti, tutti risolti sul computer locale. Si usano sottodomini di terzo livello del dominio del committente, ad esempio:
+
+- `cms1.davidemartelli.dev` e `cms2.davidemartelli.dev` come tenant di test;
+- un host per il tenant di gestione (da scegliere, vedi `docs/open-questions.md`).
+
+Questi host puntano al computer locale (record DNS verso `127.0.0.1` o voci nel file hosts) e non sono raggiungibili da internet. Vanno registrati come domini dei tenant di test (verificati a mano, ADR-0014) e non sono mai usati in produzione. Il dominio registrato dei tenant di test è un dato di configurazione/seed locale, non va scritto nel codice. Servono il binding di Kestrel su questi nomi e un certificato locale se si lavora in HTTPS; non vanno introdotti bypass non sicuri nella configurazione di produzione.
 
 ## Asset dell'admin
 

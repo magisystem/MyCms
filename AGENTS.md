@@ -66,7 +66,7 @@ La prima implementazione deve essere una **vertical slice tenant + sito + domini
 - contesto tenant risolto da host registrato;
 - isolamento tenant applicato sul server;
 - una migrazione DB (SQL Server);
-- login, un `PlatformAdmin` creato da comando di bootstrap senza credenziali predefinite e un `TenantAdmin` per tenant;
+- login, un `PlatformAdmin` e un tenant di gestione creati da comando di bootstrap senza credenziali predefinite (dominio come parametro) e un `TenantAdmin` per tenant;
 - menu "Platform" nell'admin (solo `PlatformAdmin`) per creare un tenant, un sito, un dominio (verificato a mano) e un utente `TenantAdmin`, con ingresso nell'admin di un tenant auditato;
 - pagina amministrativa Razor protetta (layout Tabler) per creare/modificare una pagina di prova;
 - rendering pubblico Razor di una pagina pubblicata;

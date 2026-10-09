@@ -35,7 +35,7 @@ Il canale di invio (Microsoft Graph, Gmail, SendGrid o SMTP, ADR-0015) è config
 
 ## Password del PlatformAdmin
 
-Il `PlatformAdmin` non ha recupero password. Il reset è una procedura manuale dell'operatore: si genera un nuovo hash compatibile con ASP.NET Core Identity (ad esempio riusando il comando di bootstrap) e si aggiorna l'account sul database. La procedura va descritta nel runbook e ogni reset annotato. Prima del primo invio in produzione, a mano: per ogni tenant, configurare l'app/account del canale scelto (registrazione app in Microsoft Entra, progetto OAuth Google, account SendGrid o server SMTP), il dominio mittente con SPF, DKIM e DMARC, e verificare la consegna; monitorare errori e code di invio dal worker.
+Il `PlatformAdmin` non ha recupero password e per ora non è previsto uno strumento dedicato: se serve un reset lo gestisce l'operatore a mano sul database, con una procedura che definirà in seguito (da descrivere nel runbook, annotando ogni reset).
 
 ## Background work e outbox
 

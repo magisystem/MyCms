@@ -17,7 +17,7 @@ I clienti non si registrano da soli: tenant, siti e account amministrativi sono 
 - Quando il `PlatformAdmin` entra nell'admin di un tenant, il contesto tenant è esplicito e l'ingresso è registrato in `AuditLog`.
 - Nessuna registrazione self-service per account amministrativi (`PlatformAdmin`, `TenantAdmin`). La registrazione degli acquirenti (`Utente`) esiste solo nei siti con e-commerce (ADR-0011).
 - Solo il `PlatformAdmin` può creare utenti `TenantAdmin` o elevare un account a `TenantAdmin`, con controllo lato server. Un `TenantAdmin` non può assegnare né auto-assegnarsi il proprio ruolo o uno superiore.
-- Il primo `PlatformAdmin` viene creato da un comando di bootstrap/seed documentato, eseguito dall'operatore, non da una pagina web. Il comando non accetta credenziali predefinite.
+- Il primo `PlatformAdmin` viene creato da un comando di bootstrap/seed documentato, eseguito dall'operatore, non da una pagina web. Il comando non accetta credenziali predefinite. Poiché non esiste un dominio centrale di amministrazione e il tenant è deciso dall'host, lo stesso comando crea un **tenant di gestione** dell'operatore con il suo dominio (passato come parametro): da lì il `PlatformAdmin` accede e crea gli altri tenant.
 - Alla creazione di un tenant si crea anche il suo profilo `Guest` (ADR-0011).
 - **Verifica dei domini:** manuale. Il `PlatformAdmin` registra il dominio dopo averne verificato il possesso fuori banda. `SiteDomain` conserva chi ha verificato e quando; un host risolve solo se il dominio è registrato, verificato e attivo.
 - **Certificati TLS:** gestiti manualmente a livello di reverse proxy/hosting. L'applicazione non emette né rinnova certificati e non implementa ACME.
