@@ -97,6 +97,7 @@ public static class EstensioniServizi
         servizi.TryAddSingleton<IArchivioTestiStatici, ArchivioTestiStatici>();
         servizi.TryAddScoped<IContestoLingua, ContestoLinguaFisso>();
         servizi.TryAddScoped<ILocalizzatore, Localizzatore>();
+        servizi.TryAddScoped<IServizioGestioneTesti, ServizioGestioneTesti>();
         servizi.AddHostedService<ServizioTestiStatici>();
     }
 

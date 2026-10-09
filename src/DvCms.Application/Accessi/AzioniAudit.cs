@@ -20,5 +20,6 @@ public static class AzioniAudit
     public const string ElevazioneATenantAdmin = "ElevazioneATenantAdmin";
     public const string DisabilitazioneUtenza = "DisabilitazioneUtenza";
     public const string RiabilitazioneUtenza = "RiabilitazioneUtenza";
+    public const string ModificaTestoStatico = "ModificaTestoStatico";
     public const string OperazioneNegata = "OperazioneNegata";
 }

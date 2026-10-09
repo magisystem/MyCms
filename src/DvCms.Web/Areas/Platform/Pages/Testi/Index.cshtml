@@ -1,0 +1,92 @@
+@page "/admin/platform/testi"
+@model DvCms.Web.Areas.Platform.Pages.Testi.IndexModel
+@{
+    ViewData["Titolo"] = _L["Testi"];
+}
+@if (Model.Messaggio is not null)
+{
+    <div class="alert alert-success" role="status">@Model.Messaggio</div>
+}
+@if (Model.ErroreDaMostrare is not null)
+{
+    <div class="alert alert-danger" role="alert">@Model.ErroreDaMostrare</div>
+}
+<div class="card">
+    <div class="card-body">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-md">
+                <label class="form-label" for="Ricerca">@_L["Cerca"]</label>
+                <input class="form-control" id="Ricerca" name="Ricerca" value="@Model.Ricerca" maxlength="200" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label" for="Lingua">@_L["Lingua"]</label>
+                <select class="form-select" id="Lingua" name="Lingua">
+                    <option value="" selected="@string.IsNullOrEmpty(Model.Lingua)">@_L["Tutte"]</option>
+                    <option value="it" selected="@(Model.Lingua == "it")">@_L["Italiano"]</option>
+                    <option value="en" selected="@(Model.Lingua == "en")">@_L["Inglese"]</option>
+                </select>
+            </div>
+            <div class="col-md-auto">
+                <label class="form-check mb-2">
+                    <input type="checkbox" class="form-check-input" name="DaTradurre" value="true" @(Model.DaTradurre ? "checked" : null) />
+                    <span class="form-check-label">@_L["Solo da tradurre"]</span>
+                </label>
+            </div>
+            <div class="col-md-auto"><button type="submit" class="btn btn-primary">@_L["Filtra"]</button></div>
+        </form>
+    </div>
+</div>
+
+<div class="card mt-3">
+    <div class="table-responsive">
+        <table class="table card-table table-vcenter">
+            <thead>
+                <tr>
+                    <th>@_L["Chiave (italiano)"]</th>
+                    <th>@_L["Lingua"]</th>
+                    <th>@_L["Testo"]</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var riga in Model.Risultato.Testi)
+                {
+                    <tr>
+                        <td class="text-secondary">@riga.Chiave</td>
+                        <td>
+                            @riga.CodiceLingua
+                            @if (riga.DaTradurre)
+                            {
+                                <span class="badge bg-orange-lt ms-1">@_L["Da tradurre"]</span>
+                            }
+                        </td>
+                        <td colspan="2">
+                            <form method="post" asp-page-handler="Modifica" class="d-flex gap-2">
+                                <input type="hidden" name="idTesto" value="@riga.Id" />
+                                <input type="hidden" name="Ricerca" value="@Model.Ricerca" />
+                                <input type="hidden" name="Lingua" value="@Model.Lingua" />
+                                <input type="hidden" name="DaTradurre" value="@Model.DaTradurre.ToString().ToLowerInvariant()" />
+                                <input type="hidden" name="Pagina" value="@Model.Risultato.Pagina" />
+                                <textarea class="form-control" name="testo" rows="2" maxlength="4000" required>@riga.Testo</textarea>
+                                <button type="submit" class="btn btn-primary align-self-start">@_L["Salva"]</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="card-footer d-flex align-items-center">
+        <p class="m-0 text-secondary">@Model.Risultato.Totale @_L["testi"] - @_L["pagina"] @Model.Risultato.Pagina / @Model.Risultato.TotalePagine</p>
+        <ul class="pagination m-0 ms-auto">
+            @if (Model.Risultato.Pagina > 1)
+            {
+                <li class="page-item"><a class="page-link" asp-page="Index" asp-route-Ricerca="@Model.Ricerca" asp-route-Lingua="@Model.Lingua" asp-route-DaTradurre="@Model.DaTradurre" asp-route-Pagina="@(Model.Risultato.Pagina - 1)">@_L["Precedente"]</a></li>
+            }
+            @if (Model.Risultato.Pagina < Model.Risultato.TotalePagine)
+            {
+                <li class="page-item"><a class="page-link" asp-page="Index" asp-route-Ricerca="@Model.Ricerca" asp-route-Lingua="@Model.Lingua" asp-route-DaTradurre="@Model.DaTradurre" asp-route-Pagina="@(Model.Risultato.Pagina + 1)">@_L["Successiva"]</a></li>
+            }
+        </ul>
+    </div>
+</div>

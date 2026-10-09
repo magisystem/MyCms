@@ -220,6 +220,26 @@ public partial class PiattaformaWebTest
         Assert.NotEqual(HttpStatusCode.OK, areaPlatform.StatusCode);
     }
 
+    [Fact]
+    public async Task LaSchermataTestiEPerIlSoloPlatformAdminEPermetteDiSalvare()
+    {
+        await using var scenario = await ScenarioWeb.CreaAsync();
+        await scenario.CreaTenantAdminAsync("anna@esempio.it");
+        await scenario.CreaPlatformAdminAsync("platform@esempio.it");
+        var tenantAdmin = scenario.SessioneA();
+        await tenantAdmin.AccediAsync("anna@esempio.it", DatiProva.PasswordProva);
+        var platform = scenario.SessioneB();
+        await platform.AccediAsync("platform@esempio.it", DatiProva.PasswordProva);
+
+        using var negata = await tenantAdmin.GetAsync("/admin/platform/testi");
+        using var negataInScrittura = await tenantAdmin.InviaModuloAsync("/admin", [new("idTesto", Guid.NewGuid().ToString()), new("testo", "x")], "/admin/platform/testi?handler=Modifica");
+        using var elenco = await platform.GetAsync("/admin/platform/testi?Lingua=en&DaTradurre=true");
+
+        Assert.Equal(HttpStatusCode.Forbidden, negata.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, negataInScrittura.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, elenco.StatusCode);
+    }
+
     [GeneratedRegex("id=\"password-temporanea\".*?<code[^>]*>([^<]+)</code>", RegexOptions.Singleline | RegexOptions.CultureInvariant)]
     private static partial Regex PasswordMostrata();
 }
