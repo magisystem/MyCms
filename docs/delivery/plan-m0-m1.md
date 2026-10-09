@@ -2,6 +2,15 @@
 
 Piano di implementazione richiesto da `docs/AI_START_HERE.md`, preparato prima di scrivere codice. Segue `AGENTS.md`, la roadmap e gli ADR. Non contiene stime (vedi `roadmap.md`). Da approvare prima di iniziare.
 
+## Avanzamento
+
+| Voce | Stato |
+|---|---|
+| A-001 Solution e CI | Completata |
+| A-002 SQL Server ed EF Core | Completata (migrazione iniziale vuota; le tabelle arrivano con B-001 e A-009) |
+| A-003 Convenzioni e logging | Completata (`docs/development/convenzioni-codice.md`) |
+| A-009 Localizzatore, A-004 Layout Tabler | Da fare |
+
 ## 1. Stato attuale del repository
 
 Verificato sul branch `claude/dreamy-gates-h43tjs`:

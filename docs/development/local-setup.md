@@ -1,6 +1,6 @@
 # Setup di sviluppo locale
 
-Questo file descrive il target di setup; i comandi precisi vanno completati durante il bootstrap, una volta fissati nomi progetto e tool test.
+Questo file descrive il setup di sviluppo. I comandi indicati come "disponibili" sono già presenti nella solution; il resto descrive il target e si completa man mano che le voci del backlog vengono implementate.
 
 ## Prerequisiti
 
@@ -31,19 +31,51 @@ dotnet format DvCms.sln --verify-no-changes   # controllo di formattazione e sti
 
 I test usano xUnit v3 con Microsoft Testing Platform (impostato in `global.json`, richiesto da .NET 10): `dotnet test` richiede l'opzione `--solution`. Le versioni dei pacchetti NuGet sono centralizzate in `Directory.Packages.props`. La CI (`.github/workflows/ci.yml`) esegue gli stessi passaggi.
 
+## SQL Server in locale (A-002)
+
+Un'istanza SQL Server qualsiasi va bene (Developer, Express o container). Esempio con Docker, solo per sviluppo (la password è un esempio locale):
+
+```bash
+docker run -d --name sqldvcms -e ACCEPT_EULA=Y -e 'MSSQL_SA_PASSWORD=<password-locale-robusta>' \
+  -p 14330:1433 mcr.microsoft.com/mssql/server:2022-latest
+```
+
+**Applicazione.** La stringa di connessione `ConnectionStrings:Predefinita` non sta mai nel repository (`appsettings.json` la lascia vuota e l'applicazione non parte se manca). In sviluppo:
+
+```bash
+dotnet user-secrets set "ConnectionStrings:Predefinita" "Server=localhost,14330;Database=DvCms;User Id=sa;Password=<password-locale>;TrustServerCertificate=True" --project src/DvCms.Web
+# oppure la variabile d'ambiente ConnectionStrings__Predefinita
+```
+
+**Migrazioni.** Si applicano solo con il comando esplicito, mai in automatico all'avvio:
+
+```bash
+dotnet run --project src/DvCms.Web -- migra
+```
+
+La creazione di nuove migrazioni è descritta in [`convenzioni-codice.md`](convenzioni-codice.md).
+
+**Test di integrazione.** Servono un server SQL Server con permesso di creare ed eliminare database; ogni test usa un database temporaneo. Si indica con la variabile d'ambiente `DVCMS_CONNESSIONE_TEST`:
+
+```bash
+export DVCMS_CONNESSIONE_TEST='Server=localhost,14330;User Id=sa;Password=<password-locale>;TrustServerCertificate=True;Encrypt=False'
+dotnet test --solution DvCms.sln --configuration Release
+```
+
+Senza la variabile i test sul database risultano saltati (non passati); con `CI=true` falliscono. La CI di GitHub avvia un SQL Server effimero come service container.
+
 ## Flusso previsto dopo il bootstrap
 
 1. Ripristinare i pacchetti NuGet.
 2. Avviare SQL Server.
 3. Configurare la connection string tramite user-secrets o environment variables.
-4. Applicare le migrazioni EF Core con il comando documentato dalla solution.
+4. Applicare le migrazioni EF Core con `dotnet run --project src/DvCms.Web -- migra`.
 5. Eseguire il seeding del tenant primario e del primo `PlatformAdmin` (ADR-0014): configurazione `Seed:TenantPrimario` e password del `PlatformAdmin` da user-secrets o environment variable, nessuna credenziale predefinita. In `Development` il seeding può creare anche i tenant di test `cms1`/`cms2` da `Seed:TenantSviluppo`.
 6. Avviare `DvCms.Web`.
 7. Eseguire test unitari e d'integrazione.
 8. Per il builder, entrare in `frontend/page-builder`, installare le dipendenze dal lockfile e avviare/buildare l'asset secondo lo script documentato.
 
-Gli agenti non devono inventare comandi finali prima che i file di progetto siano stati creati. Aggiornare questa pagina nello stesso PR del bootstrap.
-
+Gli agenti non devono inventare comandi non ancora implementati (seeding, builder). Aggiornare questa pagina nello stesso PR che li introduce.
 
 Per i dettagli su migrazioni e test, consultare [Database SQL Server](../architecture/database.md).
 

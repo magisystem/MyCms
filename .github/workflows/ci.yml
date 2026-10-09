@@ -17,6 +17,24 @@ jobs:
     name: Build e test
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    # SQL Server effimero per i test di integrazione (ADR-0012). La password serve solo a questo container
+    # temporaneo, raggiungibile soltanto dal job: non è un segreto dell'applicazione.
+    services:
+      sqlserver:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: "Y"
+          MSSQL_SA_PASSWORD: "Ci_DvCms_Effimera_7x!"
+        ports:
+          - 1433:1433
+        options: >-
+          --health-cmd "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P 'Ci_DvCms_Effimera_7x!' -Q 'SELECT 1'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 12
+          --health-start-period 20s
+    env:
+      DVCMS_CONNESSIONE_TEST: "Server=localhost,1433;User Id=sa;Password=Ci_DvCms_Effimera_7x!;TrustServerCertificate=True;Encrypt=False"
     steps:
       # Checkout parziale: la cartella admin-theme (kit grafico, centinaia di MB) non serve alla build.
       - name: Checkout

@@ -27,6 +27,13 @@ dotnet_style_qualification_for_field = false:warning
 dotnet_style_qualification_for_property = false:warning
 dotnet_style_qualification_for_method = false:warning
 
+dotnet_naming_rule.costanti_pascal.symbols = costanti
+dotnet_naming_rule.costanti_pascal.style = pascal_case
+dotnet_naming_rule.costanti_pascal.severity = warning
+dotnet_naming_symbols.costanti.applicable_kinds = field
+dotnet_naming_symbols.costanti.required_modifiers = const
+dotnet_naming_style.pascal_case.capitalization = pascal_case
+
 dotnet_naming_rule.campi_privati_con_trattino.symbols = campi_privati
 dotnet_naming_rule.campi_privati_con_trattino.style = prefisso_trattino
 dotnet_naming_rule.campi_privati_con_trattino.severity = warning
@@ -37,3 +44,7 @@ dotnet_naming_style.prefisso_trattino.capitalization = camel_case
 
 [*.{cshtml,razor}]
 indent_size = 4
+
+# Migrazioni EF Core generate dagli strumenti: non soggette alle regole di stile e agli analyzer.
+[**/Persistenza/Migrazioni/*.cs]
+generated_code = true

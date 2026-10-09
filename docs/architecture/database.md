@@ -9,8 +9,8 @@ PostgreSQL non è supportato e non va introdotto (provider, migrazioni, test o C
 ## Configurazione
 
 - Un solo provider: `Microsoft.EntityFrameworkCore.SqlServer`, con versione allineata alla major di EF Core 10 e fissata in `Directory.Packages.props`.
-- Connection string in `ConnectionStrings:Predefinita` (nome indicativo, da fissare al bootstrap). Segreti fuori dal repository (user-secrets in sviluppo, environment variables o secret manager in produzione).
-- Una sola serie di migrazioni EF Core, con il relativo model snapshot, nel progetto Infrastructure. Ogni PR che modifica lo schema aggiorna il modello, genera la migrazione, la revisiona a mano e verifica che si applichi a un database vuoto.
+- Connection string in `ConnectionStrings:Predefinita`. Segreti fuori dal repository (user-secrets in sviluppo, environment variables o secret manager in produzione).
+- Una sola serie di migrazioni EF Core, con il relativo model snapshot, nel progetto Infrastructure (`Persistenza/Migrazioni`, tabella di storico `StoricoMigrazioni`), applicata con il comando `DvCms.Web migra`. Ogni PR che modifica lo schema aggiorna il modello, genera la migrazione, la revisiona a mano e verifica che si applichi a un database vuoto.
 - Il codice provider-specifico (EF Core SQL Server, migrazioni, eventuale SQL raw) resta in Infrastructure. Domain e Application non dipendono da EF Core né da tipi SQL Server.
 
 ## Nomi delle tabelle
