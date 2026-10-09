@@ -2,7 +2,7 @@
 
 - **Stato:** Accepted (rimangono aperti dettagli elencati in `docs/open-questions.md`)
 - **Data:** 2026-10-09
-- **Aggiornato:** 2026-10-09 (ruolo `Utente` = acquirente registrato; `Guest` per tenant; recupero password; 2FA; ambito di accesso di `TenantAdmin` e `PlatformAdmin`)
+- **Aggiornato:** 2026-10-09 (ruolo `Utente` = acquirente registrato; `Guest` per tenant; recupero password; 2FA; ambito di accesso di `TenantAdmin` e `PlatformAdmin`; account sempre legati a un solo tenant)
 
 ## Contesto
 
@@ -10,14 +10,22 @@ Il progetto è un CMS: la maggior parte dei siti è semplice e non prevede regis
 
 ## Decisione
 
-Usare ASP.NET Core Identity per gli account locali, con tabelle membership esplicite tra account amministrativi e tenant. Centralizzare le policy di autorizzazione nell'application layer.
+Usare ASP.NET Core Identity per gli account locali. Ogni account, tranne il `PlatformAdmin`, appartiene a **un solo tenant** (`TenantId` dell'account). Centralizzare le policy di autorizzazione nell'application layer.
+
+### Appartenenza ai tenant e unicità dell'email
+
+- Un tenant può avere **più `TenantAdmin`** (ad esempio due persone che gestiscono lo stesso sito).
+- Un account `TenantAdmin` o `Utente` appartiene a un solo tenant.
+- L'email è unica **all'interno di un tenant** e può essere ripetuta in tenant diversi: sono account distinti, con credenziali e password distinte. Vale per `TenantAdmin` e `Utente`.
+- Il `PlatformAdmin` è globale (senza `TenantId`); la sua email è unica fra i `PlatformAdmin`.
+- Conseguenza: ovunque si identifichi un account (login, recupero password, registrazione) serve il tenant oltre all'email. L'unicità di nome utente/email di ASP.NET Core Identity va configurata per tenant, non globale.
 
 ### Ruoli
 
 | Ruolo | Ambito | Descrizione |
 |---|---|---|
 | `PlatformAdmin` | Globale (non legato a un tenant) | Entra nell'admin di qualunque tenant e lì lavora **come un `TenantAdmin`** di quel tenant, con in più il menu **Platform** per gestire tenant, siti, domini e utenti `TenantAdmin`. Unico ruolo che crea o eleva `TenantAdmin`. |
-| `TenantAdmin` | Un solo tenant (via membership) | Accede solo al proprio tenant. Amministra il proprio tenant: siti, impostazioni, tema, contenuti, media e (dal modulo e-commerce) catalogo e ordini. Fa tutto il lavoro sui contenuti: non esistono per ora ruoli intermedi (editor/publisher). |
+| `TenantAdmin` | Un solo tenant | Accede solo al proprio tenant; un tenant può averne più di uno. Amministra il proprio tenant: siti, impostazioni, tema, contenuti, media e (dal modulo e-commerce) catalogo e ordini. Fa tutto il lavoro sui contenuti: non esistono per ora ruoli intermedi (editor/publisher). |
 | `Utente` | Un tenant | Acquirente registrato di un sito con e-commerce. Può solo emettere ordini. Non accede all'admin. Non esiste nei siti senza e-commerce. |
 | `Guest` | Un tenant | Visitatore del sito pubblico senza login; vede tutto ciò che è pubblico. |
 
@@ -29,7 +37,7 @@ Usare ASP.NET Core Identity per gli account locali, con tabelle membership espli
 
 - La registrazione è consentita **solo** sui siti con e-commerce attivo (impostazione per sito, disattivata di default). Sugli altri siti non esiste alcuna pagina o endpoint di registrazione.
 - La registrazione crea sempre e soltanto un `Utente`: nessun parametro della richiesta può scegliere il ruolo.
-- L'`Utente` appartiene a un solo tenant: stessa email su tenant diversi corrisponde ad account distinti (assunzione da confermare).
+- L'`Utente` appartiene a un solo tenant: la stessa email su tenant diversi corrisponde ad account distinti.
 - Entra dal sito pubblico del tenant (area cliente). Non ha accesso all'admin né alle API amministrative.
 
 ### Chi può ordinare
@@ -42,8 +50,8 @@ Possono emettere ordini gli account autenticati: `Utente`, `TenantAdmin` e `Plat
 2. Nessun ruolo può assegnare un ruolo superiore al proprio né modificare il proprio ruolo; il `TenantAdmin` non può creare né elevare `TenantAdmin` o `PlatformAdmin`.
 3. La creazione di nuovi `PlatformAdmin` è riservata ai `PlatformAdmin`; il primo viene creato dal comando di bootstrap (ADR-0014).
 4. Non esiste registrazione self-service per `PlatformAdmin` e `TenantAdmin`.
-5. Ogni operazione amministrativa verifica membership, ruolo e risorsa; un ID noto non basta (anti-IDOR).
-6. Il `PlatformAdmin` che entra nell'admin di un tenant opera con un contesto tenant esplicito e con gli stessi poteri di un `TenantAdmin` di quel tenant, più il menu Platform. L'ingresso e le operazioni di piattaforma sono registrati in `AuditLog`.
+5. Ogni operazione amministrativa verifica tenant dell'account, ruolo e risorsa; un ID noto non basta (anti-IDOR).
+6. Il `PlatformAdmin` che entra nell'admin di un tenant opera con un contesto tenant esplicito e con gli stessi poteri di un `TenantAdmin` di quel tenant, più il menu Platform. L'ingresso e le operazioni di piattaforma sono registrati in `AuditLog` con attore e data; non è richiesto inserire un motivo. Non è prevista l'impersonation di altri utenti.
 7. Un `TenantAdmin` non può accedere ad altri tenant né all'area Platform.
 8. Le regole 1–4 e 7 sono applicate lato server e hanno test automatici di non-escalation.
 
@@ -66,7 +74,7 @@ Le email passano dall'outbox (ADR-0010) e dagli adapter di ADR-0015 (Microsoft G
 
 ## Alternative considerate
 
-- Ruoli granulari (Editor, Publisher, StoreManager, SiteAdmin) e permessi per membership: rimandati. Oggi tutto il lavoro sui contenuti è del `TenantAdmin`; si potranno aggiungere ruoli intermedi con un nuovo ADR.
+- Ruoli granulari (Editor, Publisher, StoreManager, SiteAdmin) e permessi: rimandati. Oggi tutto il lavoro sui contenuti è del `TenantAdmin`; si potranno aggiungere ruoli intermedi con un nuovo ADR.
 - Guest come ruolo unico globale: respinto, deve essere sempre legato a un tenant.
 - Guest checkout: escluso per ora.
 - Identity provider esterno obbligatorio dal day one: rimandato finché i requisiti SSO non sono chiari.
@@ -75,5 +83,6 @@ Le email passano dall'outbox (ADR-0010) e dagli adapter di ADR-0015 (Microsoft G
 
 - Per M1–M6 servono solo `PlatformAdmin`, `TenantAdmin` e il principal `Guest`; `Utente` e registrazione arrivano con l'e-commerce (M7).
 - Servono gli adapter email (ADR-0015) già per il recupero password degli account admin.
-- Un account `TenantAdmin` ha una sola membership; il `PlatformAdmin` accede a tutti i tenant senza membership.
-- Gli account `Utente` hanno `TenantId`; gli account amministrativi sono globali con membership.
+- Tutti gli account tranne il `PlatformAdmin` hanno `TenantId`; il `PlatformAdmin` accede a tutti i tenant.
+- Il login e il recupero password devono sapere a quale tenant appartiene l'account (vedi `docs/open-questions.md`).
+- Non serve una tabella di membership multi-tenant; verrà introdotta solo se un giorno un account dovrà lavorare su più tenant (nuovo ADR).

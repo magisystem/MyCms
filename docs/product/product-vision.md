@@ -11,7 +11,7 @@ Realizzare un CMS SaaS multi-tenant in cui un operatore della piattaforma può g
 - **Utente:** acquirente registrato di un sito con e-commerce; può solo emettere ordini. Nei siti senza e-commerce non esiste.
 - **Guest:** visitatore del sito pubblico senza login, sempre legato al proprio tenant; vede tutto ciò che è pubblico. Non può emettere ordini.
 
-Un `TenantAdmin` appartiene a un solo tenant; il `PlatformAdmin` accede a tutti. I clienti non si registrano da soli: gli account amministrativi sono creati dagli operatori (ADR-0014); solo gli acquirenti si registrano, e solo nei siti con e-commerce.
+Un `TenantAdmin` appartiene a un solo tenant (un tenant può averne più di uno); il `PlatformAdmin` accede a tutti. I clienti non si registrano da soli: gli account amministrativi sono creati dagli operatori (ADR-0014); solo gli acquirenti si registrano, e solo nei siti con e-commerce.
 
 ## Principi di prodotto
 

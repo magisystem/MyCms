@@ -11,8 +11,16 @@ Il progetto deve inviare email: recupero password (OTP e link monouso, ADR-0011)
 
 - L'applicazione dipende da un contratto unico (ad esempio `IEmailSender`, definito in `DvCms.Application`) e non conosce il canale di invio.
 - Sono previsti quattro adapter in `DvCms.Infrastructure`: **Microsoft Graph API**, **Gmail API**, **SendGrid**, **SMTP**.
-- Il canale attivo si sceglie con una chiave di configurazione esplicita (ad esempio `Email:Provider` = `Smtp`, `Graph`, `Gmail`, `SendGrid`). Un valore non riconosciuto fa fallire l'avvio, senza fallback silenzioso.
-- Credenziali e segreti (client secret, API key, password SMTP, credenziali OAuth) restano fuori dal repository: user-secrets in sviluppo, environment variables o secret manager in produzione.
+- **Il canale è una proprietà del tenant.** Il tenant ha un campo `EmailProvider` (`Smtp`, `Graph`, `Gmail`, `SendGrid`) e le impostazioni del canale scelto (`TenantEmailSettings`). Non esiste un ordine di priorità fra i canali: ogni tenant usa quello configurato.
+- La configurazione si modifica solo dalla schermata di configurazione del tenant nel menu "Platform" (solo `PlatformAdmin`). La UI mostra un selettore del tipo di provider e, in base alla scelta, **solo i campi necessari** a quel provider. Campi indicativi (da affinare in implementazione):
+  - SMTP: host, porta, modalità TLS, utente, password, indirizzo e nome mittente.
+  - Microsoft Graph: tenant Microsoft, client id, client secret, casella mittente.
+  - Gmail API: credenziali OAuth o account di servizio, utente mittente.
+  - SendGrid: API key, indirizzo e nome mittente.
+- Validazione lato server dei campi in base al provider scelto; un provider non riconosciuto o impostazioni incomplete sono rifiutati al salvataggio. La schermata offre un invio di prova.
+- **Segreti nel database:** password, API key e client secret dei tenant sono cifrati a riposo (ad esempio con ASP.NET Core Data Protection, con chiavi persistite e incluse nei backup), sono in sola scrittura nella UI (mai mostrati di nuovo, solo sostituibili) e non compaiono mai nei log. Restano fuori dal repository.
+- L'invio avviene nel worker: il messaggio outbox contiene il `TenantId`, e il worker carica le impostazioni di quel tenant. Un tenant senza configurazione valida non invia; l'errore è visibile ai `PlatformAdmin`.
+- Per i messaggi senza tenant (account `PlatformAdmin`, ad esempio recupero password) serve una configurazione di piattaforma. Assunzione da confermare: impostazioni `Email:*` in appsettings/segreti di ambiente, con la stessa struttura delle impostazioni di tenant.
 - Le email partono dall'outbox (ADR-0010): l'invio avviene nel worker, con retry e idempotenza. Mai nella richiesta web.
 - Le due email del recupero password (codice OTP e link monouso) sono messaggi distinti, inviati in momenti diversi.
 - I template email sono parte del codice (server-side), non modificabili dai tenant. Nessun segreto, OTP o token in chiaro nei log.
@@ -20,15 +28,17 @@ Il progetto deve inviare email: recupero password (OTP e link monouso, ADR-0011)
 
 ## Ordine di implementazione
 
-Proposta: **SMTP** per primo (sviluppo con un catcher locale), poi gli altri tre in ordine da stabilire. Il contratto e la selezione da configurazione vanno però pronti dall'inizio, per evitare di legare il codice al primo canale.
+Non c'è una priorità fra i canali per l'utilizzo. Per lo sviluppo si parte da SMTP (comodo con un catcher locale) e si aggiungono Graph, Gmail e SendGrid; contratto, selezione per tenant e UI dinamica vanno pronti dall'inizio, per non legare il codice al primo canale.
 
 ## Alternative considerate
 
 - Un solo provider: non soddisfa il requisito.
+- Configurazione globale per installazione: respinta, ogni tenant può usare un canale diverso.
 - Invio sincrono dalla richiesta: perde messaggi in caso di errore.
 
 ## Conseguenze
 
 - Ogni SDK o libreria aggiunta (Microsoft Graph, Google API, SendGrid, libreria SMTP) rispetta la regola 11 di `AGENTS.md`: motivazione, licenza, manutenzione, limitata a `DvCms.Infrastructure`. In alternativa si valuta `HttpClient` diretto.
 - Ogni canale richiede configurazione esterna manuale (registrazione app in Microsoft Entra, progetto/OAuth Google, account SendGrid, server SMTP) e dominio mittente con SPF/DKIM/DMARC; queste attività sono parte del runbook (`docs/architecture/operations.md`).
-- Resta aperto se la configurazione dell'invio sia unica per tutta l'installazione o possa essere diversa per tenant (mittente per tenant).
+- Ogni tenant ha le proprie credenziali e il proprio mittente: il `PlatformAdmin` deve configurarle per ogni tenant, con SPF/DKIM/DMARC del dominio usato.
+- Servono la cifratura dei segreti nel database e la gestione delle chiavi di cifratura nel backup/restore.

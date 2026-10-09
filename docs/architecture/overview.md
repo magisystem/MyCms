@@ -53,7 +53,7 @@ Le dipendenze fisiche tra assembly possono essere semplificate all'inizio. I con
 
 ### Modifica e pubblicazione
 
-1. Autenticare l'utente e verificare ruolo e membership.
+1. Autenticare l'utente e verificare ruolo e tenant dell'account.
 2. Caricare draft e policy di modifica.
 3. Salvare con controllo di concorrenza.
 4. Validare lato server il progetto/dati aggiornati.

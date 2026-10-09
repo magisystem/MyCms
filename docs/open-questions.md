@@ -15,7 +15,9 @@ Le scelte sotto non sono definite completamente. Gli agenti devono evitare di in
 - Ruoli `PlatformAdmin`, `TenantAdmin`, `Utente` (acquirente), `Guest` per tenant (ADR-0011). Il `TenantAdmin` svolge tutto il lavoro sui contenuti; nessun ruolo editor/publisher per ora.
 - Registrazione solo per gli acquirenti dei siti con e-commerce; nessun guest checkout; possono ordinare `Utente`, `TenantAdmin` e `PlatformAdmin`.
 - Recupero password: prima email con codice OTP, seconda email con link monouso (ADR-0011). Two-factor authentication prevista, per ultima, non bloccante per il go-live.
-- Email: adapter Microsoft Graph, Gmail API, SendGrid e SMTP dietro un contratto unico (ADR-0015).
+- Email: adapter Microsoft Graph, Gmail API, SendGrid e SMTP dietro un contratto unico; provider scelto per tenant dal `PlatformAdmin` con UI dinamica; nessuna priorità fra i canali (ADR-0015).
+- Un tenant può avere più `TenantAdmin`; un account `TenantAdmin` o `Utente` appartiene a un solo tenant; la stessa email vale in un tenant e può ripetersi in tenant diversi (ADR-0011).
+- Limiti del recupero password confermati. Nessun motivo obbligatorio per l'ingresso del `PlatformAdmin` nei tenant, nessuna impersonation.
 - `TenantAdmin` accede solo al proprio tenant; `PlatformAdmin` entra ovunque con i poteri di un `TenantAdmin` più il menu Platform. Un `TenantAdmin` ordina solo nel proprio tenant, il `PlatformAdmin` ovunque.
 - `Guest` per tenant senza impostazioni: vede tutto ciò che è pubblico; limitare la visibilità è un'evoluzione futura.
 - Duplicati fra `admin-theme/` e `wwwroot` accettati; li ripulirà il committente.
@@ -26,16 +28,15 @@ Le scelte sotto non sono definite completamente. Gli agenti devono evitare di in
 ## Identity
 
 - Solo account locali o SSO/OIDC richiesto per clienti enterprise?
-- Policy password (lunghezza, complessità, blocco account) e durate/limiti del recupero password: i valori iniziali proposti sono in ADR-0011 e vanno confermati.
-- Account `Utente`: appartenenza a un solo tenant (stessa email su due tenant = due account): da confermare.
-- Un `TenantAdmin` ha un solo tenant (dedotto dalla risposta "accede solo al proprio tenant"): da confermare. Se serve gestire più tenant con lo stesso account, va rivisto.
-- Il `PlatformAdmin` entra con il proprio account e l'ingresso è auditato (ADR-0014): serve anche un motivo/approvazione o un'impersonation di altri utenti?
+- Policy password (lunghezza, complessità, blocco account). I limiti del recupero password sono quelli di ADR-0011.
+- **Come si identifica il tenant al login degli amministratori.** La stessa email può esistere in più tenant (ADR-0011), quindi l'email da sola non basta. Per gli `Utente` il tenant è quello dell'host del sito pubblico. Per i `TenantAdmin` sull'admin a dominio centrale serve un'indicazione: un campo "tenant" nel login, oppure un indirizzo di accesso per tenant, oppure l'accesso dall'host del sito stesso. Lo stesso vale per il recupero password.
+- Il `PlatformAdmin` ha un login senza tenant: il form deve permetterlo.
 
 ## Email
 
-- Ordine di implementazione degli adapter oltre a SMTP (Graph, Gmail, SendGrid) e quale servirà per primo in produzione.
-- L'invio è configurato una sola volta per l'installazione o può avere mittente e canale diversi per tenant?
-- Indirizzo e dominio mittente (con SPF/DKIM/DMARC).
+- Per i messaggi senza tenant (ad esempio recupero password del `PlatformAdmin`) si usa una configurazione di piattaforma negli appsettings/segreti di ambiente (assunzione in ADR-0015): confermare.
+- Gestione delle chiavi di cifratura dei segreti (Data Protection) in produzione: dove vengono conservate e come entrano nel backup.
+- Indirizzo e dominio mittente di ogni tenant (con SPF/DKIM/DMARC): attività manuale del `PlatformAdmin`.
 
 ## Dati e hosting
 

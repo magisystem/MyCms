@@ -31,7 +31,7 @@ Tenant, domini e certificati sono gestiti dagli operatori (ADR-0014). Il runbook
 
 ## Email
 
-Il canale di invio (Microsoft Graph, Gmail, SendGrid o SMTP, ADR-0015) si configura con `Email:Provider` e segreti fuori dal repository. Prima del primo invio in produzione, a mano: configurare l'app/account del canale scelto (registrazione app in Microsoft Entra, progetto OAuth Google, account SendGrid o server SMTP), il dominio mittente con SPF, DKIM e DMARC, e verificare la consegna; monitorare errori e code di invio dal worker.
+Il canale di invio (Microsoft Graph, Gmail, SendGrid o SMTP, ADR-0015) è configurato per tenant dal `PlatformAdmin` nel menu "Platform"; i segreti sono cifrati nel database e le chiavi di cifratura (Data Protection) sono persistite e incluse nei backup. Per i messaggi senza tenant c'è una configurazione di piattaforma negli appsettings/segreti di ambiente. Prima del primo invio in produzione, a mano: per ogni tenant, configurare l'app/account del canale scelto (registrazione app in Microsoft Entra, progetto OAuth Google, account SendGrid o server SMTP), il dominio mittente con SPF, DKIM e DMARC, e verificare la consegna; monitorare errori e code di invio dal worker.
 
 ## Background work e outbox
 

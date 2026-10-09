@@ -88,7 +88,7 @@ La policy non è solo UI: il server deve convalidare il risultato salvato/pubbli
 ## Autosave, revisioni e concorrenza
 
 - Il client può fare debounce dell'autosave; il server resta autorità.
-- Tutti i salvataggi validano tenant, membership, pagina, policy template e payload.
+- Tutti i salvataggi validano tenant, ruolo, pagina, policy template e payload.
 - Usare token di concorrenza/ETag per evitare sovrascritture silenziose.
 - Separare draft e published revision.
 - Tracciare errori di migrazione/conversione senza perdere il progetto originale.

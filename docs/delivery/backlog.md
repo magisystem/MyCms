@@ -14,7 +14,10 @@ Le voci sono candidate a issue GitHub. Ogni issue deve essere piccola, verificab
 **Accettazione:** nullable abilitato, logging strutturato, correlation ID e convenzioni UTC documentate.
 
 ### A-005: Contratto email e adapter
-**Accettazione:** contratto unico `IEmailSender` in Application; adapter SMTP (per primo) selezionabile da `Email:Provider`; valore sconosciuto fa fallire l'avvio; invio dal worker tramite outbox; fake nei test; nessun segreto nel repository. Gli adapter Microsoft Graph, Gmail API e SendGrid sono voci successive (A-006, A-007, A-008) con test di contratto comune.
+**Accettazione:** contratto unico `IEmailSender` in Application; selezione del provider dal tenant (`EmailProvider`); adapter SMTP come primo; provider sconosciuto o impostazioni incomplete rifiutati; invio dal worker tramite outbox con `TenantId` nel messaggio; fake nei test; nessun segreto nel repository. Gli adapter Microsoft Graph, Gmail API e SendGrid sono voci successive (A-006, A-007, A-008) con test di contratto comune.
+
+### B-009: Configurazione email del tenant (menu Platform)
+**Accettazione:** nella schermata di configurazione del tenant (solo `PlatformAdmin`) un selettore del provider (`Smtp`, `Graph`, `Gmail`, `SendGrid`) mostra solo i campi del provider scelto; validazione lato server; segreti cifrati nel database, in sola scrittura nella UI e mai nei log; invio di prova; un tenant senza configurazione valida non invia e l'errore è visibile ai `PlatformAdmin`; configurazione di piattaforma per i messaggi senza tenant; test.
 
 ### A-006: Adapter Microsoft Graph
 **Accettazione:** invio tramite Graph con credenziali da configurazione; test con fake; documentate le attività manuali (registrazione app, permessi).
@@ -36,8 +39,8 @@ Le voci sono candidate a issue GitHub. Ogni issue deve essere piccola, verificab
 ### B-002: Risoluzione host
 **Accettazione:** solo host registrati risolvono; host sconosciuti danno una risposta controllata; proxy forwarded configurati esplicitamente.
 
-### B-003: Identity e membership
-**Accettazione:** login/logout; membership tenant con ruolo `TenantAdmin`; flag `PlatformAdmin`; principal `Guest` legato al tenant risolto dall'host (profilo `TenantGuestProfile` creato con il tenant); un `TenantAdmin` accede solo al proprio tenant, il `PlatformAdmin` a tutti con i poteri di un `TenantAdmin`; ogni admin request verifica ruolo e membership della risorsa; nessuna registrazione per account amministrativi.
+### B-003: Identity e account per tenant
+**Accettazione:** login/logout; ogni account `TenantAdmin` appartiene a un solo tenant e un tenant può averne più di uno; flag `PlatformAdmin` globale; email unica per tenant e ripetibile fra tenant (test con la stessa email su due tenant); principal `Guest` legato al tenant risolto dall'host (profilo `TenantGuestProfile` creato con il tenant); un `TenantAdmin` accede solo al proprio tenant, il `PlatformAdmin` a tutti con i poteri di un `TenantAdmin`; ogni admin request verifica ruolo e tenant dell'account rispetto alla risorsa; nessuna registrazione per account amministrativi.
 
 ### B-005: Bootstrap del primo PlatformAdmin
 **Accettazione:** comando documentato che crea il primo `PlatformAdmin` senza credenziali predefinite; rifiuta l'esecuzione se esiste già un `PlatformAdmin` salvo opzione esplicita; test.

@@ -6,8 +6,8 @@ La sicurezza è un requisito di progetto, con particolare attenzione a isolament
 
 - Usare ASP.NET Core Identity e cookie sicuri per l'admin. Nessuna registrazione self-service per account amministrativi; la registrazione degli acquirenti esiste solo nei siti con e-commerce (ADR-0011, ADR-0014).
 - Il `TenantAdmin` accede solo al proprio tenant; il `PlatformAdmin` a tutti, con i poteri del `TenantAdmin` più il menu Platform.
-- Autorizzare ogni operazione in base a identità, membership tenant/site, ruolo e risorsa.
-- Ruoli: `PlatformAdmin` (globale), `TenantAdmin` (per membership), `Utente` (acquirente di un tenant, solo ordini), `Guest` (anonimo, sempre vincolato a un tenant).
+- Autorizzare ogni operazione in base a identità, tenant dell'account, sito, ruolo e risorsa.
+- Ruoli: `PlatformAdmin` (globale), `TenantAdmin` (un solo tenant, più `TenantAdmin` per tenant), `Utente` (acquirente di un tenant, solo ordini), `Guest` (anonimo, sempre vincolato a un tenant).
 - Solo il `PlatformAdmin` crea o eleva `TenantAdmin`; nessun ruolo assegna un ruolo superiore al proprio né modifica il proprio. La registrazione crea solo `Utente`; il ruolo non è mai preso dalla richiesta. Controllo lato server con test di non-escalation.
 - Il primo `PlatformAdmin` si crea con un comando di bootstrap, senza credenziali predefinite.
 - Ingresso del `PlatformAdmin` nell'admin di un tenant e azioni del menu "Platform" sono registrati in `AuditLog`.
@@ -20,7 +20,7 @@ La sicurezza è un requisito di progetto, con particolare attenzione a isolament
 
 ## Dati tenant-scoped
 
-- Tenant context derivato da host/account membership, non dal payload.
+- Tenant context derivato da host e dal tenant dell'account, non dal payload.
 - Validazione tenant sia a livello application sia persistence.
 - Foreign key composite e test cross-tenant.
 - Accessi di supporto cross-tenant espliciti, privilegiati e auditati.
@@ -62,7 +62,7 @@ La sicurezza è un requisito di progetto, con particolare attenzione a isolament
 
 ## Email
 
-L'invio passa da adapter intercambiabili (Microsoft Graph, Gmail, SendGrid, SMTP) via outbox (ADR-0015). Segreti dei canali fuori dal repository; OTP, token e link non vanno nei log; mittente con SPF/DKIM/DMARC; template email non modificabili dai tenant.
+L'invio passa da adapter intercambiabili (Microsoft Graph, Gmail, SendGrid, SMTP) via outbox (ADR-0015). Impostazioni e segreti dei canali sono per tenant, cifrati nel database, in sola scrittura nella UI e fuori dal repository e dai log; OTP, token e link non vanno nei log; mittente con SPF/DKIM/DMARC; template email non modificabili dai tenant.
 
 ## Privacy e audit
 

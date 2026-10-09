@@ -13,12 +13,12 @@ Database SQL Server condiviso, tabelle condivise e isolamento logico per `Tenant
 5. Rendere il `TenantContext` request-scoped e non modificabile dall'utente della richiesta.
 6. Per job/background work, includere tenant/site esplicitamente nel messaggio e verificare il contesto prima dell'esecuzione.
 
-L'admin su un dominio centrale serve più tenant: il `TenantAdmin` opera solo sul tenant della sua membership; il `PlatformAdmin` può selezionare qualunque tenant. In ogni caso il server verifica ruolo e membership (o il ruolo `PlatformAdmin`): la selezione UI non è autorizzazione. Il dominio centrale dell'admin è configurato esplicitamente e non è un host di sito pubblico.
+L'admin su un dominio centrale serve più tenant: il `TenantAdmin` opera solo sul tenant del proprio account; il `PlatformAdmin` può selezionare qualunque tenant. In ogni caso il server verifica ruolo e tenant dell'account (o il ruolo `PlatformAdmin`): la selezione UI non è autorizzazione. Il dominio centrale dell'admin è configurato esplicitamente e non è un host di sito pubblico.
 
 ## Difesa a strati
 
 - Tenant context centrale e obbligatorio per servizi tenant-scoped.
-- Policy di autorizzazione membership/ruolo.
+- Policy di autorizzazione tenant dell'account/ruolo.
 - Filtri globali EF Core dove appropriati, con attenzione a query amministrative e bypass.
 - Foreign key e indici univoci compositi per prevenire relazioni cross-tenant.
 - Valutare Row-Level Security nativa di SQL Server solo come difesa aggiuntiva, con policy e test dedicati; non è l'unico controllo.
@@ -31,7 +31,7 @@ La gestione di tenant, siti, domini e utenti `TenantAdmin` avviene nel menu "Pla
 
 Il `Guest` è sempre legato al tenant risolto dall'host; cookie, token di anteprima e dati del Guest non sono condivisi fra tenant. Gli account `Utente` appartengono a un solo tenant.
 
-Le operazioni cross-tenant devono essere esposte tramite casi d'uso privilegiati e auditabili; non devono dipendere da un `IgnoreQueryFilters()` generico sparso nel codice. Gli endpoint di supporto devono verificare un ruolo di piattaforma esplicito e registrare motivo e attore.
+Le operazioni cross-tenant devono essere esposte tramite casi d'uso privilegiati e auditabili; non devono dipendere da un `IgnoreQueryFilters()` generico sparso nel codice. Gli endpoint di supporto devono verificare un ruolo di piattaforma esplicito e registrare attore e data (nessun motivo obbligatorio).
 
 ## Superfici da isolare
 

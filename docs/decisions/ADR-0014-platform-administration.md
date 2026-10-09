@@ -19,7 +19,7 @@ I clienti non si registrano da soli: tenant, siti e account amministrativi sono 
 - Alla creazione di un tenant si crea anche il suo profilo `Guest` (ADR-0011).
 - **Verifica dei domini:** manuale. Il `PlatformAdmin` registra il dominio dopo averne verificato il possesso fuori banda. `SiteDomain` conserva chi ha verificato e quando; un host risolve solo se il dominio è registrato, verificato e attivo.
 - **Certificati TLS:** gestiti manualmente a livello di reverse proxy/hosting. L'applicazione non emette né rinnova certificati e non implementa ACME.
-- Ogni operazione del menu "Platform" (creazione/sospensione tenant, domini, utenti, elevazione ruoli) viene registrata in `AuditLog` con attore e motivo.
+- Ogni operazione del menu "Platform" (creazione/sospensione tenant, domini, utenti, elevazione ruoli) viene registrata in `AuditLog` con attore e data. Non è richiesto un motivo e non esiste impersonation di altri utenti.
 
 ## Alternative considerate
 

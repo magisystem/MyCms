@@ -4,7 +4,7 @@
 - **Site:** sito web di un tenant.
 - **Domain:** host registrato e verificato manualmente, associato a un sito.
 - **PlatformAdmin:** ruolo globale dell'operatore della piattaforma; entra in qualunque tenant come un `TenantAdmin` e in più vede il menu "Platform"; unico a creare o elevare `TenantAdmin`.
-- **TenantAdmin:** amministratore di un tenant (ruolo della membership).
+- **TenantAdmin:** amministratore di un solo tenant; un tenant può avere più `TenantAdmin`.
 - **Utente:** acquirente registrato di un tenant con e-commerce; può solo emettere ordini.
 - **Guest:** visitatore anonimo del sito pubblico, vincolato a un tenant (un profilo Guest per tenant).
 - **DvCms:** nome del progetto; prefisso di solution, namespace e sotto-progetti.

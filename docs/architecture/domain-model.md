@@ -7,11 +7,11 @@ Questo è il modello logico iniziale; i nomi e i tipi definitivi vanno tradotti 
 - `Tenant`: cliente/organizzazione contrattuale della piattaforma.
 - `Site`: sito appartenente a un tenant. Un tenant può avere più siti.
 - `SiteDomain`: host registrato, normalizzato e associato a un sito, con `VerifiedAtUtc`, `VerifiedByUserId` e stato attivo/disattivo. La verifica è manuale (ADR-0014).
-- `User`: account (ASP.NET Core Identity). Gli account amministrativi sono globali con flag `IsPlatformAdmin`; gli account `Utente` (acquirenti) hanno `TenantId`.
-- `TenantMembership`: membership di un account `TenantAdmin` nel proprio tenant (un solo tenant per account; vincolo univoco su `UserId`). Il `PlatformAdmin` non ha membership: accede a tutti i tenant.
+- `User`: account (ASP.NET Core Identity). Il `PlatformAdmin` è globale (`IsPlatformAdmin`, senza `TenantId`); `TenantAdmin` e `Utente` hanno `TenantId` e appartengono a un solo tenant. Un tenant può avere più `TenantAdmin`. Indice univoco su `(TenantId, NormalizedEmail)`: la stessa email può esistere in tenant diversi. L'unicità di UserName/email di Identity va configurata per tenant, tenendo conto che in SQL Server un indice univoco considera uguali i NULL (nessun duplicato fra i `PlatformAdmin`).
+- `TenantEmailSettings`: `EmailProvider` del tenant (`Smtp`, `Graph`, `Gmail`, `SendGrid`) e impostazioni del canale scelto; segreti cifrati (ADR-0015).
 - `TenantGuestProfile`: profilo del `Guest` del tenant, creato insieme al tenant, senza impostazioni: il Guest vede tutto il contenuto pubblicato.
 - `Site.CustomerRegistrationEnabled`: abilita la registrazione degli acquirenti; vero solo se l'e-commerce è attivo (default falso).
-- `PasswordRecoveryRequest`: richiesta di recupero con hash dell'OTP, tentativi, scadenza, hash del token del link monouso (emesso solo dopo l'OTP corretto) e stato.
+- `PasswordRecoveryRequest` (con `TenantId`): richiesta di recupero con hash dell'OTP, tentativi, scadenza, hash del token del link monouso (emesso solo dopo l'OTP corretto) e stato.
 
 Creare o elevare un `TenantAdmin` è riservato al `PlatformAdmin` (ADR-0011).
 

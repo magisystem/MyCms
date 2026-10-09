@@ -16,7 +16,7 @@ Stato: `Proposed`, `Accepted`, `Superseded`, `Deprecated`.
 - [ADR-0008 — Rendering server-side e pubblicazione](ADR-0008-server-rendering-and-publishing.md)
 - [ADR-0009 — E-commerce come modulo interno](ADR-0009-commerce-module.md)
 - [ADR-0010 — Outbox e worker](ADR-0010-outbox-worker.md)
-- [ADR-0011 — Identity, ruoli e membership](ADR-0011-identity-and-membership.md)
+- [ADR-0011 — Identity e ruoli](ADR-0011-identity-and-membership.md)
 - [ADR-0012 — SQL Server come unico database](ADR-0012-sql-server-only.md)
 - [ADR-0013 — Tabler e Tabler Icons per l'admin](ADR-0013-tabler-admin-ui.md)
 - [ADR-0014 — Amministrazione di piattaforma, domini e certificati manuali](ADR-0014-platform-administration.md)

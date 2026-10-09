@@ -27,8 +27,8 @@ Implementare un CMS SaaS multi-tenant in C#/.NET, con rendering server-side Razo
 15. Verifica dei domini e certificati TLS sono manuali (ADR-0014): non implementare ACME né verifica DNS automatica.
 16. Il nome del progetto è **DvCms**: solution `DvCms.sln`, namespace e progetti con prefisso `DvCms.` (es. `DvCms.Web`, `DvCms.Domain`). Codice e identificatori in inglese, documentazione in italiano.
 17. Recupero password: prima email con codice OTP, seconda email distinta con link monouso (ADR-0011). La two-factor authentication è prevista ma va implementata per ultima, non è bloccante per il go-live e non va anticipata.
-18. Le email si inviano solo tramite il contratto unico e l'outbox, con adapter Microsoft Graph, Gmail API, SendGrid e SMTP scelti da configurazione (ADR-0015).
-19. Il `TenantAdmin` accede solo al proprio tenant; il `PlatformAdmin` entra in qualunque tenant con i poteri di un `TenantAdmin` più il menu Platform.
+18. Le email si inviano solo tramite il contratto unico e l'outbox, con adapter Microsoft Graph, Gmail API, SendGrid e SMTP. Il provider è un campo del tenant, configurato dal `PlatformAdmin` con una UI che mostra solo i campi del provider scelto; i segreti sono cifrati nel database (ADR-0015).
+19. Un tenant può avere più `TenantAdmin`, ma ogni account `TenantAdmin` o `Utente` appartiene a un solo tenant; la stessa email può esistere su tenant diversi come account distinti. Il `TenantAdmin` accede solo al proprio tenant; il `PlatformAdmin` entra in qualunque tenant con i poteri di un `TenantAdmin` più il menu Platform.
 
 ## Processo di lavoro richiesto
 
