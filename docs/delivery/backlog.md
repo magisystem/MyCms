@@ -37,13 +37,13 @@ Le voci sono candidate a issue GitHub. Ogni issue deve essere piccola, verificab
 **Accettazione:** vincoli e relazioni impediscono domini duplicati; tenant e site hanno status; unit/integration test presenti.
 
 ### B-002: Risoluzione host
-**Accettazione:** solo host registrati risolvono; host sconosciuti danno una risposta controllata; proxy forwarded configurati esplicitamente; il `TenantId` deriva solo dall'host e nessun valore del client lo sostituisce.
+**Accettazione:** solo host registrati risolvono; host sconosciuti danno una risposta controllata; proxy forwarded configurati esplicitamente; il `TenantId` deriva solo dall'host e nessun valore del client lo sostituisce; la porta è ignorata; `localhost` risolve il tenant di gestione solo in ambiente `Development` (test che in Production non risolve).
 
 ### B-003: Identity e account per tenant
 **Accettazione:** login/logout; ogni account `TenantAdmin` appartiene a un solo tenant e un tenant può averne più di uno; flag `PlatformAdmin` globale; email unica per tenant e ripetibile fra tenant (test con la stessa email su due tenant); principal `Guest` legato al tenant risolto dall'host (profilo `TenantGuestProfile` creato con il tenant); un `TenantAdmin` accede solo al proprio tenant, il `PlatformAdmin` a tutti con i poteri di un `TenantAdmin`; l'account è cercato solo nel tenant dell'host e un `TenantAdmin` che accede dall'host di un altro tenant fallisce con l'errore delle credenziali errate (test); il `PlatformAdmin` accede dall'host di qualunque tenant; schemi/cookie di autenticazione distinti per admin e area cliente; ogni admin request verifica ruolo e tenant dell'account rispetto alla risorsa; nessuna registrazione per account amministrativi.
 
 ### B-005: Bootstrap del primo PlatformAdmin e del tenant di gestione
-**Accettazione:** comando documentato che crea il primo `PlatformAdmin` senza credenziali predefinite e il tenant di gestione dell'operatore con il suo dominio (parametro del comando); rifiuta l'esecuzione se esiste già un `PlatformAdmin` salvo opzione esplicita; il `PlatformAdmin` può poi accedere dal dominio del tenant di gestione e creare altri tenant; nessuna funzione di reset password (gestione manuale dell'operatore); test.
+**Accettazione:** comando documentato che crea il primo `PlatformAdmin` senza credenziali predefinite e il tenant di gestione dell'operatore con il suo dominio (parametro del comando; `cms.davidemartelli.dev`) e, in sviluppo, l'alias `localhost`; rifiuta l'esecuzione se esiste già un `PlatformAdmin` salvo opzione esplicita; il `PlatformAdmin` può poi accedere dal dominio del tenant di gestione e creare altri tenant; nessuna funzione di reset password (gestione manuale dell'operatore); test.
 
 ### B-006: Menu "Platform" e gestione tenant
 **Accettazione:** il `PlatformAdmin` apre l'admin di qualunque tenant e vede il menu "Platform" (area Razor protetta lato server, non solo nascosta); CRUD tenant, siti e domini (verifica manuale: chi e quando); sospensione/riattivazione tenant; ingresso in un tenant e operazioni registrati in `AuditLog`; gli altri ruoli ricevono 403/404.

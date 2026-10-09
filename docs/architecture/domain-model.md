@@ -25,7 +25,7 @@ Creare o elevare un `TenantAdmin` è riservato al `PlatformAdmin` (ADR-0011).
 - `LatestDraftRevisionId`, `PublishedRevisionId`
 - `CreatedAtUtc`, `UpdatedAtUtc`, `ConcurrencyToken` (`rowversion`)
 
-Slug univoco all'interno del sito e della lingua, quando applicabile. In SQL Server i NULL in un indice univoco sono considerati uguali: se `Locale` è nullable scegliere esplicitamente colonna non nullable, sentinella o indice filtrato. `Status` e `PublishedRevisionId` devono restare coerenti: definire gli stati (es. `Draft`, `Published`, `Unpublished`) e il caso d'uso di unpublish. Cambiare slug di una pagina pubblicata deve passare da un caso d'uso che gestisce redirect/canonical.
+Slug riservati: `admin` (area di amministrazione, `/admin`) e i percorsi degli asset statici (es. `lib`) non sono utilizzabili come slug di pagina e vanno rifiutati alla creazione. Slug univoco all'interno del sito e della lingua, quando applicabile. In SQL Server i NULL in un indice univoco sono considerati uguali: se `Locale` è nullable scegliere esplicitamente colonna non nullable, sentinella o indice filtrato. `Status` e `PublishedRevisionId` devono restare coerenti: definire gli stati (es. `Draft`, `Published`, `Unpublished`) e il caso d'uso di unpublish. Cambiare slug di una pagina pubblicata deve passare da un caso d'uso che gestisce redirect/canonical.
 
 ### `PageRevision`
 

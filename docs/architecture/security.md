@@ -47,7 +47,7 @@ La sicurezza è un requisito di progetto, con particolare attenzione a isolament
 
 ## Web e API
 
-- HTTPS obbligatorio in produzione.
+- HTTPS obbligatorio in produzione, terminato dall'hosting sul reverse proxy; l'app dietro il proxy accetta gli header forwarded solo dai proxy configurati e i cookie di autenticazione sono `Secure` (la politica meno restrittiva è ammessa solo in sviluppo, dove si usa solo HTTP).
 - Rate limiting sugli endpoint sensibili.
 - Protezione dei proxy forwarded configurando proxy noti.
 - Validazione dei redirect e delle URL esterne per prevenire open redirect/SSRF.

@@ -7,13 +7,13 @@ Database SQL Server condiviso, tabelle condivise e isolamento logico per `Tenant
 ## Risoluzione host
 
 1. Accettare solo host normalizzati e registrati in `SiteDomains`, verificati e attivi. La registrazione e la verifica sono manuali, a cura del `PlatformAdmin` (ADR-0014).
-2. Normalizzare case, porta e formato del nome DNS secondo policy; non fidarsi di header forwarded inviati da client non attendibili.
+2. Normalizzare case, porta e formato del nome DNS secondo policy (la porta è ignorata; in sviluppo `localhost` su qualunque porta risolve sul tenant di gestione, solo se l'ambiente è `Development`, ADR-0014); non fidarsi di header forwarded inviati da client non attendibili.
 3. Configurare esplicitamente proxy attendibili prima di utilizzare `X-Forwarded-Host` o header equivalenti.
 4. Risolvere host → `SiteId` → `TenantId` tramite fonte dati attendibile.
 5. Rendere il `TenantContext` request-scoped e non modificabile dall'utente della richiesta.
 6. Per job/background work, includere tenant/site esplicitamente nel messaggio e verificare il contesto prima dell'esecuzione.
 
-L'admin di ogni tenant si raggiunge dall'host del tenant stesso (percorso riservato, ad esempio `/admin`); non esiste un dominio centrale condiviso. Il tenant è deciso solo dall'host: il `TenantAdmin` del tenant A che accede dall'host del tenant B fallisce il login perché il suo account non appartiene a B. Il `PlatformAdmin` può accedere dall'host di qualunque tenant e vi lavora come un `TenantAdmin`. Il server verifica sempre ruolo e tenant dell'account rispetto al `TenantId` dell'host; nessun tenant proveniente dal client è accettato.
+L'admin di ogni tenant si raggiunge dall'host del tenant stesso (percorso riservato `/admin`); non esiste un dominio centrale condiviso. Il tenant è deciso solo dall'host: il `TenantAdmin` del tenant A che accede dall'host del tenant B fallisce il login perché il suo account non appartiene a B. Il `PlatformAdmin` può accedere dall'host di qualunque tenant e vi lavora come un `TenantAdmin`. Il server verifica sempre ruolo e tenant dell'account rispetto al `TenantId` dell'host; nessun tenant proveniente dal client è accettato.
 
 ## Difesa a strati
 
@@ -42,6 +42,7 @@ Pages/revisions, template custom, settings tema, asset media, prodotti, inventar
 Per almeno due tenant di test:
 
 - `TenantAdmin` o `Utente` del tenant A che prova il login dall'host del tenant B: fallisce con lo stesso errore delle credenziali errate;
+- in ambiente non Development l'host `localhost` non risolve alcun tenant;
 - stesso slug, stesso database: nessun conflitto se su siti differenti;
 - tentativo di lettura pagina altrui: negato o non trovato secondo la policy endpoint;
 - modifica/cancellazione cross-tenant: negata;

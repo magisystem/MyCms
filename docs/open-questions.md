@@ -19,6 +19,7 @@ Le scelte sotto non sono definite completamente. Gli agenti devono evitare di in
 - Un tenant può avere più `TenantAdmin`; un account `TenantAdmin` o `Utente` appartiene a un solo tenant; la stessa email vale in un tenant e può ripetersi in tenant diversi (ADR-0011).
 - Il tenant è deciso solo dall'host dell'URL: un account non può accedere dall'host di un altro tenant (salvo il `PlatformAdmin`), nessun dominio centrale di amministrazione (ADR-0011).
 - Il `PlatformAdmin` non ha recupero password né strumenti di reset per ora: reset manuale dell'operatore, da definire in seguito. Il bootstrap crea il primo `PlatformAdmin` e un tenant di gestione con il suo dominio.
+- Percorso riservato dell'admin: `/admin`. Tenant di gestione: `cms.davidemartelli.dev`, con alias `localhost` (qualunque porta) solo in sviluppo. Sviluppo solo HTTP; i certificati in produzione sono dell'hosting tramite reverse proxy.
 - Tenant di test in locale: `cms1.davidemartelli.dev` e `cms2.davidemartelli.dev`, raggiungibili solo dal computer locale. Il recupero password vale per `TenantAdmin` e `Utente`.
 - Chiave di cifratura dei segreti dei tenant nella configurazione dell'ambiente (non nel repository); il key ring può stare nel database solo se protetto da quella chiave (ADR-0015).
 - Limiti del recupero password confermati. Nessun motivo obbligatorio per l'ingresso del `PlatformAdmin` nei tenant, nessuna impersonation.
@@ -26,16 +27,13 @@ Le scelte sotto non sono definite completamente. Gli agenti devono evitare di in
 - `Guest` per tenant senza impostazioni: vede tutto ciò che è pubblico; limitare la visibilità è un'evoluzione futura.
 - Duplicati fra `admin-theme/` e `wwwroot` accettati; li ripulirà il committente.
 - `admin-theme/`: licenze possedute, repository privato; `tabler` e `tabler-icons` copiati per intero in `wwwroot`.
-- Tenant, utenti `TenantAdmin`, domini e certificati gestiti manualmente dal `PlatformAdmin`/operatori (ADR-0014).
+- Tenant, utenti `TenantAdmin` e domini gestiti manualmente dal `PlatformAdmin`; certificati TLS dell'hosting tramite reverse proxy (ADR-0014).
 - Admin con Tabler e Tabler Icons (ADR-0013).
 
 ## Identity
 
 - Solo account locali o SSO/OIDC richiesto per clienti enterprise?
 - Policy password (lunghezza, complessità, blocco account). I limiti del recupero password sono quelli di ADR-0011.
-- Percorso riservato dell'admin sotto l'host del tenant (proposta: `/admin`).
-- Host del tenant di gestione (parametro del bootstrap) in sviluppo e in produzione: nome da scegliere (ad esempio un terzo livello di `davidemartelli.dev`).
-- Sviluppo locale: HTTPS con un certificato locale per gli host di test (ad esempio generato con uno strumento tipo mkcert) oppure HTTP? Con HTTP i cookie `Secure` non funzionano.
 
 ## Email
 

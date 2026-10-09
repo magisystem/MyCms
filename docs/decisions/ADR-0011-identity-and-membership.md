@@ -24,7 +24,7 @@ Usare ASP.NET Core Identity per gli account locali. Ogni account, tranne il `Pla
 
 - Il tenant è determinato **esclusivamente** dall'host dell'URL della pagina richiesta (host registrato → sito → `TenantId`, vedi `multi-tenancy.md`). Solo quel `TenantId` è usato per autenticazione, autorizzazione e per tutte le query al database.
 - Nessun tenant fornito dal client (campo del form, header, query string, cookie, claim non verificato) viene mai accettato per scegliere il tenant.
-- L'admin di ogni tenant si raggiunge dall'host del tenant stesso, in un percorso riservato (ad esempio `/admin`, nome da fissare al bootstrap). Non esiste un dominio centrale di amministrazione condiviso da più tenant.
+- L'admin di ogni tenant si raggiunge dall'host del tenant stesso, nel percorso riservato **`/admin`**; lo slug `admin` non può essere usato dalle pagine pubbliche. Non esiste un dominio centrale di amministrazione condiviso da più tenant.
 - **Login:** l'account viene cercato solo fra quelli del tenant dell'host. Se un `TenantAdmin` del tenant A prova ad accedere dall'host del tenant B, il login fallisce perché il suo account non appartiene al `TenantId` di B. L'errore è lo stesso del caso "credenziali errate", senza rivelare che l'account esiste altrove.
 - Il `PlatformAdmin` (account globale) può accedere dall'host di qualunque tenant: l'accesso ha il `TenantId` dell'host, quindi lavora in quel tenant come un `TenantAdmin`, con in più il menu Platform.
 - Il recupero password cerca l'account solo nel tenant dell'host.

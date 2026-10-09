@@ -16,7 +16,7 @@ Fornire a sviluppatori e agenti AI (Codex, Claude Code, Gemini, DeepSeek o strum
 - **Architettura:** monolite modulare, non microservizi.
 - **Tenancy:** database condiviso con isolamento logico rigoroso per tenant e sito.
 - **Ruoli:** `PlatformAdmin`, `TenantAdmin`, `Utente` (acquirente dell'e-commerce), `Guest` (visitatore del sito, per tenant) (ADR-0011). Solo il PlatformAdmin crea tenant e utenti `TenantAdmin`.
-- **Onboarding:** nessuna registrazione self-service per gli account amministrativi; tenant, domini e certificati TLS sono gestiti manualmente dagli operatori (ADR-0014). La registrazione esiste solo per gli acquirenti dei siti con e-commerce.
+- **Onboarding:** nessuna registrazione self-service per gli account amministrativi; tenant e domini sono gestiti manualmente dagli operatori e i certificati TLS dall'hosting tramite reverse proxy (ADR-0014). La registrazione esiste solo per gli acquirenti dei siti con e-commerce.
 - **Temi:** pacchetti Razor fidati e versionati, distribuiti con l'applicazione; i clienti non caricano assembly o viste Razor.
 - **Contenuti:** documenti JSON tipizzati e versionati; il solo HTML esportato non è la fonte di verità.
 - **E-commerce:** modulo interno al CMS, separato nei confini di dominio.

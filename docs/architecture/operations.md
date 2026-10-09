@@ -20,14 +20,14 @@ Non introdurre Kubernetes, broker o servizi separati per moda. Scegliere l'hosti
 
 ## Domini e certificati (procedura manuale)
 
-Tenant, domini e certificati sono gestiti dagli operatori (ADR-0014). Il runbook da completare prima del primo cliente copre:
+Tenant e domini sono gestiti dagli operatori; i certificati dall'hosting tramite reverse proxy (ADR-0014). Il runbook da completare prima del primo cliente copre:
 
 1. Richiesta del dominio da parte del cliente e verifica del possesso fuori banda.
 2. Configurazione DNS verso l'infrastruttura.
-3. Emissione e installazione del certificato TLS sul reverse proxy/hosting.
+3. Certificato TLS: emesso e rinnovato dall'hosting tramite reverse proxy; verificare che il nuovo dominio sia coperto.
 4. Registrazione del dominio nell'area di piattaforma e marcatura come verificato (chi e quando).
 5. Verifica che l'host risolva il sito corretto e che host non registrati ricevano risposta controllata.
-6. Monitoraggio scadenze dei certificati con promemoria o alert.
+6. Monitoraggio della validità dei certificati (a cura dell'hosting, con un controllo periodico).
 
 ## Email
 
