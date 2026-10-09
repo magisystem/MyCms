@@ -22,8 +22,10 @@ Creare o elevare un `TenantAdmin` è riservato al `PlatformAdmin` (ADR-0011).
 - `Id`, `IdTenant`, `IdSito`
 - `Slug`, `TipoPagina`, `Stato`
 - `PaginaIniziale`, `IdLingua` (obbligatoria, FK a `Lingue`), `IdGruppoTraduzione` (le versioni nelle varie lingue della stessa pagina condividono il gruppo)
-- `IdUltimaRevisioneBozza`, `IdRevisionePubblicata`
-- `CreatoIlUtc`, `AggiornatoIlUtc`, `TokenConcorrenza` (`rowversion`)
+- `IdUltimaRevisioneBozza`, `IdRevisionePubblicata` (chiavi esterne composite `(Id, IdRevisione...)` verso `RevisioniPagina(IdPagina, Id)`: una pagina non può puntare alla revisione di un'altra pagina), `UltimoNumeroRevisione`
+- `CreatoIlUtc`, `AggiornatoIlUtc`, `PubblicatoIlUtc`, `TokenConcorrenza` (`rowversion`)
+
+Pagina e revisione si puntano a vicenda: EF Core non ordina inserimenti circolari, quindi una pagina nuova si salva in due passi dentro una transazione (`SalvaNuovaPaginaAsync`: prima pagina e revisione, poi i puntatori). Una pagina ha al più una `PaginaIniziale` per sito e lingua (indice univoco filtrato). La chiave esterna composta `(IdTenant, IdSito)` impedisce a una pagina di puntare al sito di un altro tenant.
 
 Slug riservati: `admin` (area di amministrazione, `/admin`) e i percorsi degli asset statici (es. `lib`) non sono utilizzabili come slug di pagina e vanno rifiutati alla creazione. Ogni lingua di una pagina è una riga `Pagina` distinta con le proprie revisioni e il proprio slug; lo slug è univoco all'interno di sito e lingua (indice univoco su `(IdSito, IdLingua, Slug)`; `IdLingua` non è nullable, quindi non c'è ambiguità sui NULL). Cambiare slug di una pagina pubblicata deve passare da un caso d'uso che gestisce redirect/canonical.
 
@@ -36,7 +38,7 @@ Slug riservati: `admin` (area di amministrazione, `/admin`) e i percorsi degli a
 - `SeoJson` o campi SEO strutturati
 - `CreatoDaIdUtenza`, `CreatoIlUtc`, `NotaRevisione`
 
-Le revisioni sono immutabili dopo la creazione. Il puntatore `IdRevisionePubblicata` della pagina cambia in una transazione.
+In M1 una revisione contiene `Titolo` e `Contenuto` in testo semplice (paragrafi separati da una riga vuota, codificato in uscita, `VersioneSchema` 1); le colonne `ProgettoEditorJson`/`DocumentoRenderJson` e l'HTML ripulito arrivano con il builder e il rich text. Lo slug M1 è un solo segmento (lettere ASCII minuscole, cifre, trattini; massimo 100) e gli slug riservati sono `admin`, `lib` ed `errore`. Le revisioni sono immutabili dopo la creazione. Il puntatore `IdRevisionePubblicata` della pagina cambia in una transazione.
 
 ### Template
 

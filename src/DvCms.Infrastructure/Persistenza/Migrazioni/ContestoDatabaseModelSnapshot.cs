@@ -148,6 +148,138 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                         });
                 });
 
+            modelBuilder.Entity("DvCms.Domain.Cms.Pagina", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("AggiornatoIlUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatoIlUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("IdGruppoTraduzione")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdLingua")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("IdRevisionePubblicata")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdSito")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdTenant")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("IdUltimaRevisioneBozza")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("PaginaIniziale")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("PubblicatoIlUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Stato")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("TipoPagina")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<byte[]>("TokenConcorrenza")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int>("UltimoNumeroRevisione")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdLingua");
+
+                    b.HasIndex("Id", "IdRevisionePubblicata");
+
+                    b.HasIndex("Id", "IdUltimaRevisioneBozza");
+
+                    b.HasIndex("IdSito", "IdLingua")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Pagine_PaginaIniziale")
+                        .HasFilter("[PaginaIniziale] = 1");
+
+                    b.HasIndex("IdSito", "IdLingua", "Slug")
+                        .IsUnique();
+
+                    b.ToTable("Pagine", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Pagine_SlugMinuscolo", "[Slug] COLLATE Latin1_General_BIN2 = LOWER([Slug]) COLLATE Latin1_General_BIN2");
+                        });
+                });
+
+            modelBuilder.Entity("DvCms.Domain.Cms.RevisionePagina", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Contenuto")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("CreatoDaIdUtenza")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatoIlUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("IdPagina")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdSito")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdTenant")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("NotaRevisione")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("NumeroRevisione")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Titolo")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("VersioneSchema")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatoDaIdUtenza");
+
+                    b.HasIndex("IdPagina", "NumeroRevisione")
+                        .IsUnique();
+
+                    b.HasIndex("IdTenant", "IdSito", "IdPagina");
+
+                    b.ToTable("RevisioniPagina", (string)null);
+                });
+
             modelBuilder.Entity("DvCms.Domain.Localizzazione.Lingua", b =>
                 {
                     b.Property<Guid>("Id")
@@ -424,6 +556,50 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                         .WithMany()
                         .HasForeignKey("IdTenant")
                         .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("DvCms.Domain.Cms.Pagina", b =>
+                {
+                    b.HasOne("DvCms.Domain.Localizzazione.Lingua", null)
+                        .WithMany()
+                        .HasForeignKey("IdLingua")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("DvCms.Domain.Cms.RevisionePagina", null)
+                        .WithMany()
+                        .HasForeignKey("Id", "IdRevisionePubblicata")
+                        .HasPrincipalKey("IdPagina", "Id")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("DvCms.Domain.Cms.RevisionePagina", null)
+                        .WithMany()
+                        .HasForeignKey("Id", "IdUltimaRevisioneBozza")
+                        .HasPrincipalKey("IdPagina", "Id")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("DvCms.Domain.Tenancy.Sito", null)
+                        .WithMany()
+                        .HasForeignKey("IdTenant", "IdSito")
+                        .HasPrincipalKey("IdTenant", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DvCms.Domain.Cms.RevisionePagina", b =>
+                {
+                    b.HasOne("DvCms.Domain.Accessi.Utenza", null)
+                        .WithMany()
+                        .HasForeignKey("CreatoDaIdUtenza")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("DvCms.Domain.Cms.Pagina", null)
+                        .WithMany()
+                        .HasForeignKey("IdTenant", "IdSito", "IdPagina")
+                        .HasPrincipalKey("IdTenant", "IdSito", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("DvCms.Domain.Localizzazione.TestoStatico", b =>
