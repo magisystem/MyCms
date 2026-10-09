@@ -280,6 +280,48 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.ToTable("RevisioniPagina", (string)null);
                 });
 
+            modelBuilder.Entity("DvCms.Domain.Email.ImpostazioniEmailTenant", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("AggiornatoDaIdUtenza")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("AggiornatoIlUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("IdTenant")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Provider")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("SegretiProtetti")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<byte[]>("TokenConcorrenza")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("ValoriJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AggiornatoDaIdUtenza");
+
+                    b.HasIndex("IdTenant")
+                        .IsUnique();
+
+                    b.ToTable("ImpostazioniEmailTenant", (string)null);
+                });
+
             modelBuilder.Entity("DvCms.Domain.Localizzazione.Lingua", b =>
                 {
                     b.Property<Guid>("Id")
@@ -592,6 +634,28 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.ToTable("Tenant", (string)null);
                 });
 
+            modelBuilder.Entity("DvCms.Infrastructure.Segreti.ChiaveSegreta", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatoIlUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("NomeAmichevole")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Xml")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ChiaviSegrete", (string)null);
+                });
+
             modelBuilder.Entity("DvCms.Domain.Accessi.RegistroAudit", b =>
                 {
                     b.HasOne("DvCms.Domain.Tenancy.Tenant", null)
@@ -658,6 +722,20 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                         .WithMany()
                         .HasForeignKey("IdTenant", "IdSito", "IdPagina")
                         .HasPrincipalKey("IdTenant", "IdSito", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DvCms.Domain.Email.ImpostazioniEmailTenant", b =>
+                {
+                    b.HasOne("DvCms.Domain.Accessi.Utenza", null)
+                        .WithMany()
+                        .HasForeignKey("AggiornatoDaIdUtenza")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("DvCms.Domain.Tenancy.Tenant", null)
+                        .WithMany()
+                        .HasForeignKey("IdTenant")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

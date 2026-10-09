@@ -1,16 +1,19 @@
 using DvCms.Application.Accessi;
 using DvCms.Application.Cms;
+using DvCms.Application.Email;
 using DvCms.Application.Localizzazione;
 using DvCms.Application.Outbox;
 using DvCms.Application.Piattaforma;
 using DvCms.Application.Tenancy;
 using DvCms.Infrastructure.Accessi;
 using DvCms.Infrastructure.Cms;
+using DvCms.Infrastructure.Email;
 using DvCms.Infrastructure.Localizzazione;
 using DvCms.Infrastructure.Outbox;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.Infrastructure.Piattaforma;
 using DvCms.Infrastructure.Popolamento;
+using DvCms.Infrastructure.Segreti;
 using DvCms.Infrastructure.Tenancy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -52,6 +55,7 @@ public static class EstensioniServizi
         AggiungiAccessi(servizi, configurazione);
         AggiungiLocalizzazione(servizi);
         AggiungiOutbox(servizi, configurazione);
+        AggiungiEmail(servizi, configurazione);
 
         return servizi;
     }
@@ -68,6 +72,16 @@ public static class EstensioniServizi
         servizi.TryAddScoped<IServizioPiattaforma, ServizioPiattaforma>();
         servizi.TryAddScoped<IServizioPagine, ServizioPagine>();
         servizi.TryAddScoped<IServizioPaginePubbliche, ServizioPaginePubbliche>();
+    }
+
+    private static void AggiungiEmail(IServiceCollection servizi, IConfiguration configurazione)
+    {
+        servizi.TryAddSingleton(new ChiaveMaestraSegreti(configurazione[ChiaveMaestraSegreti.NomeConfigurazione]));
+        servizi.TryAddSingleton<IProtettoreSegreti, ProtettoreSegreti>();
+        servizi.AddScoped<IAdapterEmail, AdapterSmtp>();
+        servizi.TryAddScoped<IInvioEmail, InvioEmailPerTenant>();
+        servizi.TryAddScoped<IAccodatoreEmail, AccodatoreEmail>();
+        servizi.AddScoped<IGestoreOutbox, GestoreInvioEmail>();
     }
 
     private static void AggiungiOutbox(IServiceCollection servizi, IConfiguration configurazione)

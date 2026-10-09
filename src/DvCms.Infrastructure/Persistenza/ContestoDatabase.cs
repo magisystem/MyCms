@@ -1,9 +1,11 @@
 using DvCms.Application.Tenancy;
 using DvCms.Domain.Accessi;
 using DvCms.Domain.Cms;
+using DvCms.Domain.Email;
 using DvCms.Domain.Localizzazione;
 using DvCms.Domain.Outbox;
 using DvCms.Domain.Tenancy;
+using DvCms.Infrastructure.Segreti;
 using Microsoft.EntityFrameworkCore;
 
 namespace DvCms.Infrastructure.Persistenza;
@@ -55,6 +57,10 @@ public class ContestoDatabase : DbContext
 
     public DbSet<RevisionePagina> RevisioniPagina => Set<RevisionePagina>();
 
+    public DbSet<ImpostazioniEmailTenant> ImpostazioniEmailTenant => Set<ImpostazioniEmailTenant>();
+
+    public DbSet<ChiaveSegreta> ChiaviSegrete => Set<ChiaveSegreta>();
+
     public DbSet<MessaggioOutbox> MessaggiOutbox => Set<MessaggioOutbox>();
 
     public DbSet<RegistroAudit> RegistroAudit => Set<RegistroAudit>();
@@ -71,6 +77,7 @@ public class ContestoDatabase : DbContext
         modelBuilder.Entity<ProfiloGuest>().HasQueryFilter(profilo => profilo.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<Pagina>().HasQueryFilter(pagina => pagina.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<RevisionePagina>().HasQueryFilter(revisione => revisione.IdTenant == IdTenantCorrente);
+        modelBuilder.Entity<ImpostazioniEmailTenant>().HasQueryFilter(impostazioni => impostazioni.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<MessaggioOutbox>().HasQueryFilter(messaggio => messaggio.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<Utenza>().HasQueryFilter(utenza => utenza.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<RegistroAudit>().HasQueryFilter(voce => voce.IdTenant == IdTenantCorrente);
