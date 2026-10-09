@@ -1,3 +1,4 @@
+using DvCms.Application.Tenancy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
@@ -23,6 +24,6 @@ public sealed class FabbricaContestoDatabaseProgettazione : IDesignTimeDbContext
             .UseSqlServer(connessione, EstensioniServizi.ConfiguraSqlServer)
             .Options;
 
-        return new ContestoDatabase(opzioni);
+        return new ContestoDatabase(opzioni, new ContestoTenant());
     }
 }

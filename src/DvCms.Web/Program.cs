@@ -9,6 +9,7 @@ var costruttore = WebApplication.CreateBuilder(args);
 costruttore.Services.AddRazorPages();
 costruttore.Services.AggiungiInfrastruttura(costruttore.Configuration);
 costruttore.Services.AddHttpContextAccessor();
+var usaProxyAttendibili = ConfigurazioneProxy.Aggiungi(costruttore.Services, costruttore.Configuration);
 costruttore.Services.AddScoped<IContestoLingua, ContestoLinguaRichiesta>();
 
 var applicazione = costruttore.Build();
@@ -19,7 +20,13 @@ if (args is [ComandoMigra.Nome])
     return await ComandoMigra.EseguiAsync(applicazione.Services);
 }
 
+if (usaProxyAttendibili)
+{
+    applicazione.UseForwardedHeaders();
+}
+
 applicazione.UseMiddleware<MiddlewareIdCorrelazione>();
+applicazione.UseMiddleware<MiddlewareTenant>();
 
 if (!applicazione.Environment.IsDevelopment())
 {

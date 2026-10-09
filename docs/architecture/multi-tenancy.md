@@ -8,12 +8,16 @@ Database SQL Server condiviso, tabelle condivise e isolamento logico per `IdTena
 
 1. Accettare solo host normalizzati e registrati in `DominiSito`, verificati e attivi. La registrazione e la verifica sono manuali, a cura del `PlatformAdmin` (ADR-0014).
 2. Normalizzare case, porta e formato del nome DNS secondo policy (la porta è ignorata; in sviluppo `localhost` su qualunque porta risolve sul tenant di gestione, solo se l'ambiente è `Development`, ADR-0014); non fidarsi di header forwarded inviati da client non attendibili.
-3. Configurare esplicitamente proxy attendibili prima di utilizzare `X-Forwarded-Host` o header equivalenti.
+3. Configurare esplicitamente proxy attendibili prima di utilizzare `X-Forwarded-Host` o header equivalenti: `ProxyAttendibili:Indirizzi` (indirizzi IP) e `ProxyAttendibili:Reti` (CIDR). Senza proxy configurati le intestazioni `X-Forwarded-*` sono ignorate; un valore non valido fa fallire l'avvio.
 4. Risolvere host → `IdSito` → `IdTenant` tramite fonte dati attendibile.
-5. Rendere il `ContestoTenant` request-scoped e non modificabile dall'utente della richiesta.
+5. Host non registrato (o non valido, non verificato, disattivato): risposta 404 senza corpo; tenant o sito sospesi: 503. Rendere il `ContestoTenant` request-scoped e non modificabile dall'utente della richiesta.
 6. Per job/background work, includere tenant/site esplicitamente nel messaggio e verificare il contesto prima dell'esecuzione.
 
 L'admin di ogni tenant si raggiunge dall'host del tenant stesso (percorso riservato `/admin`); non esiste un dominio centrale condiviso. Il tenant è deciso solo dall'host: il `TenantAdmin` del tenant A che accede dall'host del tenant B fallisce il login perché il suo account non appartiene a B. Il `PlatformAdmin` può accedere dall'host di qualunque tenant e vi lavora come un `TenantAdmin`. Il server verifica sempre ruolo e tenant dell'account rispetto al `IdTenant` dell'host; nessun tenant proveniente dal client è accettato.
+
+## Filtri globali di tenant
+
+`ContestoDatabase` applica un filtro globale (`IdTenant == IdTenantCorrente`) a `Sito`, `DominioSito` e `ProfiloGuest`, e a ogni dato tenant-scoped futuro. Senza tenant risolto (comandi di servizio, test) nessuna riga di quei dati è visibile. Le letture di piattaforma su tutti i tenant usano esplicitamente `IgnoreQueryFilters()` solo in casi d'uso privilegiati: oggi il risolutore dell'host e il seeding; dopo B-006 il menu Platform.
 
 ## Difesa a strati
 

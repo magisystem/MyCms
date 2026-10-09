@@ -12,6 +12,7 @@ Piano di implementazione richiesto da `docs/AI_START_HERE.md`, preparato prima d
 | A-009 Localizzatore | Completata |
 | A-004 Layout Tabler | Completata (layout `_LayoutAdmin`, pagina `/admin`) |
 | B-001 Tenant, Sito, DominioSito, ProfiloGuest | Completata |
+| B-002 Risoluzione host | Completata |
 
 ## 1. Stato attuale del repository
 

@@ -1,3 +1,4 @@
+using DvCms.Application.Tenancy;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Supporto;
 using Microsoft.EntityFrameworkCore;
@@ -90,7 +91,7 @@ public class ConvenzioniColonneTest
     private sealed class ContestoProva : ContestoDatabase
     {
         public ContestoProva(DbContextOptions<ContestoProva> opzioni)
-            : base(opzioni)
+            : base(opzioni, new ContestoTenant())
         {
         }
 

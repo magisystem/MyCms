@@ -1,6 +1,8 @@
 using DvCms.Application.Localizzazione;
+using DvCms.Application.Tenancy;
 using DvCms.Infrastructure.Localizzazione;
 using DvCms.Infrastructure.Persistenza;
+using DvCms.Infrastructure.Tenancy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Configuration;
@@ -33,6 +35,10 @@ public static class EstensioniServizi
 
         servizi.AddDbContext<ContestoDatabase>(opzioni => opzioni.UseSqlServer(connessione, ConfiguraSqlServer));
         servizi.TryAddSingleton(TimeProvider.System);
+
+        servizi.TryAddScoped<ContestoTenant>();
+        servizi.TryAddScoped<IContestoTenant>(fornitore => fornitore.GetRequiredService<ContestoTenant>());
+        servizi.TryAddScoped<IRisolutoreTenant, RisolutoreTenantDatabase>();
 
         AggiungiLocalizzazione(servizi);
 

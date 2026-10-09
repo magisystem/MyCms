@@ -1,3 +1,4 @@
+using DvCms.Application.Tenancy;
 using DvCms.Domain.Localizzazione;
 using DvCms.Domain.Tenancy;
 using Microsoft.EntityFrameworkCore;
@@ -12,15 +13,26 @@ public class ContestoDatabase : DbContext
 {
     public const string NomeTabellaStoricoMigrazioni = "StoricoMigrazioni";
 
-    public ContestoDatabase(DbContextOptions<ContestoDatabase> opzioni)
+    private readonly IContestoTenant _contestoTenant;
+
+    public ContestoDatabase(DbContextOptions<ContestoDatabase> opzioni, IContestoTenant contestoTenant)
         : base(opzioni)
     {
+        _contestoTenant = contestoTenant;
     }
 
-    protected ContestoDatabase(DbContextOptions opzioni)
+    protected ContestoDatabase(DbContextOptions opzioni, IContestoTenant contestoTenant)
         : base(opzioni)
     {
+        _contestoTenant = contestoTenant;
     }
+
+    /// <summary>
+    /// Tenant della richiesta, usato dai filtri globali: i dati con <c>IdTenant</c> sono visibili solo per questo tenant;
+    /// senza tenant risolto non è visibile nessuna riga. Le letture di piattaforma (tutti i tenant) usano
+    /// esplicitamente <c>IgnoreQueryFilters()</c> in casi d'uso privilegiati e verificati da test.
+    /// </summary>
+    public Guid? IdTenantCorrente => _contestoTenant.IdTenantOpzionale;
 
     public DbSet<Lingua> Lingue => Set<Lingua>();
 
@@ -39,6 +51,11 @@ public class ContestoDatabase : DbContext
         ArgumentNullException.ThrowIfNull(modelBuilder);
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ContestoDatabase).Assembly);
+
+        // Isolamento tenant (difesa a più livelli, docs/architecture/multi-tenancy.md): filtro globale sui dati con IdTenant.
+        modelBuilder.Entity<Sito>().HasQueryFilter(sito => sito.IdTenant == IdTenantCorrente);
+        modelBuilder.Entity<DominioSito>().HasQueryFilter(dominio => dominio.IdTenant == IdTenantCorrente);
+        modelBuilder.Entity<ProfiloGuest>().HasQueryFilter(profilo => profilo.IdTenant == IdTenantCorrente);
     }
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)

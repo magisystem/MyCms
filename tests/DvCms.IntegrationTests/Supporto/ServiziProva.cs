@@ -3,6 +3,8 @@ using DvCms.Infrastructure.Persistenza;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace DvCms.IntegrationTests.Supporto;
@@ -16,6 +18,7 @@ public static class ServiziProva
     public static async Task<ServiceProvider> CreaConMigrazioniAsync(
         string connessione,
         IDictionary<string, string?>? impostazioniAggiuntive = null,
+        string ambiente = "Development",
         CancellationToken annullamento = default)
     {
         var impostazioni = new Dictionary<string, string?>
@@ -36,6 +39,7 @@ public static class ServiziProva
         var servizi = new ServiceCollection();
         servizi.AddLogging(logging => logging.SetMinimumLevel(LogLevel.Warning));
         servizi.AddSingleton<IConfiguration>(configurazione);
+        servizi.AddSingleton<IHostEnvironment>(new AmbienteProva(ambiente));
         servizi.AggiungiInfrastruttura(configurazione);
 
         var fornitore = servizi.BuildServiceProvider();
@@ -46,4 +50,20 @@ public static class ServiziProva
 
         return fornitore;
     }
+}
+
+internal sealed class AmbienteProva : IHostEnvironment
+{
+    public AmbienteProva(string nome)
+    {
+        EnvironmentName = nome;
+    }
+
+    public string EnvironmentName { get; set; }
+
+    public string ApplicationName { get; set; } = "DvCms.Prova";
+
+    public string ContentRootPath { get; set; } = AppContext.BaseDirectory;
+
+    public IFileProvider ContentRootFileProvider { get; set; } = new NullFileProvider();
 }
