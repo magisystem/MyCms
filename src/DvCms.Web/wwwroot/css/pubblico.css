@@ -22,3 +22,11 @@ h1 {
         background: #121212;
     }
 }
+
+.anteprima {
+    padding: 0.5rem 1rem;
+    text-align: center;
+    font-weight: 600;
+    color: #5c3d00;
+    background: #ffe8a3;
+}

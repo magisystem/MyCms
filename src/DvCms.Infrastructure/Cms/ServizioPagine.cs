@@ -203,7 +203,74 @@ public sealed class ServizioPagine : IServizioPagine
         });
     }
 
+    public async Task<AnteprimaPagina?> AnteprimaAsync(Guid idAttore, Guid idPagina, Guid? idRevisione, CancellationToken annullamento)
+    {
+        await RichiediAttoreAsync(idAttore, annullamento);
+
+        var pagina = await _contesto.Pagine.AsNoTracking().SingleOrDefaultAsync(
+            candidata => candidata.Id == idPagina && candidata.IdSito == _tenant.IdSito,
+            annullamento);
+        var idDaMostrare = idRevisione ?? pagina?.IdUltimaRevisioneBozza;
+        if (pagina is null || idDaMostrare is null)
+        {
+            return null;
+        }
+
+        var revisione = await _contesto.RevisioniPagina.AsNoTracking().SingleOrDefaultAsync(
+            candidata => candidata.Id == idDaMostrare && candidata.IdPagina == pagina.Id,
+            annullamento);
+        if (revisione is null)
+        {
+            return null;
+        }
+
+        var codiceLingua = await _contesto.Lingue.Where(lingua => lingua.Id == pagina.IdLingua).Select(lingua => lingua.Codice).SingleAsync(annullamento);
+        return new AnteprimaPagina(
+            revisione.Titolo,
+            revisione.Contenuto,
+            codiceLingua,
+            revisione.NumeroRevisione,
+            revisione.Id == pagina.IdRevisionePubblicata,
+            revisione.Id == pagina.IdUltimaRevisioneBozza);
+    }
+
     public Task<EsitoOperazione> PubblicaAsync(Guid idAttore, Guid idPagina, string? tokenConcorrenza, CancellationToken annullamento) =>
+        PubblicaAsync(idAttore, idPagina, null, tokenConcorrenza, annullamento);
+
+    public Task<EsitoOperazione> PubblicaRevisioneAsync(Guid idAttore, Guid idPagina, Guid idRevisione, string? tokenConcorrenza, CancellationToken annullamento) =>
+        PubblicaAsync(idAttore, idPagina, idRevisione, tokenConcorrenza, annullamento);
+
+    public Task<EsitoOperazione> RipristinaComeBozzaAsync(Guid idAttore, Guid idPagina, Guid idRevisione, string? tokenConcorrenza, CancellationToken annullamento) =>
+        EseguiAsync(idAttore, "Ripristino", async attore =>
+        {
+            if (!TentaToken(tokenConcorrenza, out var token))
+            {
+                return new EsitoOperazione(CodiceEsito.DatiNonValidi);
+            }
+
+            var pagina = await TrovaPaginaAsync(idPagina, annullamento);
+            if (pagina is null)
+            {
+                return new EsitoOperazione(CodiceEsito.NonTrovato);
+            }
+
+            var origine = await _contesto.RevisioniPagina.AsNoTracking().SingleOrDefaultAsync(
+                candidata => candidata.Id == idRevisione && candidata.IdPagina == pagina.Id,
+                annullamento);
+            if (origine is null)
+            {
+                return new EsitoOperazione(CodiceEsito.NonTrovato);
+            }
+
+            _contesto.Entry(pagina).Property(candidata => candidata.TokenConcorrenza).OriginalValue = token;
+            var nuova = pagina.AggiungiRevisione(origine.Titolo, origine.Contenuto, $"Ripristino della revisione {origine.NumeroRevisione}", attore.Id, _orologio);
+            _contesto.RevisioniPagina.Add(nuova);
+            await _contesto.SaveChangesAsync(annullamento);
+            return new EsitoOperazione(CodiceEsito.Riuscito, nuova.Id);
+        });
+
+    /// <summary>Pubblica la revisione indicata o, se nulla, l'ultima bozza.</summary>
+    private Task<EsitoOperazione> PubblicaAsync(Guid idAttore, Guid idPagina, Guid? idRevisione, string? tokenConcorrenza, CancellationToken annullamento) =>
         EseguiAsync(idAttore, "Pubblicazione", async _ =>
         {
             if (!TentaToken(tokenConcorrenza, out var token))
@@ -212,14 +279,23 @@ public sealed class ServizioPagine : IServizioPagine
             }
 
             var pagina = await TrovaPaginaAsync(idPagina, annullamento);
-            if (pagina?.IdUltimaRevisioneBozza is not { } idBozza)
+            var idDaPubblicare = idRevisione ?? pagina?.IdUltimaRevisioneBozza;
+            if (pagina is null || idDaPubblicare is null)
+            {
+                return new EsitoOperazione(CodiceEsito.NonTrovato);
+            }
+
+            // La revisione deve essere di questa pagina (e quindi dello stesso tenant e sito).
+            var revisione = await _contesto.RevisioniPagina.AsNoTracking().SingleOrDefaultAsync(
+                candidata => candidata.Id == idDaPubblicare && candidata.IdPagina == pagina.Id,
+                annullamento);
+            if (revisione is null)
             {
                 return new EsitoOperazione(CodiceEsito.NonTrovato);
             }
 
             _contesto.Entry(pagina).Property(candidata => candidata.TokenConcorrenza).OriginalValue = token;
-            var bozza = await _contesto.RevisioniPagina.AsNoTracking().SingleAsync(revisione => revisione.Id == idBozza, annullamento);
-            pagina.Pubblica(bozza, _orologio);
+            pagina.Pubblica(revisione, _orologio);
             // L'evento è scritto con la stessa SaveChanges della pubblicazione: o ci sono entrambi o nessuno (ADR-0010).
             _outbox.Accoda(pagina.IdTenant, TipiEventoPagina.Pubblicata, new EventoPagina(pagina.Id, pagina.IdSito, pagina.Slug));
             await _contesto.SaveChangesAsync(annullamento);

@@ -169,6 +169,91 @@ public partial class PagineAdminWebTest
         Assert.Equal("/admin/password", SessioneProva.Destinazione(risposta));
     }
 
+    [Fact]
+    public async Task LAnteprimaMostraLaBozzaNonPubblicaConIntestazioniNoindexENoStore()
+    {
+        await using var scenario = await ScenarioWeb.CreaAsync();
+        await scenario.CreaTenantAdminAsync("anna@esempio.it");
+        var anna = scenario.SessioneA();
+        await anna.AccediAsync("anna@esempio.it", DatiProva.PasswordProva);
+        using var creazione = await anna.InviaModuloAsync("/admin/pagine/nuova", [new("Titolo", "Segreta"), new("Slug", "segreta"), new("CodiceLingua", "it"), new("Contenuto", "Testo ancora riservato")]);
+        var percorso = SessioneProva.Destinazione(creazione)!;
+
+        using var anteprima = await anna.GetAsync($"{percorso}/anteprima");
+        using var pubblica = await scenario.SessioneA().GetAsync("/segreta");
+
+        Assert.Equal(HttpStatusCode.OK, anteprima.StatusCode);
+        Assert.Contains("noindex", string.Join(',', anteprima.Headers.GetValues("X-Robots-Tag")), StringComparison.Ordinal);
+        Assert.Contains("no-store", anteprima.Headers.CacheControl?.ToString() ?? string.Empty, StringComparison.Ordinal);
+        var html = await anteprima.Content.ReadAsStringAsync(Ct);
+        Assert.Contains("Testo ancora riservato", html, StringComparison.Ordinal);
+        Assert.Contains("<meta name=\"robots\" content=\"noindex, nofollow\"", html, StringComparison.Ordinal);
+        Assert.Contains("non è ancora pubblica", System.Net.WebUtility.HtmlDecode(html), StringComparison.Ordinal);
+        Assert.Equal(HttpStatusCode.NotFound, pubblica.StatusCode);
+    }
+
+    [Fact]
+    public async Task LAnteprimaRichiedeLaSessioneEUnAltroTenantNonLaVede()
+    {
+        await using var scenario = await ScenarioWeb.CreaAsync();
+        await scenario.CreaTenantAdminAsync("anna@esempio.it");
+        await DatiProva.CreaUtenzaAsync(scenario.Fabbrica.Services, DvCms.Domain.Accessi.RuoloUtenza.TenantAdmin, scenario.B.IdTenant, "bruno@esempio.it", annullamento: Ct);
+        var anna = scenario.SessioneA();
+        var bruno = scenario.SessioneB();
+        await anna.AccediAsync("anna@esempio.it", DatiProva.PasswordProva);
+        await bruno.AccediAsync("bruno@esempio.it", DatiProva.PasswordProva);
+        using var creazione = await anna.InviaModuloAsync("/admin/pagine/nuova", [new("Titolo", "Riservata"), new("Slug", "riservata"), new("CodiceLingua", "it"), new("Contenuto", "x")]);
+        var percorso = SessioneProva.Destinazione(creazione)!;
+
+        using var anonima = await scenario.SessioneA().GetAsync($"{percorso}/anteprima");
+        using var altroTenant = await bruno.GetAsync($"{percorso}/anteprima");
+        using var altraRevisione = await anna.GetAsync($"{percorso}/anteprima?revisione={Guid.NewGuid()}");
+
+        Assert.True(SessioneProva.EReindirizzamento(anonima));
+        Assert.StartsWith("/admin/accesso", SessioneProva.Destinazione(anonima), StringComparison.Ordinal);
+        Assert.Equal(HttpStatusCode.NotFound, altroTenant.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, altraRevisione.StatusCode);
+    }
+
+    [Fact]
+    public async Task RollbackEdRipristinoDalleRevisioni()
+    {
+        await using var scenario = await ScenarioWeb.CreaAsync();
+        await scenario.CreaTenantAdminAsync("anna@esempio.it");
+        var anna = scenario.SessioneA();
+        await anna.AccediAsync("anna@esempio.it", DatiProva.PasswordProva);
+        using var creazione = await anna.InviaModuloAsync("/admin/pagine/nuova", [new("Titolo", "Versione uno"), new("Slug", "pagina"), new("CodiceLingua", "it"), new("Contenuto", "Testo uno")]);
+        var percorso = SessioneProva.Destinazione(creazione)!;
+        using var pubblica1 = await anna.InviaModuloAsync(percorso, [new("TokenConcorrenza", await LeggiTokenAsync(anna, percorso))], $"{percorso}?handler=Pubblica");
+        using var salva = await anna.InviaModuloAsync(percorso, [new("Titolo", "Versione due"), new("Slug", "pagina"), new("Contenuto", "Testo due"), new("TokenConcorrenza", await LeggiTokenAsync(anna, percorso))], $"{percorso}?handler=Salva");
+        using var pubblica2 = await anna.InviaModuloAsync(percorso, [new("TokenConcorrenza", await LeggiTokenAsync(anna, percorso))], $"{percorso}?handler=Pubblica");
+        Assert.Contains("Testo due", await (await scenario.SessioneA().GetAsync("/pagina")).Content.ReadAsStringAsync(Ct), StringComparison.Ordinal);
+
+        // Rollback: si pubblica la revisione 1 dalla lista delle revisioni.
+        var idPrima = await IdRevisioneAsync(anna, percorso, 1);
+        using var rollback = await anna.InviaModuloAsync(percorso, [new("idRevisione", idPrima), new("TokenConcorrenza", await LeggiTokenAsync(anna, percorso))], $"{percorso}?handler=PubblicaRevisione");
+        var pubblica = await (await scenario.SessioneA().GetAsync("/pagina")).Content.ReadAsStringAsync(Ct);
+        Assert.Contains("Testo uno", pubblica, StringComparison.Ordinal);
+        Assert.DoesNotContain("Testo due", pubblica, StringComparison.Ordinal);
+
+        // Ripristino: il contenuto della revisione 2 torna come nuova bozza (la pagina pubblica non cambia).
+        var idSeconda = await IdRevisioneAsync(anna, percorso, 2);
+        using var ripristino = await anna.InviaModuloAsync(percorso, [new("idRevisione", idSeconda), new("TokenConcorrenza", await LeggiTokenAsync(anna, percorso))], $"{percorso}?handler=Ripristina");
+        var modifica = await (await anna.GetAsync(percorso)).Content.ReadAsStringAsync(Ct);
+        Assert.Contains("Testo due", modifica, StringComparison.Ordinal);
+        Assert.Contains("Ripristino della revisione 2", modifica, StringComparison.Ordinal);
+        Assert.Contains("Testo uno", await (await scenario.SessioneA().GetAsync("/pagina")).Content.ReadAsStringAsync(Ct), StringComparison.Ordinal);
+    }
+
+    private static async Task<string> IdRevisioneAsync(SessioneProva sessione, string percorso, int numero)
+    {
+        using var pagina = await sessione.GetAsync(percorso);
+        var html = await pagina.Content.ReadAsStringAsync(Ct);
+        var trovato = Regex.Match(html, $"#{numero} - [^<]*.*?anteprima\\?revisione=([0-9a-f-]{{36}})", RegexOptions.Singleline | RegexOptions.CultureInvariant, TimeSpan.FromSeconds(2));
+        Assert.True(trovato.Success, $"revisione {numero} non trovata");
+        return trovato.Groups[1].Value;
+    }
+
     private static async Task<string> LeggiTokenAsync(SessioneProva sessione, string percorso)
     {
         using var pagina = await sessione.GetAsync(percorso);

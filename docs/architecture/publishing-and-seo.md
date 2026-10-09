@@ -45,3 +45,8 @@ La revisione pubblicata è immutabile. Il publish aggiorna il puntatore live e r
 - [ ] Nessuna bozza o URL cross-tenant indicizzato.
 - [ ] Dati strutturati validi e basati su informazioni vere.
 - [ ] Cambio slug preserva redirect e non crea loop.
+
+## Anteprima e rollback (C-004)
+
+- **Anteprima:** `/admin/pagine/{id}/anteprima` (ultima bozza) e `?revisione={id}` (una revisione precisa). Sta sotto `/admin`: richiede la sessione admin del tenant dell'host, quindi un tenant diverso o un visitatore non la vede (404 / reindirizzamento all'accesso). Risponde sempre con `X-Robots-Tag: noindex, nofollow, noarchive`, `<meta name="robots" content="noindex, nofollow">`, `Cache-Control: no-store, private` e `Referrer-Policy: no-referrer`, e mostra una barra che dice che non è contenuto pubblico. Una revisione di un'altra pagina, sito o tenant non si apre. Con il contenuto in testo semplice, sempre codificato, l'origine condivisa con l'admin è sufficiente; quando arriverà il rich text l'anteprima passerà a un'origine isolata o a token di breve durata (security.md).
+- **Rollback:** si può pubblicare qualunque revisione della pagina (anche precedente): il puntatore pubblicato si sposta in una transazione insieme all'evento di pubblicazione dell'outbox, e l'ultima bozza non cambia (la pagina risulta "con modifiche non pubblicate"). Serve il token di concorrenza della pagina, come per ogni pubblicazione. **Ripristino:** il contenuto di una revisione passata torna come *nuova* revisione (bozza), con la nota "Ripristino della revisione N": le revisioni restano immutabili.

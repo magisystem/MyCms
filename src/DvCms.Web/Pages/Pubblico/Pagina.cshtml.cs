@@ -1,4 +1,5 @@
 using DvCms.Application.Cms;
+using DvCms.Web.Pubblico;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
@@ -18,23 +19,18 @@ public class PaginaModel : PageModel
         _pagine = pagine;
     }
 
-    public PaginaPubblica? Contenuto { get; private set; }
-
-    /// <summary>Paragrafi (separati da una riga vuota), ciascuno come elenco di righe.</summary>
-    public IReadOnlyList<IReadOnlyList<string>> Paragrafi { get; private set; } = [];
+    public VistaPagina? Vista { get; private set; }
 
     public async Task<IActionResult> OnGetAsync(string? slug, CancellationToken annullamento)
     {
-        Contenuto = await _pagine.TrovaAsync(slug, annullamento);
-        if (Contenuto is null)
+        var contenuto = await _pagine.TrovaAsync(slug, annullamento);
+        if (contenuto is null)
         {
             Response.StatusCode = StatusCodes.Status404NotFound;
             return Page();
         }
 
-        Paragrafi = [.. Contenuto.Contenuto
-            .Split("\n\n", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .Select(paragrafo => (IReadOnlyList<string>)[.. paragrafo.Split('\n', StringSplitOptions.TrimEntries)])];
+        Vista = new VistaPagina(contenuto.Titolo, contenuto.CodiceLingua, VistaPagina.DividiParagrafi(contenuto.Contenuto), NonIndicizzare: false);
         return Page();
     }
 }

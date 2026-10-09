@@ -45,6 +45,9 @@ public sealed record DettaglioPagina(
     bool ModificheNonPubblicate,
     IReadOnlyList<RevisioneInElenco> Revisioni);
 
+/// <summary>Contenuto di una revisione per l'anteprima (la bozza più recente, oppure una revisione precisa).</summary>
+public sealed record AnteprimaPagina(string Titolo, string Contenuto, string CodiceLingua, int NumeroRevisione, bool Pubblicata, bool UltimaBozza);
+
 public sealed record LinguaDisponibile(string Codice, string Nome);
 
 /// <summary>
@@ -68,6 +71,21 @@ public interface IServizioPagine
     /// l'esito è <see cref="CodiceEsito.Conflitto"/>. Lo slug di una pagina pubblicata non si cambia.
     /// </summary>
     Task<EsitoOperazione> SalvaAsync(Guid idAttore, Guid idPagina, DatiModificaPagina dati, CancellationToken annullamento);
+
+    /// <summary>
+    /// Contenuto per l'anteprima: l'ultima bozza, oppure la revisione indicata (che deve essere di questa pagina).
+    /// Restituisce nullo per una pagina o una revisione di un altro tenant o sito, o inesistente.
+    /// </summary>
+    Task<AnteprimaPagina?> AnteprimaAsync(Guid idAttore, Guid idPagina, Guid? idRevisione, CancellationToken annullamento);
+
+    /// <summary>
+    /// Pubblica una revisione precisa, anche precedente (ritorno a una versione passata): sposta il puntatore pubblicato
+    /// senza toccare l'ultima bozza, in una transazione con l'evento di pubblicazione.
+    /// </summary>
+    Task<EsitoOperazione> PubblicaRevisioneAsync(Guid idAttore, Guid idPagina, Guid idRevisione, string? tokenConcorrenza, CancellationToken annullamento);
+
+    /// <summary>Riporta il contenuto di una revisione passata come nuova bozza (le revisioni restano immutabili).</summary>
+    Task<EsitoOperazione> RipristinaComeBozzaAsync(Guid idAttore, Guid idPagina, Guid idRevisione, string? tokenConcorrenza, CancellationToken annullamento);
 
     /// <summary>Pubblica l'ultima bozza.</summary>
     Task<EsitoOperazione> PubblicaAsync(Guid idAttore, Guid idPagina, string? tokenConcorrenza, CancellationToken annullamento);

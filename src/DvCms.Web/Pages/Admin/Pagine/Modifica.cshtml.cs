@@ -42,6 +42,18 @@ public class ModificaModel : PaginaAdmin
         return Concludi(id, esito, Localizzatore.Traduci("Pagina pubblicata."));
     }
 
+    public async Task<IActionResult> OnPostPubblicaRevisioneAsync(Guid id, Guid idRevisione, string? tokenConcorrenza, CancellationToken annullamento)
+    {
+        var esito = await _pagine.PubblicaRevisioneAsync(IdAttore, id, idRevisione, tokenConcorrenza, annullamento);
+        return Concludi(id, esito, Localizzatore.Traduci("Revisione pubblicata."));
+    }
+
+    public async Task<IActionResult> OnPostRipristinaAsync(Guid id, Guid idRevisione, string? tokenConcorrenza, CancellationToken annullamento)
+    {
+        var esito = await _pagine.RipristinaComeBozzaAsync(IdAttore, id, idRevisione, tokenConcorrenza, annullamento);
+        return Concludi(id, esito, Localizzatore.Traduci("Revisione ripristinata come nuova bozza."));
+    }
+
     public async Task<IActionResult> OnPostRitiraAsync(Guid id, string? tokenConcorrenza, CancellationToken annullamento)
     {
         var esito = await _pagine.RitiraAsync(IdAttore, id, tokenConcorrenza, annullamento);

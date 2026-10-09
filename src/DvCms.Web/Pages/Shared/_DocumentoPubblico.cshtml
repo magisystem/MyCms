@@ -1,0 +1,50 @@
+@model DvCms.Web.Pubblico.VistaPagina?
+@{
+    var vista = Model;
+}
+<!DOCTYPE html>
+<html lang="@(vista?.CodiceLingua ?? "it")">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@(vista?.Titolo ?? _L["Pagina non trovata"])</title>
+    <link rel="stylesheet" href="~/css/pubblico.css" />
+    @if (vista is null || vista.NonIndicizzare)
+    {
+        <meta name="robots" content="noindex, nofollow" />
+    }
+</head>
+<body>
+    @if (vista?.EtichettaAnteprima is { } etichetta)
+    {
+        <div class="anteprima" role="status">@etichetta</div>
+    }
+    <main>
+        @if (vista is null)
+        {
+            <h1>@_L["Pagina non trovata"]</h1>
+            <p>@_L["La pagina che cerchi non esiste o non è disponibile."]</p>
+        }
+        else
+        {
+            <article>
+                <h1>@vista.Titolo</h1>
+                @foreach (var paragrafo in vista.Paragrafi)
+                {
+                    <p>
+                        @for (var i = 0; i < paragrafo.Count; i++)
+                        {
+                            if (i > 0)
+                            {
+                                <br />
+                            }
+
+                            @paragrafo[i]
+                        }
+                    </p>
+                }
+            </article>
+        }
+    </main>
+</body>
+</html>

@@ -252,6 +252,117 @@ public class ServizioPagineTest
         Assert.Empty(await s.ComeAsync(s.A, servizio => servizio.ElencaAsync(platform, Ct)));
     }
 
+    [Fact]
+    public async Task LAnteprimaMostraLaBozzaOUnaRevisionePrecisaNonSoloIlPubblicato()
+    {
+        await using var s = await Scenario.CreaAsync();
+        var id = await s.CreaPaginaAsync(s.A, s.AdminA, "pagina");
+        await s.PubblicaUltimaAsync(s.A, id);
+        await s.ModificaAsync(s.A, id, "Titolo bozza", "Testo bozza");
+        var dettaglio = (await s.ComeAsync(s.A, servizio => servizio.LeggiAsync(s.AdminA, id, Ct)))!;
+        var pubblicata = dettaglio.Revisioni.Single(r => r.Pubblicata);
+
+        var bozza = await s.ComeAsync(s.A, servizio => servizio.AnteprimaAsync(s.AdminA, id, null, Ct));
+        var vecchia = await s.ComeAsync(s.A, servizio => servizio.AnteprimaAsync(s.AdminA, id, pubblicata.Id, Ct));
+
+        Assert.Equal("Testo bozza", bozza!.Contenuto);
+        Assert.True(bozza.UltimaBozza);
+        Assert.False(bozza.Pubblicata);
+        Assert.Equal(2, bozza.NumeroRevisione);
+        Assert.Equal("Contenuto", vecchia!.Contenuto);
+        Assert.True(vecchia.Pubblicata);
+    }
+
+    [Fact]
+    public async Task LAnteprimaNonEsponePagineERevisioniDiAltri()
+    {
+        await using var s = await Scenario.CreaAsync();
+        var idA = await s.CreaPaginaAsync(s.A, s.AdminA, "di-a");
+        var idB = await s.CreaPaginaAsync(s.B, s.AdminB, "di-b");
+        var revisioneB = (await s.ComeAsync(s.B, servizio => servizio.LeggiAsync(s.AdminB, idB, Ct)))!.Revisioni[0].Id;
+
+        Assert.Null(await s.ComeAsync(s.A, servizio => servizio.AnteprimaAsync(s.AdminA, idB, null, Ct)));
+        Assert.Null(await s.ComeAsync(s.A, servizio => servizio.AnteprimaAsync(s.AdminA, idA, revisioneB, Ct)));
+        Assert.Null(await s.ComeAsync(s.A, servizio => servizio.AnteprimaAsync(s.AdminA, idA, Guid.NewGuid(), Ct)));
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => s.ComeAsync(s.A, servizio => servizio.AnteprimaAsync(s.AdminB, idA, null, Ct)));
+    }
+
+    [Fact]
+    public async Task IlRollbackPubblicaUnaRevisionePassataSenzaToccareLUltimaBozzaEScriveGliEventi()
+    {
+        await using var s = await Scenario.CreaAsync();
+        var id = await s.CreaPaginaAsync(s.A, s.AdminA, "pagina");
+        await s.PubblicaUltimaAsync(s.A, id);
+        await s.ModificaAsync(s.A, id, "Secondo titolo", "Secondo testo");
+        await s.PubblicaUltimaAsync(s.A, id);
+        var dettaglio = (await s.ComeAsync(s.A, servizio => servizio.LeggiAsync(s.AdminA, id, Ct)))!;
+        var prima = dettaglio.Revisioni.Single(r => r.Numero == 1);
+
+        var esito = await s.ComeAsync(s.A, servizio => servizio.PubblicaRevisioneAsync(s.AdminA, id, prima.Id, dettaglio.TokenConcorrenza, Ct));
+
+        Assert.True(esito.Riuscito);
+        var dopo = (await s.ComeAsync(s.A, servizio => servizio.LeggiAsync(s.AdminA, id, Ct)))!;
+        Assert.Equal(1, dopo.Revisioni.Single(r => r.Pubblicata).Numero);
+        Assert.Equal(2, dopo.Revisioni.Single(r => r.UltimaBozza).Numero);
+        Assert.True(dopo.ModificheNonPubblicate);
+        Assert.Equal("Secondo testo", dopo.Contenuto);
+        Assert.Equal(3, await s.ContaAsync(c => c.MessaggiOutbox.IgnoreQueryFilters().CountAsync(m => m.Tipo == "PaginaPubblicata", Ct)));
+
+        // Anche l'altra direzione: si torna alla seconda revisione.
+        var seconda = dopo.Revisioni.Single(r => r.Numero == 2);
+        Assert.True((await s.ComeAsync(s.A, servizio => servizio.PubblicaRevisioneAsync(s.AdminA, id, seconda.Id, dopo.TokenConcorrenza, Ct))).Riuscito);
+        Assert.False((await s.ComeAsync(s.A, servizio => servizio.LeggiAsync(s.AdminA, id, Ct)))!.ModificheNonPubblicate);
+    }
+
+    [Fact]
+    public async Task IlRollbackRispettaTokenEAppartenenza()
+    {
+        await using var s = await Scenario.CreaAsync();
+        var id = await s.CreaPaginaAsync(s.A, s.AdminA, "pagina");
+        var idAltra = await s.CreaPaginaAsync(s.A, s.AdminA, "altra");
+        var dettaglio = (await s.ComeAsync(s.A, servizio => servizio.LeggiAsync(s.AdminA, id, Ct)))!;
+        var revisioneAltra = (await s.ComeAsync(s.A, servizio => servizio.LeggiAsync(s.AdminA, idAltra, Ct)))!.Revisioni[0].Id;
+        var idB = await s.CreaPaginaAsync(s.B, s.AdminB, "di-b");
+        var revisioneB = (await s.ComeAsync(s.B, servizio => servizio.LeggiAsync(s.AdminB, idB, Ct)))!.Revisioni[0].Id;
+
+        var vecchio = await s.ComeAsync(s.A, servizio => servizio.PubblicaRevisioneAsync(s.AdminA, id, dettaglio.Revisioni[0].Id, Convert.ToBase64String([9, 9, 9]), Ct));
+        var diAltraPagina = await s.ComeAsync(s.A, servizio => servizio.PubblicaRevisioneAsync(s.AdminA, id, revisioneAltra, dettaglio.TokenConcorrenza, Ct));
+        var diAltroTenant = await s.ComeAsync(s.A, servizio => servizio.PubblicaRevisioneAsync(s.AdminA, id, revisioneB, dettaglio.TokenConcorrenza, Ct));
+        var ripristinoAltraPagina = await s.ComeAsync(s.A, servizio => servizio.RipristinaComeBozzaAsync(s.AdminA, id, revisioneAltra, dettaglio.TokenConcorrenza, Ct));
+
+        Assert.Equal(CodiceEsito.Conflitto, vecchio.Codice);
+        Assert.Equal(CodiceEsito.NonTrovato, diAltraPagina.Codice);
+        Assert.Equal(CodiceEsito.NonTrovato, diAltroTenant.Codice);
+        Assert.Equal(CodiceEsito.NonTrovato, ripristinoAltraPagina.Codice);
+        Assert.Equal(StatoPagina.Bozza, (await s.ComeAsync(s.A, servizio => servizio.LeggiAsync(s.AdminA, id, Ct)))!.Stato);
+        Assert.Equal(0, await s.ContaAsync(c => c.MessaggiOutbox.IgnoreQueryFilters().CountAsync(Ct)));
+    }
+
+    [Fact]
+    public async Task RipristinareCreaUnaNuovaBozzaConIlContenutoVecchioSenzaModificareLeRevisioni()
+    {
+        await using var s = await Scenario.CreaAsync();
+        var id = await s.CreaPaginaAsync(s.A, s.AdminA, "pagina");
+        await s.PubblicaUltimaAsync(s.A, id);
+        await s.ModificaAsync(s.A, id, "Titolo nuovo", "Testo nuovo");
+        var dettaglio = (await s.ComeAsync(s.A, servizio => servizio.LeggiAsync(s.AdminA, id, Ct)))!;
+        var prima = dettaglio.Revisioni.Single(r => r.Numero == 1);
+
+        var esito = await s.ComeAsync(s.A, servizio => servizio.RipristinaComeBozzaAsync(s.AdminA, id, prima.Id, dettaglio.TokenConcorrenza, Ct));
+
+        Assert.True(esito.Riuscito);
+        var dopo = (await s.ComeAsync(s.A, servizio => servizio.LeggiAsync(s.AdminA, id, Ct)))!;
+        Assert.Equal(3, dopo.Revisioni.Count);
+        var nuova = dopo.Revisioni.Single(r => r.UltimaBozza);
+        Assert.Equal(3, nuova.Numero);
+        Assert.Equal("Ripristino della revisione 1", nuova.Nota);
+        Assert.Equal("Titolo pagina", dopo.Titolo);
+        Assert.Equal("Contenuto", dopo.Contenuto);
+        Assert.Equal(1, dopo.Revisioni.Single(r => r.Pubblicata).Numero);
+        var originale = await s.ComeAsync(s.A, servizio => servizio.AnteprimaAsync(s.AdminA, id, prima.Id, Ct));
+        Assert.Equal("Contenuto", originale!.Contenuto);
+    }
+
     private sealed class Scenario : IAsyncDisposable
     {
         private readonly DatabaseDiProva _database;
@@ -318,6 +429,20 @@ public class ServizioPagineTest
             var esito = await ComeAsync(host, servizio => servizio.CreaAsync(attore, new DatiNuovaPagina(slug, $"Titolo {slug}", "Contenuto", "it", false), Ct));
             Assert.True(esito.Riuscito, esito.Codice.ToString());
             return esito.Id!.Value;
+        }
+
+        public async Task PubblicaUltimaAsync(DatiTenantRisolto host, Guid id)
+        {
+            var dettaglio = (await ComeAsync(host, servizio => servizio.LeggiAsync(AdminA, id, Ct)))!;
+            var esito = await ComeAsync(host, servizio => servizio.PubblicaAsync(AdminA, id, dettaglio.TokenConcorrenza, Ct));
+            Assert.True(esito.Riuscito, esito.Codice.ToString());
+        }
+
+        public async Task ModificaAsync(DatiTenantRisolto host, Guid id, string titolo, string contenuto)
+        {
+            var dettaglio = (await ComeAsync(host, servizio => servizio.LeggiAsync(AdminA, id, Ct)))!;
+            var esito = await ComeAsync(host, servizio => servizio.SalvaAsync(AdminA, id, new DatiModificaPagina(null, titolo, contenuto, null, dettaglio.PaginaIniziale, dettaglio.TokenConcorrenza), Ct));
+            Assert.True(esito.Riuscito, esito.Codice.ToString());
         }
 
         public async Task<T> ContaAsync<T>(Func<ContestoDatabase, Task<T>> lettura)

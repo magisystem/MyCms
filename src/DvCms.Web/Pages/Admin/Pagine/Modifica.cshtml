@@ -68,6 +68,7 @@
                 </form>
             </div>
             <div class="card-footer">
+                <a href="/admin/pagine/@pagina.Id/anteprima" class="btn" target="_blank" rel="noopener">@_L["Anteprima della bozza"]</a>
                 <form method="post" asp-page-handler="Pubblica" asp-route-id="@pagina.Id" class="d-inline">
                     <input type="hidden" name="TokenConcorrenza" value="@pagina.TokenConcorrenza" />
                     <button type="submit" class="btn btn-success" disabled="@(!pagina.ModificheNonPubblicate && pagina.Stato == StatoPagina.Pubblicata)">@_L["Pubblica l'ultima bozza"]</button>
@@ -111,6 +112,25 @@
                         {
                             <div class="small">@revisione.Nota</div>
                         }
+                        <div class="mt-2 d-flex flex-wrap gap-1">
+                            <a href="/admin/pagine/@pagina.Id/anteprima?revisione=@revisione.Id" class="btn btn-sm" target="_blank" rel="noopener">@_L["Anteprima"]</a>
+                            @if (!revisione.Pubblicata)
+                            {
+                                <form method="post" asp-page-handler="PubblicaRevisione" asp-route-id="@pagina.Id" class="d-inline">
+                                    <input type="hidden" name="idRevisione" value="@revisione.Id" />
+                                    <input type="hidden" name="TokenConcorrenza" value="@pagina.TokenConcorrenza" />
+                                    <button type="submit" class="btn btn-sm">@_L["Pubblica questa"]</button>
+                                </form>
+                            }
+                            @if (!revisione.UltimaBozza)
+                            {
+                                <form method="post" asp-page-handler="Ripristina" asp-route-id="@pagina.Id" class="d-inline">
+                                    <input type="hidden" name="idRevisione" value="@revisione.Id" />
+                                    <input type="hidden" name="TokenConcorrenza" value="@pagina.TokenConcorrenza" />
+                                    <button type="submit" class="btn btn-sm">@_L["Ripristina come bozza"]</button>
+                                </form>
+                            }
+                        </div>
                     </div>
                 }
             </div>
