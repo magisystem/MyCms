@@ -1,0 +1,36 @@
+@page "/admin/recupero/codice"
+@model DvCms.Web.Pages.Admin.Recupero.CodiceModel
+@{
+    Layout = "_LayoutAccesso";
+    ViewData["Titolo"] = _L["Codice di verifica"];
+}
+<div class="card card-md">
+    <div class="card-body">
+        @if (Model.LinkInviato)
+        {
+            <h2 class="h2 text-center mb-2">@_L["Controlla la tua email"]</h2>
+            <p class="text-secondary text-center mb-0">@_L["Codice verificato. Ti abbiamo inviato una seconda email con il link per scegliere la nuova password."]</p>
+        }
+        else
+        {
+            <h2 class="h2 text-center mb-2">@_L["Inserisci il codice"]</h2>
+            <p class="text-secondary text-center mb-4">@_L["Se l'indirizzo è registrato, ti abbiamo inviato un codice di sei cifre."]</p>
+            @if (Model.Errore)
+            {
+                <div class="alert alert-danger" role="alert">@_L["Codice non valido o scaduto."]</div>
+            }
+            <form method="post" autocomplete="off" novalidate>
+                <div class="mb-3">
+                    <label class="form-label" for="Codice">@_L["Codice"]</label>
+                    <input class="form-control" id="Codice" name="Codice" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="one-time-code" required />
+                </div>
+                <div class="form-footer">
+                    <button type="submit" class="btn btn-primary w-100">@_L["Verifica"]</button>
+                </div>
+            </form>
+        }
+    </div>
+</div>
+<div class="text-center text-secondary mt-3">
+    <a href="/admin/recupero">@_L["Richiedi un nuovo codice"]</a> - <a href="/admin/accesso">@_L["Torna all'accesso"]</a>
+</div>

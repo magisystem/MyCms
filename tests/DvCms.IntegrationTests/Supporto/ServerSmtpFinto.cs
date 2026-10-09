@@ -5,7 +5,16 @@ using System.Text;
 namespace DvCms.IntegrationTests.Supporto;
 
 /// <summary>Messaggio ricevuto dal server SMTP finto.</summary>
-public sealed record EmailRicevuta(string Mittente, IReadOnlyList<string> Destinatari, string Dati, string? Credenziali);
+public sealed record EmailRicevuta(string Mittente, IReadOnlyList<string> Destinatari, string Dati, string? Credenziali)
+{
+    private MimeKit.MimeMessage Messaggio => MimeKit.MimeMessage.Load(new MemoryStream(Encoding.UTF8.GetBytes(Dati)));
+
+    /// <summary>Oggetto decodificato.</summary>
+    public string Oggetto => Messaggio.Subject ?? string.Empty;
+
+    /// <summary>Corpo in testo semplice, decodificato (le codifiche di trasferimento sono già tolte).</summary>
+    public string Testo => Messaggio.TextBody ?? string.Empty;
+}
 
 /// <summary>
 /// Server SMTP minimo in locale (nessuna email reale parte dai test): accetta connessioni in chiaro, anche con
@@ -125,7 +134,8 @@ public sealed class ServerSmtpFinto : IAsyncDisposable
                         var corpo = new StringBuilder();
                         while ((riga = await lettore.ReadLineAsync(_arresto.Token)) is not null && riga != ".")
                         {
-                            corpo.AppendLine(riga);
+                            // Trasparenza SMTP (RFC 5321, 4.5.2): una riga che inizia con ".." è una riga che inizia con ".".
+                            corpo.AppendLine(riga.StartsWith("..", StringComparison.Ordinal) ? riga[1..] : riga);
                         }
 
                         lock (_ricevute)

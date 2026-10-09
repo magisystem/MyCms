@@ -64,6 +64,77 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.ToTable("RegistroAudit", (string)null);
                 });
 
+            modelBuilder.Entity("DvCms.Domain.Accessi.RichiestaRecuperoPassword", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("CompletatoIlUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatoIlUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("EmailNormalizzata")
+                        .IsRequired()
+                        .HasMaxLength(254)
+                        .HasColumnType("nvarchar(254)");
+
+                    b.Property<byte[]>("HashCodice")
+                        .IsRequired()
+                        .HasColumnType("binary(32)");
+
+                    b.Property<byte[]>("HashRiferimento")
+                        .IsRequired()
+                        .HasColumnType("binary(32)");
+
+                    b.Property<byte[]>("HashToken")
+                        .HasColumnType("binary(32)");
+
+                    b.Property<Guid>("IdTenant")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("IdUtenza")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("IndirizzoIp")
+                        .HasMaxLength(45)
+                        .HasColumnType("nvarchar(45)");
+
+                    b.Property<byte[]>("SaleCodice")
+                        .IsRequired()
+                        .HasColumnType("binary(16)");
+
+                    b.Property<DateTime>("ScadenzaCodiceIlUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("ScadenzaTokenIlUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Stato")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int>("TentativiCodice")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("HashRiferimento");
+
+                    b.HasIndex("HashToken")
+                        .HasFilter("[HashToken] IS NOT NULL");
+
+                    b.HasIndex("IdUtenza");
+
+                    b.HasIndex("IndirizzoIp", "CreatoIlUtc");
+
+                    b.HasIndex("IdTenant", "EmailNormalizzata", "CreatoIlUtc");
+
+                    b.ToTable("RichiesteRecuperoPassword", (string)null);
+                });
+
             modelBuilder.Entity("DvCms.Domain.Accessi.Utenza", b =>
                 {
                     b.Property<Guid>("Id")
@@ -666,6 +737,20 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.HasOne("DvCms.Domain.Accessi.Utenza", null)
                         .WithMany()
                         .HasForeignKey("IdUtenzaAttore")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("DvCms.Domain.Accessi.RichiestaRecuperoPassword", b =>
+                {
+                    b.HasOne("DvCms.Domain.Tenancy.Tenant", null)
+                        .WithMany()
+                        .HasForeignKey("IdTenant")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("DvCms.Domain.Accessi.Utenza", null)
+                        .WithMany()
+                        .HasForeignKey("IdUtenza")
                         .OnDelete(DeleteBehavior.Restrict);
                 });
 

@@ -100,7 +100,7 @@ public partial class ConvenzioniCodiceTest
     }
 
     // Chiamate al localizzatore il cui testo non è un letterale tra virgolette.
-    [GeneratedRegex("""(_L\[\s*(?!")|\.Traduci\(\s*(?!")|\.TraduciIn\(\s*[^,()]+,\s*(?!"))""", RegexOptions.CultureInvariant)]
+    [GeneratedRegex("""(_L\[(?>\s*)(?!")|\.Traduci\((?>\s*)(?!")|\.TraduciIn\((?>\s*)[^,()]+,(?>\s*)(?!"))""", RegexOptions.CultureInvariant)]
     private static partial Regex ChiamataNonLetterale();
 
     [GeneratedRegex(@"\bDateTime(Offset)?\.(Now|UtcNow|Today)\b", RegexOptions.CultureInvariant)]

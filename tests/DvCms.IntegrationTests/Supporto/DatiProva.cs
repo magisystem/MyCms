@@ -47,6 +47,28 @@ public static class DatiProva
         return new TenantCreato(tenant.Id, sito.Id, dominio.Id, dominio.Host);
     }
 
+    /// <summary>Configura per il tenant l'invio SMTP verso un server finto locale (senza autenticazione né TLS).</summary>
+    public static async Task ConfiguraSmtpAsync(IServiceProvider fornitore, Guid idTenant, int porta, CancellationToken annullamento = default)
+    {
+        await using var ambito = fornitore.CreateAsyncScope();
+        var contesto = ambito.ServiceProvider.GetRequiredService<ContestoDatabase>();
+        contesto.ImpostazioniEmailTenant.Add(new DvCms.Domain.Email.ImpostazioniEmailTenant
+        {
+            Id = DvCms.Domain.Identificativi.Nuovo(TimeProvider.System),
+            IdTenant = idTenant,
+            Provider = DvCms.Domain.Email.ProviderEmail.Smtp,
+            ValoriJson = System.Text.Json.JsonSerializer.Serialize(new Dictionary<string, string>
+            {
+                ["Host"] = "127.0.0.1",
+                ["Porta"] = porta.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                ["ModalitaTls"] = "Nessuna",
+                ["IndirizzoMittente"] = "noreply@esempio.it",
+            }),
+            AggiornatoIlUtc = DateTime.UtcNow,
+        });
+        await contesto.SaveChangesAsync(annullamento);
+    }
+
     public const string PasswordProva = "password-di-prova-123";
 
     /// <summary>Crea un account con password nota (<see cref="PasswordProva"/> se non indicata).</summary>

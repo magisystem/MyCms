@@ -68,6 +68,8 @@ public static class EstensioniServizi
         servizi.TryAddSingleton<HashFinto>();
         servizi.TryAddScoped<IServizioAudit, ServizioAudit>();
         servizi.TryAddScoped<IServizioAccesso, ServizioAccesso>();
+        servizi.TryAddSingleton(LeggiOpzioniRecuperoPassword(configurazione));
+        servizi.TryAddScoped<IServizioRecuperoPassword, ServizioRecuperoPassword>();
         servizi.TryAddScoped<ServizioPopolamento>();
         servizi.TryAddScoped<IServizioPiattaforma, ServizioPiattaforma>();
         servizi.TryAddScoped<IServizioPagine, ServizioPagine>();
@@ -106,6 +108,17 @@ public static class EstensioniServizi
         servizi.AddScoped<IGestoreOutbox, GestorePaginaPubblicata>();
         servizi.AddScoped<IGestoreOutbox, GestorePaginaRitirata>();
         servizi.AddHostedService<ServizioOutbox>();
+    }
+
+    private static OpzioniRecuperoPassword LeggiOpzioniRecuperoPassword(IConfiguration configurazione)
+    {
+        var p = OpzioniRecuperoPassword.Predefinite;
+        return new OpzioniRecuperoPassword(
+            TimeSpan.FromMinutes(LeggiIntero(configurazione, "Sicurezza:RecuperoPassword:MinutiValiditaCodice", (int)p.ValiditaCodice.TotalMinutes, 1, 1440)),
+            LeggiIntero(configurazione, "Sicurezza:RecuperoPassword:TentativiCodice", p.TentativiCodice, 1, 20),
+            TimeSpan.FromMinutes(LeggiIntero(configurazione, "Sicurezza:RecuperoPassword:MinutiValiditaLink", (int)p.ValiditaLink.TotalMinutes, 1, 1440)),
+            LeggiIntero(configurazione, "Sicurezza:RecuperoPassword:RichiesteOrarieAccount", p.RichiesteOrarieAccount, 1, 100),
+            LeggiIntero(configurazione, "Sicurezza:RecuperoPassword:RichiesteOrarieIp", p.RichiesteOrarieIp, 1, 1000));
     }
 
     private static OpzioniSicurezza LeggiOpzioniSicurezza(IConfiguration configurazione)

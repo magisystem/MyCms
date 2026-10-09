@@ -63,6 +63,8 @@ public class ContestoDatabase : DbContext
 
     public DbSet<MessaggioOutbox> MessaggiOutbox => Set<MessaggioOutbox>();
 
+    public DbSet<RichiestaRecuperoPassword> RichiesteRecuperoPassword => Set<RichiestaRecuperoPassword>();
+
     public DbSet<RegistroAudit> RegistroAudit => Set<RegistroAudit>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -78,6 +80,7 @@ public class ContestoDatabase : DbContext
         modelBuilder.Entity<Pagina>().HasQueryFilter(pagina => pagina.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<RevisionePagina>().HasQueryFilter(revisione => revisione.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<ImpostazioniEmailTenant>().HasQueryFilter(impostazioni => impostazioni.IdTenant == IdTenantCorrente);
+        modelBuilder.Entity<RichiestaRecuperoPassword>().HasQueryFilter(richiesta => richiesta.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<MessaggioOutbox>().HasQueryFilter(messaggio => messaggio.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<Utenza>().HasQueryFilter(utenza => utenza.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<RegistroAudit>().HasQueryFilter(voce => voce.IdTenant == IdTenantCorrente);

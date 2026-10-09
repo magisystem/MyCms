@@ -1,0 +1,45 @@
+@page "/admin/recupero/reimposta"
+@model DvCms.Web.Pages.Admin.Recupero.ReimpostaModel
+@{
+    Layout = "_LayoutAccesso";
+    ViewData["Titolo"] = _L["Nuova password"];
+}
+<div class="card card-md">
+    <div class="card-body">
+        @if (Model.Completata)
+        {
+            <h2 class="h2 text-center mb-2">@_L["Password cambiata"]</h2>
+            <p class="text-secondary text-center mb-3">@_L["Ora puoi accedere con la nuova password."]</p>
+            <a href="/admin/accesso" class="btn btn-primary w-100">@_L["Vai all'accesso"]</a>
+        }
+        else if (!Model.LinkValido)
+        {
+            <h2 class="h2 text-center mb-2">@_L["Link non valido"]</h2>
+            <p class="text-secondary text-center mb-3">@_L["Il link è scaduto, è già stato usato oppure non è corretto. Puoi richiederne uno nuovo."]</p>
+            <a href="/admin/recupero" class="btn btn-primary w-100">@_L["Ricomincia il recupero"]</a>
+        }
+        else
+        {
+            <h2 class="h2 text-center mb-4">@_L["Scegli la nuova password"]</h2>
+            @if (Model.Messaggio is not null)
+            {
+                <div class="alert alert-danger" role="alert">@Model.Messaggio</div>
+            }
+            <form method="post" autocomplete="off" novalidate>
+                <input type="hidden" name="Token" value="@Model.Token" />
+                <div class="mb-3">
+                    <label class="form-label" for="NuovaPassword">@_L["Nuova password"]</label>
+                    <input type="password" class="form-control" id="NuovaPassword" name="NuovaPassword" autocomplete="new-password" required />
+                    <div class="form-hint">@_L["Da 12 a 128 caratteri."]</div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="ConfermaPassword">@_L["Conferma la nuova password"]</label>
+                    <input type="password" class="form-control" id="ConfermaPassword" name="ConfermaPassword" autocomplete="new-password" required />
+                </div>
+                <div class="form-footer">
+                    <button type="submit" class="btn btn-primary w-100">@_L["Cambia password"]</button>
+                </div>
+            </form>
+        }
+    </div>
+</div>

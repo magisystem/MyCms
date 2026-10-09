@@ -24,6 +24,7 @@ Piano di implementazione richiesto da `docs/AI_START_HERE.md`, preparato prima d
 | C-007 Outbox minimo | Completata (tabella `MessaggiOutbox`, worker `ServizioOutbox`, eventi `PaginaPubblicata`/`PaginaRitirata`) |
 | A-005 Contratto email e adapter SMTP | Completata (M1b: `IInvioEmail`, SMTP con MailKit, impostazioni per tenant con segreti cifrati, invio dal worker) |
 | B-009 Configurazione email del tenant | Completata (`/admin/platform/tenant/{id}/email`: canale dinamico, segreti in sola scrittura, prova via outbox, errori visibili) |
+| B-008 Recupero password | Completata (M1b: OTP + link monouso in due email, limiti, invalidazioni, notifica; esclusi PlatformAdmin) |
 | B-010 Gestione testi statici | Completata (`/admin/platform/testi`: ricerca, filtri, modifica, cache e audit) |
 | B-007 Creazione TenantAdmin e non-escalation | Completata (password temporanea mostrata una volta; elevazione `Utente` → `TenantAdmin`) |
 

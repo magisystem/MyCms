@@ -1,0 +1,22 @@
+@page "/admin/recupero"
+@model DvCms.Web.Pages.Admin.Recupero.RichiestaModel
+@{
+    Layout = "_LayoutAccesso";
+    ViewData["Titolo"] = _L["Recupero password"];
+}
+<div class="card card-md">
+    <div class="card-body">
+        <h2 class="h2 text-center mb-2">@_L["Hai dimenticato la password?"]</h2>
+        <p class="text-secondary text-center mb-4">@_L["Scrivi la tua email: se è registrata ti invieremo un codice di verifica."]</p>
+        <form method="post" autocomplete="off" novalidate>
+            <div class="mb-3">
+                <label class="form-label" for="Email">@_L["Email"]</label>
+                <input type="email" class="form-control" id="Email" name="Email" autocomplete="username" maxlength="254" required />
+            </div>
+            <div class="form-footer">
+                <button type="submit" class="btn btn-primary w-100">@_L["Invia il codice"]</button>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="text-center text-secondary mt-3"><a href="/admin/accesso">@_L["Torna all'accesso"]</a></div>
