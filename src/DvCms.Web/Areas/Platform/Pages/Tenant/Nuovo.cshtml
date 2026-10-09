@@ -1,0 +1,46 @@
+@page "/admin/platform/tenant/nuovo"
+@model DvCms.Web.Areas.Platform.Pages.Tenant.NuovoModel
+@{
+    ViewData["Titolo"] = _L["Nuovo tenant"];
+}
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-body">
+                @if (Model.ErroreDaMostrare is not null)
+                {
+                    <div class="alert alert-danger" role="alert">@Model.ErroreDaMostrare</div>
+                }
+                <form method="post" novalidate>
+                    <div class="mb-3">
+                        <label class="form-label" for="Nome">@_L["Nome del tenant"]</label>
+                        <input class="form-control" id="Nome" name="Nome" value="@Model.Nome" maxlength="200" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="NomeSito">@_L["Nome del sito"]</label>
+                        <input class="form-control" id="NomeSito" name="NomeSito" value="@Model.NomeSito" maxlength="200" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="FusoOrario">@_L["Fuso orario"]</label>
+                        <input class="form-control" id="FusoOrario" name="FusoOrario" value="@Model.FusoOrario" maxlength="64" />
+                        <div class="form-hint">@_L["Nome IANA, ad esempio Europe/Rome."]</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="Host">@_L["Dominio"]</label>
+                        <input class="form-control" id="Host" name="Host" value="@Model.Host" maxlength="253" required />
+                        <div class="form-hint">@_L["Solo il nome del dominio, senza https://."]</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-check">
+                            <input type="checkbox" class="form-check-input" name="DominioVerificato" value="true" @(Model.DominioVerificato ? "checked" : null) />
+                            <span class="form-check-label">@_L["Ho verificato il possesso del dominio"]</span>
+                        </label>
+                        <div class="form-hint">@_L["Senza verifica il dominio non risolve alcun sito."]</div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">@_L["Crea il tenant"]</button>
+                    <a href="/admin/platform/tenant" class="btn btn-link">@_L["Annulla"]</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

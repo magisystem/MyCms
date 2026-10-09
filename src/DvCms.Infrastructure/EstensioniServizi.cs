@@ -1,9 +1,11 @@
 using DvCms.Application.Accessi;
 using DvCms.Application.Localizzazione;
+using DvCms.Application.Piattaforma;
 using DvCms.Application.Tenancy;
 using DvCms.Infrastructure.Accessi;
 using DvCms.Infrastructure.Localizzazione;
 using DvCms.Infrastructure.Persistenza;
+using DvCms.Infrastructure.Piattaforma;
 using DvCms.Infrastructure.Popolamento;
 using DvCms.Infrastructure.Tenancy;
 using Microsoft.EntityFrameworkCore;
@@ -58,6 +60,7 @@ public static class EstensioniServizi
         servizi.TryAddScoped<IServizioAudit, ServizioAudit>();
         servizi.TryAddScoped<IServizioAccesso, ServizioAccesso>();
         servizi.TryAddScoped<ServizioPopolamento>();
+        servizi.TryAddScoped<IServizioPiattaforma, ServizioPiattaforma>();
     }
 
     private static OpzioniSicurezza LeggiOpzioniSicurezza(IConfiguration configurazione)

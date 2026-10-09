@@ -1,0 +1,61 @@
+@page "/admin/platform/tenant"
+@model DvCms.Web.Areas.Platform.Pages.Tenant.IndexModel
+@{
+    ViewData["Titolo"] = _L["Tenant"];
+}
+@if (Model.Messaggio is not null)
+{
+    <div class="alert alert-success" role="status">@Model.Messaggio</div>
+}
+@if (Model.ErroreDaMostrare is not null)
+{
+    <div class="alert alert-danger" role="alert">@Model.ErroreDaMostrare</div>
+}
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">@_L["Tenant della piattaforma"]</h3>
+        <div class="card-actions">
+            <a href="/admin/platform/tenant/nuovo" class="btn btn-primary"><i class="ti ti-plus"></i> @_L["Nuovo tenant"]</a>
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table class="table card-table table-vcenter">
+            <thead>
+                <tr>
+                    <th>@_L["Nome"]</th>
+                    <th>@_L["Stato"]</th>
+                    <th>@_L["Siti"]</th>
+                    <th>@_L["Amministratori"]</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var tenant in Model.Elenco)
+                {
+                    <tr>
+                        <td>
+                            @tenant.Nome
+                            @if (tenant.Primario)
+                            {
+                                <span class="badge bg-blue-lt ms-2">@_L["Primario"]</span>
+                            }
+                        </td>
+                        <td>
+                            @if (tenant.Stato == StatoTenant.Attivo)
+                            {
+                                <span class="badge bg-green-lt">@_L["Attivo"]</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-red-lt">@_L["Sospeso"]</span>
+                            }
+                        </td>
+                        <td>@tenant.NumeroSiti</td>
+                        <td>@tenant.NumeroAmministratori</td>
+                        <td class="text-end"><a href="/admin/platform/tenant/@tenant.Id" class="btn btn-sm">@_L["Gestisci"]</a></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

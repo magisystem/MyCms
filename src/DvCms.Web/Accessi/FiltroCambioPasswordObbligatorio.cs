@@ -21,10 +21,12 @@ public sealed class FiltroCambioPasswordObbligatorio : IAsyncPageFilter
 
         var utente = context.HttpContext.User;
         var percorsoPagina = context.ActionDescriptor.ViewEnginePath;
+        var inAreaAdmin = percorsoPagina.StartsWith("/Admin", StringComparison.OrdinalIgnoreCase)
+            || context.ActionDescriptor.RelativePath.StartsWith("/Areas/", StringComparison.OrdinalIgnoreCase);
 
         if (utente.Identity?.IsAuthenticated == true
             && PrincipalSessione.DeveCambiarePassword(utente)
-            && percorsoPagina.StartsWith("/Admin", StringComparison.OrdinalIgnoreCase)
+            && inAreaAdmin
             && !_pagineConsentite.Contains(percorsoPagina, StringComparer.OrdinalIgnoreCase))
         {
             context.Result = new RedirectResult("/admin/password");

@@ -15,6 +15,8 @@ Piano di implementazione richiesto da `docs/AI_START_HERE.md`, preparato prima d
 | B-002 Risoluzione host | Completata |
 | B-003 Account locali e autenticazione | Completata |
 | B-005 Seeding | Completata (comando `seed`, `Seed:EseguiAllAvvio`) |
+| B-006 Menu "Platform" e gestione tenant | Completata (area `/admin/platform`; tenant, siti, domini, sospensione, account) |
+| B-007 Creazione TenantAdmin e non-escalation | Completata (password temporanea mostrata una volta; elevazione `Utente` → `TenantAdmin`) |
 
 ## 1. Stato attuale del repository
 

@@ -57,6 +57,14 @@ public sealed class ScenarioWeb : IAsyncDisposable
             deveCambiarePassword: deveCambiarePassword,
             annullamento: TestContext.Current.CancellationToken);
 
+    public Task<Guid> CreaPlatformAdminAsync(string email) =>
+        DatiProva.CreaUtenzaAsync(
+            Fabbrica.Services,
+            RuoloUtenza.PlatformAdmin,
+            null,
+            email,
+            annullamento: TestContext.Current.CancellationToken);
+
     public async Task DisabilitaAsync(Guid idUtenza)
     {
         await using var ambito = Fabbrica.Services.CreateAsyncScope();
