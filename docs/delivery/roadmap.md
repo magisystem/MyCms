@@ -17,20 +17,30 @@ La roadmap è ordinata per dipendenze. Le stime vanno fatte solo dopo un primo e
 - Tenant, site e domain registry.
 - Ruoli `PlatformAdmin` e `TenantAdmin`, principal `Guest` per tenant e comando di bootstrap del primo `PlatformAdmin`.
 - Menu "Platform" nell'admin (solo `PlatformAdmin`): crea tenant, sito, dominio (verificato a mano) e utente `TenantAdmin`; il `PlatformAdmin` può aprire l'admin di qualunque tenant (auditato).
-- Recupero password (per `TenantAdmin` e `Utente`) con codice OTP e link monouso in due email distinte (richiede il contratto email con almeno l'adapter SMTP, A-005, la configurazione email del tenant, B-009, e l'outbox minimo). Gli adapter Graph, Gmail e SendGrid arrivano dopo, prima del primo cliente in produzione.
 - Context tenant derivato dal dominio e dal tenant dell'account admin.
 - Pagina semplice draft/published.
 - Rendering Razor per pagina pubblicata.
 - Test d'isolamento cross-tenant.
 
+Il piano dettagliato è in [`plan-m0-m1.md`](plan-m0-m1.md).
+
 **Exit criteria:** un `PlatformAdmin` crea due tenant con i rispettivi `TenantAdmin`; i due tenant pubblicano lo stesso slug su siti/domìni distinti; nessun accesso incrociato; tentativi di escalation di ruolo respinti.
+
+## M1b — Email e recupero password
+
+- Contratto email con adapter SMTP (A-005) e configurazione email del tenant (B-009).
+- Outbox minimo (tabella e worker semplice, C-007).
+- Recupero password per `TenantAdmin` e `Utente` con codice OTP e link monouso in due email distinte (B-008); invito via email per i nuovi `TenantAdmin`.
+- Gli adapter Graph, Gmail e SendGrid (A-006, A-007, A-008) arrivano prima del primo cliente in produzione.
+
+**Exit criteria:** recupero password completo in due email con SMTP, limiti e invalidazioni verificati da test; segreti del tenant cifrati; nessun invio dalla richiesta web.
 
 ## M2 — CMS guidato e revisioni
 
 - CRUD pagine e slug.
 - Template guidati iniziali e form Razor.
 - Revisioni immutabili, preview sicura, concorrenza optimistic.
-- Outbox minimo (tabella e worker semplice) per publish e invalidazione cache; la versione production-ready resta in M6.
+- Publish e invalidazione cache sull'outbox minimo introdotto in M1b; la versione production-ready resta in M6.
 - SEO base, redirects e invalidazione cache.
 
 **Exit criteria:** creare/modificare/preview/publish/revert una pagina e verificare HTML pubblico.

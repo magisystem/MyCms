@@ -49,9 +49,10 @@ Le voci sono candidate a issue GitHub. Ogni issue deve essere piccola, verificab
 **Accettazione:** il `PlatformAdmin` apre l'admin di qualunque tenant e vede il menu "Platform" (area Razor protetta lato server, non solo nascosta); CRUD tenant, siti e domini (verifica manuale: chi e quando); sospensione/riattivazione tenant; ingresso in un tenant e operazioni registrati in `AuditLog`; gli altri ruoli ricevono 403/404.
 
 ### B-007: Creazione TenantAdmin e non-escalation
-**Accettazione:** solo il `PlatformAdmin` crea/eleva `TenantAdmin`; nessun ruolo si auto-assegna ruoli superiori; test automatici di escalation per UI e richieste manipolate.
+**Accettazione:** in M1 le credenziali iniziali sono una password temporanea mostrata una sola volta con cambio obbligatorio al primo accesso (da confermare, vedi `plan-m0-m1.md`); l'invito via email arriva in M1b; solo il `PlatformAdmin` crea/eleva `TenantAdmin`; nessun ruolo si auto-assegna ruoli superiori; test automatici di escalation per UI e richieste manipolate.
 
 ### B-008: Recupero password
+**Milestone:** M1b.
 **Accettazione:** per `TenantAdmin` e `Utente` (non per il `PlatformAdmin`), con ricerca dell'account nel tenant dell'host; richiesta con risposta uniforme; prima email con codice OTP (scadenza breve, tentativi limitati, hash, rate limiting); dopo OTP corretto, seconda email distinta con link monouso a scadenza breve (mai mostrato a schermo); link invalidato all'uso e da nuove richieste; al cambio password sessioni invalidate e notifica email; invio via outbox; test su OTP errato/scaduto/riusato e su enumerazione.
 
 ### B-004: Test isolamento tenant
@@ -75,7 +76,7 @@ Le voci sono candidate a issue GitHub. Ogni issue deve essere piccola, verificab
 **Accettazione:** almeno un template versionato con form Razor e policy di editing; template immutabili per versione; test.
 
 ### C-007: Outbox minimo
-**Accettazione:** il publish scrive l'evento outbox nella stessa transazione; un worker semplice processa gli eventi e invalida la cache; consegna ripetuta tollerata. La versione production-ready è G-001.
+**Milestone:** M1b. **Accettazione:** il publish scrive l'evento outbox nella stessa transazione; un worker semplice processa gli eventi e invalida la cache; consegna ripetuta tollerata. La versione production-ready è G-001.
 
 ### C-005: SEO base e redirect
 **Accettazione:** title/description/canonical/robots; rename slug crea redirect secondo policy; no redirect loop.

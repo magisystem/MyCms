@@ -35,6 +35,14 @@ Le scelte sotto non sono definite completamente. Gli agenti devono evitare di in
 - Solo account locali o SSO/OIDC richiesto per clienti enterprise?
 - Policy password (lunghezza, complessità, blocco account). I limiti del recupero password sono quelli di ADR-0011.
 
+## Da confermare per M0/M1 (vedi `docs/delivery/plan-m0-m1.md`)
+
+- Framework di test: xUnit (proposta).
+- Credenziali iniziali del `TenantAdmin` in M1: password temporanea mostrata una volta, cambio obbligatorio al primo accesso; invito via email in M1b (proposta).
+- Email di un `TenantAdmin` o `Utente` uguale a quella di un `PlatformAdmin`: rifiutata alla creazione (proposta).
+- SQL Server in CI: service container; in locale istanza o container con connection string da environment variable (proposta).
+- Disponibilità del .NET 10 SDK negli ambienti di sviluppo e CI.
+
 ## Email
 
 - Indirizzo e dominio mittente di ogni tenant (con SPF/DKIM/DMARC): attività manuale del `PlatformAdmin`.

@@ -52,6 +52,7 @@ Questa è una **baseline architetturale**, non un'applicazione già implementata
 - [Test](docs/architecture/testing.md)
 - [Roadmap](docs/delivery/roadmap.md)
 - [Backlog](docs/delivery/backlog.md)
+- [Piano M0/M1](docs/delivery/plan-m0-m1.md)
 - [Definition of Done](docs/delivery/definition-of-done.md)
 - [Questioni aperte](docs/open-questions.md)
 - [ADR](docs/decisions/README.md)

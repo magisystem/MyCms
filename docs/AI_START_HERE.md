@@ -6,6 +6,8 @@ Copia il testo seguente nella sessione dell'agente dopo aver aggiunto questa doc
 
 Leggi integralmente `AGENTS.md`, `README.md`, `docs/architecture/overview.md`, `docs/architecture/multi-tenancy.md`, gli ADR pertinenti e `docs/delivery/roadmap.md`.
 
+Il piano già preparato per M0/M1 è in `docs/delivery/plan-m0-m1.md`: verificalo rispetto allo stato del repository, segnalane le divergenze e usalo come base.
+
 Non implementare subito tutte le funzionalità. Prima ispeziona il repository e riferisci:
 
 1. stato attuale e file/progetti presenti;
