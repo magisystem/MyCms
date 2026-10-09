@@ -11,7 +11,7 @@ La sicurezza è un requisito di progetto, con particolare attenzione a isolament
 - Solo il `PlatformAdmin` crea o eleva `TenantAdmin`; nessun ruolo assegna un ruolo superiore al proprio né modifica il proprio. La registrazione crea solo `Utente`; il ruolo non è mai preso dalla richiesta. Controllo lato server con test di non-escalation.
 - Il primo `PlatformAdmin` si crea con un comando di bootstrap, senza credenziali predefinite.
 - Ingresso del `PlatformAdmin` nell'admin di un tenant e azioni del menu "Platform" sono registrati in `AuditLog`.
-- **Recupero password** (tutti gli account): risposta identica a prescindere dall'esistenza dell'account; **prima email** con codice OTP (6 cifre, 10 minuti, 5 tentativi, salvato come hash), **seconda email distinta** con link monouso (30 minuti), invalidato all'uso e da nuove richieste; rate limiting (3 richieste/ora per account e IP); al cambio password sessioni e token sono invalidati e arriva una notifica. I valori sono iniziali e configurabili (ADR-0011).
+- **Recupero password** (`TenantAdmin` e `Utente`; il `PlatformAdmin` non lo ha, la sua password è gestita a mano dall'operatore): account cercato nel tenant dell'host; risposta identica a prescindere dall'esistenza dell'account; **prima email** con codice OTP (6 cifre, 10 minuti, 5 tentativi, salvato come hash), **seconda email distinta** con link monouso (30 minuti), invalidato all'uso e da nuove richieste; rate limiting (3 richieste/ora per account e IP); al cambio password sessioni e token sono invalidati e arriva una notifica. I valori sono iniziali e configurabili (ADR-0011).
 - **Two-factor authentication:** requisito previsto, a priorità minima, da implementare per ultimo e non bloccante per il go-live (ADR-0011). Metodo e obbligatorietà per `PlatformAdmin` e `TenantAdmin` saranno decisi con un ADR.
 - **Registrazione acquirenti:** solo su siti con e-commerce attivo; conferma email, rate limiting e protezione anti-abuso.
 - Separare privilegi globali da ruoli tenant.
@@ -20,7 +20,8 @@ La sicurezza è un requisito di progetto, con particolare attenzione a isolament
 
 ## Dati tenant-scoped
 
-- Tenant context derivato da host e dal tenant dell'account, non dal payload.
+- Tenant context derivato solo dall'host dell'URL, non dal payload né da campi del client; l'account deve appartenere a quel tenant (salvo il `PlatformAdmin`).
+- Admin e sito pubblico condividono l'origine dello stesso host: schemi e cookie di autenticazione distinti per admin e area cliente, cookie admin con percorso limitato, e CSP e sanitizzazione del rich text sono controlli essenziali (un XSS sul sito pubblico raggiunge l'origine dell'admin).
 - Validazione tenant sia a livello application sia persistence.
 - Foreign key composite e test cross-tenant.
 - Accessi di supporto cross-tenant espliciti, privilegiati e auditati.

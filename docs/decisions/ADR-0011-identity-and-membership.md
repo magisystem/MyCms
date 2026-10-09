@@ -2,7 +2,7 @@
 
 - **Stato:** Accepted (rimangono aperti dettagli elencati in `docs/open-questions.md`)
 - **Data:** 2026-10-09
-- **Aggiornato:** 2026-10-09 (ruolo `Utente` = acquirente registrato; `Guest` per tenant; recupero password; 2FA; ambito di accesso di `TenantAdmin` e `PlatformAdmin`; account sempre legati a un solo tenant)
+- **Aggiornato:** 2026-10-09 (ruolo `Utente` = acquirente registrato; `Guest` per tenant; recupero password; 2FA; ambito di accesso di `TenantAdmin` e `PlatformAdmin`; account sempre legati a un solo tenant; tenant deciso solo dall'URL; nessun recupero password per `PlatformAdmin`)
 
 ## Contesto
 
@@ -18,7 +18,17 @@ Usare ASP.NET Core Identity per gli account locali. Ogni account, tranne il `Pla
 - Un account `TenantAdmin` o `Utente` appartiene a un solo tenant.
 - L'email è unica **all'interno di un tenant** e può essere ripetuta in tenant diversi: sono account distinti, con credenziali e password distinte. Vale per `TenantAdmin` e `Utente`.
 - Il `PlatformAdmin` è globale (senza `TenantId`); la sua email è unica fra i `PlatformAdmin`.
-- Conseguenza: ovunque si identifichi un account (login, recupero password, registrazione) serve il tenant oltre all'email. L'unicità di nome utente/email di ASP.NET Core Identity va configurata per tenant, non globale.
+- Conseguenza: ovunque si identifichi un account (login, recupero password, registrazione) il tenant viene dall'URL (sezione seguente). L'unicità di nome utente/email di ASP.NET Core Identity va configurata per tenant, non globale.
+
+### Il tenant è deciso solo dall'URL
+
+- Il tenant è determinato **esclusivamente** dall'host dell'URL della pagina richiesta (host registrato → sito → `TenantId`, vedi `multi-tenancy.md`). Solo quel `TenantId` è usato per autenticazione, autorizzazione e per tutte le query al database.
+- Nessun tenant fornito dal client (campo del form, header, query string, cookie, claim non verificato) viene mai accettato per scegliere il tenant.
+- L'admin di ogni tenant si raggiunge dall'host del tenant stesso, in un percorso riservato (ad esempio `/admin`, nome da fissare al bootstrap). Non esiste un dominio centrale di amministrazione condiviso da più tenant.
+- **Login:** l'account viene cercato solo fra quelli del tenant dell'host. Se un `TenantAdmin` del tenant A prova ad accedere dall'host del tenant B, il login fallisce perché il suo account non appartiene al `TenantId` di B. L'errore è lo stesso del caso "credenziali errate", senza rivelare che l'account esiste altrove.
+- Il `PlatformAdmin` (account globale) può accedere dall'host di qualunque tenant: l'accesso ha il `TenantId` dell'host, quindi lavora in quel tenant come un `TenantAdmin`, con in più il menu Platform.
+- Il recupero password cerca l'account solo nel tenant dell'host.
+- Cookie di sessione legati all'host. Lo schema di autenticazione dell'area admin e quello dell'area cliente sono distinti (cookie con nomi diversi e, per l'admin, percorso limitato), perché admin e sito pubblico condividono la stessa origine.
 
 ### Ruoli
 
@@ -57,9 +67,9 @@ Possono emettere ordini gli account autenticati: `Utente`, `TenantAdmin` e `Plat
 
 ### Recupero password
 
-Vale per tutti gli account con login. Flusso:
+Vale per gli account `TenantAdmin` e `Utente`. **Il `PlatformAdmin` non ha recupero password**: la sua password è gestita a mano dall'operatore (ad esempio con una procedura sul database, descritta nel runbook). Flusso:
 
-1. L'utente richiede il recupero indicando l'email. La risposta è sempre la stessa, esista o no l'account (nessuna enumerazione).
+1. L'utente richiede il recupero indicando l'email; l'account è cercato nel tenant dell'host. La risposta è sempre la stessa, esista o no l'account (nessuna enumerazione).
 2. Se l'account esiste, parte una **prima email** con un **codice OTP** di sicurezza a scadenza breve, con tentativi limitati e richieste soggette a rate limiting. Il codice è conservato solo come hash.
 3. Inserito l'OTP corretto, il server invia una **seconda email, distinta**, con un **link monouso** a scadenza breve per impostare la nuova password. Il link viene invalidato all'uso e da ogni nuova richiesta di recupero. Il link non viene mai mostrato a schermo né inviato insieme al codice.
 4. Cambiata la password, le sessioni e i token esistenti dell'account sono invalidati e l'utente riceve una notifica email.
@@ -82,7 +92,8 @@ Le email passano dall'outbox (ADR-0010) e dagli adapter di ADR-0015 (Microsoft G
 ## Conseguenze
 
 - Per M1–M6 servono solo `PlatformAdmin`, `TenantAdmin` e il principal `Guest`; `Utente` e registrazione arrivano con l'e-commerce (M7).
-- Servono gli adapter email (ADR-0015) già per il recupero password degli account admin.
+- Servono gli adapter email (ADR-0015) già per il recupero password dei `TenantAdmin`.
 - Tutti gli account tranne il `PlatformAdmin` hanno `TenantId`; il `PlatformAdmin` accede a tutti i tenant.
-- Il login e il recupero password devono sapere a quale tenant appartiene l'account (vedi `docs/open-questions.md`).
+- Login, recupero password e registrazione usano sempre il tenant dell'host; i test devono provare che un account non può accedere dall'host di un altro tenant.
+- Resta da decidere quale host usa il `PlatformAdmin` per il primo accesso (vedi `docs/open-questions.md`).
 - Non serve una tabella di membership multi-tenant; verrà introdotta solo se un giorno un account dovrà lavorare su più tenant (nuovo ADR).

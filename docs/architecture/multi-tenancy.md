@@ -13,7 +13,7 @@ Database SQL Server condiviso, tabelle condivise e isolamento logico per `Tenant
 5. Rendere il `TenantContext` request-scoped e non modificabile dall'utente della richiesta.
 6. Per job/background work, includere tenant/site esplicitamente nel messaggio e verificare il contesto prima dell'esecuzione.
 
-L'admin su un dominio centrale serve più tenant: il `TenantAdmin` opera solo sul tenant del proprio account; il `PlatformAdmin` può selezionare qualunque tenant. In ogni caso il server verifica ruolo e tenant dell'account (o il ruolo `PlatformAdmin`): la selezione UI non è autorizzazione. Il dominio centrale dell'admin è configurato esplicitamente e non è un host di sito pubblico.
+L'admin di ogni tenant si raggiunge dall'host del tenant stesso (percorso riservato, ad esempio `/admin`); non esiste un dominio centrale condiviso. Il tenant è deciso solo dall'host: il `TenantAdmin` del tenant A che accede dall'host del tenant B fallisce il login perché il suo account non appartiene a B. Il `PlatformAdmin` può accedere dall'host di qualunque tenant e vi lavora come un `TenantAdmin`. Il server verifica sempre ruolo e tenant dell'account rispetto al `TenantId` dell'host; nessun tenant proveniente dal client è accettato.
 
 ## Difesa a strati
 
@@ -41,6 +41,7 @@ Pages/revisions, template custom, settings tema, asset media, prodotti, inventar
 
 Per almeno due tenant di test:
 
+- `TenantAdmin` o `Utente` del tenant A che prova il login dall'host del tenant B: fallisce con lo stesso errore delle credenziali errate;
 - stesso slug, stesso database: nessun conflitto se su siti differenti;
 - tentativo di lettura pagina altrui: negato o non trovato secondo la policy endpoint;
 - modifica/cancellazione cross-tenant: negata;

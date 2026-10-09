@@ -31,7 +31,11 @@ Tenant, domini e certificati sono gestiti dagli operatori (ADR-0014). Il runbook
 
 ## Email
 
-Il canale di invio (Microsoft Graph, Gmail, SendGrid o SMTP, ADR-0015) è configurato per tenant dal `PlatformAdmin` nel menu "Platform"; i segreti sono cifrati nel database e le chiavi di cifratura (Data Protection) sono persistite e incluse nei backup. Per i messaggi senza tenant c'è una configurazione di piattaforma negli appsettings/segreti di ambiente. Prima del primo invio in produzione, a mano: per ogni tenant, configurare l'app/account del canale scelto (registrazione app in Microsoft Entra, progetto OAuth Google, account SendGrid o server SMTP), il dominio mittente con SPF, DKIM e DMARC, e verificare la consegna; monitorare errori e code di invio dal worker.
+Il canale di invio (Microsoft Graph, Gmail, SendGrid o SMTP, ADR-0015) è configurato per tenant dal `PlatformAdmin` nel menu "Platform"; i segreti sono cifrati nel database. La chiave di cifratura sta nella configurazione dell'ambiente (non nel repository) e va salvata separatamente dal database; senza di essa i segreti non sono leggibili (ADR-0015).
+
+## Password del PlatformAdmin
+
+Il `PlatformAdmin` non ha recupero password. Il reset è una procedura manuale dell'operatore: si genera un nuovo hash compatibile con ASP.NET Core Identity (ad esempio riusando il comando di bootstrap) e si aggiorna l'account sul database. La procedura va descritta nel runbook e ogni reset annotato. Prima del primo invio in produzione, a mano: per ogni tenant, configurare l'app/account del canale scelto (registrazione app in Microsoft Entra, progetto OAuth Google, account SendGrid o server SMTP), il dominio mittente con SPF, DKIM e DMARC, e verificare la consegna; monitorare errori e code di invio dal worker.
 
 ## Background work e outbox
 

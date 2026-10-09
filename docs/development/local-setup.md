@@ -13,7 +13,8 @@ Questo file descrive il target di setup; i comandi precisi vanno completati dura
 ## Configurazione
 
 - Copiare un file di esempio non segreto in configurazione locale, oppure usare user-secrets/environment variables.
-- Non committare password, connection string reali, API key, certificati o dati cliente.
+- Non committare password, connection string reali, API key, chiavi di cifratura, certificati o dati cliente. I file di configurazione con segreti (es. `appsettings.Development.json` locale, `appsettings.Production.json`) restano fuori dal repository.
+- Il tenant è deciso dall'host: per provare più tenant in locale servono host distinti registrati (da fissare al bootstrap).
 - In sviluppo usare domini locali documentati oppure un middleware/test host esplicito; non introdurre bypass non sicuri nella configurazione produzione.
 - Lo storage file system è esclusivamente un adapter per lo sviluppo.
 

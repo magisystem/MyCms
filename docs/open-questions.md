@@ -17,6 +17,9 @@ Le scelte sotto non sono definite completamente. Gli agenti devono evitare di in
 - Recupero password: prima email con codice OTP, seconda email con link monouso (ADR-0011). Two-factor authentication prevista, per ultima, non bloccante per il go-live.
 - Email: adapter Microsoft Graph, Gmail API, SendGrid e SMTP dietro un contratto unico; provider scelto per tenant dal `PlatformAdmin` con UI dinamica; nessuna priorità fra i canali (ADR-0015).
 - Un tenant può avere più `TenantAdmin`; un account `TenantAdmin` o `Utente` appartiene a un solo tenant; la stessa email vale in un tenant e può ripetersi in tenant diversi (ADR-0011).
+- Il tenant è deciso solo dall'host dell'URL: un account non può accedere dall'host di un altro tenant (salvo il `PlatformAdmin`), nessun dominio centrale di amministrazione (ADR-0011).
+- Il `PlatformAdmin` non ha recupero password: reset manuale dell'operatore. Il recupero password vale per `TenantAdmin` e `Utente`.
+- Chiave di cifratura dei segreti dei tenant nella configurazione dell'ambiente (non nel repository); il key ring può stare nel database solo se protetto da quella chiave (ADR-0015).
 - Limiti del recupero password confermati. Nessun motivo obbligatorio per l'ingresso del `PlatformAdmin` nei tenant, nessuna impersonation.
 - `TenantAdmin` accede solo al proprio tenant; `PlatformAdmin` entra ovunque con i poteri di un `TenantAdmin` più il menu Platform. Un `TenantAdmin` ordina solo nel proprio tenant, il `PlatformAdmin` ovunque.
 - `Guest` per tenant senza impostazioni: vede tutto ciò che è pubblico; limitare la visibilità è un'evoluzione futura.
@@ -29,13 +32,12 @@ Le scelte sotto non sono definite completamente. Gli agenti devono evitare di in
 
 - Solo account locali o SSO/OIDC richiesto per clienti enterprise?
 - Policy password (lunghezza, complessità, blocco account). I limiti del recupero password sono quelli di ADR-0011.
-- **Come si identifica il tenant al login degli amministratori.** La stessa email può esistere in più tenant (ADR-0011), quindi l'email da sola non basta. Per gli `Utente` il tenant è quello dell'host del sito pubblico. Per i `TenantAdmin` sull'admin a dominio centrale serve un'indicazione: un campo "tenant" nel login, oppure un indirizzo di accesso per tenant, oppure l'accesso dall'host del sito stesso. Lo stesso vale per il recupero password.
-- Il `PlatformAdmin` ha un login senza tenant: il form deve permetterlo.
+- **Primo accesso del `PlatformAdmin`.** Poiché il tenant è deciso solo dall'host e non c'è un dominio centrale di amministrazione, il `PlatformAdmin` deve accedere da un host registrato. Prima che esista un tenant dei clienti serve un host di partenza. Proposta: il comando di bootstrap crea un tenant "di gestione" dell'operatore con il suo dominio; il `PlatformAdmin` da lì crea gli altri tenant. Confermare.
+- Percorso riservato dell'admin sotto l'host del tenant (proposta: `/admin`).
+- In sviluppo locale, come si simulano più host/tenant (hosts file, `*.localhost` o un host di test esplicito)?
 
 ## Email
 
-- Per i messaggi senza tenant (ad esempio recupero password del `PlatformAdmin`) si usa una configurazione di piattaforma negli appsettings/segreti di ambiente (assunzione in ADR-0015): confermare.
-- Gestione delle chiavi di cifratura dei segreti (Data Protection) in produzione: dove vengono conservate e come entrano nel backup.
 - Indirizzo e dominio mittente di ogni tenant (con SPF/DKIM/DMARC): attività manuale del `PlatformAdmin`.
 
 ## Dati e hosting

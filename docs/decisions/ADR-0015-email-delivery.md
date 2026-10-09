@@ -18,13 +18,19 @@ Il progetto deve inviare email: recupero password (OTP e link monouso, ADR-0011)
   - Gmail API: credenziali OAuth o account di servizio, utente mittente.
   - SendGrid: API key, indirizzo e nome mittente.
 - Validazione lato server dei campi in base al provider scelto; un provider non riconosciuto o impostazioni incomplete sono rifiutati al salvataggio. La schermata offre un invio di prova.
-- **Segreti nel database:** password, API key e client secret dei tenant sono cifrati a riposo (ad esempio con ASP.NET Core Data Protection, con chiavi persistite e incluse nei backup), sono in sola scrittura nella UI (mai mostrati di nuovo, solo sostituibili) e non compaiono mai nei log. Restano fuori dal repository.
+- **Segreti nel database:** password, API key e client secret dei tenant sono cifrati a riposo con ASP.NET Core Data Protection, sono in sola scrittura nella UI (mai mostrati di nuovo, solo sostituibili) e non compaiono mai nei log. Dove stanno le chiavi: vedi "Chiavi di cifratura".
 - L'invio avviene nel worker: il messaggio outbox contiene il `TenantId`, e il worker carica le impostazioni di quel tenant. Un tenant senza configurazione valida non invia; l'errore è visibile ai `PlatformAdmin`.
-- Per i messaggi senza tenant (account `PlatformAdmin`, ad esempio recupero password) serve una configurazione di piattaforma. Assunzione da confermare: impostazioni `Email:*` in appsettings/segreti di ambiente, con la stessa struttura delle impostazioni di tenant.
+- Tutti i messaggi hanno un tenant (quello dell'host): il `PlatformAdmin` non ha recupero password, quindi non esistono invii senza tenant.
 - Le email partono dall'outbox (ADR-0010): l'invio avviene nel worker, con retry e idempotenza. Mai nella richiesta web.
 - Le due email del recupero password (codice OTP e link monouso) sono messaggi distinti, inviati in momenti diversi.
 - I template email sono parte del codice (server-side), non modificabili dai tenant. Nessun segreto, OTP o token in chiaro nei log.
 - Ogni adapter ha test con un fake del canale esterno e un test di contratto comune. Non si inviano email reali dalla CI.
+
+## Chiavi di cifratura
+
+- La chiave che protegge i segreti sta nella **configurazione dell'ambiente** (`appsettings.{Environment}.json` non versionato, oppure variabile d'ambiente), mai nel repository.
+- Il key ring di Data Protection può essere persistito nel database, purché sia protetto da quella chiave o da un certificato tenuto fuori dal database. Chiavi in chiaro nello stesso database dei segreti non proteggono da una copia del database.
+- Il backup della chiave è separato dal backup del database e deve essere ripristinabile: senza la chiave, i segreti dei tenant non sono più leggibili e vanno reinseriti.
 
 ## Ordine di implementazione
 
@@ -41,4 +47,4 @@ Non c'è una priorità fra i canali per l'utilizzo. Per lo sviluppo si parte da 
 - Ogni SDK o libreria aggiunta (Microsoft Graph, Google API, SendGrid, libreria SMTP) rispetta la regola 11 di `AGENTS.md`: motivazione, licenza, manutenzione, limitata a `DvCms.Infrastructure`. In alternativa si valuta `HttpClient` diretto.
 - Ogni canale richiede configurazione esterna manuale (registrazione app in Microsoft Entra, progetto/OAuth Google, account SendGrid, server SMTP) e dominio mittente con SPF/DKIM/DMARC; queste attività sono parte del runbook (`docs/architecture/operations.md`).
 - Ogni tenant ha le proprie credenziali e il proprio mittente: il `PlatformAdmin` deve configurarle per ogni tenant, con SPF/DKIM/DMARC del dominio usato.
-- Servono la cifratura dei segreti nel database e la gestione delle chiavi di cifratura nel backup/restore.
+- Servono la cifratura dei segreti nel database e un processo per conservare e ripristinare la chiave (sezione "Chiavi di cifratura").
