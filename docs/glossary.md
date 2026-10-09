@@ -2,7 +2,16 @@
 
 - **Tenant:** cliente/organizzazione che usa la piattaforma.
 - **Site:** sito web di un tenant.
-- **Domain:** host registrato associato a un sito.
+- **Dominio:** host registrato e verificato manualmente, associato a un sito.
+- **PlatformAdmin:** ruolo globale dell'operatore della piattaforma; entra in qualunque tenant come un `TenantAdmin` e in più vede il menu "Platform"; unico a creare o elevare `TenantAdmin`.
+- **TenantAdmin:** amministratore di un solo tenant; un tenant può avere più `TenantAdmin`.
+- **Utente:** acquirente registrato di un tenant con e-commerce; può solo emettere ordini.
+- **Guest:** visitatore anonimo del sito pubblico, vincolato a un tenant (un profilo Guest per tenant).
+- **Testo statico:** testo scritto nelle viste o nel codice, localizzato con `@_L["TESTO"]` e conservato in `TestiStatici`.
+- **Testo dinamico:** testo creato dall'utente dal backend (pagine, prodotti, ecc.), tradotto per lingua.
+- **Lingua di base:** italiano; le altre lingue ripiegano su di essa per i testi statici.
+- **DvCms:** nome del progetto; prefisso di solution, namespace e sotto-progetti.
+- **Tabler:** tema CSS/JS dell'admin (`admin-theme/tabler`); **Tabler Icons:** icone dell'admin.
 - **Theme:** pacchetto Razor fidato che definisce presentazione e renderer.
 - **Template:** modello versionato che crea la struttura iniziale di una pagina e la policy di editing.
 - **Component:** nodo tipizzato (contenuto, layout o commerce) riconosciuto dal CMS e da un renderer.

@@ -9,7 +9,7 @@ Le pagine si modificano con form guidati o GrapesJS, si renderizzano con temi Ra
 
 ## Decisione proposta
 
-Persistire `EditorProjectJson` e `RenderDocumentJson` distinti. Il documento CMS è un albero tipizzato/versionato, renderizzato solo tramite registry allow-list. Le revisioni sono immutabili, con puntatori separati per draft corrente e pubblicato. Pubblicare cambia il puntatore in transazione.
+Persistire `ProgettoEditorJson` e `DocumentoRenderJson` distinti. Il documento CMS è un albero tipizzato/versionato, renderizzato solo tramite registry allow-list. Le revisioni sono immutabili, con puntatori separati per draft corrente e pubblicato. Pubblicare cambia il puntatore in transazione.
 
 ## Alternative considerate
 

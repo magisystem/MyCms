@@ -13,7 +13,14 @@ E-commerce è un modulo interno con modelli, servizi e transizioni di dominio pr
 - Ordini e righe con snapshot dei valori applicati all'acquisto.
 - Pagamenti, tentativi, rimborsi e webhook.
 - Spedizioni/evasione, se previste dal business.
-- Account cliente ed email transazionali.
+- Account acquirente (`Utente`) ed email transazionali (adapter di ADR-0015).
+
+## Chi può ordinare
+
+- Gli ordini richiedono un account autenticato: `Utente` (acquirente registrato), `TenantAdmin` (solo nel proprio tenant) o `PlatformAdmin` (in qualunque tenant). Il `Guest` non può ordinare (nessun guest checkout, per ora).
+- `TenantAdmin` e `PlatformAdmin` si autenticano sul sito pubblico con le stesse credenziali dell'admin e vi hanno solo capacità di acquirente.
+- La registrazione degli `Utente` è abilitata per sito e solo se l'e-commerce è attivo; l'`Utente` può solo emettere e consultare i propri ordini e non accede all'admin.
+- Gli account `Utente` appartengono a un solo tenant: la stessa email può registrarsi su tenant diversi come account distinti.
 
 ## Regole di sicurezza e integrità
 
@@ -29,11 +36,11 @@ E-commerce è un modulo interno con modelli, servizi e transizioni di dominio pr
 
 ## Eventi e stati
 
-Definire gli stati consentiti come transizioni esplicite (es. `PendingPayment`, `Paid`, `PaymentFailed`, `Cancelled`, `RefundPending`, `Refunded`, `FulfillmentPending`, `Shipped`). La macchina a stati definitiva è da approvare con i requisiti commerciali; non consentire mutazioni arbitrarie dello stato.
+Definire gli stati consentiti come transizioni esplicite (es. `InAttesaDiPagamento`, `Pagato`, `PagamentoFallito`, `Annullato`, `RimborsoInCorso`, `Rimborsato`, `InAttesaDiEvasione`, `Spedito`). La macchina a stati definitiva è da approvare con i requisiti commerciali; non consentire mutazioni arbitrarie dello stato.
 
 ## Integrazione con il builder
 
-I componenti `commerce.*` referenziano prodotto/collezione/query tipizzata, non copiano il catalogo nel documento. Il renderer chiama il modulo Store attraverso servizi applicativi. Un'anteprima senza dati reali deve essere chiaramente distinta dal checkout reale.
+I componenti `negozio.*` referenziano prodotto/collezione/query tipizzata, non copiano il catalogo nel documento. Il renderer chiama il modulo Store attraverso servizi applicativi. Un'anteprima senza dati reali deve essere chiaramente distinta dal checkout reale.
 
 ## Decisioni ancora aperte
 
@@ -42,7 +49,6 @@ I componenti `commerce.*` referenziano prodotto/collezione/query tipizzata, non 
 - Metodi e zone spedizione.
 - Prenotazione e rilascio delle quantità.
 - Politica resi/rimborsi.
-- Guest checkout vs account obbligatorio.
 - Gestione dati personali, conservazione e obblighi legali applicabili.
 
 Non implementare checkout produzione finché le decisioni pertinenti non sono approvate e testate.

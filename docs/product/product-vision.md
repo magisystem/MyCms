@@ -6,15 +6,12 @@ Realizzare un CMS SaaS multi-tenant in cui un operatore della piattaforma può g
 
 ## Utenti
 
-- **Platform operator:** gestisce tenant, piani, domini e operazioni tecniche di piattaforma.
-- **Tenant owner:** gestisce il cliente, gli utenti e i siti assegnati.
-- **Site administrator:** configura un sito, il tema e le impostazioni SEO.
-- **Editor:** modifica pagine e media.
-- **Publisher:** revisiona e pubblica contenuti.
-- **Store manager:** gestisce catalogo, inventario e ordini.
-- **Visitor/customer:** naviga il sito pubblico ed eventualmente acquista.
+- **PlatformAdmin:** operatore della piattaforma. Dal menu "Platform" crea e gestisce tenant, siti, domini e utenti `TenantAdmin`; entra nell'admin di qualunque tenant e vi lavora come un `TenantAdmin`.
+- **TenantAdmin:** amministratore di un cliente. Gestisce siti, tema, SEO, contenuti, media e, con l'e-commerce, catalogo e ordini.
+- **Utente:** acquirente registrato di un sito con e-commerce; può solo emettere ordini. Nei siti senza e-commerce non esiste.
+- **Guest:** visitatore del sito pubblico senza login, sempre legato al proprio tenant; vede tutto ciò che è pubblico. Non può emettere ordini.
 
-Un utente può avere membership in più tenant, con ruoli diversi per ciascuno.
+Un `TenantAdmin` appartiene a un solo tenant (un tenant può averne più di uno); il `PlatformAdmin` accede a tutti. I clienti non si registrano da soli: gli account amministrativi sono creati dagli operatori (ADR-0014); solo gli acquirenti si registrano, e solo nei siti con e-commerce.
 
 ## Principi di prodotto
 
@@ -34,7 +31,7 @@ Un utente può avere membership in più tenant, con ruoli diversi per ciascuno.
 - Architettura a microservizi.
 - App mobile nativa.
 - Editor di temi grafici visuale completo.
-- Multilingua avanzato e multi-valuta finché i requisiti non sono definiti.
+- Più di due lingue, traduzione automatica, lingue da destra a sinistra e multi-valuta finché i requisiti non sono definiti. Italiano e inglese sono in scope (ADR-0018).
 - Gestione fiscale transnazionale completa senza analisi e provider dedicati.
 
 ## Requisiti qualitativi iniziali

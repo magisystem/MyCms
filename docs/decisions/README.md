@@ -8,7 +8,7 @@ Stato: `Proposed`, `Accepted`, `Superseded`, `Deprecated`.
 
 - [ADR-0001 — Monolite modulare](ADR-0001-modular-monolith.md)
 - [ADR-0002 — Razor-first, no SPA generale](ADR-0002-razor-first-admin.md)
-- [ADR-0003 — .NET 10, EF Core 10, SQL Server primario e PostgreSQL supportato](ADR-0003-dotnet-sql-server-postgresql.md)
+- [ADR-0003 — .NET 10, EF Core 10, SQL Server (superseded in parte da ADR-0012)](ADR-0003-dotnet-sql-server-postgresql.md)
 - [ADR-0004 — Database condiviso e isolamento tenant](ADR-0004-shared-database-tenancy.md)
 - [ADR-0005 — Contenuto canonico e revisioni](ADR-0005-canonical-content-and-revisions.md)
 - [ADR-0006 — Temi Razor fidati e versionati](ADR-0006-trusted-razor-themes.md)
@@ -16,6 +16,13 @@ Stato: `Proposed`, `Accepted`, `Superseded`, `Deprecated`.
 - [ADR-0008 — Rendering server-side e pubblicazione](ADR-0008-server-rendering-and-publishing.md)
 - [ADR-0009 — E-commerce come modulo interno](ADR-0009-commerce-module.md)
 - [ADR-0010 — Outbox e worker](ADR-0010-outbox-worker.md)
-- [ADR-0011 — Identity e membership tenant](ADR-0011-identity-and-membership.md)
+- [ADR-0011 — Account e ruoli](ADR-0011-identity-and-membership.md)
+- [ADR-0012 — SQL Server come unico database](ADR-0012-sql-server-only.md)
+- [ADR-0013 — Tabler e Tabler Icons per l'admin](ADR-0013-tabler-admin-ui.md)
+- [ADR-0014 — Amministrazione di piattaforma, domini manuali, certificati dall'hosting](ADR-0014-platform-administration.md)
+- [ADR-0015 — Invio email tramite adapter (Graph, Gmail, SendGrid, SMTP)](ADR-0015-email-delivery.md)
+- [ADR-0016 — Autenticazione locale propria, senza ASP.NET Core Identity](ADR-0016-local-authentication.md)
+- [ADR-0017 — Denominazione in italiano](ADR-0017-italian-naming.md)
+- [ADR-0018 — Localizzazione dei testi (italiano e inglese)](ADR-0018-localization.md)
 
-Per le regole operative della persistenza multi-provider, vedere [`docs/architecture/database-providers.md`](../architecture/database-providers.md).
+Per le regole operative della persistenza, vedere [`docs/architecture/database.md`](../architecture/database.md).

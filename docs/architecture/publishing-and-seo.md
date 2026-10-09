@@ -4,7 +4,7 @@
 
 - Risolvere il dominio registrato prima di cercare la pagina.
 - URL canonico per ogni pagina pubblica.
-- Slug univoco per sito e locale, se multilingua attivo.
+- Slug univoco per sito e lingua. Ogni lingua di una pagina ha il proprio URL, titolo, descrizione e canonical; le versioni collegate (`IdGruppoTraduzione`) si dichiarano con `hreflang`; il prefisso di lingua (`/en/...`) fa parte dell'URL canonico. Una pagina inesistente nella lingua richiesta risponde 404 (ADR-0018).
 - Gestire rename di slug con redirect 301 quando appropriato.
 - Distinguere 404, redirect, preview e pagina pubblicata.
 - Non indicizzare le pagine in bozza o le preview.
@@ -15,7 +15,7 @@ Il modello pagina deve supportare titolo SEO, meta description, canonical, robot
 
 ## Rendering e indicizzazione
 
-Il server genera HTML semantico completo con heading appropriati, link reali, `lang`, immagini con alt text e metadata. JavaScript è un enhancement, non un prerequisito per leggere il contenuto principale.
+Il server genera HTML semantico completo con heading appropriati, link reali, `lang` (della lingua della pagina), immagini con alt text e metadata. JavaScript è un enhancement, non un prerequisito per leggere il contenuto principale.
 
 ## Sitemap e robots
 

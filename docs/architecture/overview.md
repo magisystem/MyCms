@@ -6,14 +6,14 @@ Il prodotto parte come monolite modulare ASP.NET Core. Il sito pubblico, l'admin
 
 ## Componenti
 
-La strategia di persistenza a doppio provider è descritta in [database-providers.md](database-providers.md): SQL Server è il default, PostgreSQL è un provider supportato con migrazioni e test distinti.
+La persistenza usa SQL Server come unico database supportato ed è descritta in [database.md](database.md).
 
 - **Public web:** routing host/slug, pagine pubblicate, Razor layout, componenti e SEO.
-- **Admin web:** Razor Pages, form HTML, autenticazione, CRUD, workflow e configurazioni.
+- **Admin web:** Razor Pages con tema Tabler, form HTML, autenticazione, CRUD, workflow e configurazioni. Include l'**area di piattaforma** (solo `PlatformAdmin`) per tenant, siti, domini e utenti `TenantAdmin`.
 - **Page builder:** asset JS separato e caricato solo nelle pagine di editing visuale; comunica con endpoint ASP.NET Core.
 - **Application layer:** casi d'uso, autorizzazioni, validazioni, transizioni di stato e orchestrazione.
 - **Domain modules:** tenancy, sites, content, templates, themes, media, SEO e commerce.
-- **Infrastructure:** EF Core con SQL Server primario e PostgreSQL secondario, storage, cache, email e provider esterni.
+- **Infrastructure:** EF Core con SQL Server, storage, cache, email e provider esterni.
 - **Worker:** outbox, email, webhook asincroni, immagini e sitemap.
 
 ## Diagramma logico
@@ -24,7 +24,7 @@ Browser
   ├── Admin pages ──> ASP.NET Core / Razor ──> Application ──> Domain modules
   └── Visual builder ──> Admin Razor shell ──HTTP──> Admin API
                                                 │
-                                      SQL Server (primario) / PostgreSQL (compatibilità) / Object storage
+                                      SQL Server / Object storage
                                                 │
                                       Worker + Outbox + provider esterni
 ```
@@ -53,7 +53,7 @@ Le dipendenze fisiche tra assembly possono essere semplificate all'inizio. I con
 
 ### Modifica e pubblicazione
 
-1. Autenticare l'utente e verificare membership/permessi.
+1. Autenticare l'utente e verificare ruolo e tenant dell'account.
 2. Caricare draft e policy di modifica.
 3. Salvare con controllo di concorrenza.
 4. Validare lato server il progetto/dati aggiornati.
@@ -62,22 +62,24 @@ Le dipendenze fisiche tra assembly possono essere semplificate all'inizio. I con
 
 ## Struttura solution raccomandata
 
+Solution `DvCms.sln`; progetti e namespace con prefisso `DvCms.`.
+
 ```text
 src/
-  Cms.Web/
-  Cms.Domain/
-  Cms.Application/
-  Cms.Infrastructure/
-  Cms.Themes.Abstractions/
-  Cms.Themes.Corporate/
-  Cms.Themes.Creative/
-  Cms.Store/
-  Cms.Worker/
+  DvCms.Web/             (include wwwroot/lib/tabler e wwwroot/lib/tabler-icons)
+  DvCms.Domain/
+  DvCms.Application/
+  DvCms.Infrastructure/
+  DvCms.Themes.Abstractions/
+  DvCms.Themes.Corporate/
+  DvCms.Themes.Creative/
+  DvCms.Store/
+  DvCms.Worker/
   frontend/page-builder/
 tests/
-  Cms.UnitTests/
-  Cms.IntegrationTests/
-  Cms.TenantIsolationTests/
+  DvCms.UnitTests/
+  DvCms.IntegrationTests/
+  DvCms.TenantIsolationTests/
 ```
 
 Non è necessario creare tutti questi progetti il primo giorno. Iniziare con pochi assembly e separare solo quando migliora i confini o i test.

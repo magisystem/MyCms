@@ -6,26 +6,44 @@ La roadmap è ordinata per dipendenze. Le stime vanno fatte solo dopo un primo e
 
 - Creare solution .NET 10, configurare nullable, formatter/analyzer e CI.
 - Decidere framework test, convenzioni ID, logging, gestione segreti e hosting target iniziale.
-- Stabilire le due serie di migrazioni EF Core (SQL Server primaria e PostgreSQL secondaria) e il setup locale.
+- Configurare SQL Server ed EF Core con una serie di migrazioni e il setup locale.
+- Localizzatore dei testi statici (`@_L["TESTO"]`, tabelle `Lingue` e `TestiStatici`, italiano e inglese, ADR-0018): i testi del layout admin passano da subito dal localizzatore.
+- Preparare il layout admin Razor con Tabler e Tabler Icons (solo gli asset usati in `wwwroot`).
 - Creare i primi ADR specifici se si prendono decisioni nuove.
 
-**Exit criteria:** build pulita, test vuoto eseguibile in CI, SQL Server e PostgreSQL configurabili, entrambe le migrazioni iniziali applicabili da zero e setup locale documentato.
+**Exit criteria:** build pulita, test vuoto eseguibile in CI, SQL Server configurabile, migrazione iniziale applicabile da zero, layout admin Tabler renderizzato e setup locale documentato.
 
 ## M1 — Vertical slice tenant/sito/pagina
 
 - Tenant, site e domain registry.
-- Context tenant derivato dal dominio e membership admin.
+- Ruoli `PlatformAdmin` e `TenantAdmin`, principal `Guest` per tenant, account locali propri (ADR-0016) e seeding idempotente del tenant primario e del primo `PlatformAdmin`.
+- Schermata "Testi" del menu Platform per modificare i testi statici (B-010).
+- Menu "Platform" nell'admin (solo `PlatformAdmin`): crea tenant, sito, dominio (verificato a mano) e utente `TenantAdmin`; il `PlatformAdmin` può aprire l'admin di qualunque tenant (auditato).
+- Context tenant derivato dal dominio e dal tenant dell'account admin.
 - Pagina semplice draft/published.
 - Rendering Razor per pagina pubblicata.
 - Test d'isolamento cross-tenant.
 
-**Exit criteria:** due tenant possono pubblicare lo stesso slug su due siti/domìni distinti; nessun accesso incrociato.
+Il piano dettagliato è in [`plan-m0-m1.md`](plan-m0-m1.md).
+
+**Exit criteria:** un `PlatformAdmin` crea due tenant con i rispettivi `TenantAdmin`; i due tenant pubblicano lo stesso slug su siti/domìni distinti; nessun accesso incrociato; tentativi di escalation di ruolo respinti.
+
+## M1b — Email e recupero password
+
+- Contratto email con adapter SMTP (A-005) e configurazione email del tenant (B-009).
+- Outbox minimo (tabella e worker semplice, C-007).
+- Recupero password per `TenantAdmin` e `Utente` con codice OTP e link monouso in due email distinte (B-008); invito via email per i nuovi `TenantAdmin`.
+- Gli adapter Graph, Gmail e SendGrid (A-006, A-007, A-008) arrivano prima del primo cliente in produzione.
+
+**Exit criteria:** recupero password completo in due email con SMTP, limiti e invalidazioni verificati da test; segreti del tenant cifrati; nessun invio dalla richiesta web.
 
 ## M2 — CMS guidato e revisioni
 
 - CRUD pagine e slug.
+- Pagine in più lingue (C-008): una pagina per lingua, `hreflang`, selettore di lingua.
 - Template guidati iniziali e form Razor.
 - Revisioni immutabili, preview sicura, concorrenza optimistic.
+- Publish e invalidazione cache sull'outbox minimo introdotto in M1b; la versione production-ready resta in M6.
 - SEO base, redirects e invalidazione cache.
 
 **Exit criteria:** creare/modificare/preview/publish/revert una pagina e verificare HTML pubblico.
@@ -69,8 +87,9 @@ La roadmap è ordinata per dipendenze. Le stime vanno fatte solo dopo un primo e
 
 ## M7 — E-commerce MVP
 
-- Catalogo e varianti.
+- Catalogo e varianti, con traduzioni per lingua (F-006).
 - Prezzi/valuta, carrello e checkout.
+- Registrazione e login degli acquirenti (`Utente`), abilitati per sito; ordini riservati ad account autenticati.
 - Provider di pagamento approvato e webhook idempotenti.
 - Ordini, snapshot, inventario e email essenziali.
 - Componenti commerce nel renderer/page builder.
@@ -85,3 +104,7 @@ La roadmap è ordinata per dipendenze. Le stime vanno fatte solo dopo un primo e
 - Migrazione/release checklist e strategia rollback.
 
 Non iniziare M5 prima che il proof of concept M4 convalidi il modello documento/renderer.
+
+## Ultima priorità — Two-factor authentication
+
+Requisito previsto ma non prioritario: si affronta dopo il resto (G-006), con un ADR dedicato, e non blocca il go-live. Il recupero password via OTP e link monouso è invece in M1.

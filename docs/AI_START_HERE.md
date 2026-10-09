@@ -6,6 +6,8 @@ Copia il testo seguente nella sessione dell'agente dopo aver aggiunto questa doc
 
 Leggi integralmente `AGENTS.md`, `README.md`, `docs/architecture/overview.md`, `docs/architecture/multi-tenancy.md`, gli ADR pertinenti e `docs/delivery/roadmap.md`.
 
+Il piano già preparato per M0/M1 è in `docs/delivery/plan-m0-m1.md`: verificalo rispetto allo stato del repository, segnalane le divergenze e usalo come base.
+
 Non implementare subito tutte le funzionalità. Prima ispeziona il repository e riferisci:
 
 1. stato attuale e file/progetti presenti;
@@ -14,7 +16,7 @@ Non implementare subito tutte le funzionalità. Prima ispeziona il repository e 
 4. test che verranno aggiunti;
 5. decisioni aperte che bloccano il lavoro.
 
-Poi implementa la prima vertical slice: solution .NET 10 compilabile, SQL Server/EF Core (con PostgreSQL come provider secondario), tenant/site/domain, risoluzione tenant da host registrato, membership admin minima, una pagina draft/published renderizzata da Razor e test d'isolamento cross-tenant. Non implementare ancora e-commerce o builder completo.
+Fermati e attendi l'approvazione del piano. Solo dopo, implementa la prima vertical slice: solution .NET 10 compilabile, SQL Server/EF Core, tenant/site/domain, risoluzione tenant da host registrato, ruoli `PlatformAdmin`/`TenantAdmin` e principal `Guest` per tenant con menu "Platform" minimo, layout admin Tabler, una pagina draft/published renderizzata da Razor e test d'isolamento cross-tenant. Non implementare ancora e-commerce o builder completo.
 
 Prima di concludere esegui i test possibili, riporta comandi e risultati effettivi, aggiorna la documentazione e indica quali criteri di accettazione sono rimasti aperti. Non dichiarare test superati senza averli eseguiti. Non cambiare gli ADR senza spiegare il motivo e proporre una modifica documentata.
 

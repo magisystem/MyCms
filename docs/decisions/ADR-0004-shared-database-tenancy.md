@@ -2,6 +2,7 @@
 
 - **Stato:** Accepted
 - **Data:** 2026-10-09
+- **Nota (ADR-0012):** il riferimento a PostgreSQL non è più applicabile; la Row-Level Security eventuale riguarda solo SQL Server.
 
 ## Contesto
 
@@ -9,7 +10,7 @@ Il SaaS gestirà molti tenant e più siti per tenant. Database separati per clie
 
 ## Decisione
 
-Usare inizialmente un database condiviso e tabelle condivise con `TenantId`/`SiteId`, vincoli, query filter e autorizzazioni server-side. Valutare Row-Level Security nativa di SQL Server o PostgreSQL come difesa aggiuntiva, con implementazioni e test provider-specifici. Ogni nuovo modulo tenant-scoped deve avere test cross-tenant.
+Usare inizialmente un database condiviso e tabelle condivise con `IdTenant`/`IdSito`, vincoli, query filter e autorizzazioni server-side. Valutare Row-Level Security nativa di SQL Server o PostgreSQL come difesa aggiuntiva, con implementazioni e test provider-specifici. Ogni nuovo modulo tenant-scoped deve avere test cross-tenant.
 
 ## Alternative considerate
 

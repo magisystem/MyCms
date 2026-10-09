@@ -1,6 +1,6 @@
-# CMS SaaS multi-tenant — documentazione architetturale
+# DvCms — CMS SaaS multi-tenant: documentazione architetturale
 
-Questa cartella contiene la documentazione iniziale di progetto per un CMS multi-tenant sviluppato in .NET, pensato per siti di clienti con temi Razor dedicati, editor visuale ibrido ed e-commerce integrato.
+Questa cartella contiene la documentazione iniziale di **DvCms** (namespace e progetti `DvCms.*`), un CMS multi-tenant sviluppato in .NET, pensato per siti di clienti con temi Razor dedicati, editor visuale ibrido ed e-commerce integrato.
 
 ## Obiettivo
 
@@ -9,17 +9,19 @@ Fornire a sviluppatori e agenti AI (Codex, Claude Code, Gemini, DeepSeek o strum
 ## Scelte architetturali iniziali
 
 - **Backend e sito pubblico:** ASP.NET Core, C#, Razor Pages/MVC.
-- **Interfaccia amministrativa:** Razor Pages con navigazione e form HTML tradizionali. HTMX non è obbligatorio; si aggiunge solo se una schermata beneficia realmente di aggiornamenti parziali.
+- **Interfaccia amministrativa:** Razor Pages con navigazione e form HTML tradizionali, tema **Tabler** e icone **Tabler Icons** (cartella `admin-theme/`, ADR-0013). HTMX non è obbligatorio; si aggiunge solo se una schermata beneficia realmente di aggiornamenti parziali.
 - **Page builder:** GrapesJS in una pagina Razor dedicata, con asset JavaScript isolati. Nessun backend Node.js.
 - **Runtime:** .NET 10 LTS e Entity Framework Core 10, mantenuti sulle ultime patch supportate.
-- **Persistenza:** SQL Server è il provider primario e predefinito; PostgreSQL è un secondo provider supportato con migrazioni e test dedicati.
+- **Persistenza:** Microsoft SQL Server con EF Core 10, una sola serie di migrazioni (ADR-0012).
 - **Architettura:** monolite modulare, non microservizi.
 - **Tenancy:** database condiviso con isolamento logico rigoroso per tenant e sito.
+- **Ruoli:** `PlatformAdmin`, `TenantAdmin`, `Utente` (acquirente dell'e-commerce), `Guest` (visitatore del sito, per tenant) (ADR-0011). Solo il PlatformAdmin crea tenant e utenti `TenantAdmin`.
+- **Onboarding:** nessuna registrazione self-service per gli account amministrativi; tenant e domini sono gestiti manualmente dagli operatori e i certificati TLS dall'hosting tramite reverse proxy (ADR-0014). La registrazione esiste solo per gli acquirenti dei siti con e-commerce.
 - **Temi:** pacchetti Razor fidati e versionati, distribuiti con l'applicazione; i clienti non caricano assembly o viste Razor.
 - **Contenuti:** documenti JSON tipizzati e versionati; il solo HTML esportato non è la fonte di verità.
 - **E-commerce:** modulo interno al CMS, separato nei confini di dominio.
 
-SQL Server è il target primario. PostgreSQL è supportato con una seconda serie di migrazioni e test dedicati: non basta cambiare la connection string. I dettagli sono in [`docs/architecture/database-providers.md`](docs/architecture/database-providers.md).
+SQL Server è l'unico database supportato. I dettagli sono in [`docs/architecture/database.md`](docs/architecture/database.md).
 
 ## Come usare questa documentazione
 
@@ -38,7 +40,7 @@ Questa è una **baseline architetturale**, non un'applicazione già implementata
 - [Visione prodotto](docs/product/product-vision.md)
 - [Architettura](docs/architecture/overview.md)
 - [Stack](docs/architecture/technology-stack.md)
-- [Strategia provider database](docs/architecture/database-providers.md)
+- [Database SQL Server](docs/architecture/database.md)
 - [Modello di dominio e dati](docs/architecture/domain-model.md)
 - [Multi-tenancy](docs/architecture/multi-tenancy.md)
 - [Temi e rendering](docs/architecture/themes-and-rendering.md)
@@ -50,6 +52,7 @@ Questa è una **baseline architetturale**, non un'applicazione già implementata
 - [Test](docs/architecture/testing.md)
 - [Roadmap](docs/delivery/roadmap.md)
 - [Backlog](docs/delivery/backlog.md)
+- [Piano M0/M1](docs/delivery/plan-m0-m1.md)
 - [Definition of Done](docs/delivery/definition-of-done.md)
 - [Questioni aperte](docs/open-questions.md)
 - [ADR](docs/decisions/README.md)
