@@ -115,7 +115,7 @@ Note:
 
 Le lingue iniziali sono **italiano** (lingua di base) e **inglese** (ADR-0018).
 
-- `Lingua` (`Lingue`): `Id`, `Codice` (`it`, `en`), `Nome`, `Cultura` (`it-IT`, `en-GB`), `Predefinita` (italiano), `Attiva`. Globale alla piattaforma, popolata dal seeding.
+- `Lingua` (`Lingue`): `Id`, `Codice` (`it`, `en`), `Nome`, `Cultura` (`it-IT`, `en-GB`), `Predefinita` (italiano), `Attiva`. Globale alla piattaforma, inserita dalla migrazione (`it` e `en`).
 - `LinguaSito` (`LingueSito`): `IdTenant`, `IdSito`, `IdLingua`, `Predefinita`, `Attiva`. Le lingue abilitate per ciascun sito e la lingua predefinita del sito.
 - `TestoStatico` (`TestiStatici`): testi statici delle interfacce (HTML, messaggi, email). Globale alla piattaforma, **non** legata a un tenant: `Id`, `IdLingua`, `Chiave` (il testo statico in italiano così come scritto nella vista), `HashChiave` (SHA-256 della chiave, per l'indice), `Testo` (la traduzione nella lingua), `DaTradurre` (vero se il testo è stato creato in automatico con il testo italiano e non è ancora stato tradotto), `AggiornatoIlUtc`, `AggiornatoDaIdUtenza`. Indice univoco su `(IdLingua, HashChiave)`.
 - Testi dinamici creati dall'utente:

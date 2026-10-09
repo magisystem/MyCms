@@ -1,11 +1,15 @@
+using DvCms.Application.Localizzazione;
 using DvCms.Infrastructure;
 using DvCms.Web.Comandi;
+using DvCms.Web.Localizzazione;
 using DvCms.Web.Middleware;
 
 var costruttore = WebApplication.CreateBuilder(args);
 
 costruttore.Services.AddRazorPages();
 costruttore.Services.AggiungiInfrastruttura(costruttore.Configuration);
+costruttore.Services.AddHttpContextAccessor();
+costruttore.Services.AddScoped<IContestoLingua, ContestoLinguaRichiesta>();
 
 var applicazione = costruttore.Build();
 

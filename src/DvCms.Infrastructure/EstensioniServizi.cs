@@ -1,3 +1,5 @@
+using DvCms.Application.Localizzazione;
+using DvCms.Infrastructure.Localizzazione;
 using DvCms.Infrastructure.Persistenza;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -32,7 +34,20 @@ public static class EstensioniServizi
         servizi.AddDbContext<ContestoDatabase>(opzioni => opzioni.UseSqlServer(connessione, ConfiguraSqlServer));
         servizi.TryAddSingleton(TimeProvider.System);
 
+        AggiungiLocalizzazione(servizi);
+
         return servizi;
+    }
+
+    private static void AggiungiLocalizzazione(IServiceCollection servizi)
+    {
+        servizi.TryAddSingleton<CacheTestiStatici>();
+        servizi.TryAddSingleton<CodaTestiMancanti>();
+        servizi.TryAddSingleton<ElaboratoreTestiMancanti>();
+        servizi.TryAddSingleton<IArchivioTestiStatici, ArchivioTestiStatici>();
+        servizi.TryAddScoped<IContestoLingua, ContestoLinguaFisso>();
+        servizi.TryAddScoped<ILocalizzatore, Localizzatore>();
+        servizi.AddHostedService<ServizioTestiStatici>();
     }
 
     internal static void ConfiguraSqlServer(SqlServerDbContextOptionsBuilder opzioni)

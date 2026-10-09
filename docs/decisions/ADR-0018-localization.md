@@ -11,7 +11,7 @@ Il prodotto deve essere disponibile in più lingue, inizialmente **italiano** (l
 
 ### Lingue
 
-Tabella `Lingue` (`Id`, `Codice` `it`/`en`, `Nome`, `Cultura`, `Predefinita`, `Attiva`), popolata dal seeding; l'italiano è la lingua di base e predefinita. Altre lingue si aggiungono come righe, senza modificare il codice. Ogni sito abilita le proprie lingue in `LingueSito`. La cultura (`it-IT`, `en-GB`) governa formattazione di date e numeri; gli importi usano sempre la valuta esplicita (`database.md`).
+Tabella `Lingue` (`Id`, `Codice` `it`/`en`, `Nome`, `Cultura`, `Predefinita`, `Attiva`), inserita dalla migrazione (`it` e `en` con identificatori fissi); l'italiano è la lingua di base e predefinita. Altre lingue si aggiungono come righe, senza modificare il codice. Ogni sito abilita le proprie lingue in `LingueSito`. La cultura (`it-IT`, `en-GB`) governa formattazione di date e numeri; gli importi usano sempre la valuta esplicita (`database.md`).
 
 ### Testi statici
 
@@ -24,6 +24,7 @@ Tabella `Lingue` (`Id`, `Codice` `it`/`en`, `Nome`, `Cultura`, `Predefinita`, `A
   3. se la chiave non esiste affatto, si creano le righe di tutte le lingue attive: italiano (`DaTradurre` falso) e le altre con il testo italiano (`DaTradurre` vero).
   La creazione è sicura rispetto alla concorrenza (indice univoco `(IdLingua, HashChiave)`, un duplicato è ignorato).
 - **Solo testi letterali.** L'argomento di `_L[...]` deve essere una costante nel codice sorgente. I dati degli utenti o dei visitatori non passano mai dal localizzatore: eviterebbero la creazione illimitata di righe e l'inserimento di contenuto non attendibile. Un test automatico (o un analyzer) lo verifica.
+- **Scrittura in background:** il rendering non scrive mai sul database. Una chiave mancante viene accodata (una sola volta) e un servizio in background crea le righe; nel frattempo si usa il testo italiano. Se il database non è raggiungibile l'interfaccia resta in italiano e il servizio riprova.
 - **Prestazioni:** i testi sono tenuti in una cache in memoria per lingua; la lettura non interroga il database a ogni richiesta. La cache si invalida quando un testo viene modificato; per ora l'invalidazione è locale all'istanza, e con più istanze andrà introdotto un meccanismo condiviso (vedi `operations.md`).
 - **Sicurezza:** il risultato è codificato in HTML dal motore Razor; i testi sono testo semplice. HTML nei testi tradotti non è ammesso (un'eventuale variante con HTML sanificato richiederà un nuovo ADR).
 - **Ambito globale:** `TestiStatici` è comune a tutti i tenant, senza `IdTenant`; non esistono sostituzioni per tenant. Nelle chiavi e nei testi non vanno dati di tenant o personali.

@@ -1,3 +1,4 @@
+using DvCms.Domain.Localizzazione;
 using Microsoft.EntityFrameworkCore;
 
 namespace DvCms.Infrastructure.Persistenza;
@@ -18,6 +19,17 @@ public class ContestoDatabase : DbContext
     protected ContestoDatabase(DbContextOptions opzioni)
         : base(opzioni)
     {
+    }
+
+    public DbSet<Lingua> Lingue => Set<Lingua>();
+
+    public DbSet<TestoStatico> TestiStatici => Set<TestoStatico>();
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        ArgumentNullException.ThrowIfNull(modelBuilder);
+
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(ContestoDatabase).Assembly);
     }
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
