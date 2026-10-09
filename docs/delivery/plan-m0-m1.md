@@ -40,17 +40,18 @@ Struttura minima (si crea il necessario, non tutta la struttura raccomandata):
 ```text
 DvCms.sln
 global.json  Directory.Build.props  Directory.Packages.props  .editorconfig
-src/DvCms.Web  src/DvCms.Domain  src/DvCms.Application  src/DvCms.Infrastructure
-tests/DvCms.UnitTests  tests/DvCms.IntegrationTests  tests/DvCms.TenantIsolationTests
+src/DvCms.Web  src/DvCms.Dominio  src/DvCms.Applicazione  src/DvCms.Infrastruttura
+tests/DvCms.TestUnitari  tests/DvCms.TestIntegrazione  tests/DvCms.TestIsolamentoTenant
 .github/workflows/ci.yml
 ```
 
 Passi, uno per PR (CONTRIBUTING: PR piccole e verificabili):
 
 1. **A-001 — Solution e CI.** Progetti, nullable abilitato, analyzer, `.editorconfig`, versioni NuGet centralizzate, workflow di restore/build/test. `.gitignore` esteso per `appsettings.Production.json` e simili.
-2. **A-002 — SQL Server ed EF Core.** `DbContext` in Infrastructure, connection string da configurazione, prima migrazione, smoke test di integrazione che applica le migrazioni su database vuoto.
+2. **A-002 — SQL Server ed EF Core.** `DbContext` in Infrastruttura, connection string da configurazione, prima migrazione, smoke test di integrazione che applica le migrazioni su database vuoto.
 3. **A-003 — Convenzioni.** Logging strutturato, correlation ID, convenzioni UTC (`datetime2`), `Guid` v7.
-4. **A-004 — Layout admin Tabler.** Copia integrale di `tabler` e `tabler-icons` in `src/DvCms.Web/wwwroot/lib/`; regola dei file statici che non serve le pagine HTML demo; layout Razor condiviso (menu laterale, icone); nessun asset di `tabler-emails`, `tabler-illustrations`, `tabler-avatars`.
+4. **A-009 — Localizzatore dei testi statici (ADR-0018).** Tabelle `Lingue` e `TestiStatici`, `ILocalizzatore` e `@_L["TESTO"]`, algoritmo di creazione delle righe mancanti, cache, controllo che gli argomenti siano costanti letterali; deve precedere il layout, così ogni testo nasce già localizzato.
+5. **A-004 — Layout admin Tabler.** Copia integrale di `tabler` e `tabler-icons` in `src/DvCms.Web/wwwroot/lib/`; regola dei file statici che non serve le pagine HTML demo; layout Razor condiviso (menu laterale, icone); nessun asset di `tabler-emails`, `tabler-illustrations`, `tabler-avatars`.
 
 **Exit criteria (roadmap):** build pulita, test eseguibile in CI, migrazione applicabile da zero, layout Tabler renderizzato, setup locale aggiornato in `local-setup.md`.
 
@@ -60,13 +61,13 @@ Test M0: smoke di avvio, migrazione su database vuoto, test che `GET` di una pag
 
 Ordine di PR:
 
-5. **B-001 — Modello `Tenant`/`Site`/`SiteDomain`/`TenantGuestProfile`.** Vincoli (dominio univoco, stati), FK composite con `TenantId`, nessun cascade sui cicli, migrazione.
-6. **B-002 — Risoluzione host.** Normalizzazione (case, porta ignorata), solo host registrati, verificati e attivi; risposta controllata per host ignoti; `TenantContext` request-scoped; alias `localhost` solo in `Development`; header forwarded da proxy configurati.
-7. **B-003 — Account locali e autenticazione (ADR-0016).** Tabella `Utenze` propria con vincolo di ruolo/tenant e indice univoco `(TenantId, NormalizedEmail)`; hash password BCrypt (`BCrypt.Net-Next`, work factor 12, pre-hash, rehash al login); cookie authentication con `SecurityStamp` verificato a ogni richiesta, schema e cookie dell'area admin con percorso `/admin`; blocco di 5 minuti dopo 5 tentativi falliti, rate limiting ed errore uniforme al login. Niente ASP.NET Core Identity: scompare il rischio dell'unicità globale, ma l'autenticazione è codice nostro, quindi test mirati (hash, rehash, blocco, invalidazione sessioni, login incrociato) e inclusione nella security review.
-8. **B-005 — Seeding.** Seeder idempotente del tenant primario (`cms.davidemartelli.dev`, `IsPrimary`), del sito, dei domini e del primo `PlatformAdmin`, con dati da `Seed:PrimaryTenant`, password da segreto, alias `localhost` solo in `Development` e tenant di test opzionali (`cms1`/`cms2`) solo in `Development`; lanciabile da comando o all'avvio (opt-in); mai riscrive dati esistenti.
-9. **B-006/B-007 — Menu "Platform".** CRUD tenant, siti e domini (verifica manuale registrata), creazione `TenantAdmin` solo dal `PlatformAdmin`, ingresso nell'admin di un tenant e azioni in `AuditLog`.
-10. **C-001/C-002/C-003 (versione minima).** `Page` con `PublishedRevisionId` e revisione, creazione/modifica nell'admin con validazione server e antiforgery, slug univoco per sito (slug riservati `admin`, `lib`), rendering pubblico Razor per host e slug (404 per bozze e inesistenti).
-11. **B-004 — Matrice di isolamento.** Tenant A/B su pagine, account e domini.
+6. **B-001 — Modello `Tenant`/`Sito`/`DominioSito`/`ProfiloGuest`.** Vincoli (dominio univoco, stati), FK composite con `IdTenant`, nessun cascade sui cicli, migrazione.
+7. **B-002 — Risoluzione host.** Normalizzazione (case, porta ignorata), solo host registrati, verificati e attivi; risposta controllata per host ignoti; `ContestoTenant` request-scoped; alias `localhost` solo in `Development`; header forwarded da proxy configurati.
+8. **B-003 — Account locali e autenticazione (ADR-0016).** Tabella `Utenze` propria con vincolo di ruolo/tenant e indice univoco `(IdTenant, EmailNormalizzata)`; hash password BCrypt (`BCrypt.Net-Next`, work factor 12, pre-hash, rehash al login); cookie authentication con `TimbroSicurezza` verificato a ogni richiesta, schema e cookie dell'area admin con percorso `/admin`; blocco di 5 minuti dopo 5 tentativi falliti, rate limiting ed errore uniforme al login. Niente ASP.NET Core Identity: scompare il rischio dell'unicità globale, ma l'autenticazione è codice nostro, quindi test mirati (hash, rehash, blocco, invalidazione sessioni, login incrociato) e inclusione nella security review.
+9. **B-005 — Seeding.** Seeder idempotente del tenant primario (`cms.davidemartelli.dev`, `Primario`), del sito, dei domini e del primo `PlatformAdmin`, con dati da `Seed:TenantPrimario`, password da segreto, alias `localhost` solo in `Development` e tenant di test opzionali (`cms1`/`cms2`) solo in `Development`; lanciabile da comando o all'avvio (opt-in); mai riscrive dati esistenti.
+10. **B-006/B-007/B-010 — Menu "Platform".** CRUD tenant, siti e domini (verifica manuale registrata), creazione `TenantAdmin` solo dal `PlatformAdmin`, ingresso nell'admin di un tenant e azioni in `RegistroAudit`; schermata "Testi" per modificare i testi statici (solo `PlatformAdmin`).
+11. **C-001/C-002/C-003 (versione minima).** `Pagina` con `IdRevisionePubblicata` e revisione, creazione/modifica nell'admin con validazione server e antiforgery, slug univoco per sito (slug riservati `admin`, `lib`), rendering pubblico Razor per host e slug (404 per bozze e inesistenti).
+12. **B-004 — Matrice di isolamento.** Tenant A/B su pagine, account e domini.
 
 Non fanno parte di M1: recupero password, email, outbox, `Utente` e registrazione, e-commerce, builder, temi dedicati, media.
 
@@ -82,7 +83,7 @@ Unit: normalizzazione host e slug, regole di escalation dei ruoli, stati di pagi
 
 Integrazione (SQL Server reale): migrazioni da zero; vincoli (dominio, slug per sito, email per tenant ripetibile fra tenant); risoluzione host (ignoto, porta ignorata, `localhost` solo in `Development`, non risolve in `Production`); login (credenziali giuste/errate, `TenantAdmin` dall'host di un altro tenant fallisce con l'errore uniforme, `PlatformAdmin` da qualunque host); autorizzazione del menu "Platform" (403/404 per `TenantAdmin`); creazione `TenantAdmin` solo dal `PlatformAdmin`, rifiuto dell'auto-elevazione; audit di ingresso e azioni; pubblicazione (bozza mai pubblica, pubblicata visibile, 404 corretto).
 
-Isolamento (`DvCms.TenantIsolationTests`): con Tenant A e B, lettura/modifica/cancellazione di pagine e account altrui negate, stesso slug su siti diversi senza conflitti, nessun `TenantId` dal client accettato.
+Isolamento (`DvCms.TestIsolamentoTenant`): con Tenant A e B, lettura/modifica/cancellazione di pagine e account altrui negate, stesso slug su siti diversi senza conflitti, nessun `IdTenant` dal client accettato.
 
 Ogni PR riporta comandi ed esiti reali dei test eseguiti.
 

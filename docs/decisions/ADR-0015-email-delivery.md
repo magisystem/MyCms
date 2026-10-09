@@ -9,9 +9,9 @@ Il progetto deve inviare email: recupero password (OTP e link monouso, ADR-0011)
 
 ## Decisione
 
-- L'applicazione dipende da un contratto unico (ad esempio `IEmailSender`, definito in `DvCms.Application`) e non conosce il canale di invio.
-- Sono previsti quattro adapter in `DvCms.Infrastructure`: **Microsoft Graph API**, **Gmail API**, **SendGrid**, **SMTP**.
-- **Il canale è una proprietà del tenant.** Il tenant ha un campo `EmailProvider` (`Smtp`, `Graph`, `Gmail`, `SendGrid`) e le impostazioni del canale scelto (`TenantEmailSettings`). Non esiste un ordine di priorità fra i canali: ogni tenant usa quello configurato.
+- L'applicazione dipende da un contratto unico (ad esempio `IInvioEmail`, definito in `DvCms.Applicazione`) e non conosce il canale di invio.
+- Sono previsti quattro adapter in `DvCms.Infrastruttura`: **Microsoft Graph API**, **Gmail API**, **SendGrid**, **SMTP**.
+- **Il canale è una proprietà del tenant.** Il tenant ha un campo `ProviderEmail` (`Smtp`, `Graph`, `Gmail`, `SendGrid`) e le impostazioni del canale scelto (`ImpostazioniEmailTenant`). Non esiste un ordine di priorità fra i canali: ogni tenant usa quello configurato.
 - La configurazione si modifica solo dalla schermata di configurazione del tenant nel menu "Platform" (solo `PlatformAdmin`). La UI mostra un selettore del tipo di provider e, in base alla scelta, **solo i campi necessari** a quel provider. Campi indicativi (da affinare in implementazione):
   - SMTP: host, porta, modalità TLS, utente, password, indirizzo e nome mittente.
   - Microsoft Graph: tenant Microsoft, client id, client secret, casella mittente.
@@ -19,7 +19,7 @@ Il progetto deve inviare email: recupero password (OTP e link monouso, ADR-0011)
   - SendGrid: API key, indirizzo e nome mittente.
 - Validazione lato server dei campi in base al provider scelto; un provider non riconosciuto o impostazioni incomplete sono rifiutati al salvataggio. La schermata offre un invio di prova.
 - **Segreti nel database:** password, API key e client secret dei tenant sono cifrati a riposo con ASP.NET Core Data Protection, sono in sola scrittura nella UI (mai mostrati di nuovo, solo sostituibili) e non compaiono mai nei log. Dove stanno le chiavi: vedi "Chiavi di cifratura".
-- L'invio avviene nel worker: il messaggio outbox contiene il `TenantId`, e il worker carica le impostazioni di quel tenant. Un tenant senza configurazione valida non invia; l'errore è visibile ai `PlatformAdmin`.
+- L'invio avviene nel worker: il messaggio outbox contiene il `IdTenant`, e il worker carica le impostazioni di quel tenant. Un tenant senza configurazione valida non invia; l'errore è visibile ai `PlatformAdmin`.
 - Tutti i messaggi hanno un tenant (quello dell'host): il `PlatformAdmin` non ha recupero password, quindi non esistono invii senza tenant.
 - Le email partono dall'outbox (ADR-0010): l'invio avviene nel worker, con retry e idempotenza. Mai nella richiesta web.
 - Le due email del recupero password (codice OTP e link monouso) sono messaggi distinti, inviati in momenti diversi.
@@ -44,7 +44,7 @@ Non c'è una priorità fra i canali per l'utilizzo. Per lo sviluppo si parte da 
 
 ## Conseguenze
 
-- Ogni SDK o libreria aggiunta (Microsoft Graph, Google API, SendGrid, libreria SMTP) rispetta la regola 11 di `AGENTS.md`: motivazione, licenza, manutenzione, limitata a `DvCms.Infrastructure`. In alternativa si valuta `HttpClient` diretto.
+- Ogni SDK o libreria aggiunta (Microsoft Graph, Google API, SendGrid, libreria SMTP) rispetta la regola 11 di `AGENTS.md`: motivazione, licenza, manutenzione, limitata a `DvCms.Infrastruttura`. In alternativa si valuta `HttpClient` diretto.
 - Ogni canale richiede configurazione esterna manuale (registrazione app in Microsoft Entra, progetto/OAuth Google, account SendGrid, server SMTP) e dominio mittente con SPF/DKIM/DMARC; queste attività sono parte del runbook (`docs/architecture/operations.md`).
 - Ogni tenant ha le proprie credenziali e il proprio mittente: il `PlatformAdmin` deve configurarle per ogni tenant, con SPF/DKIM/DMARC del dominio usato.
 - Servono la cifratura dei segreti nel database e un processo per conservare e ripristinare la chiave (sezione "Chiavi di cifratura").

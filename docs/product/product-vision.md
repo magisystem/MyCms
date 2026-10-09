@@ -31,7 +31,7 @@ Un `TenantAdmin` appartiene a un solo tenant (un tenant può averne più di uno)
 - Architettura a microservizi.
 - App mobile nativa.
 - Editor di temi grafici visuale completo.
-- Multilingua avanzato e multi-valuta finché i requisiti non sono definiti.
+- Più di due lingue, traduzione automatica, lingue da destra a sinistra e multi-valuta finché i requisiti non sono definiti. Italiano e inglese sono in scope (ADR-0018).
 - Gestione fiscale transnazionale completa senza analisi e provider dedicati.
 
 ## Requisiti qualitativi iniziali

@@ -36,11 +36,11 @@ E-commerce è un modulo interno con modelli, servizi e transizioni di dominio pr
 
 ## Eventi e stati
 
-Definire gli stati consentiti come transizioni esplicite (es. `PendingPayment`, `Paid`, `PaymentFailed`, `Cancelled`, `RefundPending`, `Refunded`, `FulfillmentPending`, `Shipped`). La macchina a stati definitiva è da approvare con i requisiti commerciali; non consentire mutazioni arbitrarie dello stato.
+Definire gli stati consentiti come transizioni esplicite (es. `InAttesaDiPagamento`, `Pagato`, `PagamentoFallito`, `Annullato`, `RimborsoInCorso`, `Rimborsato`, `InAttesaDiEvasione`, `Spedito`). La macchina a stati definitiva è da approvare con i requisiti commerciali; non consentire mutazioni arbitrarie dello stato.
 
 ## Integrazione con il builder
 
-I componenti `commerce.*` referenziano prodotto/collezione/query tipizzata, non copiano il catalogo nel documento. Il renderer chiama il modulo Store attraverso servizi applicativi. Un'anteprima senza dati reali deve essere chiaramente distinta dal checkout reale.
+I componenti `negozio.*` referenziano prodotto/collezione/query tipizzata, non copiano il catalogo nel documento. Il renderer chiama il modulo Store attraverso servizi applicativi. Un'anteprima senza dati reali deve essere chiaramente distinta dal checkout reale.
 
 ## Decisioni ancora aperte
 

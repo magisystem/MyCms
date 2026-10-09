@@ -24,6 +24,15 @@ Verificare flussi critici: login, creazione pagina, save draft, preview, publish
 - rendering coerente con tema;
 - compatibilità/migrazione dei documenti versionati.
 
+## Test di localizzazione
+
+- Chiave nuova: creazione delle righe per tutte le lingue attive (italiano `DaTradurre` falso, le altre vero) e restituzione del testo italiano.
+- Chiave esistente in una lingua: restituito il testo della lingua; mancante in una lingua: riga creata con il testo italiano.
+- Creazione concorrente della stessa chiave senza errori né duplicati.
+- Modifica da parte del `PlatformAdmin`: azzera `DaTradurre`, invalida la cache, scrive in `RegistroAudit`; `TenantAdmin` e altri ricevono 403/404.
+- Output codificato in HTML; verifica che gli argomenti di `_L[...]` siano costanti letterali.
+- Pagine in lingua: stesso `IdGruppoTraduzione`, slug univoco per sito e lingua, 404 se manca la lingua, `hreflang` corretto; traduzioni di altre entità con ripiego sulla lingua predefinita del sito.
+
 ## Tenant isolation matrix
 
 Creare almeno Tenant A e Tenant B e tentare per tutte le aree di leggere, modificare, cancellare e collegare risorse dell'altro tenant. Includere API, pagine admin, media, cache, job/outbox, prodotti, carrelli e ordini.

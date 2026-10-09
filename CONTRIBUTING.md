@@ -17,6 +17,8 @@ Checklist minima:
 - [ ] Le nuove query/entità sono tenant-safe.
 - [ ] Sono stati controllati autorizzazioni, input non attendibili e dati personali.
 - [ ] La documentazione è stata aggiornata.
+- [ ] I nomi (tabelle, colonne, classi, metodi, configurazione) sono in italiano secondo ADR-0017.
+- [ ] I testi visibili passano dal localizzatore (`@_L["TESTO"]`), solo con testo letterale.
 - [ ] Migrazioni e downgrade/rollback sono stati valutati.
 - [ ] Non sono stati aggiunti segreti, dati reali o file generati non necessari.
 - [ ] I risultati dei test sono riportati correttamente.

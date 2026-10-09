@@ -19,29 +19,29 @@ Riferimenti: [GrapesJS storage docs](https://grapesjs.com/docs/modules/Storage.h
 
 Persistire separatamente:
 
-- `EditorProjectJson`: serializzazione richiesta per riaprire il progetto GrapesJS senza perdere componenti, stili, asset e metadata dell'editor.
-- `RenderDocumentJson`: documento CMS normalizzato, tipizzato e versionato usato dal renderer Razor.
+- `ProgettoEditorJson`: serializzazione richiesta per riaprire il progetto GrapesJS senza perdere componenti, stili, asset e metadata dell'editor.
+- `DocumentoRenderJson`: documento CMS normalizzato, tipizzato e versionato usato dal renderer Razor.
 
 Non usare l'HTML esportato come unica fonte di verità. GrapesJS stesso raccomanda il project JSON per ricaricare correttamente un progetto.
 
-L'adapter `EditorProject ↔ CmsDocument` deve essere deterministico, versionato e coperto da test round-trip per i componenti supportati. Le conversioni possono essere lossy solo se il caso è esplicitamente escluso, mai silenziosamente.
+L'adapter `ProgettoEditor ↔ DocumentoCms` deve essere deterministico, versionato e coperto da test round-trip per i componenti supportati. Le conversioni possono essere lossy solo se il caso è esplicitamente escluso, mai silenziosamente.
 
 ## Schema iniziale del documento
 
 ```json
 {
-  "schemaVersion": 1,
-  "nodes": [
+  "versioneSchema": 1,
+  "nodi": [
     {
       "id": "hero-01",
-      "type": "content.hero",
-      "props": {
-        "title": "Titolo della pagina",
-        "subtitle": "Descrizione",
-        "imageAssetId": "asset-id"
+      "tipo": "contenuto.hero",
+      "proprieta": {
+        "titolo": "Titolo della pagina",
+        "sottotitolo": "Descrizione",
+        "idRisorsaImmagine": "id-risorsa"
       },
-      "styles": { "variant": "split", "spacing": "large" },
-      "children": []
+      "stili": { "variante": "diviso", "spaziatura": "ampia" },
+      "figli": []
     }
   ]
 }
@@ -51,9 +51,9 @@ Questo è un esempio, non lo schema completo. Ogni tipo deve avere schema versio
 
 ## Famiglie di componenti iniziali
 
-- Layout: `layout.section`, `layout.container`, `layout.columns`, `layout.grid`.
-- Contenuto: `content.heading`, `content.rich-text`, `content.image`, `content.button`, `content.hero`, `content.feature-grid`, `content.accordion`, `content.testimonials`, `content.cta`.
-- Commerce: `commerce.product-grid`, `commerce.product-card`, `commerce.product-detail`, `commerce.add-to-cart`.
+- Layout: `layout.sezione`, `layout.contenitore`, `layout.colonne`, `layout.griglia`.
+- Contenuto: `contenuto.titolo`, `contenuto.testo-ricco`, `contenuto.immagine`, `contenuto.pulsante`, `contenuto.hero`, `contenuto.griglia-caratteristiche`, `contenuto.fisarmonica`, `contenuto.testimonianze`, `contenuto.cta`.
+- Negozio: `negozio.griglia-prodotti`, `negozio.scheda-prodotto`, `negozio.dettaglio-prodotto`, `negozio.aggiungi-al-carrello`.
 
 Il catalogo concreto va scelto per il primo tema/prototipo, senza implementare decine di componenti prima di validare il modello.
 

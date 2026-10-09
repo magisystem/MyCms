@@ -10,37 +10,37 @@
 
 ## Packaging
 
-Per i temi interni usare Razor Class Libraries o una struttura di viste Razor controllata, versione e asset statici. Il registro dei temi espone almeno `ThemeKey`, `ThemeVersion`, schema settings, tipi di componente supportati e mapping dei renderer.
+Per i temi interni usare Razor Class Libraries o una struttura di viste Razor controllata, versione e asset statici. Il registro dei temi espone almeno `ChiaveTema`, `VersioneTema`, schema settings, tipi di componente supportati e mapping dei renderer.
 
 Non selezionare view path o assembly tramite stringhe non attendibili salvate dal tenant. Il tema attivo deve essere una chiave risolta da un registry allow-list.
 
 ## Contratto concettuale
 
 ```csharp
-public interface IThemeDefinition
+public interface IDefinizioneTema
 {
-    string Key { get; }
-    string Version { get; }
-    IReadOnlyCollection<string> SupportedComponents { get; }
-    ThemeSettingsSchema SettingsSchema { get; }
+    string Chiave { get; }
+    string Versione { get; }
+    IReadOnlyCollection<string> ComponentiSupportati { get; }
+    SchemaImpostazioniTema SchemaImpostazioni { get; }
 }
 ```
 
-È un esempio illustrativo, non un contratto definitivo. Evitare che il tema acceda direttamente al `DbContext`: riceve dati view-model già caricati e autorizzati dall'application layer.
+È un esempio illustrativo, non un contratto definitivo. Evitare che il tema acceda direttamente al `DbContext`: riceve dati view-model già caricati e autorizzati dall'livello applicazione.
 
 ## Rendering
 
 - Layout globale: header, navigation, footer, asset e metadata condivisi.
-- Page renderer: valida/legge il documento CMS e delega ogni `ComponentType` a un renderer registrato.
+- Page renderer: valida/legge il documento CMS e delega ogni `TipoComponente` a un renderer registrato.
 - Component renderer: genera HTML server-side con Razor/Tag Helper/partial o View Component, a seconda della complessità.
 - Commerce component: chiama servizi del modulo Store e non si fida dei dati forniti dal browser.
 
-Il mapping tra `ComponentType` e renderer deve essere esplicito. Non eseguire nomi di classi, percorsi Razor, espressioni C# o script contenuti nei documenti.
+Il mapping tra `TipoComponente` e renderer deve essere esplicito. Non eseguire nomi di classi, percorsi Razor, espressioni C# o script contenuti nei documenti.
 
 ## Versioni e compatibilità
 
 - Ogni tema ha versione semantica o schema versione equivalente.
-- Ogni render document ha `schemaVersion`.
+- Ogni documento di render ha `versioneSchema`.
 - Ogni template ha versione immutabile.
 - Dichiarare le versioni del documento/componenti supportate dal tema.
 - Non aggiornare automaticamente tutti i tenant a una nuova versione del tema senza piano di compatibilità e test.

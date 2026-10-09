@@ -20,7 +20,7 @@ Non introdurre Kubernetes, broker o servizi separati per moda. Scegliere l'hosti
 
 ## Seeding del tenant primario
 
-Prima del primo avvio in un ambiente si esegue il seeding (ADR-0014): configurazione `Seed:PrimaryTenant` nel file di ambiente non versionato, password del `PlatformAdmin` da segreto o variabile d'ambiente, poi comando di seeding o avvio con `Seed:RunOnStartup`. Il seeding è idempotente e si può rilanciare; dopo il primo successo si disattiva `Seed:RunOnStartup`. I tenant dei clienti non si seminano: li crea il `PlatformAdmin` dal menu "Platform".
+Prima del primo avvio in un ambiente si esegue il seeding (ADR-0014): configurazione `Seed:TenantPrimario` nel file di ambiente non versionato, password del `PlatformAdmin` da segreto o variabile d'ambiente, poi comando di seeding o avvio con `Seed:EseguiAllAvvio`. Il seeding è idempotente e si può rilanciare; dopo il primo successo si disattiva `Seed:EseguiAllAvvio`. I tenant dei clienti non si seminano: li crea il `PlatformAdmin` dal menu "Platform".
 
 ## Domini e certificati (procedura manuale)
 
@@ -47,6 +47,7 @@ Ogni evento che non può essere perso (publish, ordine, pagamento, webhook) deve
 
 ## Cache
 
+- Testi statici: cache in memoria per lingua, invalidata alla modifica; con più istanze serve un meccanismo condiviso (ad esempio una versione dei testi controllata periodicamente) o una cache distribuita.
 - Distinguere output cache pubblica da cache di dati.
 - Includere in chiave le dimensioni che determinano il risultato (site, path, revisione, locale e contesto ove necessario).
 - Invalidare tramite eventi/outbox al publish, cambio tema, modifica prodotto o asset.

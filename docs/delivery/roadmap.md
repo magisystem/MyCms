@@ -7,6 +7,7 @@ La roadmap è ordinata per dipendenze. Le stime vanno fatte solo dopo un primo e
 - Creare solution .NET 10, configurare nullable, formatter/analyzer e CI.
 - Decidere framework test, convenzioni ID, logging, gestione segreti e hosting target iniziale.
 - Configurare SQL Server ed EF Core con una serie di migrazioni e il setup locale.
+- Localizzatore dei testi statici (`@_L["TESTO"]`, tabelle `Lingue` e `TestiStatici`, italiano e inglese, ADR-0018): i testi del layout admin passano da subito dal localizzatore.
 - Preparare il layout admin Razor con Tabler e Tabler Icons (solo gli asset usati in `wwwroot`).
 - Creare i primi ADR specifici se si prendono decisioni nuove.
 
@@ -16,6 +17,7 @@ La roadmap è ordinata per dipendenze. Le stime vanno fatte solo dopo un primo e
 
 - Tenant, site e domain registry.
 - Ruoli `PlatformAdmin` e `TenantAdmin`, principal `Guest` per tenant, account locali propri (ADR-0016) e seeding idempotente del tenant primario e del primo `PlatformAdmin`.
+- Schermata "Testi" del menu Platform per modificare i testi statici (B-010).
 - Menu "Platform" nell'admin (solo `PlatformAdmin`): crea tenant, sito, dominio (verificato a mano) e utente `TenantAdmin`; il `PlatformAdmin` può aprire l'admin di qualunque tenant (auditato).
 - Context tenant derivato dal dominio e dal tenant dell'account admin.
 - Pagina semplice draft/published.
@@ -38,6 +40,7 @@ Il piano dettagliato è in [`plan-m0-m1.md`](plan-m0-m1.md).
 ## M2 — CMS guidato e revisioni
 
 - CRUD pagine e slug.
+- Pagine in più lingue (C-008): una pagina per lingua, `hreflang`, selettore di lingua.
 - Template guidati iniziali e form Razor.
 - Revisioni immutabili, preview sicura, concorrenza optimistic.
 - Publish e invalidazione cache sull'outbox minimo introdotto in M1b; la versione production-ready resta in M6.
@@ -84,7 +87,7 @@ Il piano dettagliato è in [`plan-m0-m1.md`](plan-m0-m1.md).
 
 ## M7 — E-commerce MVP
 
-- Catalogo e varianti.
+- Catalogo e varianti, con traduzioni per lingua (F-006).
 - Prezzi/valuta, carrello e checkout.
 - Registrazione e login degli acquirenti (`Utente`), abilitati per sito; ordini riservati ad account autenticati.
 - Provider di pagamento approvato e webhook idempotenti.

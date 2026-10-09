@@ -5,7 +5,6 @@ Le scelte sotto non sono definite completamente. Gli agenti devono evitare di in
 ## Prodotto
 
 - Piani commerciali, limiti per tenant, quote e billing SaaS.
-- Locales supportate all'MVP e comportamento multilingua.
 - Requisiti quantitativi di carico, disponibilità e retention.
 
 ## Decisioni prese (2026-10-09)
@@ -27,18 +26,22 @@ Le scelte sotto non sono definite completamente. Gli agenti devono evitare di in
 - `Guest` per tenant senza impostazioni: vede tutto ciò che è pubblico; limitare la visibilità è un'evoluzione futura.
 - Duplicati fra `admin-theme/` e `wwwroot` accettati; li ripulirà il committente.
 - `admin-theme/`: licenze possedute, repository privato; `tabler` e `tabler-icons` copiati per intero in `wwwroot`.
-- Account locali propri nella tabella `Utenze`, senza ASP.NET Core Identity, con password BCrypt e blocco di 5 minuti (ADR-0016). Comando di seeding `DvCms.Web seed`. Nomi delle tabelle in italiano (`domain-model.md`). Seeding idempotente del tenant primario e del primo `PlatformAdmin` da configurazione e segreti (ADR-0014).
+- Account locali propri nella tabella `Utenze`, senza ASP.NET Core Identity, con password BCrypt e blocco di 5 minuti dopo 5 tentativi falliti (ADR-0016). Comando di seeding `DvCms.Web seed`. Tutto in italiano: tabelle, colonne, funzioni, progetti, configurazione (ADR-0017); `Tenant`, `Slug`, i nomi dei ruoli e `seed` restano. Lingue italiano e inglese; testi statici con `@_L["TESTO"]` nel database, modificabili dal `PlatformAdmin` (ADR-0018). Seeding idempotente del tenant primario e del primo `PlatformAdmin` da configurazione e segreti (ADR-0014).
 - Tenant, utenti `TenantAdmin` e domini gestiti manualmente dal `PlatformAdmin`; certificati TLS dell'hosting tramite reverse proxy (ADR-0014).
 - Admin con Tabler e Tabler Icons (ADR-0013).
 
 ## Account e autenticazione
 
 - Solo account locali o SSO/OIDC richiesto per clienti enterprise?
-- Soglia dei tentativi falliti prima del blocco (proposta: 5; il blocco dura 5 minuti), lunghezza massima della password e policy password (lunghezza minima, complessità). I limiti del recupero password sono quelli di ADR-0011.
+- Lunghezza massima della password e policy password (lunghezza minima, complessità). I limiti del recupero password sono quelli di ADR-0011.
 
 ## Da confermare per M0/M1 (vedi `docs/delivery/plan-m0-m1.md`)
 
-- Nomi delle tabelle: colonne in inglese (proposta, perché solo le tabelle sono state richieste in italiano) e `Tenant` come unica eccezione terminologica (alternativa: `Organizzazioni`).
+- Lingua corrente: admin dalla preferenza dell'account (predefinita italiano); sito pubblico dal prefisso del percorso (`/en/...`), senza prefisso la lingua predefinita del sito (proposta, ADR-0018).
+- Cultura dell'inglese (`en-GB` o `en-US`) per date e numeri.
+- Pulizia delle chiavi di testo non più usate dai testi statici (non prioritaria).
+- Sincronizzazione della cache dei testi statici con più istanze (fino a una sola istanza è sufficiente l'invalidazione locale).
+
 
 - Framework di test: xUnit (proposta).
 - Ruolo come colonna della tabella `Utenze` (quattro ruoli fissi, nessuna tabella di ruoli) e seeding dei tenant di test solo in `Development` (proposte).

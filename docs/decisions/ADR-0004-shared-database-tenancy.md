@@ -10,7 +10,7 @@ Il SaaS gestirà molti tenant e più siti per tenant. Database separati per clie
 
 ## Decisione
 
-Usare inizialmente un database condiviso e tabelle condivise con `TenantId`/`SiteId`, vincoli, query filter e autorizzazioni server-side. Valutare Row-Level Security nativa di SQL Server o PostgreSQL come difesa aggiuntiva, con implementazioni e test provider-specifici. Ogni nuovo modulo tenant-scoped deve avere test cross-tenant.
+Usare inizialmente un database condiviso e tabelle condivise con `IdTenant`/`IdSito`, vincoli, query filter e autorizzazioni server-side. Valutare Row-Level Security nativa di SQL Server o PostgreSQL come difesa aggiuntiva, con implementazioni e test provider-specifici. Ogni nuovo modulo tenant-scoped deve avere test cross-tenant.
 
 ## Alternative considerate
 

@@ -11,17 +11,17 @@ La persistenza usa SQL Server come unico database supportato ed è descritta in 
 - **Public web:** routing host/slug, pagine pubblicate, Razor layout, componenti e SEO.
 - **Admin web:** Razor Pages con tema Tabler, form HTML, autenticazione, CRUD, workflow e configurazioni. Include l'**area di piattaforma** (solo `PlatformAdmin`) per tenant, siti, domini e utenti `TenantAdmin`.
 - **Page builder:** asset JS separato e caricato solo nelle pagine di editing visuale; comunica con endpoint ASP.NET Core.
-- **Application layer:** casi d'uso, autorizzazioni, validazioni, transizioni di stato e orchestrazione.
-- **Domain modules:** tenancy, sites, content, templates, themes, media, SEO e commerce.
-- **Infrastructure:** EF Core con SQL Server, storage, cache, email e provider esterni.
+- **Livello applicazione:** casi d'uso, autorizzazioni, validazioni, transizioni di stato e orchestrazione.
+- **Moduli di dominio:** tenancy, sites, content, templates, themes, media, SEO e commerce.
+- **Infrastruttura:** EF Core con SQL Server, storage, cache, email e provider esterni.
 - **Worker:** outbox, email, webhook asincroni, immagini e sitemap.
 
 ## Diagramma logico
 
 ```text
 Browser
-  ├── Public site ──> ASP.NET Core / Razor ──> Application ──> Domain modules
-  ├── Admin pages ──> ASP.NET Core / Razor ──> Application ──> Domain modules
+  ├── Public site ──> ASP.NET Core / Razor ──> Applicazione ──> Moduli di dominio
+  ├── Admin pages ──> ASP.NET Core / Razor ──> Applicazione ──> Moduli di dominio
   └── Visual builder ──> Admin Razor shell ──HTTP──> Admin API
                                                 │
                                       SQL Server / Object storage
@@ -31,9 +31,9 @@ Browser
 
 ## Regole di dipendenza
 
-- Domain non dipende da ASP.NET Core, EF Core o provider esterni.
-- Application dipende da Domain e definisce i contratti necessari.
-- Infrastructure implementa persistenza e integrazioni.
+- Dominio non dipende da ASP.NET Core, EF Core o provider esterni.
+- Applicazione dipende da Dominio e definisce i contratti necessari.
+- Infrastruttura implementa persistenza e integrazioni.
 - Web compone le dipendenze e rende UI/API.
 - Themes dipendono da contratti stabili del rendering, non accedono direttamente al database.
 - Il modulo Commerce non dipende dal rendering Razor; espone operazioni e modelli applicativi.
@@ -67,19 +67,19 @@ Solution `DvCms.sln`; progetti e namespace con prefisso `DvCms.`.
 ```text
 src/
   DvCms.Web/             (include wwwroot/lib/tabler e wwwroot/lib/tabler-icons)
-  DvCms.Domain/
-  DvCms.Application/
-  DvCms.Infrastructure/
-  DvCms.Themes.Abstractions/
-  DvCms.Themes.Corporate/
-  DvCms.Themes.Creative/
-  DvCms.Store/
-  DvCms.Worker/
-  frontend/page-builder/
+  DvCms.Dominio/
+  DvCms.Applicazione/
+  DvCms.Infrastruttura/
+  DvCms.Temi.Astrazioni/
+  DvCms.Temi.Aziendale/
+  DvCms.Temi.Creativo/
+  DvCms.Negozio/
+  DvCms.ServizioBackground/
+  frontend/editor-pagine/
 tests/
-  DvCms.UnitTests/
-  DvCms.IntegrationTests/
-  DvCms.TenantIsolationTests/
+  DvCms.TestUnitari/
+  DvCms.TestIntegrazione/
+  DvCms.TestIsolamentoTenant/
 ```
 
 Non è necessario creare tutti questi progetti il primo giorno. Iniziare con pochi assembly e separare solo quando migliora i confini o i test.

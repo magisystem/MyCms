@@ -11,23 +11,23 @@ Il progetto è un CMS: la maggior parte dei siti è semplice e non prevede regis
 
 ## Decisione
 
-Gli account sono locali, con tabelle e logica proprie, senza ASP.NET Core Identity (ADR-0016). Ogni account, tranne il `PlatformAdmin`, appartiene a **un solo tenant** (`TenantId` dell'account). Centralizzare le policy di autorizzazione nell'application layer.
+Gli account sono locali, con tabelle e logica proprie, senza ASP.NET Core Identity (ADR-0016). Ogni account, tranne il `PlatformAdmin`, appartiene a **un solo tenant** (`IdTenant` dell'account). Centralizzare le policy di autorizzazione nell'livello applicazione.
 
 ### Appartenenza ai tenant e unicità dell'email
 
 - Un tenant può avere **più `TenantAdmin`** (ad esempio due persone che gestiscono lo stesso sito).
 - Un account `TenantAdmin` o `Utente` appartiene a un solo tenant.
 - L'email è unica **all'interno di un tenant** e può essere ripetuta in tenant diversi: sono account distinti, con credenziali e password distinte. Vale per `TenantAdmin` e `Utente`.
-- Il `PlatformAdmin` è globale (senza `TenantId`); la sua email è unica fra i `PlatformAdmin`.
-- Conseguenza: ovunque si identifichi un account (login, recupero password, registrazione) il tenant viene dall'URL (sezione seguente). L'unicità dell'email è per tenant (indice univoco su `(TenantId, NormalizedEmail)`, ADR-0016), non globale.
+- Il `PlatformAdmin` è globale (senza `IdTenant`); la sua email è unica fra i `PlatformAdmin`.
+- Conseguenza: ovunque si identifichi un account (login, recupero password, registrazione) il tenant viene dall'URL (sezione seguente). L'unicità dell'email è per tenant (indice univoco su `(IdTenant, EmailNormalizzata)`, ADR-0016), non globale.
 
 ### Il tenant è deciso solo dall'URL
 
-- Il tenant è determinato **esclusivamente** dall'host dell'URL della pagina richiesta (host registrato → sito → `TenantId`, vedi `multi-tenancy.md`). Solo quel `TenantId` è usato per autenticazione, autorizzazione e per tutte le query al database.
+- Il tenant è determinato **esclusivamente** dall'host dell'URL della pagina richiesta (host registrato → sito → `IdTenant`, vedi `multi-tenancy.md`). Solo quel `IdTenant` è usato per autenticazione, autorizzazione e per tutte le query al database.
 - Nessun tenant fornito dal client (campo del form, header, query string, cookie, claim non verificato) viene mai accettato per scegliere il tenant.
 - L'admin di ogni tenant si raggiunge dall'host del tenant stesso, nel percorso riservato **`/admin`**; lo slug `admin` non può essere usato dalle pagine pubbliche. Non esiste un dominio centrale di amministrazione condiviso da più tenant.
-- **Login:** l'account viene cercato solo fra quelli del tenant dell'host. Se un `TenantAdmin` del tenant A prova ad accedere dall'host del tenant B, il login fallisce perché il suo account non appartiene al `TenantId` di B. L'errore è lo stesso del caso "credenziali errate", senza rivelare che l'account esiste altrove.
-- Il `PlatformAdmin` (account globale) può accedere dall'host di qualunque tenant: l'accesso ha il `TenantId` dell'host, quindi lavora in quel tenant come un `TenantAdmin`, con in più il menu Platform.
+- **Login:** l'account viene cercato solo fra quelli del tenant dell'host. Se un `TenantAdmin` del tenant A prova ad accedere dall'host del tenant B, il login fallisce perché il suo account non appartiene al `IdTenant` di B. L'errore è lo stesso del caso "credenziali errate", senza rivelare che l'account esiste altrove.
+- Il `PlatformAdmin` (account globale) può accedere dall'host di qualunque tenant: l'accesso ha il `IdTenant` dell'host, quindi lavora in quel tenant come un `TenantAdmin`, con in più il menu Platform.
 - Il recupero password cerca l'account solo nel tenant dell'host.
 - Cookie di sessione legati all'host. Lo schema di autenticazione dell'area admin e quello dell'area cliente sono distinti (cookie con nomi diversi e, per l'admin, percorso limitato), perché admin e sito pubblico condividono la stessa origine.
 
@@ -42,7 +42,7 @@ Gli account sono locali, con tabelle e logica proprie, senza ASP.NET Core Identi
 
 ### Guest per tenant
 
-`Guest` non è un account. È un principal anonimo **vincolato al tenant** risolto dall'host: porta sempre il `TenantId` e non è mai condiviso fra tenant. Ogni tenant ha un proprio profilo Guest (`TenantGuestProfile`), creato insieme al tenant, senza impostazioni: il Guest vede tutto il contenuto pubblicato. Limitare la visibilità è un'evoluzione futura, non prevista ora. Cookie, token di anteprima e, in futuro, carrello e consensi del Guest sono limitati al suo tenant. Il Guest non può emettere ordini (nessun guest checkout, per ora).
+`Guest` non è un account. È un principal anonimo **vincolato al tenant** risolto dall'host: porta sempre il `IdTenant` e non è mai condiviso fra tenant. Ogni tenant ha un proprio profilo Guest (`ProfiloGuest`), creato insieme al tenant, senza impostazioni: il Guest vede tutto il contenuto pubblicato. Limitare la visibilità è un'evoluzione futura, non prevista ora. Cookie, token di anteprima e, in futuro, carrello e consensi del Guest sono limitati al suo tenant. Il Guest non può emettere ordini (nessun guest checkout, per ora).
 
 ### Utente (acquirente)
 
@@ -62,7 +62,7 @@ Possono emettere ordini gli account autenticati: `Utente`, `TenantAdmin` e `Plat
 3. La creazione di nuovi `PlatformAdmin` è riservata ai `PlatformAdmin`; il primo viene creato dal seeding del tenant primario (ADR-0014).
 4. Non esiste registrazione self-service per `PlatformAdmin` e `TenantAdmin`.
 5. Ogni operazione amministrativa verifica tenant dell'account, ruolo e risorsa; un ID noto non basta (anti-IDOR).
-6. Il `PlatformAdmin` che entra nell'admin di un tenant opera con un contesto tenant esplicito e con gli stessi poteri di un `TenantAdmin` di quel tenant, più il menu Platform. L'ingresso e le operazioni di piattaforma sono registrati in `AuditLog` con attore e data; non è richiesto inserire un motivo. Non è prevista l'impersonation di altri utenti.
+6. Il `PlatformAdmin` che entra nell'admin di un tenant opera con un contesto tenant esplicito e con gli stessi poteri di un `TenantAdmin` di quel tenant, più il menu Platform. L'ingresso e le operazioni di piattaforma sono registrati in `RegistroAudit` con attore e data; non è richiesto inserire un motivo. Non è prevista l'impersonation di altri utenti.
 7. Un `TenantAdmin` non può accedere ad altri tenant né all'area Platform.
 8. Le regole 1–4 e 7 sono applicate lato server e hanno test automatici di non-escalation.
 
@@ -94,7 +94,7 @@ Le email passano dall'outbox (ADR-0010) e dagli adapter di ADR-0015 (Microsoft G
 
 - Per M1–M6 servono solo `PlatformAdmin`, `TenantAdmin` e il principal `Guest`; `Utente` e registrazione arrivano con l'e-commerce (M7).
 - Servono gli adapter email (ADR-0015) già per il recupero password dei `TenantAdmin`.
-- Tutti gli account tranne il `PlatformAdmin` hanno `TenantId`; il `PlatformAdmin` accede a tutti i tenant.
+- Tutti gli account tranne il `PlatformAdmin` hanno `IdTenant`; il `PlatformAdmin` accede a tutti i tenant.
 - Login, recupero password e registrazione usano sempre il tenant dell'host; i test devono provare che un account non può accedere dall'host di un altro tenant.
 - Il `PlatformAdmin` accede da un host registrato: il primo è quello del tenant di gestione creato dal seeding (ADR-0014).
 - Non serve una tabella di membership multi-tenant; verrà introdotta solo se un giorno un account dovrà lavorare su più tenant (nuovo ADR).

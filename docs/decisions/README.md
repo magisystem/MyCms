@@ -22,5 +22,7 @@ Stato: `Proposed`, `Accepted`, `Superseded`, `Deprecated`.
 - [ADR-0014 — Amministrazione di piattaforma, domini manuali, certificati dall'hosting](ADR-0014-platform-administration.md)
 - [ADR-0015 — Invio email tramite adapter (Graph, Gmail, SendGrid, SMTP)](ADR-0015-email-delivery.md)
 - [ADR-0016 — Autenticazione locale propria, senza ASP.NET Core Identity](ADR-0016-local-authentication.md)
+- [ADR-0017 — Denominazione in italiano](ADR-0017-italian-naming.md)
+- [ADR-0018 — Localizzazione dei testi (italiano e inglese)](ADR-0018-localization.md)
 
 Per le regole operative della persistenza, vedere [`docs/architecture/database.md`](../architecture/database.md).
