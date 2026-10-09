@@ -4,10 +4,10 @@ Questo è il modello logico iniziale; i nomi e i tipi definitivi vanno tradotti 
 
 ## Tenant, sito e dominio
 
-- `Tenant`: cliente/organizzazione contrattuale della piattaforma.
+- `Tenant`: cliente/organizzazione contrattuale della piattaforma. Il tenant primario (di gestione) ha `IsPrimary` vero: ne esiste uno solo ed è creato dal seeding (ADR-0014).
 - `Site`: sito appartenente a un tenant. Un tenant può avere più siti.
 - `SiteDomain`: host registrato, normalizzato e associato a un sito, con `VerifiedAtUtc`, `VerifiedByUserId` e stato attivo/disattivo. La verifica è manuale (ADR-0014).
-- `User`: account (ASP.NET Core Identity). Il `PlatformAdmin` è globale (`IsPlatformAdmin`, senza `TenantId`); `TenantAdmin` e `Utente` hanno `TenantId` e appartengono a un solo tenant. Un tenant può avere più `TenantAdmin`. Indice univoco su `(TenantId, NormalizedEmail)`: la stessa email può esistere in tenant diversi. L'unicità di UserName/email di Identity va configurata per tenant, tenendo conto che in SQL Server un indice univoco considera uguali i NULL (nessun duplicato fra i `PlatformAdmin`).
+- `User`: account locale (tabella `Users`, ADR-0016). Colonna `Role` (`PlatformAdmin`, `TenantAdmin`, `Utente`). Il `PlatformAdmin` è globale (`TenantId` nullo); `TenantAdmin` e `Utente` hanno `TenantId` e appartengono a un solo tenant. Un tenant può avere più `TenantAdmin`. Vincolo: `PlatformAdmin` ⇔ `TenantId` nullo. Indice univoco su `(TenantId, NormalizedEmail)`: la stessa email può esistere in tenant diversi; fra i `PlatformAdmin` l'email è unica perché in SQL Server i NULL sono considerati uguali. Contiene hash della password, `SecurityStamp`, stato, contatore dei tentativi falliti e blocco temporaneo.
 - `TenantEmailSettings`: `EmailProvider` del tenant (`Smtp`, `Graph`, `Gmail`, `SendGrid`) e impostazioni del canale scelto; segreti cifrati (ADR-0015).
 - `TenantGuestProfile`: profilo del `Guest` del tenant, creato insieme al tenant, senza impostazioni: il Guest vede tutto il contenuto pubblicato.
 - `Site.CustomerRegistrationEnabled`: abilita la registrazione degli acquirenti; vero solo se l'e-commerce è attivo (default falso).

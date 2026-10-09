@@ -18,6 +18,10 @@ Non introdurre Kubernetes, broker o servizi separati per moda. Scegliere l'hosti
 - Separare ambienti dev/test/staging/prod.
 - Verificare le configurazioni di dominio e proxy per ogni ambiente.
 
+## Seeding del tenant primario
+
+Prima del primo avvio in un ambiente si esegue il seeding (ADR-0014): configurazione `Seed:PrimaryTenant` nel file di ambiente non versionato, password del `PlatformAdmin` da segreto o variabile d'ambiente, poi comando di seeding o avvio con `Seed:RunOnStartup`. Il seeding è idempotente e si può rilanciare; dopo il primo successo si disattiva `Seed:RunOnStartup`. I tenant dei clienti non si seminano: li crea il `PlatformAdmin` dal menu "Platform".
+
 ## Domini e certificati (procedura manuale)
 
 Tenant e domini sono gestiti dagli operatori; i certificati dall'hosting tramite reverse proxy (ADR-0014). Il runbook da completare prima del primo cliente copre:

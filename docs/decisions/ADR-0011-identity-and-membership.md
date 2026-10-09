@@ -1,7 +1,8 @@
-# ADR-0011 — Identity, ruoli e autorizzazione
+# ADR-0011 — Account, ruoli e autorizzazione
 
 - **Stato:** Accepted (rimangono aperti dettagli elencati in `docs/open-questions.md`)
 - **Data:** 2026-10-09
+- **Nota (ADR-0016):** la scelta di ASP.NET Core Identity è superata: gli account sono locali, con tabelle e gestione proprie. Il resto di questo ADR resta in vigore.
 - **Aggiornato:** 2026-10-09 (ruolo `Utente` = acquirente registrato; `Guest` per tenant; recupero password; 2FA; ambito di accesso di `TenantAdmin` e `PlatformAdmin`; account sempre legati a un solo tenant; tenant deciso solo dall'URL; nessun recupero password per `PlatformAdmin`)
 
 ## Contesto
@@ -10,7 +11,7 @@ Il progetto è un CMS: la maggior parte dei siti è semplice e non prevede regis
 
 ## Decisione
 
-Usare ASP.NET Core Identity per gli account locali. Ogni account, tranne il `PlatformAdmin`, appartiene a **un solo tenant** (`TenantId` dell'account). Centralizzare le policy di autorizzazione nell'application layer.
+Gli account sono locali, con tabelle e logica proprie, senza ASP.NET Core Identity (ADR-0016). Ogni account, tranne il `PlatformAdmin`, appartiene a **un solo tenant** (`TenantId` dell'account). Centralizzare le policy di autorizzazione nell'application layer.
 
 ### Appartenenza ai tenant e unicità dell'email
 
@@ -18,7 +19,7 @@ Usare ASP.NET Core Identity per gli account locali. Ogni account, tranne il `Pla
 - Un account `TenantAdmin` o `Utente` appartiene a un solo tenant.
 - L'email è unica **all'interno di un tenant** e può essere ripetuta in tenant diversi: sono account distinti, con credenziali e password distinte. Vale per `TenantAdmin` e `Utente`.
 - Il `PlatformAdmin` è globale (senza `TenantId`); la sua email è unica fra i `PlatformAdmin`.
-- Conseguenza: ovunque si identifichi un account (login, recupero password, registrazione) il tenant viene dall'URL (sezione seguente). L'unicità di nome utente/email di ASP.NET Core Identity va configurata per tenant, non globale.
+- Conseguenza: ovunque si identifichi un account (login, recupero password, registrazione) il tenant viene dall'URL (sezione seguente). L'unicità dell'email è per tenant (indice univoco su `(TenantId, NormalizedEmail)`, ADR-0016), non globale.
 
 ### Il tenant è deciso solo dall'URL
 
@@ -58,7 +59,7 @@ Possono emettere ordini gli account autenticati: `Utente`, `TenantAdmin` e `Plat
 
 1. Solo il `PlatformAdmin` può creare un account `TenantAdmin` o elevare un account a `TenantAdmin`.
 2. Nessun ruolo può assegnare un ruolo superiore al proprio né modificare il proprio ruolo; il `TenantAdmin` non può creare né elevare `TenantAdmin` o `PlatformAdmin`.
-3. La creazione di nuovi `PlatformAdmin` è riservata ai `PlatformAdmin`; il primo viene creato dal comando di bootstrap (ADR-0014).
+3. La creazione di nuovi `PlatformAdmin` è riservata ai `PlatformAdmin`; il primo viene creato dal seeding del tenant primario (ADR-0014).
 4. Non esiste registrazione self-service per `PlatformAdmin` e `TenantAdmin`.
 5. Ogni operazione amministrativa verifica tenant dell'account, ruolo e risorsa; un ID noto non basta (anti-IDOR).
 6. Il `PlatformAdmin` che entra nell'admin di un tenant opera con un contesto tenant esplicito e con gli stessi poteri di un `TenantAdmin` di quel tenant, più il menu Platform. L'ingresso e le operazioni di piattaforma sono registrati in `AuditLog` con attore e data; non è richiesto inserire un motivo. Non è prevista l'impersonation di altri utenti.
@@ -95,5 +96,5 @@ Le email passano dall'outbox (ADR-0010) e dagli adapter di ADR-0015 (Microsoft G
 - Servono gli adapter email (ADR-0015) già per il recupero password dei `TenantAdmin`.
 - Tutti gli account tranne il `PlatformAdmin` hanno `TenantId`; il `PlatformAdmin` accede a tutti i tenant.
 - Login, recupero password e registrazione usano sempre il tenant dell'host; i test devono provare che un account non può accedere dall'host di un altro tenant.
-- Il `PlatformAdmin` accede da un host registrato: il primo è quello del tenant di gestione creato dal bootstrap (ADR-0014).
+- Il `PlatformAdmin` accede da un host registrato: il primo è quello del tenant di gestione creato dal seeding (ADR-0014).
 - Non serve una tabella di membership multi-tenant; verrà introdotta solo se un giorno un account dovrà lavorare su più tenant (nuovo ADR).

@@ -15,7 +15,7 @@ La roadmap è ordinata per dipendenze. Le stime vanno fatte solo dopo un primo e
 ## M1 — Vertical slice tenant/sito/pagina
 
 - Tenant, site e domain registry.
-- Ruoli `PlatformAdmin` e `TenantAdmin`, principal `Guest` per tenant e comando di bootstrap del primo `PlatformAdmin`.
+- Ruoli `PlatformAdmin` e `TenantAdmin`, principal `Guest` per tenant, account locali propri (ADR-0016) e seeding idempotente del tenant primario e del primo `PlatformAdmin`.
 - Menu "Platform" nell'admin (solo `PlatformAdmin`): crea tenant, sito, dominio (verificato a mano) e utente `TenantAdmin`; il `PlatformAdmin` può aprire l'admin di qualunque tenant (auditato).
 - Context tenant derivato dal dominio e dal tenant dell'account admin.
 - Pagina semplice draft/published.

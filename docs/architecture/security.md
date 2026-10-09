@@ -4,12 +4,12 @@ La sicurezza è un requisito di progetto, con particolare attenzione a isolament
 
 ## Identità e autorizzazione
 
-- Usare ASP.NET Core Identity e cookie sicuri per l'admin. Nessuna registrazione self-service per account amministrativi; la registrazione degli acquirenti esiste solo nei siti con e-commerce (ADR-0011, ADR-0014).
+- Account locali con tabelle e gestione proprie, senza ASP.NET Core Identity (ADR-0016): password con PBKDF2-HMAC-SHA512 (sale per utente, iterazioni configurabili, confronto a tempo costante), cookie authentication del framework con `SecurityStamp` verificato a ogni richiesta, blocco temporaneo dopo tentativi falliti, rate limiting e errore uniforme al login. Cookie sicuri per l'admin. Nessuna registrazione self-service per account amministrativi; la registrazione degli acquirenti esiste solo nei siti con e-commerce (ADR-0011, ADR-0014).
 - Il `TenantAdmin` accede solo al proprio tenant; il `PlatformAdmin` a tutti, con i poteri del `TenantAdmin` più il menu Platform.
 - Autorizzare ogni operazione in base a identità, tenant dell'account, sito, ruolo e risorsa.
 - Ruoli: `PlatformAdmin` (globale), `TenantAdmin` (un solo tenant, più `TenantAdmin` per tenant), `Utente` (acquirente di un tenant, solo ordini), `Guest` (anonimo, sempre vincolato a un tenant).
 - Solo il `PlatformAdmin` crea o eleva `TenantAdmin`; nessun ruolo assegna un ruolo superiore al proprio né modifica il proprio. La registrazione crea solo `Utente`; il ruolo non è mai preso dalla richiesta. Controllo lato server con test di non-escalation.
-- Il primo `PlatformAdmin` si crea con un comando di bootstrap, senza credenziali predefinite.
+- Il primo `PlatformAdmin` si crea con il seeding del tenant primario (ADR-0014), con password da segreto o variabile d'ambiente, mai da file versionati e senza credenziali predefinite.
 - Ingresso del `PlatformAdmin` nell'admin di un tenant e azioni del menu "Platform" sono registrati in `AuditLog`.
 - **Recupero password** (`TenantAdmin` e `Utente`; il `PlatformAdmin` non lo ha, la sua password è gestita a mano dall'operatore): account cercato nel tenant dell'host; risposta identica a prescindere dall'esistenza dell'account; **prima email** con codice OTP (6 cifre, 10 minuti, 5 tentativi, salvato come hash), **seconda email distinta** con link monouso (30 minuti), invalidato all'uso e da nuove richieste; rate limiting (3 richieste/ora per account e IP); al cambio password sessioni e token sono invalidati e arriva una notifica. I valori sono iniziali e configurabili (ADR-0011).
 - **Two-factor authentication:** requisito previsto, a priorità minima, da implementare per ultimo e non bloccante per il go-live (ADR-0011). Metodo e obbligatorietà per `PlatformAdmin` e `TenantAdmin` saranno decisi con un ADR.

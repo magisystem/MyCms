@@ -62,8 +62,8 @@ Ordine di PR:
 
 5. **B-001 — Modello `Tenant`/`Site`/`SiteDomain`/`TenantGuestProfile`.** Vincoli (dominio univoco, stati), FK composite con `TenantId`, nessun cascade sui cicli, migrazione.
 6. **B-002 — Risoluzione host.** Normalizzazione (case, porta ignorata), solo host registrati, verificati e attivi; risposta controllata per host ignoti; `TenantContext` request-scoped; alias `localhost` solo in `Development`; header forwarded da proxy configurati.
-7. **B-003 — Identity per tenant.** Il rischio tecnico maggiore: ASP.NET Core Identity assume nome utente ed email globalmente unici. Servono indici univoci `(TenantId, NormalizedUserName/Email)`, uno store utenti che cerca sempre nel tenant dell'host (più i `PlatformAdmin` globali), schema di autenticazione e cookie dell'area admin con percorso `/admin`, errore uniforme al login fallito. Prima di costruirci sopra, uno **spike** breve con test (stessa email su due tenant, login incrociato fallito, `PlatformAdmin` ovunque).
-8. **B-005 — Bootstrap.** Comando che crea il primo `PlatformAdmin`, il tenant di gestione (`cms.davidemartelli.dev`), il sito e il dominio; alias `localhost` in sviluppo; rifiuta se esiste già un `PlatformAdmin`; nessuna credenziale predefinita.
+7. **B-003 — Account locali e autenticazione (ADR-0016).** Tabella `Users` propria con vincolo di ruolo/tenant e indice univoco `(TenantId, NormalizedEmail)`; hash password PBKDF2 con primitive .NET e formato versionato; cookie authentication con `SecurityStamp` verificato a ogni richiesta, schema e cookie dell'area admin con percorso `/admin`; blocco temporaneo, rate limiting ed errore uniforme al login. Niente ASP.NET Core Identity: scompare il rischio dell'unicità globale, ma l'autenticazione è codice nostro, quindi test mirati (hash, rehash, blocco, invalidazione sessioni, login incrociato) e inclusione nella security review.
+8. **B-005 — Seeding.** Seeder idempotente del tenant primario (`cms.davidemartelli.dev`, `IsPrimary`), del sito, dei domini e del primo `PlatformAdmin`, con dati da `Seed:PrimaryTenant`, password da segreto, alias `localhost` solo in `Development` e tenant di test opzionali (`cms1`/`cms2`) solo in `Development`; lanciabile da comando o all'avvio (opt-in); mai riscrive dati esistenti.
 9. **B-006/B-007 — Menu "Platform".** CRUD tenant, siti e domini (verifica manuale registrata), creazione `TenantAdmin` solo dal `PlatformAdmin`, ingresso nell'admin di un tenant e azioni in `AuditLog`.
 10. **C-001/C-002/C-003 (versione minima).** `Page` con `PublishedRevisionId` e revisione, creazione/modifica nell'admin con validazione server e antiforgery, slug univoco per sito (slug riservati `admin`, `lib`), rendering pubblico Razor per host e slug (404 per bozze e inesistenti).
 11. **B-004 — Matrice di isolamento.** Tenant A/B su pagine, account e domini.
@@ -88,7 +88,7 @@ Ogni PR riporta comandi ed esiti reali dei test eseguiti.
 
 ## 8. Rischi
 
-- **Identity multi-tenant** (punto 7): alto; mitigato dallo spike e dai test.
+- **Autenticazione scritta in proprio** (punto 7): medio-alto; mitigato da primitive standard di .NET, test mirati e security review. Il rischio precedente di Identity multi-tenant non esiste più.
 - **Host header e proxy:** `localhost` o host forgiati dietro il reverse proxy; mitigato da registrazione degli host, alias solo in `Development` e proxy attendibili configurati.
 - **Stessa origine per admin e sito pubblico:** cookie distinti con percorso limitato, CSP e sanitizzazione (da M2 con il rich text).
 - **Dimensione di `admin-theme/` e di `wwwroot`:** repository e artefatti di build pesanti; accettato dal committente, da monitorare in CI.
@@ -96,4 +96,4 @@ Ogni PR riporta comandi ed esiti reali dei test eseguiti.
 
 ## 9. Cosa non si fa
 
-Nessun e-commerce, builder, tema dedicato, media, 2FA o strumenti di reset della password del `PlatformAdmin`. Nessun codice provider-specifico fuori da Infrastructure. Nessun pacchetto aggiunto senza motivazione e controllo della licenza.
+Nessun e-commerce, builder, tema dedicato, media, 2FA o strumenti di reset della password del `PlatformAdmin`. Nessun ASP.NET Core Identity. Nessun codice provider-specifico fuori da Infrastructure. Nessun pacchetto aggiunto senza motivazione e controllo della licenza.

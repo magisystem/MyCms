@@ -29,7 +29,8 @@ Implementare un CMS SaaS multi-tenant in C#/.NET, con rendering server-side Razo
 17. Il tenant è deciso solo dall'host dell'URL e solo quel `TenantId` va alle query; mai un tenant proveniente dal client. Un account non può accedere dall'host di un altro tenant (salvo il `PlatformAdmin`). Non esiste un dominio centrale di amministrazione.
 18. Recupero password (solo `TenantAdmin` e `Utente`, non `PlatformAdmin`): prima email con codice OTP, seconda email distinta con link monouso (ADR-0011). La two-factor authentication è prevista ma va implementata per ultima, non è bloccante per il go-live e non va anticipata.
 19. Le email si inviano solo tramite il contratto unico e l'outbox, con adapter Microsoft Graph, Gmail API, SendGrid e SMTP. Il provider è un campo del tenant, configurato dal `PlatformAdmin` con una UI che mostra solo i campi del provider scelto; i segreti sono cifrati nel database (ADR-0015).
-20. Un tenant può avere più `TenantAdmin`, ma ogni account `TenantAdmin` o `Utente` appartiene a un solo tenant; la stessa email può esistere su tenant diversi come account distinti. Il `TenantAdmin` accede solo al proprio tenant; il `PlatformAdmin` entra in qualunque tenant con i poteri di un `TenantAdmin` più il menu Platform.
+20. Non si usa ASP.NET Core Identity (ADR-0016): account nella tabella `Users` propria, cookie authentication del framework, hash PBKDF2 con primitive .NET, nessuna crittografia o algoritmo inventato. Il tenant primario e il primo `PlatformAdmin` nascono dal seeding idempotente (ADR-0014): dati da configurazione, password da segreto, mai valori predefiniti.
+21. Un tenant può avere più `TenantAdmin`, ma ogni account `TenantAdmin` o `Utente` appartiene a un solo tenant; la stessa email può esistere su tenant diversi come account distinti. Il `TenantAdmin` accede solo al proprio tenant; il `PlatformAdmin` entra in qualunque tenant con i poteri di un `TenantAdmin` più il menu Platform.
 
 ## Processo di lavoro richiesto
 
@@ -66,7 +67,7 @@ La prima implementazione deve essere una **vertical slice tenant + sito + domini
 - contesto tenant risolto da host registrato;
 - isolamento tenant applicato sul server;
 - una migrazione DB (SQL Server);
-- login, un `PlatformAdmin` e un tenant di gestione creati da comando di bootstrap senza credenziali predefinite (dominio come parametro) e un `TenantAdmin` per tenant;
+- login con account locali propri (senza ASP.NET Core Identity, ADR-0016), seeding idempotente del tenant primario e del primo `PlatformAdmin` senza credenziali predefinite (dati da configurazione, password da segreto) e un `TenantAdmin` per tenant;
 - menu "Platform" nell'admin (solo `PlatformAdmin`) per creare un tenant, un sito, un dominio (verificato a mano) e un utente `TenantAdmin`, con ingresso nell'admin di un tenant auditato;
 - pagina amministrativa Razor protetta (layout Tabler) per creare/modificare una pagina di prova;
 - rendering pubblico Razor di una pagina pubblicata;

@@ -24,7 +24,7 @@ Questo file descrive il target di setup; i comandi precisi vanno completati dura
 2. Avviare SQL Server.
 3. Configurare la connection string tramite user-secrets o environment variables.
 4. Applicare le migrazioni EF Core con il comando documentato dalla solution.
-5. Creare il primo `PlatformAdmin` e il tenant di gestione con il comando di bootstrap documentato (nessuna credenziale predefinita; il dominio del tenant di gestione è un parametro).
+5. Eseguire il seeding del tenant primario e del primo `PlatformAdmin` (ADR-0014): configurazione `Seed:PrimaryTenant` e password del `PlatformAdmin` da user-secrets o environment variable, nessuna credenziale predefinita. In `Development` il seeding può creare anche i tenant di test `cms1`/`cms2` da `Seed:DevelopmentTenants`.
 6. Avviare `DvCms.Web`.
 7. Eseguire test unitari e d'integrazione.
 8. Per il builder, entrare in `frontend/page-builder`, installare le dipendenze dal lockfile e avviare/buildare l'asset secondo lo script documentato.
