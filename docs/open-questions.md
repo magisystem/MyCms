@@ -43,7 +43,7 @@ Le scelte sotto non sono definite completamente. Gli agenti devono evitare di in
 - Framework di test: xUnit (proposta).
 - Ruolo come colonna della tabella `Utenze` (quattro ruoli fissi, nessuna tabella di ruoli) e seeding dei tenant di test solo in `Development` (proposte).
 - Verifica di licenza e manutenzione di `BCrypt.Net-Next` prima di aggiungerlo (regola 11).
-- Credenziali iniziali del `TenantAdmin` in M1: password temporanea mostrata una volta, cambio obbligatorio al primo accesso; invito via email in M1b (proposta).
+- Credenziali iniziali del `TenantAdmin` in M1: password temporanea mostrata una volta, cambio obbligatorio al primo accesso; invito via email in M1b, ora disponibile se il tenant ha il canale email configurato.
 - Email di un `TenantAdmin` o `Utente` uguale a quella di un `PlatformAdmin`: rifiutata alla creazione (proposta).
 - SQL Server in CI: service container; in locale istanza o container con connection string da environment variable (proposta).
 - Disponibilità del .NET 10 SDK negli ambienti di sviluppo e CI.

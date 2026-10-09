@@ -80,8 +80,26 @@ public class DettaglioModel : PaginaPiattaforma
     public Task<IActionResult> OnPostAccountAttivoAsync(Guid id, Guid idUtenza, bool attiva, CancellationToken annullamento) =>
         EseguiAsync(id, () => _piattaforma.ImpostaUtenzaAttivaAsync(IdAttore, id, idUtenza, attiva, annullamento), Localizzatore.Traduci("Account aggiornato."));
 
-    public async Task<IActionResult> OnPostNuovoAmministratoreAsync(Guid id, string? email, string? nomeVisualizzato, CancellationToken annullamento)
+    public async Task<IActionResult> OnPostInviaInvitoAsync(Guid id, Guid idUtenza, CancellationToken annullamento) =>
+        await EseguiAsync(id, () => _piattaforma.InviaInvitoAsync(IdAttore, id, idUtenza, LinkInvito(), annullamento), Localizzatore.Traduci("Invito inviato."));
+
+    public async Task<IActionResult> OnPostNuovoAmministratoreAsync(Guid id, string? email, string? nomeVisualizzato, bool conInvito, CancellationToken annullamento)
     {
+        if (conInvito)
+        {
+            var invito = await _piattaforma.CreaTenantAdminConInvitoAsync(IdAttore, id, email, nomeVisualizzato, LinkInvito(), annullamento);
+            if (invito.Riuscito)
+            {
+                Messaggio = Localizzatore.Traduci("Amministratore creato: l'invito è stato accodato per l'invio via email.");
+            }
+            else
+            {
+                MessaggioErrore = TestoErrore(invito.Codice);
+            }
+
+            return RedirectToPage(new { id });
+        }
+
         var esito = await _piattaforma.CreaTenantAdminAsync(IdAttore, id, email, nomeVisualizzato, annullamento);
         if (!esito.Riuscito)
         {
@@ -95,6 +113,9 @@ public class DettaglioModel : PaginaPiattaforma
         Tenant = await _piattaforma.LeggiTenantAsync(IdAttore, id, annullamento);
         return Tenant is null ? NotFound() : Page();
     }
+
+    /// <summary>Schema e porta della richiesta corrente: il link dell'invito usa l'host del dominio del tenant.</summary>
+    private DatiLinkInvito LinkInvito() => new(Request.Scheme, Request.Host.Port);
 
     private async Task<IActionResult> EseguiAsync(Guid id, Func<Task<EsitoOperazione>> operazione, string messaggioRiuscito)
     {

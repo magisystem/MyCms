@@ -22,6 +22,52 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("DvCms.Domain.Accessi.InvitoAccount", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("AccettatoIlUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("CreatoDaIdUtenza")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatoIlUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<byte[]>("HashToken")
+                        .IsRequired()
+                        .HasColumnType("binary(32)");
+
+                    b.Property<Guid>("IdTenant")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdUtenza")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("ScadeIlUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Stato")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatoDaIdUtenza");
+
+                    b.HasIndex("HashToken")
+                        .IsUnique();
+
+                    b.HasIndex("IdTenant");
+
+                    b.HasIndex("IdUtenza", "Stato");
+
+                    b.ToTable("InvitiAccount", (string)null);
+                });
+
             modelBuilder.Entity("DvCms.Domain.Accessi.RegistroAudit", b =>
                 {
                     b.Property<Guid>("Id")
@@ -840,6 +886,26 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.HasKey("Id");
 
                     b.ToTable("ChiaviSegrete", (string)null);
+                });
+
+            modelBuilder.Entity("DvCms.Domain.Accessi.InvitoAccount", b =>
+                {
+                    b.HasOne("DvCms.Domain.Accessi.Utenza", null)
+                        .WithMany()
+                        .HasForeignKey("CreatoDaIdUtenza")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("DvCms.Domain.Tenancy.Tenant", null)
+                        .WithMany()
+                        .HasForeignKey("IdTenant")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("DvCms.Domain.Accessi.Utenza", null)
+                        .WithMany()
+                        .HasForeignKey("IdUtenza")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("DvCms.Domain.Accessi.RegistroAudit", b =>

@@ -13,6 +13,7 @@ costruttore.Services.AddRazorPages(opzioni =>
     opzioni.Conventions.AuthorizeFolder("/Admin", Politiche.AmministratoreTenant);
     opzioni.Conventions.AllowAnonymousToPage("/Admin/Accesso");
     opzioni.Conventions.AllowAnonymousToFolder("/Admin/Recupero");
+    opzioni.Conventions.AllowAnonymousToFolder("/Admin/Invito");
     // Il menu "Platform" è un'area dedicata: solo il PlatformAdmin, verificato lato server a ogni richiesta.
     opzioni.Conventions.AuthorizeAreaFolder("Platform", "/", Politiche.AmministratorePiattaforma);
     opzioni.Conventions.ConfigureFilter(new FiltroCambioPasswordObbligatorio());

@@ -280,6 +280,13 @@
                                             <button type="submit" class="btn btn-sm">@_L["Promuovi ad amministratore"]</button>
                                         </form>
                                     }
+                                    @if (account.Ruolo == RuoloUtenza.TenantAdmin && account.DeveCambiarePassword && account.Stato == StatoUtenza.Attiva && tenant.EmailConfigurata)
+                                    {
+                                        <form method="post" asp-page-handler="InviaInvito" asp-route-id="@tenant.Id" class="d-inline">
+                                            <input type="hidden" name="idUtenza" value="@account.Id" />
+                                            <button type="submit" class="btn btn-sm">@_L["Invia l'invito"]</button>
+                                        </form>
+                                    }
                                     <form method="post" asp-page-handler="AccountAttivo" asp-route-id="@tenant.Id" class="d-inline">
                                         <input type="hidden" name="idUtenza" value="@account.Id" />
                                         <input type="hidden" name="attiva" value="@((account.Stato != StatoUtenza.Attiva).ToString().ToLowerInvariant())" />
@@ -293,6 +300,16 @@
             </div>
             <div class="card-body border-top">
                 <form method="post" asp-page-handler="NuovoAmministratore" asp-route-id="@tenant.Id" class="row g-2 align-items-end" autocomplete="off">
+                    <div class="col-12">
+                        <label class="form-check">
+                            <input type="checkbox" class="form-check-input" name="conInvito" value="true" checked="@tenant.EmailConfigurata" disabled="@(!tenant.EmailConfigurata)" />
+                            <span class="form-check-label">@_L["Invia un invito via email (l'amministratore sceglie da sé la password)"]</span>
+                        </label>
+                        @if (!tenant.EmailConfigurata)
+                        {
+                            <div class="form-hint">@_L["Per usare l'invito configura prima il canale email del tenant."]</div>
+                        }
+                    </div>
                     <div class="col-md">
                         <label class="form-label">@_L["Email del nuovo amministratore"]</label>
                         <input type="email" class="form-control" name="email" maxlength="254" required />
@@ -303,7 +320,7 @@
                     </div>
                     <div class="col-md-auto"><button type="submit" class="btn btn-primary">@_L["Crea amministratore"]</button></div>
                 </form>
-                <div class="form-hint mt-2">@_L["Viene generata una password temporanea, mostrata una sola volta."]</div>
+                <div class="form-hint mt-2">@_L["Senza invito viene generata una password temporanea, mostrata una sola volta."]</div>
             </div>
         </div>
     </div>

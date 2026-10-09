@@ -29,12 +29,18 @@ public enum CodiceEsito
 
     /// <summary>La chiave di ambiente per cifrare i segreti (<c>Sicurezza:ChiaveSegreti</c>) manca o non è valida.</summary>
     ChiaveSegretiMancante = 9,
+
+    /// <summary>Il tenant non ha ancora configurato il canale email (serve per gli inviti).</summary>
+    EmailNonConfigurata = 10,
 }
 
 public sealed record EsitoOperazione(CodiceEsito Codice, Guid? Id = null, IReadOnlyList<string>? CampiNonValidi = null)
 {
     public bool Riuscito => Codice == CodiceEsito.Riuscito;
 }
+
+/// <summary>Schema (e porta, se non standard) con cui costruire il link dell'invito; l'host è quello del dominio verificato del tenant.</summary>
+public sealed record DatiLinkInvito(string Schema, int? Porta);
 
 /// <summary>Esito della creazione/elevazione di un <c>TenantAdmin</c>; la password temporanea è mostrata una sola volta.</summary>
 public sealed record EsitoNuovoAmministratore(CodiceEsito Codice, Guid? IdUtenza, string? PasswordTemporanea)
@@ -88,7 +94,8 @@ public sealed record DettaglioTenant(
     DateTime CreatoIlUtc,
     IReadOnlyList<DettaglioSito> Siti,
     IReadOnlyList<DettaglioAccount> Account,
-    IReadOnlyList<LinguaDelSito> LingueDisponibili);
+    IReadOnlyList<LinguaDelSito> LingueDisponibili,
+    bool EmailConfigurata = false);
 
 /// <summary>
 /// Operazioni riservate al <see cref="RuoloUtenza.PlatformAdmin"/> (ADR-0014). Ogni metodo verifica sul database che
@@ -154,6 +161,23 @@ public interface IServizioPiattaforma
         string? email,
         string? nomeVisualizzato,
         CancellationToken annullamento);
+
+    /// <summary>
+    /// Crea un <c>TenantAdmin</c> e gli invia un invito via email: nessuna password viene comunicata, l'invitato sceglie la sua
+    /// aprendo un link monouso sul dominio del tenant. Richiede il canale email del tenant configurato.
+    /// </summary>
+    Task<EsitoOperazione> CreaTenantAdminConInvitoAsync(
+        Guid idAttore,
+        Guid idTenant,
+        string? email,
+        string? nomeVisualizzato,
+        DatiLinkInvito link,
+        CancellationToken annullamento);
+
+    /// <summary>
+    /// Invia di nuovo l'invito a un <c>TenantAdmin</c> che non ha ancora scelto la propria password; i link precedenti si annullano.
+    /// </summary>
+    Task<EsitoOperazione> InviaInvitoAsync(Guid idAttore, Guid idTenant, Guid idUtenza, DatiLinkInvito link, CancellationToken annullamento);
 
     /// <summary>Eleva un account <see cref="RuoloUtenza.Utente"/> del tenant a <see cref="RuoloUtenza.TenantAdmin"/>.</summary>
     Task<EsitoOperazione> ElevaATenantAdminAsync(Guid idAttore, Guid idTenant, Guid idUtenza, CancellationToken annullamento);

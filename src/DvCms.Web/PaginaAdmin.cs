@@ -41,6 +41,8 @@ public abstract class PaginaAdmin : PageModel
         CodiceEsito.GiaPresente => _localizzatore.Traduci("Esiste già un elemento con questo nome o indirizzo."),
         CodiceEsito.NonConsentito => _localizzatore.Traduci("L'operazione non è consentita in questo stato."),
         CodiceEsito.PaginaInizialeEsistente => _localizzatore.Traduci("Esiste già una pagina iniziale per questa lingua: toglila prima da quella."),
+        CodiceEsito.EmailNonConfigurata => _localizzatore.Traduci("Il tenant non ha ancora configurato il canale email: configuralo per inviare inviti."),
+        CodiceEsito.ChiaveSegretiMancante => _localizzatore.Traduci("La chiave per cifrare i segreti non è configurata sul server."),
         CodiceEsito.Conflitto => _localizzatore.Traduci("Il dato è stato modificato da qualcun altro: ricarica la pagina e riprova."),
         _ => _localizzatore.Traduci("Operazione non riuscita."),
     };

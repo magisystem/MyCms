@@ -1,4 +1,7 @@
+using System.Security.Cryptography;
 using DvCms.Application.Accessi;
+using DvCms.Application.Email;
+using DvCms.Application.Localizzazione;
 using DvCms.Application.Piattaforma;
 using DvCms.Domain;
 using DvCms.Domain.Accessi;
@@ -22,13 +25,26 @@ public sealed class ServizioPiattaforma : IServizioPiattaforma
     private readonly ContestoDatabase _contesto;
     private readonly IServizioAudit _audit;
     private readonly IHashPassword _hash;
+    private readonly IAccodatoreEmail _email;
+    private readonly ILocalizzatore _localizzatore;
+    private readonly OpzioniInviti _opzioniInviti;
     private readonly TimeProvider _orologio;
 
-    public ServizioPiattaforma(ContestoDatabase contesto, IServizioAudit audit, IHashPassword hash, TimeProvider orologio)
+    public ServizioPiattaforma(
+        ContestoDatabase contesto,
+        IServizioAudit audit,
+        IHashPassword hash,
+        IAccodatoreEmail email,
+        ILocalizzatore localizzatore,
+        OpzioniInviti opzioniInviti,
+        TimeProvider orologio)
     {
         _contesto = contesto;
         _audit = audit;
         _hash = hash;
+        _email = email;
+        _localizzatore = localizzatore;
+        _opzioniInviti = opzioniInviti;
         _orologio = orologio;
     }
 
@@ -106,7 +122,8 @@ public sealed class ServizioPiattaforma : IServizioPiattaforma
                 utenza.Stato,
                 utenza.DeveCambiarePassword,
                 utenza.UltimoAccessoIlUtc))],
-            lingueDisponibili);
+            lingueDisponibili,
+            await _contesto.ImpostazioniEmailTenant.IgnoreQueryFilters().AnyAsync(impostazioni => impostazioni.IdTenant == idTenant, annullamento));
     }
 
     public Task<EsitoOperazione> CreaTenantAsync(Guid idAttore, DatiNuovoTenant dati, CancellationToken annullamento)
@@ -437,6 +454,161 @@ public sealed class ServizioPiattaforma : IServizioPiattaforma
             ? new EsitoNuovoAmministratore(CodiceEsito.Riuscito, idUtenza, password)
             : new EsitoNuovoAmministratore(esito.Codice, null, null);
     }
+
+    public Task<EsitoOperazione> CreaTenantAdminConInvitoAsync(
+        Guid idAttore,
+        Guid idTenant,
+        string? email,
+        string? nomeVisualizzato,
+        DatiLinkInvito link,
+        CancellationToken annullamento)
+    {
+        ArgumentNullException.ThrowIfNull(link);
+
+        return EseguiAsync(idAttore, AzioniAudit.CreazioneTenantAdmin, "Utenza", idTenant, async attore =>
+        {
+            if (!NormalizzatoreEmail.TentaNormalizza(email, out var normalizzata)
+                || !TentaNome(nomeVisualizzato, out var nome)
+                || !TentaLink(link))
+            {
+                return Esito.Non(CodiceEsito.DatiNonValidi);
+            }
+
+            if (!await _contesto.Tenant.IgnoreQueryFilters().AnyAsync(candidato => candidato.Id == idTenant, annullamento))
+            {
+                return Esito.Non(CodiceEsito.NonTrovato);
+            }
+
+            var occupata = await _contesto.Utenze.IgnoreQueryFilters().AnyAsync(
+                candidata => candidata.EmailNormalizzata == normalizzata
+                    && (candidata.IdTenant == idTenant || candidata.Ruolo == RuoloUtenza.PlatformAdmin),
+                annullamento);
+            if (occupata)
+            {
+                return Esito.Non(CodiceEsito.GiaPresente);
+            }
+
+            // La password iniziale è casuale, non viene comunicata a nessuno: l'accesso passa dal link dell'invito.
+            var utenza = Utenza.Crea(RuoloUtenza.TenantAdmin, idTenant, email!, nome, _hash.Calcola(GeneratorePasswordTemporanea.Genera()), deveCambiarePassword: true, _orologio);
+            var codice = await PreparaInvitoAsync(attore, utenza, link, annullamento);
+            if (codice != CodiceEsito.Riuscito)
+            {
+                return Esito.Non(codice);
+            }
+
+            _contesto.Utenze.Add(utenza);
+            return Esito.Ok(utenza.Id, idTenant, $"TenantAdmin '{utenza.Email}' con invito");
+        }, annullamento);
+    }
+
+    public Task<EsitoOperazione> InviaInvitoAsync(Guid idAttore, Guid idTenant, Guid idUtenza, DatiLinkInvito link, CancellationToken annullamento)
+    {
+        ArgumentNullException.ThrowIfNull(link);
+
+        return EseguiAsync(idAttore, AzioniAudit.InvitoInviato, "Utenza", idTenant, async attore =>
+        {
+            if (!TentaLink(link))
+            {
+                return Esito.Non(CodiceEsito.DatiNonValidi);
+            }
+
+            var utenza = await _contesto.Utenze.IgnoreQueryFilters().SingleOrDefaultAsync(candidata => candidata.Id == idUtenza && candidata.IdTenant == idTenant, annullamento);
+            if (utenza is null)
+            {
+                return Esito.Non(CodiceEsito.NonTrovato);
+            }
+
+            // Solo chi non ha ancora scelto una password propria: dopo, la via è il recupero password.
+            if (utenza.Ruolo != RuoloUtenza.TenantAdmin || utenza.Stato != StatoUtenza.Attiva || !utenza.DeveCambiarePassword)
+            {
+                return Esito.Non(CodiceEsito.NonConsentito);
+            }
+
+            var codice = await PreparaInvitoAsync(attore, utenza, link, annullamento);
+            return codice == CodiceEsito.Riuscito
+                ? Esito.Ok(utenza.Id, idTenant, $"invito a '{utenza.Email}'")
+                : Esito.Non(codice);
+        }, annullamento);
+    }
+
+    /// <summary>
+    /// Annulla gli inviti aperti dell'account, ne crea uno nuovo e accoda l'email (cifrata nell'outbox) con il link sul dominio
+    /// verificato del tenant. Non salva: lo fa chi chiama insieme al resto dell'operazione.
+    /// </summary>
+    private async Task<CodiceEsito> PreparaInvitoAsync(Utenza attore, Utenza invitato, DatiLinkInvito link, CancellationToken annullamento)
+    {
+        var idTenant = invitato.IdTenant!.Value;
+        if (!await _contesto.ImpostazioniEmailTenant.IgnoreQueryFilters().AnyAsync(impostazioni => impostazioni.IdTenant == idTenant, annullamento))
+        {
+            return CodiceEsito.EmailNonConfigurata;
+        }
+
+        var dominio = await _contesto.DominiSito.IgnoreQueryFilters().AsNoTracking()
+            .Where(candidato => candidato.IdTenant == idTenant && candidato.Attivo && candidato.VerificatoIlUtc != null)
+            .OrderBy(candidato => candidato.SoloSviluppo).ThenBy(candidato => candidato.CreatoIlUtc)
+            .Select(candidato => candidato.Host)
+            .FirstOrDefaultAsync(annullamento);
+        if (dominio is null)
+        {
+            return CodiceEsito.NonConsentito;
+        }
+
+        var nomeTenant = await _contesto.Tenant.IgnoreQueryFilters().AsNoTracking().Where(t => t.Id == idTenant).Select(t => t.Nome).SingleAsync(annullamento);
+        var codiceLingua = invitato.IdLingua is { } idLingua
+            ? await _contesto.Lingue.AsNoTracking().Where(l => l.Id == idLingua && l.Attiva).Select(l => l.Codice).SingleOrDefaultAsync(annullamento)
+            : null;
+        var lingua = codiceLingua ?? Lingua.CodiceItaliano;
+
+        var adesso = Adesso();
+        var token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32)).Replace('+', '-').Replace('/', '_').TrimEnd('=');
+        var invito = new InvitoAccount
+        {
+            Id = Identificativi.Nuovo(_orologio),
+            IdTenant = idTenant,
+            IdUtenza = invitato.Id,
+            HashToken = SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(token)),
+            ScadeIlUtc = adesso + _opzioniInviti.Validita,
+            CreatoDaIdUtenza = attore.Id,
+            CreatoIlUtc = adesso,
+        };
+        var url = $"{link.Schema}://{dominio}{(link.Porta is { } porta ? $":{porta}" : string.Empty)}/admin/invito?token={token}";
+
+        try
+        {
+            _email.Accoda(
+                idTenant,
+                new MessaggioEmail(
+                    invitato.Email,
+                    invitato.NomeVisualizzato,
+                    _localizzatore.TraduciIn(lingua, "Invito come amministratore di {0}", nomeTenant),
+                    _localizzatore.TraduciIn(
+                        lingua,
+                        "Sei stato invitato a gestire il sito {0}. Per scegliere la tua password apri questo link entro {2} ore: {1}. Il link si può usare una sola volta.",
+                        nomeTenant,
+                        url,
+                        (int)_opzioniInviti.Validita.TotalHours)),
+                chiaveIdempotenza: $"invito:{invito.Id}",
+                riservato: true);
+        }
+        catch (Exception eccezione) when (eccezione is InvalidOperationException or CryptographicException)
+        {
+            return CodiceEsito.ChiaveSegretiMancante;
+        }
+
+        var aperti = await _contesto.InvitiAccount.IgnoreQueryFilters()
+            .Where(candidato => candidato.IdUtenza == invitato.Id && candidato.Stato == StatoInvito.Inviato)
+            .ToListAsync(annullamento);
+        foreach (var vecchio in aperti)
+        {
+            vecchio.Stato = StatoInvito.Annullato;
+        }
+
+        _contesto.InvitiAccount.Add(invito);
+        return CodiceEsito.Riuscito;
+    }
+
+    private static bool TentaLink(DatiLinkInvito link) =>
+        link.Schema is "http" or "https" && link.Porta is null or (> 0 and <= 65535);
 
     public Task<EsitoOperazione> ElevaATenantAdminAsync(Guid idAttore, Guid idTenant, Guid idUtenza, CancellationToken annullamento) =>
         EseguiAsync(idAttore, AzioniAudit.ElevazioneATenantAdmin, "Utenza", idTenant, async _ =>
