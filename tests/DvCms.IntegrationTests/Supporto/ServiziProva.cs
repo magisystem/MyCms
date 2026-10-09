@@ -19,6 +19,7 @@ public static class ServiziProva
         string connessione,
         IDictionary<string, string?>? impostazioniAggiuntive = null,
         string ambiente = "Development",
+        TimeProvider? orologio = null,
         CancellationToken annullamento = default)
     {
         var impostazioni = new Dictionary<string, string?>
@@ -40,6 +41,11 @@ public static class ServiziProva
         servizi.AddLogging(logging => logging.SetMinimumLevel(LogLevel.Warning));
         servizi.AddSingleton<IConfiguration>(configurazione);
         servizi.AddSingleton<IHostEnvironment>(new AmbienteProva(ambiente));
+        if (orologio is not null)
+        {
+            servizi.AddSingleton(orologio);
+        }
+
         servizi.AggiungiInfrastruttura(configurazione);
 
         var fornitore = servizi.BuildServiceProvider();
@@ -66,4 +72,19 @@ internal sealed class AmbienteProva : IHostEnvironment
     public string ContentRootPath { get; set; } = AppContext.BaseDirectory;
 
     public IFileProvider ContentRootFileProvider { get; set; } = new NullFileProvider();
+}
+
+/// <summary>Orologio di prova controllabile.</summary>
+public sealed class OrologioProva : TimeProvider
+{
+    private DateTimeOffset _adesso;
+
+    public OrologioProva(DateTimeOffset? iniziale = null)
+    {
+        _adesso = iniziale ?? new DateTimeOffset(2026, 10, 9, 12, 0, 0, TimeSpan.Zero);
+    }
+
+    public void Avanza(TimeSpan intervallo) => _adesso += intervallo;
+
+    public override DateTimeOffset GetUtcNow() => _adesso;
 }

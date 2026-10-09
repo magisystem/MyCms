@@ -1,0 +1,29 @@
+@page "/admin/accesso"
+@model DvCms.Web.Pages.Admin.AccessoModel
+@{
+    Layout = "_LayoutAccesso";
+    ViewData["Titolo"] = _L["Accesso"];
+}
+<div class="card card-md">
+    <div class="card-body">
+        <h2 class="h2 text-center mb-4">@_L["Accedi al tuo account"]</h2>
+        @if (Model.Errore)
+        {
+            <div class="alert alert-danger" role="alert">@_L["Credenziali non valide."]</div>
+        }
+        <form method="post" autocomplete="off" novalidate>
+            <input type="hidden" name="ReturnUrl" value="@Model.ReturnUrl" />
+            <div class="mb-3">
+                <label class="form-label" for="Email">@_L["Email"]</label>
+                <input type="email" class="form-control" id="Email" name="Email" value="@Model.Email" autocomplete="username" required />
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="Password">@_L["Password"]</label>
+                <input type="password" class="form-control" id="Password" name="Password" autocomplete="current-password" required />
+            </div>
+            <div class="form-footer">
+                <button type="submit" class="btn btn-primary w-100">@_L["Accedi"]</button>
+            </div>
+        </form>
+    </div>
+</div>

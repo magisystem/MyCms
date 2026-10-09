@@ -1,12 +1,20 @@
 using DvCms.Application.Localizzazione;
 using DvCms.Infrastructure;
+using DvCms.Web.Accessi;
 using DvCms.Web.Comandi;
 using DvCms.Web.Localizzazione;
 using DvCms.Web.Middleware;
 
 var costruttore = WebApplication.CreateBuilder(args);
 
-costruttore.Services.AddRazorPages();
+costruttore.Services.AddRazorPages(opzioni =>
+{
+    // Tutta l'area /admin richiede un amministratore del tenant (o il PlatformAdmin); l'accesso è l'unica eccezione.
+    opzioni.Conventions.AuthorizeFolder("/Admin", Politiche.AmministratoreTenant);
+    opzioni.Conventions.AllowAnonymousToPage("/Admin/Accesso");
+    opzioni.Conventions.ConfigureFilter(new FiltroCambioPasswordObbligatorio());
+});
+ConfigurazioneAccessiWeb.Aggiungi(costruttore.Services, costruttore.Configuration, costruttore.Environment);
 costruttore.Services.AggiungiInfrastruttura(costruttore.Configuration);
 costruttore.Services.AddHttpContextAccessor();
 var usaProxyAttendibili = ConfigurazioneProxy.Aggiungi(costruttore.Services, costruttore.Configuration);
@@ -36,6 +44,11 @@ if (!applicazione.Environment.IsDevelopment())
 applicazione.UseMiddleware<MiddlewareRisorseStatiche>();
 applicazione.UseStaticFiles();
 applicazione.UseRouting();
+applicazione.UseRateLimiter();
+applicazione.UseAuthentication();
+applicazione.UseMiddleware<MiddlewareGuest>();
+applicazione.UseMiddleware<MiddlewareLingua>();
+applicazione.UseAuthorization();
 applicazione.MapRazorPages();
 
 applicazione.Run();

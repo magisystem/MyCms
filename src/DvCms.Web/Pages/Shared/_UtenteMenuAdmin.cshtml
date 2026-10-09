@@ -1,1 +1,24 @@
-@* Blocco dell'utente nel menu laterale: arricchito con nome e uscita quando arriva l'autenticazione (B-003). *@
+@using System.Security.Claims
+@if (User.Identity?.IsAuthenticated == true)
+{
+    <div class="navbar-footer">
+        <ul class="navbar-nav">
+            <li class="nav-item dropup">
+                <a href="#" class="nav-link" data-bs-toggle="dropdown" aria-label="@_L["Menu utente"]">
+                    <span class="avatar avatar-sm"><i class="ti ti-user"></i></span>
+                    <div class="nav-link-title">
+                        @User.FindFirstValue(ClaimTypes.Name)
+                        <div class="small text-secondary">@User.FindFirstValue(ClaimTypes.Role)</div>
+                    </div>
+                </a>
+                <div class="dropdown-menu">
+                    <a class="dropdown-item" href="/admin/password">@_L["Cambio password"]</a>
+                    <div class="dropdown-divider"></div>
+                    <form method="post" asp-page="/Admin/Esci" class="m-0">
+                        <button type="submit" class="dropdown-item">@_L["Esci"]</button>
+                    </form>
+                </div>
+            </li>
+        </ul>
+    </div>
+}

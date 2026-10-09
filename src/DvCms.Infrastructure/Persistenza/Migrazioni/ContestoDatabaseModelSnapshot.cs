@@ -22,6 +22,132 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("DvCms.Domain.Accessi.RegistroAudit", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Azione")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("CreatoIlUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Dettagli")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("Esito")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<Guid?>("IdTenant")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("IdUtenzaAttore")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Risorsa")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdUtenzaAttore");
+
+                    b.HasIndex("IdTenant", "CreatoIlUtc");
+
+                    b.ToTable("RegistroAudit", (string)null);
+                });
+
+            modelBuilder.Entity("DvCms.Domain.Accessi.Utenza", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("AggiornatoIlUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("BloccatoFinoAlUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ContatoreAccessiFalliti")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatoIlUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("DeveCambiarePassword")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(254)
+                        .HasColumnType("nvarchar(254)");
+
+                    b.Property<string>("EmailNormalizzata")
+                        .IsRequired()
+                        .HasMaxLength(254)
+                        .HasColumnType("nvarchar(254)");
+
+                    b.Property<string>("HashPassword")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<Guid?>("IdLingua")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("IdTenant")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("NomeVisualizzato")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime>("PasswordAggiornataIlUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Ruolo")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Stato")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<Guid>("TimbroSicurezza")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte[]>("TokenConcorrenza")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<DateTime?>("UltimoAccessoIlUtc")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdLingua");
+
+                    b.HasIndex("IdTenant", "EmailNormalizzata")
+                        .IsUnique();
+
+                    b.ToTable("Utenze", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Utenze_RuoloETenant", "([Ruolo] = 'PlatformAdmin' AND [IdTenant] IS NULL) OR ([Ruolo] <> 'PlatformAdmin' AND [IdTenant] IS NOT NULL)");
+                        });
+                });
+
             modelBuilder.Entity("DvCms.Domain.Localizzazione.Lingua", b =>
                 {
                     b.Property<Guid>("Id")
@@ -109,6 +235,8 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
 
                     b.HasKey("Id");
 
+                    b.HasIndex("AggiornatoDaIdUtenza");
+
                     b.HasIndex("IdLingua", "HashChiave")
                         .IsUnique();
 
@@ -159,6 +287,8 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
 
                     b.HasIndex("Host")
                         .IsUnique();
+
+                    b.HasIndex("VerificatoDaIdUtenza");
 
                     b.HasIndex("IdTenant", "IdSito");
 
@@ -270,8 +400,39 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.ToTable("Tenant", (string)null);
                 });
 
+            modelBuilder.Entity("DvCms.Domain.Accessi.RegistroAudit", b =>
+                {
+                    b.HasOne("DvCms.Domain.Tenancy.Tenant", null)
+                        .WithMany()
+                        .HasForeignKey("IdTenant")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("DvCms.Domain.Accessi.Utenza", null)
+                        .WithMany()
+                        .HasForeignKey("IdUtenzaAttore")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("DvCms.Domain.Accessi.Utenza", b =>
+                {
+                    b.HasOne("DvCms.Domain.Localizzazione.Lingua", null)
+                        .WithMany()
+                        .HasForeignKey("IdLingua")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("DvCms.Domain.Tenancy.Tenant", null)
+                        .WithMany()
+                        .HasForeignKey("IdTenant")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
             modelBuilder.Entity("DvCms.Domain.Localizzazione.TestoStatico", b =>
                 {
+                    b.HasOne("DvCms.Domain.Accessi.Utenza", null)
+                        .WithMany()
+                        .HasForeignKey("AggiornatoDaIdUtenza")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("DvCms.Domain.Localizzazione.Lingua", null)
                         .WithMany()
                         .HasForeignKey("IdLingua")
@@ -281,6 +442,11 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
 
             modelBuilder.Entity("DvCms.Domain.Tenancy.DominioSito", b =>
                 {
+                    b.HasOne("DvCms.Domain.Accessi.Utenza", null)
+                        .WithMany()
+                        .HasForeignKey("VerificatoDaIdUtenza")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("DvCms.Domain.Tenancy.Sito", null)
                         .WithMany()
                         .HasForeignKey("IdTenant", "IdSito")

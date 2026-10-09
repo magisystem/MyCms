@@ -48,6 +48,7 @@ public abstract class FabbricaApplicazione : WebApplicationFactory<Program>
         builder.UseEnvironment(_ambiente);
         builder.UseSetting("ConnectionStrings:Predefinita", _connessione);
         builder.UseSetting("Sicurezza:Password:FattoreLavoroBcrypt", "4");
+        builder.UseSetting("Sicurezza:Accesso:RichiesteAlMinuto", "1000");
         if (_impostazioni is not null)
         {
             foreach (var coppia in _impostazioni)

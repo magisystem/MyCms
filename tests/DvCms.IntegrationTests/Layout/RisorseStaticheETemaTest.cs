@@ -51,19 +51,18 @@ public partial class RisorseStaticheETemaTest : IClassFixture<FabbricaApplicazio
     }
 
     [Fact]
-    public async Task LayoutAdminUsaSoloRisorseLocaliEDichiaraLaLingua()
+    public async Task PaginaDiAccessoUsaSoloRisorseLocaliEDichiaraLaLingua()
     {
         using var client = _fabbrica.CreateClient();
 
-        using var risposta = await client.GetAsync("/admin", TestContext.Current.CancellationToken);
+        using var risposta = await client.GetAsync("/admin/accesso", TestContext.Current.CancellationToken);
         var html = await risposta.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, risposta.StatusCode);
         Assert.Contains("<html lang=\"it\"", html, StringComparison.Ordinal);
         Assert.Contains("/lib/tabler/dashboard/dist/css/tabler.min.css", html, StringComparison.Ordinal);
         Assert.Contains("/lib/tabler-icons/webfont/tabler-icons.min.css", html, StringComparison.Ordinal);
-        Assert.Contains("navbar-vertical", html, StringComparison.Ordinal);
-        Assert.Contains("Cruscotto", html, StringComparison.Ordinal);
+        Assert.Contains("name=\"robots\" content=\"noindex, nofollow\"", html, StringComparison.Ordinal);
         Assert.DoesNotMatch(RiferimentoEsterno(), html);
     }
 

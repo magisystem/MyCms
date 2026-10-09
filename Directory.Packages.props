@@ -11,6 +11,10 @@
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.12" />
   </ItemGroup>
 
+  <ItemGroup Label="Sicurezza">
+    <PackageVersion Include="BCrypt.Net-Next" Version="4.2.1" />
+  </ItemGroup>
+
   <ItemGroup Label="Estensioni">
     <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.12" />
     <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.12" />

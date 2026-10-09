@@ -1,4 +1,5 @@
 using DvCms.Application.Tenancy;
+using DvCms.Domain.Accessi;
 using DvCms.Domain.Localizzazione;
 using DvCms.Domain.Tenancy;
 using Microsoft.EntityFrameworkCore;
@@ -46,6 +47,10 @@ public class ContestoDatabase : DbContext
 
     public DbSet<ProfiloGuest> ProfiliGuest => Set<ProfiloGuest>();
 
+    public DbSet<Utenza> Utenze => Set<Utenza>();
+
+    public DbSet<RegistroAudit> RegistroAudit => Set<RegistroAudit>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         ArgumentNullException.ThrowIfNull(modelBuilder);
@@ -56,6 +61,8 @@ public class ContestoDatabase : DbContext
         modelBuilder.Entity<Sito>().HasQueryFilter(sito => sito.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<DominioSito>().HasQueryFilter(dominio => dominio.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<ProfiloGuest>().HasQueryFilter(profilo => profilo.IdTenant == IdTenantCorrente);
+        modelBuilder.Entity<Utenza>().HasQueryFilter(utenza => utenza.IdTenant == IdTenantCorrente);
+        modelBuilder.Entity<RegistroAudit>().HasQueryFilter(voce => voce.IdTenant == IdTenantCorrente);
     }
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)

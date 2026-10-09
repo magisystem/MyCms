@@ -1,3 +1,5 @@
+using DvCms.Application.Accessi;
+using DvCms.Domain.Accessi;
 using DvCms.Domain.Tenancy;
 using DvCms.Infrastructure.Persistenza;
 using Microsoft.Extensions.DependencyInjection;
@@ -43,5 +45,30 @@ public static class DatiProva
         await contesto.SaveChangesAsync(annullamento);
 
         return new TenantCreato(tenant.Id, sito.Id, dominio.Id, dominio.Host);
+    }
+
+    public const string PasswordProva = "password-di-prova-123";
+
+    /// <summary>Crea un account con password nota (<see cref="PasswordProva"/> se non indicata).</summary>
+    public static async Task<Guid> CreaUtenzaAsync(
+        IServiceProvider fornitore,
+        RuoloUtenza ruolo,
+        Guid? idTenant,
+        string email,
+        string? password = null,
+        bool deveCambiarePassword = false,
+        StatoUtenza stato = StatoUtenza.Attiva,
+        CancellationToken annullamento = default)
+    {
+        await using var ambito = fornitore.CreateAsyncScope();
+        var contesto = ambito.ServiceProvider.GetRequiredService<ContestoDatabase>();
+        var hash = ambito.ServiceProvider.GetRequiredService<IHashPassword>();
+        var orologio = ambito.ServiceProvider.GetRequiredService<TimeProvider>();
+
+        var utenza = Utenza.Crea(ruolo, idTenant, email, $"Utente {email}", hash.Calcola(password ?? PasswordProva), deveCambiarePassword, orologio);
+        utenza.Stato = stato;
+        contesto.Utenze.Add(utenza);
+        await contesto.SaveChangesAsync(annullamento);
+        return utenza.Id;
     }
 }

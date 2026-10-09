@@ -1,3 +1,4 @@
+using DvCms.Domain.Accessi;
 using DvCms.Domain.Localizzazione;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -15,6 +16,7 @@ internal sealed class ConfigurazioneTestoStatico : IEntityTypeConfiguration<Test
         entita.Property(testo => testo.HashChiave).HasColumnType("binary(32)").IsRequired();
         entita.Property(testo => testo.Testo).HasMaxLength(TestoStatico.LunghezzaMassimaTesto).IsRequired();
         entita.HasOne<Lingua>().WithMany().HasForeignKey(testo => testo.IdLingua).OnDelete(DeleteBehavior.Restrict);
+        entita.HasOne<Utenza>().WithMany().HasForeignKey(testo => testo.AggiornatoDaIdUtenza).OnDelete(DeleteBehavior.Restrict);
         entita.HasIndex(testo => new { testo.IdLingua, testo.HashChiave }).IsUnique();
     }
 }

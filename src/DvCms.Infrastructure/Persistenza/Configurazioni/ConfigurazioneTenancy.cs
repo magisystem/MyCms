@@ -1,3 +1,4 @@
+using DvCms.Domain.Accessi;
 using DvCms.Domain.Tenancy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -65,6 +66,8 @@ internal sealed class ConfigurazioneDominioSito : IEntityTypeConfiguration<Domin
             .HasForeignKey(dominio => new { dominio.IdTenant, dominio.IdSito })
             .HasPrincipalKey(sito => new { sito.IdTenant, sito.Id })
             .OnDelete(DeleteBehavior.Restrict);
+
+        entita.HasOne<Utenza>().WithMany().HasForeignKey(dominio => dominio.VerificatoDaIdUtenza).OnDelete(DeleteBehavior.Restrict);
     }
 }
 
