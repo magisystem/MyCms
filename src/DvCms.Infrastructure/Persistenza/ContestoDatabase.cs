@@ -1,4 +1,5 @@
 using DvCms.Domain.Localizzazione;
+using DvCms.Domain.Tenancy;
 using Microsoft.EntityFrameworkCore;
 
 namespace DvCms.Infrastructure.Persistenza;
@@ -24,6 +25,14 @@ public class ContestoDatabase : DbContext
     public DbSet<Lingua> Lingue => Set<Lingua>();
 
     public DbSet<TestoStatico> TestiStatici => Set<TestoStatico>();
+
+    public DbSet<Tenant> Tenant => Set<Tenant>();
+
+    public DbSet<Sito> Siti => Set<Sito>();
+
+    public DbSet<DominioSito> DominiSito => Set<DominioSito>();
+
+    public DbSet<ProfiloGuest> ProfiliGuest => Set<ProfiloGuest>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

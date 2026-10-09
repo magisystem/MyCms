@@ -11,6 +11,7 @@ Piano di implementazione richiesto da `docs/AI_START_HERE.md`, preparato prima d
 | A-003 Convenzioni e logging | Completata (`docs/development/convenzioni-codice.md`) |
 | A-009 Localizzatore | Completata |
 | A-004 Layout Tabler | Completata (layout `_LayoutAdmin`, pagina `/admin`) |
+| B-001 Tenant, Sito, DominioSito, ProfiloGuest | Completata |
 
 ## 1. Stato attuale del repository
 
