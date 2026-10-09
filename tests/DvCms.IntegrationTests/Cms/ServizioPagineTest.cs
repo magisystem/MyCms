@@ -1,0 +1,335 @@
+using DvCms.Application.Accessi;
+using DvCms.Application.Cms;
+using DvCms.Application.Piattaforma;
+using DvCms.Application.Tenancy;
+using DvCms.Domain.Accessi;
+using DvCms.Domain.Cms;
+using DvCms.Domain.Tenancy;
+using DvCms.Infrastructure.Persistenza;
+using DvCms.IntegrationTests.Supporto;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Xunit;
+
+namespace DvCms.IntegrationTests.Cms;
+
+/// <summary>Gestione delle pagine nell'admin (C-002) su SQL Server reale.</summary>
+public class ServizioPagineTest
+{
+    private static CancellationToken Ct => TestContext.Current.CancellationToken;
+
+    [Fact]
+    public async Task CreaUnaBozzaConSlugDalTitoloELinguaPredefinita()
+    {
+        await using var s = await Scenario.CreaAsync();
+
+        var esito = await s.ComeAsync(s.A, servizio => servizio.CreaAsync(s.AdminA, new DatiNuovaPagina(null, "Chi siamo", "Testo", null, false), Ct));
+
+        Assert.True(esito.Riuscito);
+        var dettaglio = await s.ComeAsync(s.A, servizio => servizio.LeggiAsync(s.AdminA, esito.Id!.Value, Ct));
+        Assert.Equal("chi-siamo", dettaglio!.Slug);
+        Assert.Equal("it", dettaglio.CodiceLingua);
+        Assert.Equal(StatoPagina.Bozza, dettaglio.Stato);
+        Assert.Equal("Testo", dettaglio.Contenuto);
+        Assert.Single(dettaglio.Revisioni);
+        Assert.Equal("anna@esempio.it", dettaglio.Revisioni[0].Autore);
+    }
+
+    [Theory]
+    [InlineData("", "Testo", "pagina", "it")]
+    [InlineData("Titolo", "Testo", "admin", "it")]
+    [InlineData("Titolo", "Testo", "lib", "it")]
+    [InlineData("Titolo", "Testo", "con spazio", "it")]
+    [InlineData("Titolo", "Testo", "file.html", "it")]
+    [InlineData("Titolo", "Testo", "pagina", "xx")]
+    [InlineData("!!!", "Testo", "", "it")]
+    public async Task LaCreazioneRifiutaDatiNonValidi(string titolo, string contenuto, string slug, string lingua)
+    {
+        await using var s = await Scenario.CreaAsync();
+
+        var esito = await s.ComeAsync(s.A, servizio => servizio.CreaAsync(s.AdminA, new DatiNuovaPagina(slug, titolo, contenuto, lingua, false), Ct));
+
+        Assert.Equal(CodiceEsito.DatiNonValidi, esito.Codice);
+        Assert.Empty(await s.ComeAsync(s.A, servizio => servizio.ElencaAsync(s.AdminA, Ct)));
+    }
+
+    [Fact]
+    public async Task LoSlugEUnicoPerSitoELinguaMaPuoRipetersiAltrove()
+    {
+        await using var s = await Scenario.CreaAsync();
+        await s.CreaPaginaAsync(s.A, s.AdminA, "contatti");
+
+        var stessaLingua = await s.ComeAsync(s.A, servizio => servizio.CreaAsync(s.AdminA, new DatiNuovaPagina("contatti", "Altro", "x", "it", false), Ct));
+        var altraLingua = await s.ComeAsync(s.A, servizio => servizio.CreaAsync(s.AdminA, new DatiNuovaPagina("contatti", "Contacts", "x", "en", false), Ct));
+        var altroTenant = await s.ComeAsync(s.B, servizio => servizio.CreaAsync(s.AdminB, new DatiNuovaPagina("contatti", "Contatti B", "x", "it", false), Ct));
+
+        Assert.Equal(CodiceEsito.GiaPresente, stessaLingua.Codice);
+        Assert.True(altraLingua.Riuscito);
+        Assert.True(altroTenant.Riuscito);
+    }
+
+    [Fact]
+    public async Task LoSlugPuoRipetersiSuUnAltroSitoDelloStessoTenant()
+    {
+        await using var s = await Scenario.CreaAsync();
+        await s.CreaPaginaAsync(s.A, s.AdminA, "contatti");
+        var secondoSito = await s.AggiungiSitoAsync(s.A);
+
+        var esito = await s.ComeAsync(secondoSito, servizio => servizio.CreaAsync(s.AdminA, new DatiNuovaPagina("contatti", "Contatti 2", "x", "it", false), Ct));
+
+        Assert.True(esito.Riuscito);
+        Assert.Single(await s.ComeAsync(secondoSito, servizio => servizio.ElencaAsync(s.AdminA, Ct)));
+        Assert.Single(await s.ComeAsync(s.A, servizio => servizio.ElencaAsync(s.AdminA, Ct)));
+    }
+
+    [Fact]
+    public async Task UnaSolaPaginaInizialePerLingua()
+    {
+        await using var s = await Scenario.CreaAsync();
+        await s.ComeAsync(s.A, servizio => servizio.CreaAsync(s.AdminA, new DatiNuovaPagina("home", "Home", "x", "it", true), Ct));
+
+        var seconda = await s.ComeAsync(s.A, servizio => servizio.CreaAsync(s.AdminA, new DatiNuovaPagina("benvenuto", "Benvenuto", "x", "it", true), Ct));
+        var inglese = await s.ComeAsync(s.A, servizio => servizio.CreaAsync(s.AdminA, new DatiNuovaPagina("home-en", "Home", "x", "en", true), Ct));
+
+        Assert.Equal(CodiceEsito.PaginaInizialeEsistente, seconda.Codice);
+        Assert.True(inglese.Riuscito);
+    }
+
+    [Fact]
+    public async Task SalvareCreaUnaNuovaRevisioneEIlTokenVecchioDaConflitto()
+    {
+        await using var s = await Scenario.CreaAsync();
+        var id = await s.CreaPaginaAsync(s.A, s.AdminA, "pagina");
+        var letta = (await s.ComeAsync(s.A, servizio => servizio.LeggiAsync(s.AdminA, id, Ct)))!;
+
+        var primo = await s.ComeAsync(s.A, servizio => servizio.SalvaAsync(s.AdminA, id, new DatiModificaPagina(null, "Titolo 2", "Testo 2", "ritocco", false, letta.TokenConcorrenza), Ct));
+        var concorrente = await s.ComeAsync(s.A, servizio => servizio.SalvaAsync(s.AdminA, id, new DatiModificaPagina(null, "Titolo 3", "Testo 3", null, false, letta.TokenConcorrenza), Ct));
+
+        Assert.True(primo.Riuscito);
+        Assert.Equal(CodiceEsito.Conflitto, concorrente.Codice);
+        var dopo = (await s.ComeAsync(s.A, servizio => servizio.LeggiAsync(s.AdminA, id, Ct)))!;
+        Assert.Equal("Titolo 2", dopo.Titolo);
+        Assert.Equal(2, dopo.Revisioni.Count);
+        Assert.Equal("ritocco", dopo.Revisioni[0].Nota);
+        Assert.NotEqual(letta.TokenConcorrenza, dopo.TokenConcorrenza);
+    }
+
+    [Fact]
+    public async Task SalvareSenzaModificheNonCreaRevisioni()
+    {
+        await using var s = await Scenario.CreaAsync();
+        var id = await s.CreaPaginaAsync(s.A, s.AdminA, "pagina");
+        var letta = (await s.ComeAsync(s.A, servizio => servizio.LeggiAsync(s.AdminA, id, Ct)))!;
+
+        var esito = await s.ComeAsync(s.A, servizio => servizio.SalvaAsync(s.AdminA, id, new DatiModificaPagina(null, letta.Titolo, letta.Contenuto, null, false, letta.TokenConcorrenza), Ct));
+
+        Assert.True(esito.Riuscito);
+        Assert.Single((await s.ComeAsync(s.A, servizio => servizio.LeggiAsync(s.AdminA, id, Ct)))!.Revisioni);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("non-base64!!")]
+    public async Task SenzaTokenValidoLaModificaEDatiNonValidi(string? token)
+    {
+        await using var s = await Scenario.CreaAsync();
+        var id = await s.CreaPaginaAsync(s.A, s.AdminA, "pagina");
+
+        var esito = await s.ComeAsync(s.A, servizio => servizio.SalvaAsync(s.AdminA, id, new DatiModificaPagina(null, "T", "C", null, false, token), Ct));
+
+        Assert.Equal(CodiceEsito.DatiNonValidi, esito.Codice);
+    }
+
+    [Fact]
+    public async Task LoSlugSiCambiaInBozzaMaNonSeLaPaginaEPubblicata()
+    {
+        await using var s = await Scenario.CreaAsync();
+        var id = await s.CreaPaginaAsync(s.A, s.AdminA, "vecchio");
+        await s.CreaPaginaAsync(s.A, s.AdminA, "occupato");
+        var letta = (await s.ComeAsync(s.A, servizio => servizio.LeggiAsync(s.AdminA, id, Ct)))!;
+
+        var occupato = await s.ComeAsync(s.A, servizio => servizio.SalvaAsync(s.AdminA, id, new DatiModificaPagina("occupato", letta.Titolo, letta.Contenuto, null, false, letta.TokenConcorrenza), Ct));
+        var riservato = await s.ComeAsync(s.A, servizio => servizio.SalvaAsync(s.AdminA, id, new DatiModificaPagina("admin", letta.Titolo, letta.Contenuto, null, false, letta.TokenConcorrenza), Ct));
+        var nuovo = await s.ComeAsync(s.A, servizio => servizio.SalvaAsync(s.AdminA, id, new DatiModificaPagina("Nuovo", letta.Titolo, letta.Contenuto, null, false, letta.TokenConcorrenza), Ct));
+        letta = (await s.ComeAsync(s.A, servizio => servizio.LeggiAsync(s.AdminA, id, Ct)))!;
+        await s.ComeAsync(s.A, servizio => servizio.PubblicaAsync(s.AdminA, id, letta.TokenConcorrenza, Ct));
+        letta = (await s.ComeAsync(s.A, servizio => servizio.LeggiAsync(s.AdminA, id, Ct)))!;
+        var dopoPubblicazione = await s.ComeAsync(s.A, servizio => servizio.SalvaAsync(s.AdminA, id, new DatiModificaPagina("altro", letta.Titolo, letta.Contenuto, null, false, letta.TokenConcorrenza), Ct));
+
+        Assert.Equal(CodiceEsito.GiaPresente, occupato.Codice);
+        Assert.Equal(CodiceEsito.DatiNonValidi, riservato.Codice);
+        Assert.True(nuovo.Riuscito);
+        Assert.Equal(CodiceEsito.NonConsentito, dopoPubblicazione.Codice);
+        Assert.Equal("nuovo", letta.Slug);
+    }
+
+    [Fact]
+    public async Task BozzaEPubblicatoRestanoSeparatiEIlRitiroTogliLaPagina()
+    {
+        await using var s = await Scenario.CreaAsync();
+        var id = await s.CreaPaginaAsync(s.A, s.AdminA, "pagina");
+        var letta = (await s.ComeAsync(s.A, servizio => servizio.LeggiAsync(s.AdminA, id, Ct)))!;
+        Assert.True((await s.ComeAsync(s.A, servizio => servizio.PubblicaAsync(s.AdminA, id, letta.TokenConcorrenza, Ct))).Riuscito);
+        letta = (await s.ComeAsync(s.A, servizio => servizio.LeggiAsync(s.AdminA, id, Ct)))!;
+        Assert.Equal(StatoPagina.Pubblicata, letta.Stato);
+        Assert.False(letta.ModificheNonPubblicate);
+
+        await s.ComeAsync(s.A, servizio => servizio.SalvaAsync(s.AdminA, id, new DatiModificaPagina(null, "Bozza nuova", "Testo nuovo", null, false, letta.TokenConcorrenza), Ct));
+        var conBozza = (await s.ComeAsync(s.A, servizio => servizio.LeggiAsync(s.AdminA, id, Ct)))!;
+
+        Assert.Equal(StatoPagina.Pubblicata, conBozza.Stato);
+        Assert.True(conBozza.ModificheNonPubblicate);
+        Assert.Equal(["Pubblicata"], conBozza.Revisioni.Where(r => r.Pubblicata).Select(_ => "Pubblicata"));
+        Assert.Equal(1, conBozza.Revisioni.Single(r => r.Pubblicata).Numero);
+        Assert.Equal(2, conBozza.Revisioni.Single(r => r.UltimaBozza).Numero);
+
+        Assert.True((await s.ComeAsync(s.A, servizio => servizio.RitiraAsync(s.AdminA, id, conBozza.TokenConcorrenza, Ct))).Riuscito);
+        var ritirata = (await s.ComeAsync(s.A, servizio => servizio.LeggiAsync(s.AdminA, id, Ct)))!;
+        Assert.Equal(StatoPagina.Bozza, ritirata.Stato);
+        Assert.DoesNotContain(ritirata.Revisioni, r => r.Pubblicata);
+    }
+
+    [Fact]
+    public async Task LaPaginaDiUnAltroTenantOSitoNonSiVedeNeSiModifica()
+    {
+        await using var s = await Scenario.CreaAsync();
+        var idB = await s.CreaPaginaAsync(s.B, s.AdminB, "di-b");
+        var secondoSito = await s.AggiungiSitoAsync(s.A);
+        var idSecondoSito = await s.CreaPaginaAsync(secondoSito, s.AdminA, "altro-sito");
+
+        // Dall'host A, con un amministratore di A: pagine di B e di un altro sito di A sono come inesistenti.
+        Assert.Null(await s.ComeAsync(s.A, servizio => servizio.LeggiAsync(s.AdminA, idB, Ct)));
+        Assert.Null(await s.ComeAsync(s.A, servizio => servizio.LeggiAsync(s.AdminA, idSecondoSito, Ct)));
+        var salva = await s.ComeAsync(s.A, servizio => servizio.SalvaAsync(s.AdminA, idB, new DatiModificaPagina(null, "X", "Y", null, false, Convert.ToBase64String([1, 2, 3])), Ct));
+        var pubblica = await s.ComeAsync(s.A, servizio => servizio.PubblicaAsync(s.AdminA, idB, Convert.ToBase64String([1, 2, 3]), Ct));
+        var ritira = await s.ComeAsync(s.A, servizio => servizio.RitiraAsync(s.AdminA, idSecondoSito, Convert.ToBase64String([1, 2, 3]), Ct));
+        Assert.Equal(CodiceEsito.NonTrovato, salva.Codice);
+        Assert.Equal(CodiceEsito.NonTrovato, pubblica.Codice);
+        Assert.Equal(CodiceEsito.NonTrovato, ritira.Codice);
+        Assert.DoesNotContain(await s.ComeAsync(s.A, servizio => servizio.ElencaAsync(s.AdminA, Ct)), p => p.Slug is "di-b" or "altro-sito");
+    }
+
+    [Fact]
+    public async Task ChiNonEAmministratoreDelTenantDellHostVieneNegatoEdEInAudit()
+    {
+        await using var s = await Scenario.CreaAsync();
+        var id = await s.CreaPaginaAsync(s.A, s.AdminA, "pagina");
+        var letta = (await s.ComeAsync(s.A, servizio => servizio.LeggiAsync(s.AdminA, id, Ct)))!;
+        var utente = await DatiProva.CreaUtenzaAsync(s.Fornitore, RuoloUtenza.Utente, s.A.IdTenant, "cliente@esempio.it", annullamento: Ct);
+        var disabilitato = await DatiProva.CreaUtenzaAsync(s.Fornitore, RuoloUtenza.TenantAdmin, s.A.IdTenant, "ex@esempio.it", stato: StatoUtenza.Disabilitata, annullamento: Ct);
+        var attori = new[] { s.AdminB, utente, disabilitato, Guid.NewGuid() };
+
+        foreach (var attore in attori)
+        {
+            var crea = await s.ComeAsync(s.A, servizio => servizio.CreaAsync(attore, new DatiNuovaPagina("abusiva", "T", "C", "it", false), Ct));
+            var salva = await s.ComeAsync(s.A, servizio => servizio.SalvaAsync(attore, id, new DatiModificaPagina(null, "Hacked", "Hacked", null, false, letta.TokenConcorrenza), Ct));
+            var pubblica = await s.ComeAsync(s.A, servizio => servizio.PubblicaAsync(attore, id, letta.TokenConcorrenza, Ct));
+            Assert.Equal(CodiceEsito.NonAutorizzato, crea.Codice);
+            Assert.Equal(CodiceEsito.NonAutorizzato, salva.Codice);
+            Assert.Equal(CodiceEsito.NonAutorizzato, pubblica.Codice);
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => s.ComeAsync(s.A, servizio => servizio.ElencaAsync(attore, Ct)));
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => s.ComeAsync(s.A, servizio => servizio.LeggiAsync(attore, id, Ct)));
+        }
+
+        var dopo = (await s.ComeAsync(s.A, servizio => servizio.LeggiAsync(s.AdminA, id, Ct)))!;
+        Assert.Equal(letta.Titolo, dopo.Titolo);
+        Assert.Equal(StatoPagina.Bozza, dopo.Stato);
+        Assert.Equal(1, await s.ContaAsync(contesto => contesto.Pagine.IgnoreQueryFilters().CountAsync(Ct)));
+        Assert.Equal(attori.Length * 3, await s.ContaAsync(contesto => contesto.RegistroAudit.IgnoreQueryFilters().CountAsync(a => a.Azione == AzioniAudit.OperazioneNegata, Ct)));
+    }
+
+    [Fact]
+    public async Task IlPlatformAdminLavoraSulleProprieDelTenantDellHost()
+    {
+        await using var s = await Scenario.CreaAsync();
+        var platform = await DatiProva.CreaUtenzaAsync(s.Fornitore, RuoloUtenza.PlatformAdmin, null, "platform@esempio.it", annullamento: Ct);
+
+        var esito = await s.ComeAsync(s.B, servizio => servizio.CreaAsync(platform, new DatiNuovaPagina("da-platform", "Da platform", "x", "it", false), Ct));
+
+        Assert.True(esito.Riuscito);
+        Assert.Single(await s.ComeAsync(s.B, servizio => servizio.ElencaAsync(platform, Ct)));
+        Assert.Empty(await s.ComeAsync(s.A, servizio => servizio.ElencaAsync(platform, Ct)));
+    }
+
+    private sealed class Scenario : IAsyncDisposable
+    {
+        private readonly DatabaseDiProva _database;
+
+        private Scenario(DatabaseDiProva database, ServiceProvider fornitore, DatiTenantRisolto a, DatiTenantRisolto b, Guid adminA, Guid adminB)
+        {
+            _database = database;
+            Fornitore = fornitore;
+            A = a;
+            B = b;
+            AdminA = adminA;
+            AdminB = adminB;
+        }
+
+        public ServiceProvider Fornitore { get; }
+
+        public DatiTenantRisolto A { get; }
+
+        public DatiTenantRisolto B { get; }
+
+        public Guid AdminA { get; }
+
+        public Guid AdminB { get; }
+
+        public static async Task<Scenario> CreaAsync()
+        {
+            var database = await DatabaseDiProva.CreaAsync(Ct);
+            var fornitore = await ServiziProva.CreaConMigrazioniAsync(database.Connessione, annullamento: Ct);
+            var a = await DatiProva.CreaTenantAsync(fornitore, "A", "a.esempio.it", annullamento: Ct);
+            var b = await DatiProva.CreaTenantAsync(fornitore, "B", "b.esempio.it", annullamento: Ct);
+            var adminA = await DatiProva.CreaUtenzaAsync(fornitore, RuoloUtenza.TenantAdmin, a.IdTenant, "anna@esempio.it", annullamento: Ct);
+            var adminB = await DatiProva.CreaUtenzaAsync(fornitore, RuoloUtenza.TenantAdmin, b.IdTenant, "bruno@esempio.it", annullamento: Ct);
+            return new Scenario(
+                database,
+                fornitore,
+                new DatiTenantRisolto(a.IdTenant, a.IdSito, a.IdDominio, a.Host, false),
+                new DatiTenantRisolto(b.IdTenant, b.IdSito, b.IdDominio, b.Host, false),
+                adminA,
+                adminB);
+        }
+
+        /// <summary>Aggiunge un secondo sito (con il suo dominio) al tenant e restituisce il contesto dell'host di quel sito.</summary>
+        public async Task<DatiTenantRisolto> AggiungiSitoAsync(DatiTenantRisolto tenant)
+        {
+            await using var ambito = Fornitore.CreateAsyncScope();
+            var contesto = ambito.ServiceProvider.GetRequiredService<ContestoDatabase>();
+            var sito = Sito.Crea(tenant.IdTenant, "Secondo sito", null, TimeProvider.System);
+            var dominio = DominioSito.CreaVerificato(tenant.IdTenant, sito.Id, "secondo.esempio.it", false, null, TimeProvider.System);
+            contesto.Siti.Add(sito);
+            contesto.DominiSito.Add(dominio);
+            await contesto.SaveChangesAsync(Ct);
+            return new DatiTenantRisolto(tenant.IdTenant, sito.Id, dominio.Id, dominio.Host, false);
+        }
+
+        public async Task<T> ComeAsync<T>(DatiTenantRisolto host, Func<IServizioPagine, Task<T>> operazione)
+        {
+            await using var ambito = Fornitore.CreateAsyncScope();
+            ambito.ServiceProvider.GetRequiredService<ContestoTenant>().Imposta(host);
+            return await operazione(ambito.ServiceProvider.GetRequiredService<IServizioPagine>());
+        }
+
+        public async Task<Guid> CreaPaginaAsync(DatiTenantRisolto host, Guid attore, string slug)
+        {
+            var esito = await ComeAsync(host, servizio => servizio.CreaAsync(attore, new DatiNuovaPagina(slug, $"Titolo {slug}", "Contenuto", "it", false), Ct));
+            Assert.True(esito.Riuscito, esito.Codice.ToString());
+            return esito.Id!.Value;
+        }
+
+        public async Task<T> ContaAsync<T>(Func<ContestoDatabase, Task<T>> lettura)
+        {
+            await using var ambito = Fornitore.CreateAsyncScope();
+            return await lettura(ambito.ServiceProvider.GetRequiredService<ContestoDatabase>());
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            await Fornitore.DisposeAsync();
+            await _database.DisposeAsync();
+        }
+    }
+}

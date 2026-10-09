@@ -1,0 +1,52 @@
+@page "/admin/pagine/nuova"
+@model DvCms.Web.Pages.Admin.Pagine.NuovaModel
+@{
+    ViewData["Titolo"] = _L["Nuova pagina"];
+}
+<div class="row justify-content-center">
+    <div class="col-lg-9">
+        <div class="card">
+            <div class="card-body">
+                @if (Model.Errore is not null)
+                {
+                    <div class="alert alert-danger" role="alert">@Model.Errore</div>
+                }
+                <form method="post" novalidate>
+                    <div class="mb-3">
+                        <label class="form-label" for="Titolo">@_L["Titolo"]</label>
+                        <input class="form-control" id="Titolo" name="Titolo" value="@Model.Titolo" maxlength="200" required />
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label" for="Slug">@_L["Indirizzo (slug)"]</label>
+                            <input class="form-control" id="Slug" name="Slug" value="@Model.Slug" maxlength="100" />
+                            <div class="form-hint">@_L["Lettere minuscole, cifre e trattini. Se vuoto si ricava dal titolo."]</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label" for="CodiceLingua">@_L["Lingua"]</label>
+                            <select class="form-select" id="CodiceLingua" name="CodiceLingua">
+                                @foreach (var lingua in Model.Lingue)
+                                {
+                                    <option value="@lingua.Codice" selected="@(lingua.Codice == Model.CodiceLingua)">@lingua.Nome</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="Contenuto">@_L["Contenuto"]</label>
+                        <textarea class="form-control" id="Contenuto" name="Contenuto" rows="12" maxlength="100000">@Model.Contenuto</textarea>
+                        <div class="form-hint">@_L["Testo semplice: separa i paragrafi con una riga vuota."]</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-check">
+                            <input type="checkbox" class="form-check-input" name="PaginaIniziale" value="true" @(Model.PaginaIniziale ? "checked" : null) />
+                            <span class="form-check-label">@_L["Pagina iniziale del sito"]</span>
+                        </label>
+                    </div>
+                    <button type="submit" class="btn btn-primary">@_L["Crea la bozza"]</button>
+                    <a href="/admin/pagine" class="btn btn-link">@_L["Annulla"]</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

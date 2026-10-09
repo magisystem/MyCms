@@ -6,6 +6,13 @@
             <span class="nav-link-title">@_L["Cruscotto"]</span>
         </a>
     </li>
+    <li class="nav-section-title">@_L["Contenuti"]</li>
+    <li class="nav-item">
+        <a class="nav-link" href="/admin/pagine">
+            <span class="nav-link-icon"><i class="ti ti-file-text"></i></span>
+            <span class="nav-link-title">@_L["Pagine"]</span>
+        </a>
+    </li>
     @* La visibilità è solo comodità: ogni pagina dell'area Platform è protetta lato server dalla politica del PlatformAdmin. *@
     @if (User.IsInRole("PlatformAdmin"))
     {

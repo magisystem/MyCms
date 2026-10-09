@@ -1,0 +1,119 @@
+@page "/admin/pagine/{id:guid}"
+@model DvCms.Web.Pages.Admin.Pagine.ModificaModel
+@using DvCms.Domain.Cms
+@{
+    var pagina = Model.Pagina!;
+    ViewData["Titolo"] = _L["Modifica pagina"];
+}
+@if (Model.Messaggio is not null)
+{
+    <div class="alert alert-success" role="status">@Model.Messaggio</div>
+}
+@if (Model.ErroreDaMostrare is not null)
+{
+    <div class="alert alert-danger" role="alert">@Model.ErroreDaMostrare</div>
+}
+<div class="row row-cards">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    /@pagina.Slug
+                    @if (pagina.Stato == StatoPagina.Pubblicata)
+                    {
+                        <span class="badge bg-green-lt ms-2">@_L["Pubblicata"]</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary-lt ms-2">@_L["Bozza"]</span>
+                    }
+                    @if (pagina.ModificheNonPubblicate && pagina.Stato == StatoPagina.Pubblicata)
+                    {
+                        <span class="badge bg-orange-lt ms-1">@_L["Modifiche non pubblicate"]</span>
+                    }
+                </h3>
+                <div class="card-actions"><a href="/admin/pagine" class="btn btn-link">@_L["Torna all'elenco"]</a></div>
+            </div>
+            <div class="card-body">
+                <form method="post" asp-page-handler="Salva" asp-route-id="@pagina.Id" novalidate>
+                    <input type="hidden" name="TokenConcorrenza" value="@pagina.TokenConcorrenza" />
+                    <div class="mb-3">
+                        <label class="form-label" for="Titolo">@_L["Titolo"]</label>
+                        <input class="form-control" id="Titolo" name="Titolo" value="@pagina.Titolo" maxlength="200" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="Slug">@_L["Indirizzo (slug)"]</label>
+                        <input class="form-control" id="Slug" name="Slug" value="@pagina.Slug" maxlength="100" readonly="@(pagina.Stato == StatoPagina.Pubblicata)" />
+                        @if (pagina.Stato == StatoPagina.Pubblicata)
+                        {
+                            <div class="form-hint">@_L["L'indirizzo di una pagina pubblicata non si può cambiare."]</div>
+                        }
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="Contenuto">@_L["Contenuto"]</label>
+                        <textarea class="form-control" id="Contenuto" name="Contenuto" rows="14" maxlength="100000">@pagina.Contenuto</textarea>
+                        <div class="form-hint">@_L["Testo semplice: separa i paragrafi con una riga vuota."]</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="Nota">@_L["Nota sulla modifica"]</label>
+                        <input class="form-control" id="Nota" name="Nota" maxlength="500" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-check">
+                            <input type="checkbox" class="form-check-input" name="PaginaIniziale" value="true" @(pagina.PaginaIniziale ? "checked" : null) />
+                            <span class="form-check-label">@_L["Pagina iniziale del sito"]</span>
+                        </label>
+                    </div>
+                    <button type="submit" class="btn btn-primary">@_L["Salva la bozza"]</button>
+                </form>
+            </div>
+            <div class="card-footer">
+                <form method="post" asp-page-handler="Pubblica" asp-route-id="@pagina.Id" class="d-inline">
+                    <input type="hidden" name="TokenConcorrenza" value="@pagina.TokenConcorrenza" />
+                    <button type="submit" class="btn btn-success" disabled="@(!pagina.ModificheNonPubblicate && pagina.Stato == StatoPagina.Pubblicata)">@_L["Pubblica l'ultima bozza"]</button>
+                </form>
+                @if (pagina.Stato == StatoPagina.Pubblicata)
+                {
+                    <form method="post" asp-page-handler="Ritira" asp-route-id="@pagina.Id" class="d-inline">
+                        <input type="hidden" name="TokenConcorrenza" value="@pagina.TokenConcorrenza" />
+                        <button type="submit" class="btn btn-outline-danger">@_L["Ritira dal pubblico"]</button>
+                    </form>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header"><h3 class="card-title">@_L["Revisioni"]</h3></div>
+            <div class="list-group list-group-flush">
+                @foreach (var revisione in pagina.Revisioni)
+                {
+                    <div class="list-group-item">
+                        <div>
+                            #@revisione.Numero - @revisione.Titolo
+                            @if (revisione.Pubblicata)
+                            {
+                                <span class="badge bg-green-lt ms-1">@_L["Pubblicata"]</span>
+                            }
+                            @if (revisione.UltimaBozza)
+                            {
+                                <span class="badge bg-blue-lt ms-1">@_L["Ultima bozza"]</span>
+                            }
+                        </div>
+                        <div class="text-secondary small">
+                            @revisione.CreatoIlUtc.ToString("yyyy-MM-dd HH:mm", System.Globalization.CultureInfo.InvariantCulture) UTC
+                            @if (revisione.Autore is not null)
+                            {
+                                <span>- @revisione.Autore</span>
+                            }
+                        </div>
+                        @if (!string.IsNullOrEmpty(revisione.Nota))
+                        {
+                            <div class="small">@revisione.Nota</div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

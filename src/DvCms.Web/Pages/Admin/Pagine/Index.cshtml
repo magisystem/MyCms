@@ -1,0 +1,70 @@
+@page "/admin/pagine"
+@model DvCms.Web.Pages.Admin.Pagine.IndexModel
+@using DvCms.Domain.Cms
+@{
+    ViewData["Titolo"] = _L["Pagine"];
+}
+@if (Model.Messaggio is not null)
+{
+    <div class="alert alert-success" role="status">@Model.Messaggio</div>
+}
+@if (Model.ErroreDaMostrare is not null)
+{
+    <div class="alert alert-danger" role="alert">@Model.ErroreDaMostrare</div>
+}
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">@_L["Pagine del sito"]</h3>
+        <div class="card-actions">
+            <a href="/admin/pagine/nuova" class="btn btn-primary"><i class="ti ti-plus"></i> @_L["Nuova pagina"]</a>
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table class="table card-table table-vcenter">
+            <thead>
+                <tr>
+                    <th>@_L["Titolo"]</th>
+                    <th>@_L["Indirizzo"]</th>
+                    <th>@_L["Lingua"]</th>
+                    <th>@_L["Stato"]</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var pagina in Model.Pagine)
+                {
+                    <tr>
+                        <td>
+                            @pagina.Titolo
+                            @if (pagina.PaginaIniziale)
+                            {
+                                <span class="badge bg-blue-lt ms-2">@_L["Pagina iniziale"]</span>
+                            }
+                        </td>
+                        <td class="text-secondary">/@pagina.Slug</td>
+                        <td>@pagina.CodiceLingua</td>
+                        <td>
+                            @if (pagina.Stato == StatoPagina.Pubblicata)
+                            {
+                                <span class="badge bg-green-lt">@_L["Pubblicata"]</span>
+                                @if (pagina.ModificheNonPubblicate)
+                                {
+                                    <span class="badge bg-orange-lt ms-1">@_L["Modifiche non pubblicate"]</span>
+                                }
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary-lt">@_L["Bozza"]</span>
+                            }
+                        </td>
+                        <td class="text-end"><a href="/admin/pagine/@pagina.Id" class="btn btn-sm">@_L["Modifica"]</a></td>
+                    </tr>
+                }
+                @if (Model.Pagine.Count == 0)
+                {
+                    <tr><td colspan="5" class="text-secondary text-center">@_L["Nessuna pagina: creane una."]</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

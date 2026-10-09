@@ -17,6 +17,7 @@ Piano di implementazione richiesto da `docs/AI_START_HERE.md`, preparato prima d
 | B-005 Seeding | Completata (comando `seed`, `Seed:EseguiAllAvvio`) |
 | B-006 Menu "Platform" e gestione tenant | Completata (area `/admin/platform`; tenant, siti, domini, sospensione, account) |
 | C-001 Entità Pagina e RevisionePagina | Completata (tabelle `Pagine` e `RevisioniPagina`, vincoli e filtri di tenant) |
+| C-002 CRUD pagine nell'admin | Completata (`/admin/pagine`: bozza, revisioni, pubblica/ritira, concorrenza, slug unico per sito e lingua) |
 | B-010 Gestione testi statici | Completata (`/admin/platform/testi`: ricerca, filtri, modifica, cache e audit) |
 | B-007 Creazione TenantAdmin e non-escalation | Completata (password temporanea mostrata una volta; elevazione `Utente` → `TenantAdmin`) |
 

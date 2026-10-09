@@ -23,6 +23,9 @@ public enum CodiceEsito
 
     /// <summary>Il dato è stato modificato da qualcun altro nel frattempo.</summary>
     Conflitto = 7,
+
+    /// <summary>Esiste già un'altra pagina iniziale per quel sito e quella lingua.</summary>
+    PaginaInizialeEsistente = 8,
 }
 
 public sealed record EsitoOperazione(CodiceEsito Codice, Guid? Id = null)

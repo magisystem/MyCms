@@ -85,3 +85,9 @@ Minimizzare dati personali, definire retention ed export/delete secondo requisit
 - Segreti gestiti fuori dal repository.
 - Backup/restore testati.
 - Dipendenze con vulnerabilità note valutate.
+
+## Gestione delle pagine (C-002)
+
+- `/admin/pagine` è nell'area `/admin` (politica `AmministratoreTenant`, cambio password obbligatorio, antiforgery su ogni scrittura). `IServizioPagine` lavora solo sul tenant e sul sito risolti dall'host: nessun identificativo di tenant o sito arriva dal client, e una pagina di un altro tenant o di un altro sito è come inesistente (404). L'attore è riverificato sul database a ogni operazione (`TenantAdmin` di quel tenant oppure `PlatformAdmin`, account attivo); le scritture negate sono registrate come `OperazioneNegata`, le letture lanciano `UnauthorizedAccessException`.
+- Il contenuto M1 è testo semplice, mostrato sempre codificato (Razor): nessun HTML dell'utente viene emesso. Il rich text, con sanitizzazione e CSP, arriva con M2.
+- Le modifiche concorrenti sono rilevate dal token `rowversion` della pagina (hidden field del modulo): chi salva con un token vecchio riceve un conflitto e non sovrascrive nulla. Lo slug di una pagina pubblicata non si cambia (il cambio richiederà redirect/canonical).
