@@ -27,7 +27,9 @@ L'admin su un dominio centrale può gestire più tenant: in tal caso l'utente se
 
 ## Admin di piattaforma
 
-La gestione di tenant, siti, domini e utenti `TenantAdmin` avviene nell'area di piattaforma, accessibile solo al ruolo `PlatformAdmin` (ADR-0011, ADR-0014). Nessuna registrazione self-service.
+La gestione di tenant, siti, domini e utenti `TenantAdmin` avviene nel menu "Platform" dell'admin, accessibile solo al ruolo `PlatformAdmin`, che può anche aprire l'admin di qualunque tenant (ADR-0011, ADR-0014). Ingresso in un tenant e azioni sono auditate. Nessuna registrazione self-service per gli account amministrativi.
+
+Il `Guest` è sempre legato al tenant risolto dall'host; cookie, token di anteprima e dati del Guest non sono condivisi fra tenant. Gli account `Utente` appartengono a un solo tenant.
 
 Le operazioni cross-tenant devono essere esposte tramite casi d'uso privilegiati e auditabili; non devono dipendere da un `IgnoreQueryFilters()` generico sparso nel codice. Gli endpoint di supporto devono verificare un ruolo di piattaforma esplicito e registrare motivo e attore.
 
@@ -45,7 +47,8 @@ Per almeno due tenant di test:
 - associazione di asset/prodotto di altro tenant: rifiutata;
 - cache e media non condivisi accidentalmente;
 - job/outbox con tenant incoerente: scartato e segnalato;
-- `TenantAdmin` o `Utente` che tenta di creare/elevare un `TenantAdmin`, di assegnarsi un ruolo superiore o di operare sull'area di piattaforma: negato.
+- `TenantAdmin` o `Utente` che tenta di creare/elevare un `TenantAdmin`, di assegnarsi un ruolo superiore o di operare sul menu "Platform": negato;
+- `Utente` o `Guest` di un tenant che accede a dati, cookie o preview di un altro tenant: negato.
 
 ## Migrazione futura
 

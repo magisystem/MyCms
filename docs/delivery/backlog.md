@@ -14,7 +14,7 @@ Le voci sono candidate a issue GitHub. Ogni issue deve essere piccola, verificab
 **Accettazione:** nullable abilitato, logging strutturato, correlation ID e convenzioni UTC documentate.
 
 ### A-004: Layout admin Tabler
-**Accettazione:** layout Razor condiviso basato su Tabler 1.6.1 e Tabler Icons; in `wwwroot` solo gli asset usati; nessun CDN esterno; nessun file delle cartelle `tabler-emails`, `tabler-illustrations`, `tabler-avatars`; aggiornata la nota sulle licenze.
+**Accettazione:** le cartelle `tabler` e `tabler-icons` di `admin-theme/` sono copiate per intero in `src/DvCms.Web/wwwroot/lib/`; le pagine HTML demo non sono servite al pubblico (test che `GET` di una pagina demo restituisce 404); layout Razor condiviso con menu laterale; nessun CDN esterno; nessun file di `tabler-emails`, `tabler-illustrations`, `tabler-avatars` in `wwwroot`.
 
 ## EPIC B — Tenant e accessi
 
@@ -25,16 +25,19 @@ Le voci sono candidate a issue GitHub. Ogni issue deve essere piccola, verificab
 **Accettazione:** solo host registrati risolvono; host sconosciuti danno una risposta controllata; proxy forwarded configurati esplicitamente.
 
 ### B-003: Identity e membership
-**Accettazione:** login/logout; membership tenant con ruolo `TenantAdmin` o `Utente` e permessi; flag `PlatformAdmin`; ogni admin request verifica ruolo e membership della risorsa; nessuna registrazione self-service.
+**Accettazione:** login/logout; membership tenant con ruolo `TenantAdmin`; flag `PlatformAdmin`; principal `Guest` legato al tenant risolto dall'host (profilo `TenantGuestProfile` creato con il tenant); ogni admin request verifica ruolo e membership della risorsa; nessuna registrazione per account amministrativi.
 
 ### B-005: Bootstrap del primo PlatformAdmin
 **Accettazione:** comando documentato che crea il primo `PlatformAdmin` senza credenziali predefinite; rifiuta l'esecuzione se esiste già un `PlatformAdmin` salvo opzione esplicita; test.
 
-### B-006: Area di piattaforma
-**Accettazione:** area Razor visibile solo al `PlatformAdmin`; CRUD tenant, siti e domini (con verifica manuale: chi e quando); sospensione/riattivazione tenant; operazioni registrate in `AuditLog`; i non-`PlatformAdmin` ricevono 403/404.
+### B-006: Menu "Platform" e gestione tenant
+**Accettazione:** il `PlatformAdmin` apre l'admin di qualunque tenant e vede il menu "Platform" (area Razor protetta lato server, non solo nascosta); CRUD tenant, siti e domini (verifica manuale: chi e quando); sospensione/riattivazione tenant; ingresso in un tenant e operazioni registrati in `AuditLog`; gli altri ruoli ricevono 403/404.
 
-### B-007: Gestione utenti e non-escalation
-**Accettazione:** solo il `PlatformAdmin` crea/eleva `TenantAdmin`; il `TenantAdmin` crea `Utente` e assegna permessi/siti nel proprio tenant; nessuno si auto-assegna ruoli superiori; test automatici di escalation per UI e richieste manipolate.
+### B-007: Creazione TenantAdmin e non-escalation
+**Accettazione:** solo il `PlatformAdmin` crea/eleva `TenantAdmin`; nessun ruolo si auto-assegna ruoli superiori; test automatici di escalation per UI e richieste manipolate.
+
+### B-008: Recupero password
+**Accettazione:** richiesta con risposta uniforme; email con codice OTP (scadenza breve, tentativi limitati, hash, rate limiting); dopo OTP corretto, email con link monouso a scadenza breve; link invalidato all'uso e da nuove richieste; al cambio password sessioni invalidate e notifica email; invio via outbox; test su OTP errato/scaduto/riusato e su enumerazione.
 
 ### B-004: Test isolamento tenant
 **Accettazione:** cross-tenant read/update/delete negati per pagine e media; test ripetibile in CI.
@@ -98,11 +101,14 @@ Le voci sono candidate a issue GitHub. Ogni issue deve essere piccola, verificab
 
 ## EPIC F — Commerce
 
+### F-000: Registrazione e login acquirenti
+**Accettazione:** registrazione possibile solo se il sito ha e-commerce attivo (`CustomerRegistrationEnabled`), altrimenti 404; crea sempre un `Utente` del tenant, senza possibilità di scegliere il ruolo; conferma email e rate limiting; un `Utente` non accede all'admin; account separati per tenant; test cross-tenant.
+
 ### F-001: Catalogo
 **Accettazione:** tenant-scoped prodotti/varianti/prezzi; denaro con decimal e valuta; test accesso.
 
 ### F-002: Carrello e calcolo totale
-**Accettazione:** totali sempre ricalcolati server-side; prezzo manomesso dal client ignorato.
+**Accettazione:** totali sempre ricalcolati server-side; prezzo manomesso dal client ignorato; l'ordine richiede un account autenticato (`Utente`, `TenantAdmin` o `PlatformAdmin`); il `Guest` non può ordinare.
 
 ### F-003: Ordine snapshot
 **Accettazione:** ordine conserva i dati commerciali essenziali al momento dell'acquisto; le modifiche prodotto non cambiano storico ordine.
@@ -126,6 +132,9 @@ Le voci sono candidate a issue GitHub. Ogni issue deve essere piccola, verificab
 
 ### G-004: Backup/restore e runbook
 **Accettazione:** procedura verificata su ambiente di test, con risultati documentati.
+
+### G-006: Two-factor authentication
+**Priorità minima, da affrontare per ultima.** **Accettazione:** ADR su metodo, recupero e obbligatorietà per `PlatformAdmin`/`TenantAdmin`; implementazione e test; enrollment e recupero documentati.
 
 ### G-005: Security review
 **Accettazione:** checklist di `docs/architecture/security.md` completata; issue critiche risolte o accettate formalmente.

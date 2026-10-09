@@ -7,10 +7,11 @@ Questo è il modello logico iniziale; i nomi e i tipi definitivi vanno tradotti 
 - `Tenant`: cliente/organizzazione contrattuale della piattaforma.
 - `Site`: sito appartenente a un tenant. Un tenant può avere più siti.
 - `SiteDomain`: host registrato, normalizzato e associato a un sito, con `VerifiedAtUtc`, `VerifiedByUserId` e stato attivo/disattivo. La verifica è manuale (ADR-0014).
-- `User`: identità applicativa (ASP.NET Core Identity) con flag globale `IsPlatformAdmin`.
-- `TenantMembership`: membership di un utente in un tenant con ruolo `TenantAdmin` o `Utente`.
-- `MembershipPermission`: permessi dell'`Utente` (`Content.Edit`, `Content.Publish`, `Media.Manage`, `Store.Manage`).
-- `SiteMembership` (opzionale inizialmente): restrizione di una membership a siti specifici.
+- `User`: account (ASP.NET Core Identity). Gli account amministrativi sono globali con flag `IsPlatformAdmin`; gli account `Utente` (acquirenti) hanno `TenantId`.
+- `TenantMembership`: membership di un account amministrativo in un tenant con ruolo `TenantAdmin`.
+- `TenantGuestProfile`: profilo del `Guest` del tenant, creato insieme al tenant (inizialmente senza impostazioni).
+- `Site.CustomerRegistrationEnabled`: abilita la registrazione degli acquirenti; vero solo se l'e-commerce è attivo (default falso).
+- `PasswordRecoveryRequest`: richiesta di recupero con hash dell'OTP, tentativi, scadenza, hash del token del link monouso e stato.
 
 Creare o elevare un `TenantAdmin` è riservato al `PlatformAdmin` (ADR-0011).
 

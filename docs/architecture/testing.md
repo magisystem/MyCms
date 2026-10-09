@@ -31,7 +31,8 @@ Creare almeno Tenant A e Tenant B e tentare per tutte le aree di leggere, modifi
 ## Test sicurezza
 
 - IDOR e tenant switch;
-- escalation di ruolo: solo il `PlatformAdmin` crea/eleva `TenantAdmin`; `TenantAdmin` e `Utente` non possono assegnarsi ruoli superiori né accedere all'area di piattaforma;
+- escalation di ruolo: solo il `PlatformAdmin` crea/eleva `TenantAdmin`; `TenantAdmin` e `Utente` non possono assegnarsi ruoli superiori né accedere al menu "Platform"; la registrazione non può scegliere il ruolo né funzionare su siti senza e-commerce;
+- recupero password: nessuna enumerazione account, OTP scaduto/errato/riusato, limite tentativi, link monouso riusato o scaduto, invalidazione sessioni;
 - CSRF sulle mutazioni;
 - XSS persistente in rich text/component properties;
 - upload malevoli/oversize;

@@ -8,13 +8,13 @@
 | Web | ASP.NET Core 10 | Razor Pages e MVC per sito pubblico e admin. |
 | ORM | EF Core 10 | Mantenere la stessa major version di EF Core e dei provider. |
 | Database | Microsoft SQL Server | Unico database supportato (ADR-0012). Una sola serie di migrazioni EF Core. |
-| UI admin | Razor Pages + Tabler 1.6.1 (MIT) | Tema in `admin-theme/tabler`, `dist/` precompilato. No framework SPA generale. HTMX è opzionale (ADR-0013). |
-| Icone admin | Tabler Icons 3.49.0 (MIT) | `admin-theme/tabler-icons` (webfont o SVG). |
+| UI admin | Razor Pages + Tabler 1.6.1 (MIT) | Tema in `admin-theme/tabler`, `dist/` precompilato; cartella copiata per intero in `wwwroot/lib/tabler`. No framework SPA generale. HTMX è opzionale (ADR-0013). |
+| Icone admin | Tabler Icons 3.49.0 (MIT) | `admin-theme/tabler-icons`, copiata per intero in `wwwroot/lib/tabler-icons`. |
 | Editor | GrapesJS | Bundle dedicato, estensioni JavaScript; nessun backend Node.js. |
 | File/media | Object storage via astrazione applicativa | File system solo per sviluppo locale. |
 | Cache | Interfaccia cache; Redis quando si scala su più istanze | Non fare affidamento su cache in-memory per coerenza cross-instance. |
 | Background jobs | Hosted Service/worker + outbox iniziale | Valutare libreria di job solo con requisiti espliciti. |
-| Auth | ASP.NET Core Identity | Ruoli `PlatformAdmin`, `TenantAdmin`, `Utente`, `Guest` (ADR-0011). SSO/OIDC resta estensione futura se richiesta. |
+| Auth | ASP.NET Core Identity | Ruoli `PlatformAdmin`, `TenantAdmin`, `Utente` (acquirente), `Guest` per tenant (ADR-0011); recupero password con OTP e link monouso; 2FA per ultima. SSO/OIDC resta estensione futura se richiesta. |
 | Test | xUnit o NUnit, da selezionare prima del bootstrap | Non usare due framework test concorrenti senza ragione. |
 | Logging | ILogger + logging strutturato | Provider APM/trace da scegliere con hosting. |
 

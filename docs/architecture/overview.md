@@ -53,7 +53,7 @@ Le dipendenze fisiche tra assembly possono essere semplificate all'inizio. I con
 
 ### Modifica e pubblicazione
 
-1. Autenticare l'utente e verificare membership/permessi.
+1. Autenticare l'utente e verificare ruolo e membership.
 2. Caricare draft e policy di modifica.
 3. Salvare con controllo di concorrenza.
 4. Validare lato server il progetto/dati aggiornati.
@@ -62,22 +62,24 @@ Le dipendenze fisiche tra assembly possono essere semplificate all'inizio. I con
 
 ## Struttura solution raccomandata
 
+Solution `DvCms.sln`; progetti e namespace con prefisso `DvCms.`.
+
 ```text
 src/
-  Cms.Web/
-  Cms.Domain/
-  Cms.Application/
-  Cms.Infrastructure/
-  Cms.Themes.Abstractions/
-  Cms.Themes.Corporate/
-  Cms.Themes.Creative/
-  Cms.Store/
-  Cms.Worker/
+  DvCms.Web/             (include wwwroot/lib/tabler e wwwroot/lib/tabler-icons)
+  DvCms.Domain/
+  DvCms.Application/
+  DvCms.Infrastructure/
+  DvCms.Themes.Abstractions/
+  DvCms.Themes.Corporate/
+  DvCms.Themes.Creative/
+  DvCms.Store/
+  DvCms.Worker/
   frontend/page-builder/
 tests/
-  Cms.UnitTests/
-  Cms.IntegrationTests/
-  Cms.TenantIsolationTests/
+  DvCms.UnitTests/
+  DvCms.IntegrationTests/
+  DvCms.TenantIsolationTests/
 ```
 
 Non è necessario creare tutti questi progetti il primo giorno. Iniziare con pochi assembly e separare solo quando migliora i confini o i test.

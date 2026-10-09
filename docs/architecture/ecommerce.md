@@ -13,7 +13,13 @@ E-commerce è un modulo interno con modelli, servizi e transizioni di dominio pr
 - Ordini e righe con snapshot dei valori applicati all'acquisto.
 - Pagamenti, tentativi, rimborsi e webhook.
 - Spedizioni/evasione, se previste dal business.
-- Account cliente ed email transazionali.
+- Account acquirente (`Utente`) ed email transazionali.
+
+## Chi può ordinare
+
+- Gli ordini richiedono un account autenticato: `Utente` (acquirente registrato), `TenantAdmin` o `PlatformAdmin`. Il `Guest` non può ordinare (nessun guest checkout, per ora).
+- La registrazione degli `Utente` è abilitata per sito e solo se l'e-commerce è attivo; l'`Utente` può solo emettere e consultare i propri ordini e non accede all'admin.
+- Gli account `Utente` appartengono a un solo tenant.
 
 ## Regole di sicurezza e integrità
 
@@ -42,7 +48,6 @@ I componenti `commerce.*` referenziano prodotto/collezione/query tipizzata, non 
 - Metodi e zone spedizione.
 - Prenotazione e rilascio delle quantità.
 - Politica resi/rimborsi.
-- Guest checkout vs account obbligatorio.
 - Gestione dati personali, conservazione e obblighi legali applicabili.
 
 Non implementare checkout produzione finché le decisioni pertinenti non sono approvate e testate.

@@ -1,6 +1,6 @@
-# CMS SaaS multi-tenant — documentazione architetturale
+# DvCms — CMS SaaS multi-tenant: documentazione architetturale
 
-Questa cartella contiene la documentazione iniziale di progetto per un CMS multi-tenant sviluppato in .NET, pensato per siti di clienti con temi Razor dedicati, editor visuale ibrido ed e-commerce integrato.
+Questa cartella contiene la documentazione iniziale di **DvCms** (namespace e progetti `DvCms.*`), un CMS multi-tenant sviluppato in .NET, pensato per siti di clienti con temi Razor dedicati, editor visuale ibrido ed e-commerce integrato.
 
 ## Obiettivo
 
@@ -15,8 +15,8 @@ Fornire a sviluppatori e agenti AI (Codex, Claude Code, Gemini, DeepSeek o strum
 - **Persistenza:** Microsoft SQL Server con EF Core 10, una sola serie di migrazioni (ADR-0012).
 - **Architettura:** monolite modulare, non microservizi.
 - **Tenancy:** database condiviso con isolamento logico rigoroso per tenant e sito.
-- **Ruoli:** `PlatformAdmin`, `TenantAdmin`, `Utente`, `Guest` (ADR-0011). Solo il PlatformAdmin crea tenant e utenti `TenantAdmin`.
-- **Onboarding:** nessuna registrazione self-service; tenant, domini e certificati TLS sono gestiti manualmente dagli operatori (ADR-0014).
+- **Ruoli:** `PlatformAdmin`, `TenantAdmin`, `Utente` (acquirente dell'e-commerce), `Guest` (visitatore del sito, per tenant) (ADR-0011). Solo il PlatformAdmin crea tenant e utenti `TenantAdmin`.
+- **Onboarding:** nessuna registrazione self-service per gli account amministrativi; tenant, domini e certificati TLS sono gestiti manualmente dagli operatori (ADR-0014). La registrazione esiste solo per gli acquirenti dei siti con e-commerce.
 - **Temi:** pacchetti Razor fidati e versionati, distribuiti con l'applicazione; i clienti non caricano assembly o viste Razor.
 - **Contenuti:** documenti JSON tipizzati e versionati; il solo HTML esportato non è la fonte di verità.
 - **E-commerce:** modulo interno al CMS, separato nei confini di dominio.

@@ -22,9 +22,11 @@ Implementare un CMS SaaS multi-tenant in C#/.NET, con rendering server-side Razo
 10. Non memorizzare dati carta. Non inventare comportamento di pagamento, IVA, spedizioni o rimborsi prima delle decisioni di prodotto e del provider.
 11. Non aggiungere dipendenze NuGet/npm senza spiegare perché sono necessarie, verificare licenza e manutenzione e limitarle al modulo che le richiede.
 12. Non modificare un ADR accettato in silenzio. Proporre un nuovo ADR o aggiornare quello esistente con motivazione, alternative e conseguenze.
-13. I ruoli sono `PlatformAdmin`, `TenantAdmin`, `Utente`, `Guest` (ADR-0011). Solo il `PlatformAdmin` può creare o elevare utenti `TenantAdmin`; nessun ruolo può assegnarsi un ruolo superiore. Il controllo è lato server e ha test di non-escalation. Non esiste registrazione self-service.
-14. L'admin usa **Tabler** (tema) e **Tabler Icons** (icone) da `admin-theme/` (ADR-0013). Copiare in `wwwroot` solo gli asset usati. Non usare `admin-theme/tabler-emails`, `tabler-illustrations` e `tabler-avatars` (licenze non verificate) e non servire direttamente `admin-theme/`.
+13. I ruoli sono `PlatformAdmin`, `TenantAdmin`, `Utente` (acquirente dell'e-commerce, solo emissione ordini) e `Guest` (visitatore anonimo vincolato a un tenant) (ADR-0011). Solo il `PlatformAdmin` può creare o elevare utenti `TenantAdmin`; nessun ruolo può assegnarsi un ruolo superiore. Controllo lato server con test di non-escalation. La registrazione esiste solo per gli `Utente` dei siti con e-commerce; mai per account amministrativi.
+14. L'admin usa **Tabler** e **Tabler Icons** da `admin-theme/` (ADR-0013): al bootstrap le cartelle `tabler` e `tabler-icons` si copiano per intero in `wwwroot/lib/`, senza servire le pagine HTML demo. Non copiare in `wwwroot` né usare `tabler-emails`, `tabler-illustrations` e `tabler-avatars` senza una decisione esplicita. Non servire direttamente `admin-theme/`.
 15. Verifica dei domini e certificati TLS sono manuali (ADR-0014): non implementare ACME né verifica DNS automatica.
+16. Il nome del progetto è **DvCms**: solution `DvCms.sln`, namespace e progetti con prefisso `DvCms.` (es. `DvCms.Web`, `DvCms.Domain`). Codice e identificatori in inglese, documentazione in italiano.
+17. Recupero password: email con codice OTP, poi link monouso (ADR-0011). La two-factor authentication è prevista ma va implementata per ultima, non prima.
 
 ## Processo di lavoro richiesto
 
@@ -61,10 +63,10 @@ La prima implementazione deve essere una **vertical slice tenant + sito + domini
 - contesto tenant risolto da host registrato;
 - isolamento tenant applicato sul server;
 - una migrazione DB (SQL Server);
-- login e un `PlatformAdmin` creato da comando di bootstrap, senza credenziali predefinite;
-- area di piattaforma minima per creare un tenant, un sito, un dominio (verificato a mano) e un utente `TenantAdmin`;
+- login, un `PlatformAdmin` creato da comando di bootstrap senza credenziali predefinite e un `TenantAdmin` per tenant;
+- menu "Platform" nell'admin (solo `PlatformAdmin`) per creare un tenant, un sito, un dominio (verificato a mano) e un utente `TenantAdmin`, con ingresso nell'admin di un tenant auditato;
 - pagina amministrativa Razor protetta (layout Tabler) per creare/modificare una pagina di prova;
 - rendering pubblico Razor di una pagina pubblicata;
-- test automatici che provino accesso consentito, tentativo di accesso cross-tenant negato e tentativi di escalation di ruolo respinti.
+- test automatici che provino accesso consentito, tentativo di accesso cross-tenant negato e tentativi di escalation di ruolo respinti. Il ruolo `Utente` e la registrazione arrivano con l'e-commerce (M7).
 
 Non implementare subito l'e-commerce o il builder completo. Prima dimostrare che il confine tenant e il flusso di pubblicazione sono solidi.

@@ -11,6 +11,10 @@ Alcuni tenant devono vendere prodotti; le pagine possono mostrare catalogo e CTA
 
 Creare un modulo Store/Commerce interno con servizi, entità e transizioni proprie. Il builder usa componenti che referenziano prodotti/collezioni. Checkout e totali sono verificati lato server; gli ordini conservano snapshot; provider e webhook sono incapsulati tramite contratti.
 
+## Account e ordini
+
+Gli ordini richiedono un account autenticato (`Utente`, `TenantAdmin`, `PlatformAdmin`); il `Guest` non può ordinare (ADR-0011).
+
 ## Conseguenze
 
 Commerce si sviluppa dopo il core CMS. Provider, tassazione, valute, spedizioni e politica stock restano decisioni aperte, da finalizzare prima del checkout di produzione.

@@ -11,10 +11,11 @@ L'admin è server-rendered con Razor Pages (ADR-0002). Serve un tema grafico com
 
 - L'interfaccia admin usa **Tabler** (cartella `admin-theme/tabler`, versione 1.6.1, licenza MIT) come tema CSS/JS.
 - Le icone del backend sono **Tabler Icons** (cartella `admin-theme/tabler-icons`, versione 3.49.0, licenza MIT).
-- `admin-theme/` è la sorgente di riferimento (kit con pagine HTML demo), non una cartella servita. Le pagine demo sono modelli da tradurre in layout e partial Razor.
-- Al bootstrap si copiano in `wwwroot` solo gli asset realmente usati (`dist/css`, `dist/js` e le singole librerie di `dist/libs` necessarie, più il webfont o gli SVG delle icone). Gli asset sono versionati, senza CDN esterni a runtime.
-- Le librerie di `dist/libs` (ApexCharts, Tom Select, ecc.) si abilitano una alla volta quando una schermata le richiede, dopo aver verificato la licenza di ciascuna (AGENTS.md, regola 11).
-- Gli altri pacchetti presenti in `admin-theme/` (`tabler-emails`, `tabler-illustrations`, `tabler-avatars`) **non sono approvati**: `tabler-emails` e `tabler-illustrations` hanno una licenza personale a pagamento; per `tabler-avatars` non c'è licenza nella cartella. Non vanno copiati in `wwwroot`, usati nell'app o ridistribuiti finché la licenza non è verificata.
+- `admin-theme/` contiene i pacchetti scaricati, con le relative licenze, e resta nel repository come sorgente di riferimento. Non viene servita direttamente.
+- Al bootstrap le cartelle **`tabler` e `tabler-icons` vengono copiate per intero** in `src/DvCms.Web/wwwroot/lib/` (rispettivamente `lib/tabler` e `lib/tabler-icons`), senza selezionare i soli file usati. Le pagine HTML demo di Tabler sono modelli da tradurre in layout e partial Razor.
+- Le pagine HTML demo copiate in `wwwroot` non devono essere servite al pubblico: la configurazione dei file statici le esclude (ad esempio `*.html` sotto `lib/tabler`); si servono solo asset (CSS, JS, font, immagini, SVG). Lo stesso vale per i file di documentazione, sorgenti e mappe non necessari. Gli asset sono versionati, senza CDN esterni a runtime.
+- Gli altri pacchetti (`tabler-emails`, `tabler-illustrations`, `tabler-avatars`) **non vengono copiati in `wwwroot`**. Le relative licenze sono possedute dal committente e il repository è privato; restano in `admin-theme/` per uso futuro (ad esempio template email). Le licenze sono personali (singolo licenziatario): il repository deve restare privato e i file non vanno ridistribuiti.
+- Le librerie di `dist/libs` (ApexCharts, Tom Select, ecc.) sono incluse nella copia, ma si usano solo quando una schermata le richiede, dopo aver verificato la licenza di ciascuna (AGENTS.md, regola 11).
 - Il tema del sito pubblico (temi tenant, ADR-0006) è indipendente da Tabler.
 
 ## Alternative considerate
@@ -27,5 +28,5 @@ L'admin è server-rendered con Razor Pages (ADR-0002). Serve un tema grafico com
 
 - Nessuna dipendenza Node in produzione: `dist/` è già compilato.
 - Le versioni di Tabler e Tabler Icons sono fissate nel repository; l'aggiornamento è una sostituzione deliberata della cartella con revisione.
-- Il repository contiene molto materiale non usato (centinaia di MB). Va deciso se tenerlo (vedi `docs/open-questions.md`).
+- La copia intera aumenta dimensione di repository e di pubblicazione (centinaia di MB, in gran parte demo e icone in formati non usati). Accettato dal committente; si può ridurre in seguito con un nuovo ADR.
 - Accessibilità e mobile vanno verificati sulle schermate costruite, non assunti dal template.

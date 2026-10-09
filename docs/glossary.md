@@ -3,10 +3,11 @@
 - **Tenant:** cliente/organizzazione che usa la piattaforma.
 - **Site:** sito web di un tenant.
 - **Domain:** host registrato e verificato manualmente, associato a un sito.
-- **PlatformAdmin:** ruolo globale dell'operatore della piattaforma; unico a creare o elevare `TenantAdmin`.
+- **PlatformAdmin:** ruolo globale dell'operatore della piattaforma; vede il menu "Platform"; unico a creare o elevare `TenantAdmin`.
 - **TenantAdmin:** amministratore di un tenant (ruolo della membership).
-- **Utente:** account di lavoro su un tenant, con permessi assegnati dal `TenantAdmin`.
-- **Guest:** visitatore non autenticato del sito pubblico.
+- **Utente:** acquirente registrato di un tenant con e-commerce; può solo emettere ordini.
+- **Guest:** visitatore anonimo del sito pubblico, vincolato a un tenant (un profilo Guest per tenant).
+- **DvCms:** nome del progetto; prefisso di solution, namespace e sotto-progetti.
 - **Tabler:** tema CSS/JS dell'admin (`admin-theme/tabler`); **Tabler Icons:** icone dell'admin.
 - **Theme:** pacchetto Razor fidato che definisce presentazione e renderer.
 - **Template:** modello versionato che crea la struttura iniziale di una pagina e la policy di editing.

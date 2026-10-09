@@ -4,7 +4,6 @@ Le scelte sotto non sono definite completamente. Gli agenti devono evitare di in
 
 ## Prodotto
 
-- Nome prodotto e naming namespace/solution.
 - Piani commerciali, limiti per tenant, quote e billing SaaS.
 - Locales supportate all'MVP e comportamento multilingua.
 - Requisiti quantitativi di carico, disponibilità e retention.
@@ -12,7 +11,12 @@ Le scelte sotto non sono definite completamente. Gli agenti devono evitare di in
 ## Decisioni prese (2026-10-09)
 
 - SQL Server è l'unico database (ADR-0012).
-- Ruoli `PlatformAdmin`, `TenantAdmin`, `Utente`, `Guest` (ADR-0011).
+- Nome progetto **DvCms**: solution `DvCms.sln`, namespace e sotto-progetti `DvCms.*`.
+- Ruoli `PlatformAdmin`, `TenantAdmin`, `Utente` (acquirente), `Guest` per tenant (ADR-0011). Il `TenantAdmin` svolge tutto il lavoro sui contenuti; nessun ruolo editor/publisher per ora.
+- Registrazione solo per gli acquirenti dei siti con e-commerce; nessun guest checkout; possono ordinare `Utente`, `TenantAdmin` e `PlatformAdmin`.
+- Il `PlatformAdmin` vede il menu "Platform" nell'admin e può aprire l'admin di qualunque tenant.
+- Recupero password con codice OTP e link monouso; two-factor authentication prevista ma per ultima.
+- `admin-theme/`: licenze possedute, repository privato; `tabler` e `tabler-icons` copiati per intero in `wwwroot`.
 - Tenant, utenti `TenantAdmin`, domini e certificati gestiti manualmente dal `PlatformAdmin`/operatori (ADR-0014).
 - Admin con Tabler e Tabler Icons (ADR-0013).
 
@@ -20,11 +24,12 @@ Le scelte sotto non sono definite completamente. Gli agenti devono evitare di in
 
 - Solo account locali o SSO/OIDC richiesto per clienti enterprise?
 - Policy password/MFA (in particolare per `PlatformAdmin` e `TenantAdmin`) e processo di recupero account (serve un provider email?).
-- `Guest`: è solo il visitatore anonimo o serve anche un account in sola lettura (es. revisore di preview)?
-- Permessi dell'`Utente`: confermare l'insieme iniziale (`Content.Edit`, `Content.Publish`, `Media.Manage`, `Store.Manage`).
-- Un `TenantAdmin` può avere più tenant? Può creare altri `TenantAdmin`? (decisione attuale: no, solo `PlatformAdmin`).
-- Account degli acquirenti dello store: tenant-scoped e separati dagli account admin?
-- Il supporto platform admin richiede approvazione/audit o impersonation controllata?
+- Account `Utente`: confermata l'appartenenza a un solo tenant (stessa email su due tenant = due account)? Un `TenantAdmin` o `PlatformAdmin` che ordina usa le stesse credenziali dell'admin sul sito pubblico? Può ordinare in qualsiasi tenant o solo nei propri?
+- Recupero password: il link monouso arriva per email dopo la verifica dell'OTP (come scritto in ADR-0011) o viene mostrato subito dopo l'OTP? Quali durate e limiti di tentativi?
+- Provider email e dominio mittente (servono già per il recupero password, M1).
+- Two-factor authentication: va resa bloccante per il go-live o può restare successiva? Metodo (TOTP, email, ecc.).
+- Il `Guest` per tenant deve avere impostazioni configurabili (es. visibilità contenuti) o basta il principal anonimo vincolato al tenant?
+- Il `PlatformAdmin` entra nell'admin di un tenant con il proprio account e ingresso auditato (ADR-0014). Serve anche richiedere un motivo/approvazione o un'impersonation di altri utenti?
 
 ## Dati e hosting
 
@@ -35,10 +40,6 @@ Le scelte sotto non sono definite completamente. Gli agenti devono evitare di in
 
 ## UI
 
-- Licenze: `tabler-emails` e `tabler-illustrations` sono a pagamento (licenza personale) e `tabler-avatars` non ha licenza visibile. Il repository è privato? Vanno tenuti, rimossi o spostati fuori dal repository?
-- Dimensione di `admin-theme/` (centinaia di MB): tenerla nel repository o ridurla ai soli `tabler` e `tabler-icons`?
-
-- ~~Libreria CSS/admin~~: decisa, Tabler + Tabler Icons (ADR-0013).
 - HTMX da aggiungere solo in base a una schermata/requisito preciso.
 - Design system e requisiti accessibilità dettagliati.
 
@@ -63,7 +64,7 @@ Le scelte sotto non sono definite completamente. Gli agenti devono evitare di in
 - Imposte/IVA, fatturazione e responsabilità per il calcolo.
 - Spedizioni, resi e rimborsi.
 - Prenotazione, rilascio e riconciliazione inventario.
-- Guest checkout, account cliente, retention e dati personali.
+- Retention e dati personali degli account acquirente. (Account obbligatorio per ordinare; nessun guest checkout, vedi ADR-0011.)
 
 ## Processo
 

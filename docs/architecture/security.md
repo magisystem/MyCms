@@ -4,12 +4,15 @@ La sicurezza è un requisito di progetto, con particolare attenzione a isolament
 
 ## Identità e autorizzazione
 
-- Usare ASP.NET Core Identity e cookie sicuri per l'admin. Nessuna registrazione self-service: gli account sono creati da chi ha il ruolo per farlo (ADR-0011, ADR-0014).
+- Usare ASP.NET Core Identity e cookie sicuri per l'admin. Nessuna registrazione self-service per account amministrativi; la registrazione degli acquirenti esiste solo nei siti con e-commerce (ADR-0011, ADR-0014).
 - Autorizzare ogni operazione in base a identità, membership tenant/site, ruolo e risorsa.
-- Ruoli: `PlatformAdmin` (globale), `TenantAdmin` e `Utente` (per membership), `Guest` (non autenticato). I permessi dell'`Utente` (`Content.Edit`, `Content.Publish`, `Media.Manage`, `Store.Manage`) sono assegnati dal `TenantAdmin`.
-- Solo il `PlatformAdmin` crea o eleva `TenantAdmin`; nessun ruolo assegna un ruolo superiore al proprio né modifica il proprio. Controllo lato server con test di non-escalation.
+- Ruoli: `PlatformAdmin` (globale), `TenantAdmin` (per membership), `Utente` (acquirente di un tenant, solo ordini), `Guest` (anonimo, sempre vincolato a un tenant).
+- Solo il `PlatformAdmin` crea o eleva `TenantAdmin`; nessun ruolo assegna un ruolo superiore al proprio né modifica il proprio. La registrazione crea solo `Utente`; il ruolo non è mai preso dalla richiesta. Controllo lato server con test di non-escalation.
 - Il primo `PlatformAdmin` si crea con un comando di bootstrap, senza credenziali predefinite.
-- Le operazioni dell'area di piattaforma sono registrate in `AuditLog`.
+- Ingresso del `PlatformAdmin` nell'admin di un tenant e azioni del menu "Platform" sono registrati in `AuditLog`.
+- **Recupero password** (tutti gli account): risposta identica a prescindere dall'esistenza dell'account; email con codice OTP a scadenza breve, tentativi limitati, rate limiting, codice salvato come hash; poi email con link monouso a scadenza breve per impostare la nuova password, invalidato all'uso e da nuove richieste; al cambio password sessioni e token sono invalidati e arriva una notifica.
+- **Two-factor authentication:** requisito previsto, a priorità minima, da implementare per ultimo (ADR-0011). Se e quando verrà reso obbligatorio per `PlatformAdmin` e `TenantAdmin` sarà deciso con un ADR.
+- **Registrazione acquirenti:** solo su siti con e-commerce attivo; conferma email, rate limiting e protezione anti-abuso.
 - Separare privilegi globali da ruoli tenant.
 - Proteggere form mutanti con antiforgery; applicare policy session/cookie appropriate.
 - Evitare IDOR: conoscere un GUID non equivale ad avere accesso.

@@ -15,8 +15,9 @@ La roadmap è ordinata per dipendenze. Le stime vanno fatte solo dopo un primo e
 ## M1 — Vertical slice tenant/sito/pagina
 
 - Tenant, site e domain registry.
-- Ruoli `PlatformAdmin`, `TenantAdmin`, `Utente`, `Guest` e comando di bootstrap del primo `PlatformAdmin`.
-- Area di piattaforma minima: crea tenant, sito, dominio (verificato a mano) e utente `TenantAdmin`.
+- Ruoli `PlatformAdmin` e `TenantAdmin`, principal `Guest` per tenant e comando di bootstrap del primo `PlatformAdmin`.
+- Menu "Platform" nell'admin (solo `PlatformAdmin`): crea tenant, sito, dominio (verificato a mano) e utente `TenantAdmin`; il `PlatformAdmin` può aprire l'admin di qualunque tenant (auditato).
+- Recupero password con codice OTP e link monouso (richiede un provider email e l'outbox minimo).
 - Context tenant derivato dal dominio e membership admin.
 - Pagina semplice draft/published.
 - Rendering Razor per pagina pubblicata.
@@ -75,6 +76,7 @@ La roadmap è ordinata per dipendenze. Le stime vanno fatte solo dopo un primo e
 
 - Catalogo e varianti.
 - Prezzi/valuta, carrello e checkout.
+- Registrazione e login degli acquirenti (`Utente`), abilitati per sito; ordini riservati ad account autenticati.
 - Provider di pagamento approvato e webhook idempotenti.
 - Ordini, snapshot, inventario e email essenziali.
 - Componenti commerce nel renderer/page builder.
@@ -89,3 +91,7 @@ La roadmap è ordinata per dipendenze. Le stime vanno fatte solo dopo un primo e
 - Migrazione/release checklist e strategia rollback.
 
 Non iniziare M5 prima che il proof of concept M4 convalidi il modello documento/renderer.
+
+## Ultima priorità — Two-factor authentication
+
+Requisito previsto ma non prioritario: si affronta dopo il resto (G-006), con un ADR dedicato. Il recupero password via OTP e link monouso è invece in M1.
