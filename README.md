@@ -1,0 +1,55 @@
+# CMS SaaS multi-tenant — documentazione architetturale
+
+Questa cartella contiene la documentazione iniziale di progetto per un CMS multi-tenant sviluppato in .NET, pensato per siti di clienti con temi Razor dedicati, editor visuale ibrido ed e-commerce integrato.
+
+## Obiettivo
+
+Fornire a sviluppatori e agenti AI (Codex, Claude Code, Gemini, DeepSeek o strumenti analoghi) una fonte di verità versionabile nel repository e indicazioni sufficienti per implementare il sistema per incrementi verificabili.
+
+## Scelte architetturali iniziali
+
+- **Backend e sito pubblico:** ASP.NET Core, C#, Razor Pages/MVC.
+- **Interfaccia amministrativa:** Razor Pages con navigazione e form HTML tradizionali. HTMX non è obbligatorio; si aggiunge solo se una schermata beneficia realmente di aggiornamenti parziali.
+- **Page builder:** GrapesJS in una pagina Razor dedicata, con asset JavaScript isolati. Nessun backend Node.js.
+- **Runtime:** .NET 10 LTS e Entity Framework Core 10, mantenuti sulle ultime patch supportate.
+- **Persistenza:** SQL Server è il provider primario e predefinito; PostgreSQL è un secondo provider supportato con migrazioni e test dedicati.
+- **Architettura:** monolite modulare, non microservizi.
+- **Tenancy:** database condiviso con isolamento logico rigoroso per tenant e sito.
+- **Temi:** pacchetti Razor fidati e versionati, distribuiti con l'applicazione; i clienti non caricano assembly o viste Razor.
+- **Contenuti:** documenti JSON tipizzati e versionati; il solo HTML esportato non è la fonte di verità.
+- **E-commerce:** modulo interno al CMS, separato nei confini di dominio.
+
+SQL Server è il target primario. PostgreSQL è supportato con una seconda serie di migrazioni e test dedicati: non basta cambiare la connection string. I dettagli sono in [`docs/architecture/database-providers.md`](docs/architecture/database-providers.md).
+
+## Come usare questa documentazione
+
+1. Leggere [`AGENTS.md`](AGENTS.md) prima di implementare codice.
+2. Leggere [`docs/architecture/overview.md`](docs/architecture/overview.md) e gli ADR rilevanti.
+3. Consultare [`docs/delivery/roadmap.md`](docs/delivery/roadmap.md) e [`docs/delivery/backlog.md`](docs/delivery/backlog.md) per ordinare il lavoro.
+4. Implementare una milestone alla volta, con test e documentazione aggiornata.
+5. Prima del rilascio pubblico, completare le attività di sicurezza e i test di isolamento tenant.
+
+## Stato del documento
+
+Questa è una **baseline architetturale**, non un'applicazione già implementata. Le decisioni contrassegnate come *da decidere* devono essere approvate prima di sviluppare le parti che ne dipendono. Non inventare provider commerciali, regole fiscali o requisiti contrattuali.
+
+## Indice
+
+- [Visione prodotto](docs/product/product-vision.md)
+- [Architettura](docs/architecture/overview.md)
+- [Stack](docs/architecture/technology-stack.md)
+- [Strategia provider database](docs/architecture/database-providers.md)
+- [Modello di dominio e dati](docs/architecture/domain-model.md)
+- [Multi-tenancy](docs/architecture/multi-tenancy.md)
+- [Temi e rendering](docs/architecture/themes-and-rendering.md)
+- [Page builder](docs/architecture/page-builder.md)
+- [Pubblicazione e SEO](docs/architecture/publishing-and-seo.md)
+- [E-commerce](docs/architecture/ecommerce.md)
+- [Sicurezza](docs/architecture/security.md)
+- [Operatività](docs/architecture/operations.md)
+- [Test](docs/architecture/testing.md)
+- [Roadmap](docs/delivery/roadmap.md)
+- [Backlog](docs/delivery/backlog.md)
+- [Definition of Done](docs/delivery/definition-of-done.md)
+- [Questioni aperte](docs/open-questions.md)
+- [ADR](docs/decisions/README.md)
