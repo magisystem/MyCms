@@ -252,6 +252,182 @@ public class ServizioPagineTest
         Assert.Empty(await s.ComeAsync(s.A, servizio => servizio.ElencaAsync(platform, Ct)));
     }
 
+    private static readonly Dictionary<string, string> _datiPresentazione = new()
+    {
+        ["Sottotitolo"] = "Un sottotitolo",
+        ["EtichettaPulsante"] = "Scopri",
+        ["UrlPulsante"] = "/prodotti",
+    };
+
+    [Fact]
+    public async Task CreaUnaPaginaConUnModelloESalvaIDatiConLaVersione()
+    {
+        await using var s = await Scenario.CreaAsync();
+
+        var esito = await s.ComeAsync(s.A, servizio => servizio.CreaAsync(s.AdminA, new DatiNuovaPagina("vetrina", "Vetrina", "Testo", "it", false, "presentazione", _datiPresentazione), Ct));
+
+        Assert.True(esito.Riuscito);
+        var dettaglio = (await s.ComeAsync(s.A, servizio => servizio.LeggiAsync(s.AdminA, esito.Id!.Value, Ct)))!;
+        Assert.Equal("presentazione", dettaglio.IdModello);
+        Assert.Equal(1, dettaglio.VersioneModello);
+        Assert.Equal(_datiPresentazione, dettaglio.DatiModello);
+        Assert.Null(dettaglio.VersioneModelloRecente);
+        await s.PubblicaUltimaAsync(s.A, esito.Id!.Value);
+        await using var ambito = s.Fornitore.CreateAsyncScope();
+        ambito.ServiceProvider.GetRequiredService<ContestoTenant>().Imposta(s.A);
+        var pubblica = (await ambito.ServiceProvider.GetRequiredService<IServizioPaginePubbliche>().TrovaAsync("vetrina", Ct))!;
+        Assert.Equal("presentazione", pubblica.IdModello);
+        Assert.Equal("Scopri", pubblica.DatiModello["EtichettaPulsante"]);
+    }
+
+    [Fact]
+    public async Task IDatiDelModelloNonValidiVengonoRifiutatiPerNomeDelCampo()
+    {
+        await using var s = await Scenario.CreaAsync();
+        var pericoloso = new Dictionary<string, string>(_datiPresentazione) { ["UrlPulsante"] = "javascript:alert(1)" };
+        var senzaUrl = new Dictionary<string, string> { ["EtichettaPulsante"] = "Vai" };
+
+        var a = await s.ComeAsync(s.A, servizio => servizio.CreaAsync(s.AdminA, new DatiNuovaPagina("a", "A", "x", "it", false, "presentazione", pericoloso), Ct));
+        var b = await s.ComeAsync(s.A, servizio => servizio.CreaAsync(s.AdminA, new DatiNuovaPagina("b", "B", "x", "it", false, "presentazione", senzaUrl), Ct));
+        var c = await s.ComeAsync(s.A, servizio => servizio.CreaAsync(s.AdminA, new DatiNuovaPagina("c", "C", "x", "it", false, "inesistente", null), Ct));
+        var d = await s.ComeAsync(s.A, servizio => servizio.CreaAsync(s.AdminA, new DatiNuovaPagina("d", "D", "x", "it", false, "testo-semplice", new Dictionary<string, string> { ["Extra"] = "x" }), Ct));
+
+        Assert.Equal(CodiceEsito.DatiNonValidi, a.Codice);
+        Assert.Equal(["UrlPulsante"], a.CampiNonValidi);
+        Assert.Equal(["UrlPulsante"], b.CampiNonValidi);
+        Assert.Equal(["Modello"], c.CampiNonValidi);
+        Assert.Equal(["Extra"], d.CampiNonValidi);
+        Assert.Empty(await s.ComeAsync(s.A, servizio => servizio.ElencaAsync(s.AdminA, Ct)));
+    }
+
+    [Fact]
+    public async Task SalvareAggiornaIDatiConLaStessaVersioneEUnaRevisioneNonCambiaModelloDaSola()
+    {
+        await using var s = await Scenario.CreaAsync();
+        var id = (await s.ComeAsync(s.A, servizio => servizio.CreaAsync(s.AdminA, new DatiNuovaPagina("vetrina", "Vetrina", "Testo", "it", false, "presentazione", _datiPresentazione), Ct))).Id!.Value;
+        var letta = (await s.ComeAsync(s.A, servizio => servizio.LeggiAsync(s.AdminA, id, Ct)))!;
+
+        var invariata = await s.ComeAsync(s.A, servizio => servizio.SalvaAsync(s.AdminA, id, new DatiModificaPagina(null, letta.Titolo, letta.Contenuto, null, false, letta.TokenConcorrenza, _datiPresentazione), Ct));
+        Assert.True(invariata.Riuscito);
+        Assert.Single((await s.ComeAsync(s.A, servizio => servizio.LeggiAsync(s.AdminA, id, Ct)))!.Revisioni);
+
+        var nuovi = new Dictionary<string, string>(_datiPresentazione) { ["Sottotitolo"] = "Nuovo sottotitolo" };
+        var token = (await s.ComeAsync(s.A, servizio => servizio.LeggiAsync(s.AdminA, id, Ct)))!.TokenConcorrenza;
+        var modificata = await s.ComeAsync(s.A, servizio => servizio.SalvaAsync(s.AdminA, id, new DatiModificaPagina(null, letta.Titolo, letta.Contenuto, null, false, token, nuovi), Ct));
+        Assert.True(modificata.Riuscito);
+        var dopo = (await s.ComeAsync(s.A, servizio => servizio.LeggiAsync(s.AdminA, id, Ct)))!;
+        Assert.Equal(2, dopo.Revisioni.Count);
+        Assert.Equal("Nuovo sottotitolo", dopo.DatiModello["Sottotitolo"]);
+        Assert.Equal("presentazione", dopo.IdModello);
+
+        // Campi di un altro modello o valori non validi: rifiutati, nulla cambia.
+        var rifiutata = await s.ComeAsync(s.A, servizio => servizio.SalvaAsync(s.AdminA, id, new DatiModificaPagina(null, letta.Titolo, letta.Contenuto, null, false, dopo.TokenConcorrenza, new Dictionary<string, string> { ["Foto"] = "x" }), Ct));
+        Assert.Equal(["Foto"], rifiutata.CampiNonValidi);
+        Assert.Equal(2, (await s.ComeAsync(s.A, servizio => servizio.LeggiAsync(s.AdminA, id, Ct)))!.Revisioni.Count);
+    }
+
+    [Fact]
+    public async Task UnaNuovaVersioneDelModelloNonToccaLeRevisioniEsistentiEPuoEssereAdottataDallaBozza()
+    {
+        await using var s = await Scenario.CreaAsync();
+        var id = (await s.ComeAsync(s.A, servizio => servizio.CreaAsync(s.AdminA, new DatiNuovaPagina("vetrina", "Vetrina", "Testo", "it", false, "presentazione", new Dictionary<string, string> { ["Sottotitolo"] = "Sub", ["EtichettaPulsante"] = "Vai", ["UrlPulsante"] = "/x" }), Ct))).Id!.Value;
+        await s.PubblicaUltimaAsync(s.A, id);
+
+        // Seconda istanza dell'applicazione sullo stesso database, con la versione 2 del modello (senza il pulsante, con sottotitolo obbligatorio).
+        var v2 = RegistroModelliPagina.ModelloPresentazione with
+        {
+            Versione = 2,
+            Campi = [new CampoModello("Sottotitolo", TipoCampoModello.TestoBreve, Obbligatorio: true, LunghezzaMassima: 100)],
+            CampiTuttiONessuno = [],
+        };
+        await using var nuova = await ServiziProva.CreaConMigrazioniAsync(
+            s.Connessione,
+            configura: servizi => servizi.AddSingleton(new RegistroModelliPagina([.. RegistroModelliPagina.Predefiniti, v2])),
+            annullamento: Ct);
+        async Task<T> ComeNuova<T>(Func<IServizioPagine, Task<T>> operazione)
+        {
+            await using var ambito = nuova.CreateAsyncScope();
+            ambito.ServiceProvider.GetRequiredService<ContestoTenant>().Imposta(s.A);
+            return await operazione(ambito.ServiceProvider.GetRequiredService<IServizioPagine>());
+        }
+
+        var prima = (await ComeNuova(servizio => servizio.LeggiAsync(s.AdminA, id, Ct)))!;
+        Assert.Equal(1, prima.VersioneModello);
+        Assert.Equal(2, prima.VersioneModelloRecente);
+
+        // Salvare resta sulla versione 1; la versione nuova si adotta solo su richiesta.
+        Assert.True((await ComeNuova(servizio => servizio.SalvaAsync(s.AdminA, id, new DatiModificaPagina(null, prima.Titolo, "Testo modificato", null, false, prima.TokenConcorrenza, prima.DatiModello), Ct))).Riuscito);
+        var dopoSalvataggio = (await ComeNuova(servizio => servizio.LeggiAsync(s.AdminA, id, Ct)))!;
+        Assert.Equal(1, dopoSalvataggio.VersioneModello);
+
+        var aggiornata = await ComeNuova(servizio => servizio.AggiornaModelloAsync(s.AdminA, id, dopoSalvataggio.TokenConcorrenza, Ct));
+        Assert.True(aggiornata.Riuscito);
+        var adottata = (await ComeNuova(servizio => servizio.LeggiAsync(s.AdminA, id, Ct)))!;
+        Assert.Equal(2, adottata.VersioneModello);
+        Assert.Null(adottata.VersioneModelloRecente);
+        Assert.Equal(new Dictionary<string, string> { ["Sottotitolo"] = "Sub" }, adottata.DatiModello);
+        Assert.Equal(3, adottata.Revisioni.Count);
+
+        // Le revisioni vecchie (anche quella pubblicata) restano alla versione 1, con i loro dati.
+        var pubblicata = adottata.Revisioni.Single(r => r.Pubblicata);
+        var anteprimaVecchia = (await ComeNuova(servizio => servizio.AnteprimaAsync(s.AdminA, id, pubblicata.Id, Ct)))!;
+        Assert.Equal(1, anteprimaVecchia.VersioneModello);
+        Assert.Equal("Vai", anteprimaVecchia.DatiModello["EtichettaPulsante"]);
+
+        // Già all'ultima versione: nulla da fare.
+        var ancora = await ComeNuova(servizio => servizio.AggiornaModelloAsync(s.AdminA, id, adottata.TokenConcorrenza, Ct));
+        Assert.Equal(CodiceEsito.NonConsentito, ancora.Codice);
+
+        // Le nuove pagine nascono con la versione 2 (il sottotitolo è obbligatorio).
+        var senza = await ComeNuova(servizio => servizio.CreaAsync(s.AdminA, new DatiNuovaPagina("nuova", "Nuova", "x", "it", false, "presentazione", null), Ct));
+        Assert.Equal(["Sottotitolo"], senza.CampiNonValidi);
+        var con = await ComeNuova(servizio => servizio.CreaAsync(s.AdminA, new DatiNuovaPagina("nuova", "Nuova", "x", "it", false, "presentazione", new Dictionary<string, string> { ["Sottotitolo"] = "Ok" }), Ct));
+        Assert.Equal(2, (await ComeNuova(servizio => servizio.LeggiAsync(s.AdminA, con.Id!.Value, Ct)))!.VersioneModello);
+    }
+
+    [Fact]
+    public async Task SeIValoriNonSonoValidiPerLaNuovaVersioneLAggiornamentoNonCambiaNulla()
+    {
+        await using var s = await Scenario.CreaAsync();
+        var id = await s.CreaPaginaAsync(s.A, s.AdminA, "pagina");
+        var v2 = RegistroModelliPagina.ModelloTestoSemplice with
+        {
+            Versione = 2,
+            Campi = [new CampoModello("Autore", TipoCampoModello.TestoBreve, Obbligatorio: true, LunghezzaMassima: 50)],
+        };
+        await using var nuova = await ServiziProva.CreaConMigrazioniAsync(
+            s.Connessione,
+            configura: servizi => servizi.AddSingleton(new RegistroModelliPagina([.. RegistroModelliPagina.Predefiniti, v2])),
+            annullamento: Ct);
+        await using var ambito = nuova.CreateAsyncScope();
+        ambito.ServiceProvider.GetRequiredService<ContestoTenant>().Imposta(s.A);
+        var servizio = ambito.ServiceProvider.GetRequiredService<IServizioPagine>();
+        var letta = (await servizio.LeggiAsync(s.AdminA, id, Ct))!;
+
+        var esito = await servizio.AggiornaModelloAsync(s.AdminA, id, letta.TokenConcorrenza, Ct);
+
+        Assert.Equal(CodiceEsito.DatiNonValidi, esito.Codice);
+        Assert.Equal(["Autore"], esito.CampiNonValidi);
+        Assert.Single((await servizio.LeggiAsync(s.AdminA, id, Ct))!.Revisioni);
+    }
+
+    [Fact]
+    public async Task RipristinoEPubblicazioneDiUnaRevisionePassataConservanoModelloEDati()
+    {
+        await using var s = await Scenario.CreaAsync();
+        var id = (await s.ComeAsync(s.A, servizio => servizio.CreaAsync(s.AdminA, new DatiNuovaPagina("vetrina", "Vetrina", "Testo", "it", false, "presentazione", _datiPresentazione), Ct))).Id!.Value;
+        var letta = (await s.ComeAsync(s.A, servizio => servizio.LeggiAsync(s.AdminA, id, Ct)))!;
+        await s.ComeAsync(s.A, servizio => servizio.SalvaAsync(s.AdminA, id, new DatiModificaPagina(null, "Altro", "Altro testo", null, false, letta.TokenConcorrenza, new Dictionary<string, string> { ["Sottotitolo"] = "Diverso" }), Ct));
+        var dopo = (await s.ComeAsync(s.A, servizio => servizio.LeggiAsync(s.AdminA, id, Ct)))!;
+
+        var ripristino = await s.ComeAsync(s.A, servizio => servizio.RipristinaComeBozzaAsync(s.AdminA, id, dopo.Revisioni.Single(r => r.Numero == 1).Id, dopo.TokenConcorrenza, Ct));
+
+        Assert.True(ripristino.Riuscito);
+        var ripristinata = (await s.ComeAsync(s.A, servizio => servizio.LeggiAsync(s.AdminA, id, Ct)))!;
+        Assert.Equal(_datiPresentazione, ripristinata.DatiModello);
+        Assert.Equal("presentazione", ripristinata.IdModello);
+    }
+
     [Fact]
     public async Task LAnteprimaMostraLaBozzaOUnaRevisionePrecisaNonSoloIlPubblicato()
     {
@@ -387,10 +563,13 @@ public class ServizioPagineTest
 
         public Guid AdminB { get; }
 
-        public static async Task<Scenario> CreaAsync()
+        public static async Task<Scenario> CreaAsync(IEnumerable<ModelloPagina>? modelli = null)
         {
             var database = await DatabaseDiProva.CreaAsync(Ct);
-            var fornitore = await ServiziProva.CreaConMigrazioniAsync(database.Connessione, annullamento: Ct);
+            var fornitore = await ServiziProva.CreaConMigrazioniAsync(
+                database.Connessione,
+                configura: modelli is null ? null : servizi => servizi.AddSingleton(new RegistroModelliPagina(modelli)),
+                annullamento: Ct);
             var a = await DatiProva.CreaTenantAsync(fornitore, "A", "a.esempio.it", annullamento: Ct);
             var b = await DatiProva.CreaTenantAsync(fornitore, "B", "b.esempio.it", annullamento: Ct);
             var adminA = await DatiProva.CreaUtenzaAsync(fornitore, RuoloUtenza.TenantAdmin, a.IdTenant, "anna@esempio.it", annullamento: Ct);
@@ -430,6 +609,8 @@ public class ServizioPagineTest
             Assert.True(esito.Riuscito, esito.Codice.ToString());
             return esito.Id!.Value;
         }
+
+        public string Connessione => _database.Connessione;
 
         public async Task PubblicaUltimaAsync(DatiTenantRisolto host, Guid id)
         {

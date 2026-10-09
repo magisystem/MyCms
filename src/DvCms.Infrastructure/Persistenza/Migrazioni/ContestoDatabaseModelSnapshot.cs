@@ -315,6 +315,19 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.Property<DateTime>("CreatoIlUtc")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("DatiModelloJson")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("nvarchar(max)")
+                        .HasDefaultValue("{}");
+
+                    b.Property<string>("IdModello")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasDefaultValue("testo-semplice");
+
                     b.Property<Guid>("IdPagina")
                         .HasColumnType("uniqueidentifier");
 
@@ -335,6 +348,11 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("VersioneModello")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(1);
 
                     b.Property<int>("VersioneSchema")
                         .HasColumnType("int");

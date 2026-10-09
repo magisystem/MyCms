@@ -49,6 +49,24 @@
                             <div class="form-hint">@_L["L'indirizzo di una pagina pubblicata non si può cambiare."]</div>
                         }
                     </div>
+                    <p class="text-secondary small mb-3">
+                        @_L["Modello"]: <strong>@DvCms.Web.Cms.EtichetteModelli.NomeModello(_L, pagina.IdModello)</strong> (v@(pagina.VersioneModello))
+                    </p>
+                    @foreach (var campo in Model.Modello?.Campi ?? [])
+                    {
+                        <div class="mb-3">
+                            <label class="form-label @(campo.Obbligatorio ? "required" : null)" for="m_@campo.Nome">@DvCms.Web.Cms.EtichetteModelli.Campo(_L, campo.Nome)</label>
+                            @if (campo.Tipo == DvCms.Application.Cms.TipoCampoModello.TestoLungo)
+                            {
+                                <textarea class="form-control @(Model.CampiNonValidi.Contains(campo.Nome) ? "is-invalid" : null)" id="m_@campo.Nome" name="m_@campo.Nome" rows="3" maxlength="@campo.LunghezzaMassima">@pagina.DatiModello.GetValueOrDefault(campo.Nome)</textarea>
+                            }
+                            else
+                            {
+                                <input class="form-control @(Model.CampiNonValidi.Contains(campo.Nome) ? "is-invalid" : null)" id="m_@campo.Nome" name="m_@campo.Nome" value="@pagina.DatiModello.GetValueOrDefault(campo.Nome)" maxlength="@campo.LunghezzaMassima"
+                                       placeholder="@(campo.Tipo == DvCms.Application.Cms.TipoCampoModello.Url ? "/pagina oppure https://..." : null)" />
+                            }
+                        </div>
+                    }
                     <div class="mb-3">
                         <label class="form-label" for="Contenuto">@_L["Contenuto"]</label>
                         <textarea class="form-control" id="Contenuto" name="Contenuto" rows="14" maxlength="100000">@pagina.Contenuto</textarea>
@@ -73,6 +91,13 @@
                     <input type="hidden" name="TokenConcorrenza" value="@pagina.TokenConcorrenza" />
                     <button type="submit" class="btn btn-success" disabled="@(!pagina.ModificheNonPubblicate && pagina.Stato == StatoPagina.Pubblicata)">@_L["Pubblica l'ultima bozza"]</button>
                 </form>
+                @if (pagina.VersioneModelloRecente is { } recente)
+                {
+                    <form method="post" asp-page-handler="AggiornaModello" asp-route-id="@pagina.Id" class="d-inline">
+                        <input type="hidden" name="TokenConcorrenza" value="@pagina.TokenConcorrenza" />
+                        <button type="submit" class="btn btn-outline-primary">@_L["Passa all'ultima versione del modello"] (v@(recente))</button>
+                    </form>
+                }
                 @if (pagina.Stato == StatoPagina.Pubblicata)
                 {
                     <form method="post" asp-page-handler="Ritira" asp-route-id="@pagina.Id" class="d-inline">

@@ -1,0 +1,32 @@
+@model DvCms.Web.Pubblico.VistaPagina
+@{
+    var sottotitolo = Model.Dato("Sottotitolo");
+    var etichetta = Model.Dato("EtichettaPulsante");
+    var url = Model.Dato("UrlPulsante");
+}
+<article class="presentazione">
+    <h1>@Model.Titolo</h1>
+    @if (sottotitolo.Length > 0)
+    {
+        <p class="sottotitolo">@sottotitolo</p>
+    }
+    @foreach (var paragrafo in Model.Paragrafi)
+    {
+        <p>
+            @for (var i = 0; i < paragrafo.Count; i++)
+            {
+                if (i > 0)
+                {
+                    <br />
+                }
+
+                @paragrafo[i]
+            }
+        </p>
+    }
+    @* L'indirizzo è controllato anche in uscita (percorso del sito o https), oltre che al salvataggio. *@
+    @if (etichetta.Length > 0 && DvCms.Application.Cms.RegistroModelliPagina.UrlConsentito(url))
+    {
+        <p><a class="pulsante" href="@url">@etichetta</a></p>
+    }
+</article>

@@ -63,6 +63,9 @@ internal sealed class ConfigurazioneRevisionePagina : IEntityTypeConfiguration<R
         entita.Property(revisione => revisione.Id).ValueGeneratedNever();
         entita.Property(revisione => revisione.Titolo).HasMaxLength(RevisionePagina.LunghezzaMassimaTitolo).IsRequired();
         entita.Property(revisione => revisione.Contenuto).IsRequired();
+        entita.Property(revisione => revisione.IdModello).HasMaxLength(RevisionePagina.LunghezzaMassimaIdModello).IsRequired().HasDefaultValue(RevisionePagina.ModelloPredefinito);
+        entita.Property(revisione => revisione.VersioneModello).HasDefaultValue(1);
+        entita.Property(revisione => revisione.DatiModelloJson).IsRequired().HasDefaultValue("{}");
         entita.Property(revisione => revisione.NotaRevisione).HasMaxLength(RevisionePagina.LunghezzaMassimaNota);
 
         entita.HasOne<Pagina>()

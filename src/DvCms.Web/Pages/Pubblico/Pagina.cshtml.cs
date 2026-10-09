@@ -30,7 +30,7 @@ public class PaginaModel : PageModel
             return Page();
         }
 
-        Vista = new VistaPagina(contenuto.Titolo, contenuto.CodiceLingua, VistaPagina.DividiParagrafi(contenuto.Contenuto), NonIndicizzare: false);
+        Vista = new VistaPagina(contenuto.Titolo, contenuto.CodiceLingua, VistaPagina.DividiParagrafi(contenuto.Contenuto), NonIndicizzare: false, null, contenuto.IdModello, contenuto.VersioneModello, contenuto.DatiModello);
         return Page();
     }
 }

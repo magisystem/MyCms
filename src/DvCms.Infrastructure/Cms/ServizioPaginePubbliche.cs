@@ -53,6 +53,9 @@ public sealed class ServizioPaginePubbliche : IServizioPaginePubbliche
                 scelta.revisione.Contenuto,
                 scelta.Codice,
                 scelta.pagina.Slug,
-                scelta.pagina.PubblicatoIlUtc ?? scelta.revisione.CreatoIlUtc);
+                scelta.pagina.PubblicatoIlUtc ?? scelta.revisione.CreatoIlUtc,
+                scelta.revisione.IdModello,
+                scelta.revisione.VersioneModello,
+                scelta.revisione.DatiModello);
     }
 }

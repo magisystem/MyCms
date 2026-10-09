@@ -3,7 +3,14 @@ using DvCms.Domain.Cms;
 
 namespace DvCms.Application.Cms;
 
-public sealed record DatiNuovaPagina(string? Slug, string? Titolo, string? Contenuto, string? CodiceLingua, bool PaginaIniziale);
+public sealed record DatiNuovaPagina(
+    string? Slug,
+    string? Titolo,
+    string? Contenuto,
+    string? CodiceLingua,
+    bool PaginaIniziale,
+    string? IdModello = null,
+    IReadOnlyDictionary<string, string>? DatiModello = null);
 
 public sealed record DatiModificaPagina(
     string? Slug,
@@ -11,7 +18,8 @@ public sealed record DatiModificaPagina(
     string? Contenuto,
     string? Nota,
     bool PaginaIniziale,
-    string? TokenConcorrenza);
+    string? TokenConcorrenza,
+    IReadOnlyDictionary<string, string>? DatiModello = null);
 
 public sealed record RiepilogoPagina(
     Guid Id,
@@ -43,10 +51,23 @@ public sealed record DettaglioPagina(
     string Contenuto,
     string TokenConcorrenza,
     bool ModificheNonPubblicate,
-    IReadOnlyList<RevisioneInElenco> Revisioni);
+    IReadOnlyList<RevisioneInElenco> Revisioni,
+    string IdModello,
+    int VersioneModello,
+    IReadOnlyDictionary<string, string> DatiModello,
+    int? VersioneModelloRecente);
 
 /// <summary>Contenuto di una revisione per l'anteprima (la bozza più recente, oppure una revisione precisa).</summary>
-public sealed record AnteprimaPagina(string Titolo, string Contenuto, string CodiceLingua, int NumeroRevisione, bool Pubblicata, bool UltimaBozza);
+public sealed record AnteprimaPagina(
+    string Titolo,
+    string Contenuto,
+    string CodiceLingua,
+    int NumeroRevisione,
+    bool Pubblicata,
+    bool UltimaBozza,
+    string IdModello,
+    int VersioneModello,
+    IReadOnlyDictionary<string, string> DatiModello);
 
 public sealed record LinguaDisponibile(string Codice, string Nome);
 
@@ -86,6 +107,12 @@ public interface IServizioPagine
 
     /// <summary>Riporta il contenuto di una revisione passata come nuova bozza (le revisioni restano immutabili).</summary>
     Task<EsitoOperazione> RipristinaComeBozzaAsync(Guid idAttore, Guid idPagina, Guid idRevisione, string? tokenConcorrenza, CancellationToken annullamento);
+
+    /// <summary>
+    /// Porta la bozza all'ultima versione del suo modello (nuova revisione, le vecchie restano come sono). I campi che
+    /// la nuova versione non ha più vengono scartati; se i valori restanti non sono validi per la nuova versione, nulla cambia.
+    /// </summary>
+    Task<EsitoOperazione> AggiornaModelloAsync(Guid idAttore, Guid idPagina, string? tokenConcorrenza, CancellationToken annullamento);
 
     /// <summary>Pubblica l'ultima bozza.</summary>
     Task<EsitoOperazione> PubblicaAsync(Guid idAttore, Guid idPagina, string? tokenConcorrenza, CancellationToken annullamento);

@@ -1,11 +1,26 @@
 namespace DvCms.Domain.Cms;
 
 /// <summary>
+/// Contenuto di una revisione: i campi di base (titolo e testo libero) e quelli del modello di pagina scelto.
+/// La validazione dei campi del modello spetta al registro dei modelli (Application); qui si garantiscono solo
+/// i vincoli di base e la forma dei dati.
+/// </summary>
+public sealed record ContenutoRevisione(
+    string Titolo,
+    string Contenuto,
+    string IdModello = RevisionePagina.ModelloPredefinito,
+    int VersioneModello = 1,
+    IReadOnlyDictionary<string, string>? DatiModello = null);
+
+/// <summary>
 /// Versione immutabile del contenuto di una pagina. In M1 il contenuto è testo semplice (titolo e paragrafi);
 /// il documento del builder e l'HTML ripulito arrivano con le milestone successive, aggiungendo colonne.
 /// </summary>
 public class RevisionePagina
 {
+    public const string ModelloPredefinito = "testo-semplice";
+    public const int LunghezzaMassimaIdModello = 50;
+
     public const int LunghezzaMassimaTitolo = 200;
     public const int LunghezzaMassimaContenuto = 100_000;
     public const int LunghezzaMassimaNota = 500;
@@ -28,6 +43,14 @@ public class RevisionePagina
     /// <summary>Testo semplice: i paragrafi sono separati da una riga vuota. Non è HTML e viene sempre codificato in uscita.</summary>
     public string Contenuto { get; set; } = string.Empty;
 
+    /// <summary>Modello di pagina e versione con cui la revisione è stata scritta (e va disegnata): non cambiano mai.</summary>
+    public string IdModello { get; set; } = ModelloPredefinito;
+
+    public int VersioneModello { get; set; } = 1;
+
+    /// <summary>Valori dei campi del modello, come oggetto JSON nome-valore.</summary>
+    public string DatiModelloJson { get; set; } = "{}";
+
     public string? NotaRevisione { get; set; }
 
     public Guid CreatoDaIdUtenza { get; set; }
@@ -44,19 +67,28 @@ public class RevisionePagina
             && !contenutoValido.Any(carattere => char.IsControl(carattere) && carattere != '\n' && carattere != '\t');
     }
 
+    /// <summary>Valori dei campi del modello letti dal JSON salvato.</summary>
+    public IReadOnlyDictionary<string, string> DatiModello =>
+        System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(DatiModelloJson) ?? [];
+
     internal static RevisionePagina Crea(
         Pagina pagina,
         int numero,
-        string titolo,
-        string contenuto,
+        ContenutoRevisione dati,
         string? nota,
         Guid idAutore,
         DateTime adesso,
         TimeProvider orologio)
     {
-        if (!TentaValidaTesto(titolo, contenuto, out var titoloValido, out var contenutoValido))
+        ArgumentNullException.ThrowIfNull(dati);
+        if (!TentaValidaTesto(dati.Titolo, dati.Contenuto, out var titoloValido, out var contenutoValido))
         {
-            throw new ArgumentException("Titolo o contenuto non validi.", nameof(titolo));
+            throw new ArgumentException("Titolo o contenuto non validi.", nameof(dati));
+        }
+
+        if (string.IsNullOrWhiteSpace(dati.IdModello) || dati.IdModello.Length > LunghezzaMassimaIdModello || dati.VersioneModello < 1)
+        {
+            throw new ArgumentException("Modello di pagina non valido.", nameof(dati));
         }
 
         var notaValida = nota?.Trim();
@@ -74,6 +106,9 @@ public class RevisionePagina
             NumeroRevisione = numero,
             Titolo = titoloValido,
             Contenuto = contenutoValido,
+            IdModello = dati.IdModello,
+            VersioneModello = dati.VersioneModello,
+            DatiModelloJson = System.Text.Json.JsonSerializer.Serialize(dati.DatiModello ?? new Dictionary<string, string>()),
             NotaRevisione = string.IsNullOrEmpty(notaValida) ? null : notaValida,
             CreatoDaIdUtenza = idAutore,
             CreatoIlUtc = adesso,

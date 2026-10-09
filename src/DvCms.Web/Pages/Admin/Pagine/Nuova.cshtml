@@ -11,7 +11,19 @@
                 {
                     <div class="alert alert-danger" role="alert">@Model.Errore</div>
                 }
-                <form method="post" novalidate>
+                <form method="get" class="row g-2 align-items-end mb-4">
+                    <div class="col">
+                        <label class="form-label" for="modello">@_L["Modello di pagina"]</label>
+                        <select class="form-select" id="modello" name="modello" data-auto-invio>
+                            @foreach (var modello in Model.Modelli)
+                            {
+                                <option value="@modello.Id" selected="@(modello.Id == Model.Modello.Id)">@DvCms.Web.Cms.EtichetteModelli.NomeModello(_L, modello.Id)</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-auto"><button type="submit" class="btn">@_L["Usa questo modello"]</button></div>
+                </form>
+                <form method="post" asp-route-modello="@Model.Modello.Id" novalidate>
                     <div class="mb-3">
                         <label class="form-label" for="Titolo">@_L["Titolo"]</label>
                         <input class="form-control" id="Titolo" name="Titolo" value="@Model.Titolo" maxlength="200" required />
@@ -32,6 +44,21 @@
                             </select>
                         </div>
                     </div>
+                    @foreach (var campo in Model.Modello.Campi)
+                    {
+                        <div class="mb-3">
+                            <label class="form-label @(campo.Obbligatorio ? "required" : null)" for="m_@campo.Nome">@DvCms.Web.Cms.EtichetteModelli.Campo(_L, campo.Nome)</label>
+                            @if (campo.Tipo == DvCms.Application.Cms.TipoCampoModello.TestoLungo)
+                            {
+                                <textarea class="form-control @(Model.CampiNonValidi.Contains(campo.Nome) ? "is-invalid" : null)" id="m_@campo.Nome" name="m_@campo.Nome" rows="3" maxlength="@campo.LunghezzaMassima">@Model.Valori.GetValueOrDefault(campo.Nome)</textarea>
+                            }
+                            else
+                            {
+                                <input class="form-control @(Model.CampiNonValidi.Contains(campo.Nome) ? "is-invalid" : null)" id="m_@campo.Nome" name="m_@campo.Nome" value="@Model.Valori.GetValueOrDefault(campo.Nome)" maxlength="@campo.LunghezzaMassima"
+                                       placeholder="@(campo.Tipo == DvCms.Application.Cms.TipoCampoModello.Url ? "/pagina oppure https://..." : null)" />
+                            }
+                        </div>
+                    }
                     <div class="mb-3">
                         <label class="form-label" for="Contenuto">@_L["Contenuto"]</label>
                         <textarea class="form-control" id="Contenuto" name="Contenuto" rows="12" maxlength="100000">@Model.Contenuto</textarea>
@@ -50,3 +77,7 @@
         </div>
     </div>
 </div>
+
+@section Script {
+    <script src="~/js/auto-invio.js"></script>
+}

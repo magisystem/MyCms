@@ -17,11 +17,19 @@ public sealed class ServizioPagine : IServizioPagine
     private readonly IContestoTenant _tenant;
     private readonly IServizioAudit _audit;
     private readonly IOutbox _outbox;
+    private readonly RegistroModelliPagina _modelli;
     private readonly TimeProvider _orologio;
 
-    public ServizioPagine(ContestoDatabase contesto, IContestoTenant tenant, IServizioAudit audit, IOutbox outbox, TimeProvider orologio)
+    public ServizioPagine(
+        ContestoDatabase contesto,
+        IContestoTenant tenant,
+        IServizioAudit audit,
+        IOutbox outbox,
+        RegistroModelliPagina modelli,
+        TimeProvider orologio)
     {
         _outbox = outbox;
+        _modelli = modelli;
         _contesto = contesto;
         _tenant = tenant;
         _audit = audit;
@@ -100,7 +108,11 @@ public sealed class ServizioPagine : IServizioPagine
             bozza.Contenuto,
             Convert.ToBase64String(pagina.TokenConcorrenza),
             pagina.IdRevisionePubblicata != pagina.IdUltimaRevisioneBozza,
-            revisioni);
+            revisioni,
+            bozza.IdModello,
+            bozza.VersioneModello,
+            bozza.DatiModello,
+            _modelli.Ultimo(bozza.IdModello) is { } recente && recente.Versione > bozza.VersioneModello ? recente.Versione : null);
     }
 
     public Task<EsitoOperazione> CreaAsync(Guid idAttore, DatiNuovaPagina dati, CancellationToken annullamento)
@@ -133,7 +145,27 @@ public sealed class ServizioPagine : IServizioPagine
                 return new EsitoOperazione(CodiceEsito.PaginaInizialeEsistente);
             }
 
-            var (pagina, revisione) = Pagina.Crea(_tenant.IdTenant, idSito, lingua.Id, slug, titolo, contenuto, dati.PaginaIniziale, attore.Id, _orologio);
+            var modello = _modelli.Ultimo(string.IsNullOrWhiteSpace(dati.IdModello) ? RevisionePagina.ModelloPredefinito : dati.IdModello.Trim());
+            if (modello is null)
+            {
+                return new EsitoOperazione(CodiceEsito.DatiNonValidi, null, ["Modello"]);
+            }
+
+            var errori = _modelli.Valida(modello.Id, modello.Versione, dati.DatiModello, contenuto);
+            if (errori.Count > 0)
+            {
+                return new EsitoOperazione(CodiceEsito.DatiNonValidi, null, errori);
+            }
+
+            var (pagina, revisione) = Pagina.Crea(
+                _tenant.IdTenant,
+                idSito,
+                lingua.Id,
+                slug,
+                new ContenutoRevisione(titolo, contenuto, modello.Id, modello.Versione, RegistroModelliPagina.Normalizza(dati.DatiModello)),
+                dati.PaginaIniziale,
+                attore.Id,
+                _orologio);
             await _contesto.SalvaNuovaPaginaAsync(pagina, revisione, annullamento);
             return new EsitoOperazione(CodiceEsito.Riuscito, pagina.Id);
         });
@@ -191,10 +223,24 @@ public sealed class ServizioPagine : IServizioPagine
                 pagina.PaginaIniziale = dati.PaginaIniziale;
             }
 
+            // Il modello (e la sua versione) è quello della bozza: una revisione non cambia mai modello da sola.
             var bozza = await _contesto.RevisioniPagina.AsNoTracking().SingleAsync(revisione => revisione.Id == pagina.IdUltimaRevisioneBozza, annullamento);
-            if (!string.Equals(bozza.Titolo, titolo, StringComparison.Ordinal) || !string.Equals(bozza.Contenuto, contenuto, StringComparison.Ordinal))
+            var errori = _modelli.Valida(bozza.IdModello, bozza.VersioneModello, dati.DatiModello, contenuto);
+            if (errori.Count > 0)
             {
-                _contesto.RevisioniPagina.Add(pagina.AggiungiRevisione(titolo, contenuto, dati.Nota, attore.Id, _orologio));
+                return new EsitoOperazione(CodiceEsito.DatiNonValidi, null, errori);
+            }
+
+            var datiNormalizzati = RegistroModelliPagina.Normalizza(dati.DatiModello);
+            var invariati = datiNormalizzati.Count == bozza.DatiModello.Count
+                && datiNormalizzati.All(coppia => bozza.DatiModello.TryGetValue(coppia.Key, out var valore) && valore == coppia.Value);
+            if (!string.Equals(bozza.Titolo, titolo, StringComparison.Ordinal) || !string.Equals(bozza.Contenuto, contenuto, StringComparison.Ordinal) || !invariati)
+            {
+                _contesto.RevisioniPagina.Add(pagina.AggiungiRevisione(
+                    new ContenutoRevisione(titolo, contenuto, bozza.IdModello, bozza.VersioneModello, datiNormalizzati),
+                    dati.Nota,
+                    attore.Id,
+                    _orologio));
             }
 
             pagina.AggiornatoIlUtc = _orologio.GetUtcNow().UtcDateTime;
@@ -231,7 +277,10 @@ public sealed class ServizioPagine : IServizioPagine
             codiceLingua,
             revisione.NumeroRevisione,
             revisione.Id == pagina.IdRevisionePubblicata,
-            revisione.Id == pagina.IdUltimaRevisioneBozza);
+            revisione.Id == pagina.IdUltimaRevisioneBozza,
+            revisione.IdModello,
+            revisione.VersioneModello,
+            revisione.DatiModello);
     }
 
     public Task<EsitoOperazione> PubblicaAsync(Guid idAttore, Guid idPagina, string? tokenConcorrenza, CancellationToken annullamento) =>
@@ -263,7 +312,52 @@ public sealed class ServizioPagine : IServizioPagine
             }
 
             _contesto.Entry(pagina).Property(candidata => candidata.TokenConcorrenza).OriginalValue = token;
-            var nuova = pagina.AggiungiRevisione(origine.Titolo, origine.Contenuto, $"Ripristino della revisione {origine.NumeroRevisione}", attore.Id, _orologio);
+            var nuova = pagina.AggiungiRevisione(
+                new ContenutoRevisione(origine.Titolo, origine.Contenuto, origine.IdModello, origine.VersioneModello, origine.DatiModello),
+                $"Ripristino della revisione {origine.NumeroRevisione}",
+                attore.Id,
+                _orologio);
+            _contesto.RevisioniPagina.Add(nuova);
+            await _contesto.SaveChangesAsync(annullamento);
+            return new EsitoOperazione(CodiceEsito.Riuscito, nuova.Id);
+        });
+
+    public Task<EsitoOperazione> AggiornaModelloAsync(Guid idAttore, Guid idPagina, string? tokenConcorrenza, CancellationToken annullamento) =>
+        EseguiAsync(idAttore, "AggiornamentoModello", async attore =>
+        {
+            if (!TentaToken(tokenConcorrenza, out var token))
+            {
+                return new EsitoOperazione(CodiceEsito.DatiNonValidi);
+            }
+
+            var pagina = await TrovaPaginaAsync(idPagina, annullamento);
+            if (pagina is null)
+            {
+                return new EsitoOperazione(CodiceEsito.NonTrovato);
+            }
+
+            var bozza = await _contesto.RevisioniPagina.AsNoTracking().SingleAsync(revisione => revisione.Id == pagina.IdUltimaRevisioneBozza, annullamento);
+            var recente = _modelli.Ultimo(bozza.IdModello);
+            var attuale = _modelli.Trova(bozza.IdModello, bozza.VersioneModello);
+            if (recente is null || attuale is null || recente.Versione <= attuale.Versione)
+            {
+                return new EsitoOperazione(CodiceEsito.NonConsentito);
+            }
+
+            // Si portano i valori dei campi che esistono ancora; gli altri si scartano.
+            var dati = bozza.DatiModello.Where(coppia => recente.Campi.Any(campo => campo.Nome == coppia.Key)).ToDictionary(coppia => coppia.Key, coppia => coppia.Value, StringComparer.Ordinal);
+            var errori = _modelli.Valida(recente.Id, recente.Versione, dati, bozza.Contenuto);
+            if (errori.Count > 0)
+            {
+                return new EsitoOperazione(CodiceEsito.DatiNonValidi, null, errori);
+            }
+
+            _contesto.Entry(pagina).Property(candidata => candidata.TokenConcorrenza).OriginalValue = token;
+            var nuova = pagina.AggiungiRevisione(
+                new ContenutoRevisione(bozza.Titolo, bozza.Contenuto, recente.Id, recente.Versione, dati),
+                $"Passaggio al modello {recente.Id} versione {recente.Versione}",
+                attore.Id,
+                _orologio);
             _contesto.RevisioniPagina.Add(nuova);
             await _contesto.SaveChangesAsync(annullamento);
             return new EsitoOperazione(CodiceEsito.Riuscito, nuova.Id);

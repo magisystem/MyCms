@@ -6,8 +6,13 @@ public sealed record VistaPagina(
     string CodiceLingua,
     IReadOnlyList<IReadOnlyList<string>> Paragrafi,
     bool NonIndicizzare,
-    string? EtichettaAnteprima = null)
+    string? EtichettaAnteprima = null,
+    string IdModello = "testo-semplice",
+    int VersioneModello = 1,
+    IReadOnlyDictionary<string, string>? DatiModello = null)
 {
+    public string Dato(string nome) => DatiModello is not null && DatiModello.TryGetValue(nome, out var valore) ? valore : string.Empty;
+
     /// <summary>Divide il testo semplice in paragrafi (riga vuota) e righe: ogni riga sarà codificata da Razor.</summary>
     public static IReadOnlyList<IReadOnlyList<string>> DividiParagrafi(string contenuto)
     {

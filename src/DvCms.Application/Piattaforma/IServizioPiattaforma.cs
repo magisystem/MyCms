@@ -31,7 +31,7 @@ public enum CodiceEsito
     ChiaveSegretiMancante = 9,
 }
 
-public sealed record EsitoOperazione(CodiceEsito Codice, Guid? Id = null)
+public sealed record EsitoOperazione(CodiceEsito Codice, Guid? Id = null, IReadOnlyList<string>? CampiNonValidi = null)
 {
     public bool Riuscito => Codice == CodiceEsito.Riuscito;
 }

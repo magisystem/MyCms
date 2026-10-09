@@ -245,6 +245,74 @@ public partial class PagineAdminWebTest
         Assert.Contains("Testo uno", await (await scenario.SessioneA().GetAsync("/pagina")).Content.ReadAsStringAsync(Ct), StringComparison.Ordinal);
     }
 
+    [Fact]
+    public async Task ICampiDelModelloSceltoSonoNelModuloEIlSitoLiMostra()
+    {
+        await using var scenario = await ScenarioWeb.CreaAsync();
+        await scenario.CreaTenantAdminAsync("anna@esempio.it");
+        var anna = scenario.SessioneA();
+        await anna.AccediAsync("anna@esempio.it", DatiProva.PasswordProva);
+
+        var semplice = await (await anna.GetAsync("/admin/pagine/nuova")).Content.ReadAsStringAsync(Ct);
+        var presentazione = await (await anna.GetAsync("/admin/pagine/nuova?modello=presentazione")).Content.ReadAsStringAsync(Ct);
+        Assert.DoesNotContain("name=\"m_Sottotitolo\"", semplice, StringComparison.Ordinal);
+        Assert.Contains("name=\"m_Sottotitolo\"", presentazione, StringComparison.Ordinal);
+        Assert.Contains("name=\"m_UrlPulsante\"", presentazione, StringComparison.Ordinal);
+
+        using var creazione = await anna.InviaModuloAsync(
+            "/admin/pagine/nuova?modello=presentazione",
+            [
+                new("Titolo", "Vetrina"), new("Slug", "vetrina"), new("CodiceLingua", "it"), new("Contenuto", "Corpo della pagina"),
+                new("m_Sottotitolo", "Un <b>sottotitolo</b>"), new("m_EtichettaPulsante", "Scopri"), new("m_UrlPulsante", "/prodotti"),
+            ]);
+        var percorso = SessioneProva.Destinazione(creazione)!;
+        Assert.Matches("^/admin/pagine/[0-9a-f-]{36}$", percorso);
+        using var pubblica = await anna.InviaModuloAsync(percorso, [new("TokenConcorrenza", await LeggiTokenAsync(anna, percorso))], $"{percorso}?handler=Pubblica");
+
+        var html = await (await scenario.SessioneA().GetAsync("/vetrina")).Content.ReadAsStringAsync(Ct);
+        Assert.Contains("class=\"sottotitolo\"", html, StringComparison.Ordinal);
+        Assert.Contains("Un &lt;b&gt;sottotitolo&lt;/b&gt;", html, StringComparison.Ordinal);
+        Assert.Contains("<a class=\"pulsante\" href=\"/prodotti\">Scopri</a>", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task UnIndirizzoPericolosoDelPulsanteEvidenziatoENonSalvato()
+    {
+        await using var scenario = await ScenarioWeb.CreaAsync();
+        await scenario.CreaTenantAdminAsync("anna@esempio.it");
+        var anna = scenario.SessioneA();
+        await anna.AccediAsync("anna@esempio.it", DatiProva.PasswordProva);
+
+        using var risposta = await anna.InviaModuloAsync(
+            "/admin/pagine/nuova?modello=presentazione",
+            [new("Titolo", "Vetrina"), new("Slug", "vetrina"), new("CodiceLingua", "it"), new("Contenuto", "x"), new("m_EtichettaPulsante", "Clicca"), new("m_UrlPulsante", "javascript:alert(1)")]);
+
+        Assert.Equal(HttpStatusCode.OK, risposta.StatusCode);
+        var html = await risposta.Content.ReadAsStringAsync(Ct);
+        Assert.Contains("is-invalid", html, StringComparison.Ordinal);
+        Assert.Contains("Clicca", html, StringComparison.Ordinal);
+        Assert.Equal(0, await ContaPagineAsync(scenario));
+    }
+
+    [Fact]
+    public async Task UnAttributoNelPulsanteNonPuoEssereIniettato()
+    {
+        await using var scenario = await ScenarioWeb.CreaAsync();
+        await scenario.CreaTenantAdminAsync("anna@esempio.it");
+        var anna = scenario.SessioneA();
+        await anna.AccediAsync("anna@esempio.it", DatiProva.PasswordProva);
+        using var creazione = await anna.InviaModuloAsync(
+            "/admin/pagine/nuova?modello=presentazione",
+            [new("Titolo", "Vetrina"), new("Slug", "vetrina"), new("CodiceLingua", "it"), new("Contenuto", "x"), new("m_EtichettaPulsante", "Vai"), new("m_UrlPulsante", "/x\"onmouseover=\"alert(1)")]);
+        var percorso = SessioneProva.Destinazione(creazione)!;
+        using var pubblica = await anna.InviaModuloAsync(percorso, [new("TokenConcorrenza", await LeggiTokenAsync(anna, percorso))], $"{percorso}?handler=Pubblica");
+
+        var html = await (await scenario.SessioneA().GetAsync("/vetrina")).Content.ReadAsStringAsync(Ct);
+
+        Assert.DoesNotContain("\"onmouseover=\"", html, StringComparison.Ordinal);
+        Assert.Contains("&quot;onmouseover=&quot;", html, StringComparison.Ordinal);
+    }
+
     private static async Task<string> IdRevisioneAsync(SessioneProva sessione, string percorso, int numero)
     {
         using var pagina = await sessione.GetAsync(percorso);

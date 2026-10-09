@@ -1,7 +1,15 @@
 namespace DvCms.Application.Cms;
 
 /// <summary>Contenuto pubblicato di una pagina, pronto per il rendering pubblico.</summary>
-public sealed record PaginaPubblica(string Titolo, string Contenuto, string CodiceLingua, string Slug, DateTime PubblicatoIlUtc);
+public sealed record PaginaPubblica(
+    string Titolo,
+    string Contenuto,
+    string CodiceLingua,
+    string Slug,
+    DateTime PubblicatoIlUtc,
+    string IdModello,
+    int VersioneModello,
+    IReadOnlyDictionary<string, string> DatiModello);
 
 /// <summary>
 /// Lettura delle pagine per il sito pubblico (C-003). Lavora sul sito risolto dall'host; restituisce solo la

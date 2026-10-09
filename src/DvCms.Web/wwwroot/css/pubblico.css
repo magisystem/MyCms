@@ -30,3 +30,18 @@ h1 {
     color: #5c3d00;
     background: #ffe8a3;
 }
+
+.sottotitolo {
+    font-size: 1.25rem;
+    color: #52606d;
+}
+
+.pulsante {
+    display: inline-block;
+    padding: 0.6rem 1.2rem;
+    border-radius: 0.4rem;
+    color: #ffffff;
+    background: #1f4e8c;
+    text-decoration: none;
+    font-weight: 600;
+}

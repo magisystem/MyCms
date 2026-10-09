@@ -44,7 +44,10 @@ public class AnteprimaModel : PaginaAdmin
             anteprima.CodiceLingua,
             VistaPagina.DividiParagrafi(anteprima.Contenuto),
             NonIndicizzare: true,
-            $"{stato} (#{anteprima.NumeroRevisione})");
+            $"{stato} (#{anteprima.NumeroRevisione})",
+            anteprima.IdModello,
+            anteprima.VersioneModello,
+            anteprima.DatiModello);
         return Page();
     }
 }

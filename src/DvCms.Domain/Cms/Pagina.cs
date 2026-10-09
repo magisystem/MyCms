@@ -45,7 +45,7 @@ public class Pagina
 
     public byte[] TokenConcorrenza { get; set; } = [];
 
-    /// <summary>Crea la pagina con la sua prima revisione (bozza).</summary>
+    /// <summary>Crea la pagina con la sua prima revisione (bozza), con il modello predefinito.</summary>
     public static (Pagina Pagina, RevisionePagina Revisione) Crea(
         Guid idTenant,
         Guid idSito,
@@ -53,6 +53,18 @@ public class Pagina
         string slug,
         string titolo,
         string contenuto,
+        bool paginaIniziale,
+        Guid idAutore,
+        TimeProvider orologio) =>
+        Crea(idTenant, idSito, idLingua, slug, new ContenutoRevisione(titolo, contenuto), paginaIniziale, idAutore, orologio);
+
+    /// <summary>Crea la pagina con la sua prima revisione (bozza).</summary>
+    public static (Pagina Pagina, RevisionePagina Revisione) Crea(
+        Guid idTenant,
+        Guid idSito,
+        Guid idLingua,
+        string slug,
+        ContenutoRevisione contenuto,
         bool paginaIniziale,
         Guid idAutore,
         TimeProvider orologio)
@@ -77,17 +89,21 @@ public class Pagina
             CreatoIlUtc = adesso,
             AggiornatoIlUtc = adesso,
         };
-        var revisione = pagina.AggiungiRevisione(titolo, contenuto, "Creazione", idAutore, orologio);
+        var revisione = pagina.AggiungiRevisione(contenuto, "Creazione", idAutore, orologio);
         return (pagina, revisione);
     }
 
     /// <summary>Aggiunge una revisione (nuova bozza) e la rende l'ultima. Le revisioni esistenti non cambiano mai.</summary>
-    public RevisionePagina AggiungiRevisione(string titolo, string contenuto, string? nota, Guid idAutore, TimeProvider orologio)
+    public RevisionePagina AggiungiRevisione(string titolo, string contenuto, string? nota, Guid idAutore, TimeProvider orologio) =>
+        AggiungiRevisione(new ContenutoRevisione(titolo, contenuto), nota, idAutore, orologio);
+
+    /// <summary>Aggiunge una revisione (nuova bozza) e la rende l'ultima. Le revisioni esistenti non cambiano mai.</summary>
+    public RevisionePagina AggiungiRevisione(ContenutoRevisione contenuto, string? nota, Guid idAutore, TimeProvider orologio)
     {
         ArgumentNullException.ThrowIfNull(orologio);
 
         var adesso = orologio.GetUtcNow().UtcDateTime;
-        var revisione = RevisionePagina.Crea(this, UltimoNumeroRevisione + 1, titolo, contenuto, nota, idAutore, adesso, orologio);
+        var revisione = RevisionePagina.Crea(this, UltimoNumeroRevisione + 1, contenuto, nota, idAutore, adesso, orologio);
         UltimoNumeroRevisione = revisione.NumeroRevisione;
         IdUltimaRevisioneBozza = revisione.Id;
         AggiornatoIlUtc = adesso;

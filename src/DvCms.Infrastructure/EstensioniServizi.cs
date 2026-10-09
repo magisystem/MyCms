@@ -72,6 +72,7 @@ public static class EstensioniServizi
         servizi.TryAddScoped<IServizioRecuperoPassword, ServizioRecuperoPassword>();
         servizi.TryAddScoped<ServizioPopolamento>();
         servizi.TryAddScoped<IServizioPiattaforma, ServizioPiattaforma>();
+        servizi.TryAddSingleton(new RegistroModelliPagina(RegistroModelliPagina.Predefiniti));
         servizi.TryAddScoped<IServizioPagine, ServizioPagine>();
         servizi.TryAddScoped<IServizioPaginePubbliche, ServizioPaginePubbliche>();
     }
