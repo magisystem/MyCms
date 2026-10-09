@@ -7,7 +7,7 @@ Questo è il modello logico iniziale; i nomi e i tipi definitivi vanno tradotti 
 - `Tenant`: cliente/organizzazione contrattuale della piattaforma. Il tenant primario (di gestione) ha `IsPrimary` vero: ne esiste uno solo ed è creato dal seeding (ADR-0014).
 - `Site`: sito appartenente a un tenant. Un tenant può avere più siti.
 - `SiteDomain`: host registrato, normalizzato e associato a un sito, con `VerifiedAtUtc`, `VerifiedByUserId` e stato attivo/disattivo. La verifica è manuale (ADR-0014).
-- `User`: account locale (tabella `Users`, ADR-0016). Colonna `Role` (`PlatformAdmin`, `TenantAdmin`, `Utente`). Il `PlatformAdmin` è globale (`TenantId` nullo); `TenantAdmin` e `Utente` hanno `TenantId` e appartengono a un solo tenant. Un tenant può avere più `TenantAdmin`. Vincolo: `PlatformAdmin` ⇔ `TenantId` nullo. Indice univoco su `(TenantId, NormalizedEmail)`: la stessa email può esistere in tenant diversi; fra i `PlatformAdmin` l'email è unica perché in SQL Server i NULL sono considerati uguali. Contiene hash della password, `SecurityStamp`, stato, contatore dei tentativi falliti e blocco temporaneo.
+- `User`: account locale (tabella `Utenze`, ADR-0016). Colonna `Role` (`PlatformAdmin`, `TenantAdmin`, `Utente`). Il `PlatformAdmin` è globale (`TenantId` nullo); `TenantAdmin` e `Utente` hanno `TenantId` e appartengono a un solo tenant. Un tenant può avere più `TenantAdmin`. Vincolo: `PlatformAdmin` ⇔ `TenantId` nullo. Indice univoco su `(TenantId, NormalizedEmail)`: la stessa email può esistere in tenant diversi; fra i `PlatformAdmin` l'email è unica perché in SQL Server i NULL sono considerati uguali. Contiene hash della password, `SecurityStamp`, stato, contatore dei tentativi falliti e blocco temporaneo.
 - `TenantEmailSettings`: `EmailProvider` del tenant (`Smtp`, `Graph`, `Gmail`, `SendGrid`) e impostazioni del canale scelto; segreti cifrati (ADR-0015).
 - `TenantGuestProfile`: profilo del `Guest` del tenant, creato insieme al tenant, senza impostazioni: il Guest vede tutto il contenuto pubblicato.
 - `Site.CustomerRegistrationEnabled`: abilita la registrazione degli acquirenti; vero solo se l'e-commerce è attivo (default falso).
@@ -71,6 +71,37 @@ I confini definitivi di imposte, spedizioni, prenotazione giacenza, multi-valuta
 - `OutboxMessage`: evento registrato atomicamente con la transazione di dominio.
 - `AuditLog`: attore, azione, risorsa, tenant, esito e timestamp; evitare segreti e payload sensibili.
 - `Redirect`: sito, source path, destination, status code, data di creazione.
+
+## Nomi delle tabelle (italiano)
+
+I nomi delle **tabelle** del database sono in italiano. Classi, proprietà e colonne restano in inglese (identificatori del codice, AGENTS.md regola 16): la mappatura è esplicita nella configurazione EF Core (`ToTable("...")`), mai ricavata dal nome della classe.
+
+Convenzione: PascalCase, plurale, senza accenti, spazi, apostrofi o trattini bassi. Indici, chiavi e vincoli seguono lo stesso schema (ad esempio `PK_Utenze`, `IX_Utenze_TenantId_NormalizedEmail`).
+
+| Entità | Tabella | Entità | Tabella |
+|---|---|---|---|
+| `Tenant` | `Tenant` (eccezione, vedi sotto) | `Product` | `Prodotti` |
+| `Site` | `Siti` | `ProductVariant` | `VariantiProdotto` |
+| `SiteDomain` | `DominiSito` | `ProductCategory` | `CategorieProdotto` |
+| `TenantGuestProfile` | `ProfiliGuest` | `ProductCollection` | `CollezioniProdotto` |
+| `User` | `Utenze` | `Price` | `Prezzi` |
+| `TenantEmailSettings` | `ImpostazioniEmailTenant` | `InventoryItem` | `ArticoliMagazzino` |
+| `PasswordRecoveryRequest` | `RichiesteRecuperoPassword` | `InventoryMovement` | `MovimentiMagazzino` |
+| `Page` | `Pagine` | `Cart` | `Carrelli` |
+| `PageRevision` | `RevisioniPagina` | `CartItem` | `RigheCarrello` |
+| `Template` | `Modelli` | `Order` | `Ordini` |
+| `TemplateVersion` | `VersioniModello` | `OrderLine` | `RigheOrdine` |
+| `SiteThemeSettings` | `ImpostazioniTemaSito` | `PaymentAttempt` | `TentativiPagamento` |
+| `MediaAsset` | `RisorseMedia` | `Payment` | `Pagamenti` |
+| `OutboxMessage` | `MessaggiOutbox` | `Refund` | `Rimborsi` |
+| `AuditLog` | `RegistroAudit` | `Shipment` | `Spedizioni` |
+| `Redirect` | `Reindirizzamenti` | `WebhookEvent` | `EventiWebhook` |
+
+Note:
+
+- La tabella degli account si chiama `Utenze` (e non `Utenti`) per non confondersi con il ruolo `Utente`, che è l'acquirente dell'e-commerce: `Utenze` contiene gli account di tutti i ruoli.
+- `Tenant` mantiene il termine inglese, usato in tutto il progetto (`TenantId`, `TenantAdmin`); un'alternativa italiana sarebbe `Organizzazioni`, da decidere (vedi `open-questions.md`).
+- Le tabelle nuove aggiunte da milestone future seguono la stessa convenzione e si aggiungono a questa tabella nello stesso PR.
 
 ## Regole per gli ID e i vincoli
 

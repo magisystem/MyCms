@@ -13,6 +13,10 @@ PostgreSQL non è supportato e non va introdotto (provider, migrazioni, test o C
 - Una sola serie di migrazioni EF Core, con il relativo model snapshot, nel progetto Infrastructure. Ogni PR che modifica lo schema aggiorna il modello, genera la migrazione, la revisiona a mano e verifica che si applichi a un database vuoto.
 - Il codice provider-specifico (EF Core SQL Server, migrazioni, eventuale SQL raw) resta in Infrastructure. Domain e Application non dipendono da EF Core né da tipi SQL Server.
 
+## Nomi delle tabelle
+
+Tabelle in italiano, PascalCase, plurale, con mappatura esplicita (`ToTable`); colonne e proprietà in inglese. L'elenco è in [`domain-model.md`](domain-model.md#nomi-delle-tabelle-italiano).
+
 ## Compatibilità del modello dati
 
 - Identificatori `Guid` generati dall'applicazione, preferibilmente sequenziali (`Guid.CreateVersion7()`), per limitare la frammentazione degli indici cluster. Configurare esplicitamente chiavi e indici.

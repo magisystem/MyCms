@@ -27,20 +27,22 @@ Le scelte sotto non sono definite completamente. Gli agenti devono evitare di in
 - `Guest` per tenant senza impostazioni: vede tutto ciò che è pubblico; limitare la visibilità è un'evoluzione futura.
 - Duplicati fra `admin-theme/` e `wwwroot` accettati; li ripulirà il committente.
 - `admin-theme/`: licenze possedute, repository privato; `tabler` e `tabler-icons` copiati per intero in `wwwroot`.
-- Account locali propri nella tabella `Users`, senza ASP.NET Core Identity (ADR-0016). Seeding idempotente del tenant primario e del primo `PlatformAdmin` da configurazione e segreti (ADR-0014).
+- Account locali propri nella tabella `Utenze`, senza ASP.NET Core Identity, con password BCrypt e blocco di 5 minuti (ADR-0016). Comando di seeding `DvCms.Web seed`. Nomi delle tabelle in italiano (`domain-model.md`). Seeding idempotente del tenant primario e del primo `PlatformAdmin` da configurazione e segreti (ADR-0014).
 - Tenant, utenti `TenantAdmin` e domini gestiti manualmente dal `PlatformAdmin`; certificati TLS dell'hosting tramite reverse proxy (ADR-0014).
 - Admin con Tabler e Tabler Icons (ADR-0013).
 
 ## Account e autenticazione
 
 - Solo account locali o SSO/OIDC richiesto per clienti enterprise?
-- Parametri dell'hash password (iterazioni di partenza: almeno 210.000, configurabili), soglie e durata del blocco account, policy password (lunghezza, complessità). Argon2id (pacchetto esterno) o PBKDF2 con primitive .NET (proposta). I limiti del recupero password sono quelli di ADR-0011.
+- Soglia dei tentativi falliti prima del blocco (proposta: 5; il blocco dura 5 minuti), lunghezza massima della password e policy password (lunghezza minima, complessità). I limiti del recupero password sono quelli di ADR-0011.
 
 ## Da confermare per M0/M1 (vedi `docs/delivery/plan-m0-m1.md`)
 
+- Nomi delle tabelle: colonne in inglese (proposta, perché solo le tabelle sono state richieste in italiano) e `Tenant` come unica eccezione terminologica (alternativa: `Organizzazioni`).
+
 - Framework di test: xUnit (proposta).
-- Ruolo come colonna della tabella `Users` (quattro ruoli fissi, nessuna tabella di ruoli) e seeding dei tenant di test solo in `Development` (proposte).
-- Nome e forma del comando di seeding (ad esempio `DvCms.Web seed`).
+- Ruolo come colonna della tabella `Utenze` (quattro ruoli fissi, nessuna tabella di ruoli) e seeding dei tenant di test solo in `Development` (proposte).
+- Verifica di licenza e manutenzione di `BCrypt.Net-Next` prima di aggiungerlo (regola 11).
 - Credenziali iniziali del `TenantAdmin` in M1: password temporanea mostrata una volta, cambio obbligatorio al primo accesso; invito via email in M1b (proposta).
 - Email di un `TenantAdmin` o `Utente` uguale a quella di un `PlatformAdmin`: rifiutata alla creazione (proposta).
 - SQL Server in CI: service container; in locale istanza o container con connection string da environment variable (proposta).

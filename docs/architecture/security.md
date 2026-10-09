@@ -4,7 +4,7 @@ La sicurezza è un requisito di progetto, con particolare attenzione a isolament
 
 ## Identità e autorizzazione
 
-- Account locali con tabelle e gestione proprie, senza ASP.NET Core Identity (ADR-0016): password con PBKDF2-HMAC-SHA512 (sale per utente, iterazioni configurabili, confronto a tempo costante), cookie authentication del framework con `SecurityStamp` verificato a ogni richiesta, blocco temporaneo dopo tentativi falliti, rate limiting e errore uniforme al login. Cookie sicuri per l'admin. Nessuna registrazione self-service per account amministrativi; la registrazione degli acquirenti esiste solo nei siti con e-commerce (ADR-0011, ADR-0014).
+- Account locali con tabelle e gestione proprie, senza ASP.NET Core Identity (ADR-0016): password con BCrypt (work factor 12 configurabile, pre-hash SHA-384, lunghezza massima limitata, rehash al login), cookie authentication del framework con `SecurityStamp` verificato a ogni richiesta, blocco di 5 minuti dopo 5 tentativi falliti consecutivi, rate limiting e errore uniforme al login. Cookie sicuri per l'admin. Nessuna registrazione self-service per account amministrativi; la registrazione degli acquirenti esiste solo nei siti con e-commerce (ADR-0011, ADR-0014).
 - Il `TenantAdmin` accede solo al proprio tenant; il `PlatformAdmin` a tutti, con i poteri del `TenantAdmin` più il menu Platform.
 - Autorizzare ogni operazione in base a identità, tenant dell'account, sito, ruolo e risorsa.
 - Ruoli: `PlatformAdmin` (globale), `TenantAdmin` (un solo tenant, più `TenantAdmin` per tenant), `Utente` (acquirente di un tenant, solo ordini), `Guest` (anonimo, sempre vincolato a un tenant).
