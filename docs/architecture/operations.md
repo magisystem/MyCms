@@ -4,7 +4,7 @@
 
 - Reverse proxy/CDN/WAF/TLS secondo hosting.
 - Una o più istanze stateless ASP.NET Core.
-- SQL Server gestito o operato con backup e monitoraggio affidabili (target primario); mantenere PostgreSQL nella matrice di compatibilità supportata.
+- SQL Server gestito o operato con backup e monitoraggio affidabili.
 - Object storage per media e file.
 - Cache distribuita quando il deployment ha più istanze o richiede cache condivisa.
 - Worker per outbox, email, webhook, trasformazione immagini e sitemap.
@@ -17,6 +17,17 @@ Non introdurre Kubernetes, broker o servizi separati per moda. Scegliere l'hosti
 - Mai committare password, connection string reali, API key o certificati privati.
 - Separare ambienti dev/test/staging/prod.
 - Verificare le configurazioni di dominio e proxy per ogni ambiente.
+
+## Domini e certificati (procedura manuale)
+
+Tenant, domini e certificati sono gestiti dagli operatori (ADR-0014). Il runbook da completare prima del primo cliente copre:
+
+1. Richiesta del dominio da parte del cliente e verifica del possesso fuori banda.
+2. Configurazione DNS verso l'infrastruttura.
+3. Emissione e installazione del certificato TLS sul reverse proxy/hosting.
+4. Registrazione del dominio nell'area di piattaforma e marcatura come verificato (chi e quando).
+5. Verifica che l'host risolva il sito corretto e che host non registrati ricevano risposta controllata.
+6. Monitoraggio scadenze dei certificati con promemoria o alert.
 
 ## Background work e outbox
 
@@ -42,7 +53,7 @@ Definire prima della produzione RPO/RTO, retention e responsabilità operative. 
 
 ## Ambienti
 
-- Local: SQL Server come default; PostgreSQL disponibile come secondo target. Usare container o installazioni documentate e storage locale solo per sviluppo.
+- Local: SQL Server (container o installazione documentata) e storage locale solo per sviluppo.
 - CI: DB dedicato effimero, migrazioni e test automatici.
 - Staging: domini/test provider e dati non reali.
 - Production: TLS, secret manager, backup, monitoring, deploy progressivo e rollback.

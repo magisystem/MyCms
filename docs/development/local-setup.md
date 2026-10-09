@@ -5,7 +5,7 @@ Questo file descrive il target di setup; i comandi precisi vanno completati dura
 ## Prerequisiti
 
 - .NET 10 SDK aggiornato.
-- SQL Server come requisito locale predefinito; PostgreSQL va avviato quando si lavora sulla compatibilità del secondo provider. Usare versioni supportate dai rispettivi provider EF Core.
+- SQL Server (Developer o Express, anche in container) in una versione supportata dal provider EF Core 10.
 - Git e un IDE/editor C#.
 - Node/npm soltanto per sviluppare e creare il bundle del page builder; non serve per eseguire il backend in produzione.
 - Tool di container opzionale per servizi locali.
@@ -20,14 +20,19 @@ Questo file descrive il target di setup; i comandi precisi vanno completati dura
 ## Flusso previsto dopo il bootstrap
 
 1. Ripristinare i pacchetti NuGet.
-2. Avviare SQL Server (default) oppure PostgreSQL se si sta verificando il provider secondario.
-3. Configurare `Database:Provider` e la connection string corrispondente (`SqlServer` di default oppure `PostgreSql`).
-4. Applicare la serie di migrazioni associata al provider selezionato tramite il comando documentato dalla solution. Non applicare migrazioni di un provider a un database dell'altro provider.
-5. Avviare `Cms.Web`.
-6. Eseguire test unitari e d'integrazione.
-7. Per il builder, entrare in `frontend/page-builder`, installare le dipendenze dal lockfile e avviare/buildare l'asset secondo lo script documentato.
+2. Avviare SQL Server.
+3. Configurare la connection string tramite user-secrets o environment variables.
+4. Applicare le migrazioni EF Core con il comando documentato dalla solution.
+5. Creare il primo `PlatformAdmin` con il comando di bootstrap documentato (nessuna credenziale predefinita).
+6. Avviare `Cms.Web`.
+7. Eseguire test unitari e d'integrazione.
+8. Per il builder, entrare in `frontend/page-builder`, installare le dipendenze dal lockfile e avviare/buildare l'asset secondo lo script documentato.
 
 Gli agenti non devono inventare comandi finali prima che i file di progetto siano stati creati. Aggiornare questa pagina nello stesso PR del bootstrap.
 
 
-Per i dettagli sulla doppia serie di migrazioni e sui test cross-provider, consultare [Strategia provider database](../architecture/database-providers.md).
+Per i dettagli su migrazioni e test, consultare [Database SQL Server](../architecture/database.md).
+
+## Asset dell'admin
+
+Il tema admin (Tabler e Tabler Icons) è in `admin-theme/` come sorgente di riferimento (ADR-0013). Al bootstrap si copiano in `wwwroot` solo gli asset usati; non servire direttamente la cartella. Npm non è necessario per Tabler: `dist/` è già compilato.

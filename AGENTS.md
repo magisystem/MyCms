@@ -11,8 +11,8 @@ Implementare un CMS SaaS multi-tenant in C#/.NET, con rendering server-side Razo
 1. **Non introdurre React, Angular, Blazor WebAssembly o un backend Node.js** senza una decisione architetturale approvata. L'admin standard è Razor Pages. HTMX è opzionale, non una dipendenza globale.
 2. L'unico bundle JavaScript complesso previsto è il page builder GrapesJS e le sue estensioni. Il suo uso non cambia il backend, che resta ASP.NET Core.
 3. Usare .NET 10 / ASP.NET Core 10 / EF Core 10, mantenendo le patch aggiornate. Non mescolare major version di EF Core e provider.
-3a. SQL Server è il provider primario/predefinito; PostgreSQL è un provider supportato. Mantenere due serie distinte di migration EF Core e test reali per entrambi. Ogni cambiamento di schema aggiorna entrambe le serie nello stesso PR salvo deroga approvata. Vedi `docs/architecture/database-providers.md` e ADR-0003.
-3b. Non fare affidamento su tipi, collazioni, funzioni SQL, indicizzazione JSON o comportamento transazionale specifici di un provider senza isolare la differenza e testarla su entrambi. EF Core InMemory/SQLite non sostituiscono test reali dei provider.
+3a. SQL Server è l'unico database supportato (ADR-0012). Una sola serie di migration EF Core. Non aggiungere PostgreSQL o altri provider senza un nuovo ADR. Vedi `docs/architecture/database.md`.
+3b. Il codice specifico di SQL Server (tipi, hint, SQL raw) resta in Infrastructure, parametrizzato e testato. EF Core InMemory/SQLite non sostituiscono test reali su SQL Server.
 4. Implementare un **monolite modulare**. Non introdurre microservizi, broker o infrastrutture distribuite senza requisito misurabile e ADR.
 5. Ogni query e operazione su dati tenant-scoped deve derivare da un contesto tenant attendibile e applicare autorizzazione e isolamento lato server. Non fidarsi di `TenantId` inviati dal browser.
 6. I test di isolamento tenant sono obbligatori per ogni nuova area dati multi-tenant.
@@ -22,6 +22,9 @@ Implementare un CMS SaaS multi-tenant in C#/.NET, con rendering server-side Razo
 10. Non memorizzare dati carta. Non inventare comportamento di pagamento, IVA, spedizioni o rimborsi prima delle decisioni di prodotto e del provider.
 11. Non aggiungere dipendenze NuGet/npm senza spiegare perché sono necessarie, verificare licenza e manutenzione e limitarle al modulo che le richiede.
 12. Non modificare un ADR accettato in silenzio. Proporre un nuovo ADR o aggiornare quello esistente con motivazione, alternative e conseguenze.
+13. I ruoli sono `PlatformAdmin`, `TenantAdmin`, `Utente`, `Guest` (ADR-0011). Solo il `PlatformAdmin` può creare o elevare utenti `TenantAdmin`; nessun ruolo può assegnarsi un ruolo superiore. Il controllo è lato server e ha test di non-escalation. Non esiste registrazione self-service.
+14. L'admin usa **Tabler** (tema) e **Tabler Icons** (icone) da `admin-theme/` (ADR-0013). Copiare in `wwwroot` solo gli asset usati. Non usare `admin-theme/tabler-emails`, `tabler-illustrations` e `tabler-avatars` (licenze non verificate) e non servire direttamente `admin-theme/`.
+15. Verifica dei domini e certificati TLS sono manuali (ADR-0014): non implementare ACME né verifica DNS automatica.
 
 ## Processo di lavoro richiesto
 
@@ -57,9 +60,11 @@ La prima implementazione deve essere una **vertical slice tenant + sito + domini
 - solution compilabile;
 - contesto tenant risolto da host registrato;
 - isolamento tenant applicato sul server;
-- una migrazione DB;
-- pagina amministrativa Razor protetta per creare/modificare una pagina di prova;
+- una migrazione DB (SQL Server);
+- login e un `PlatformAdmin` creato da comando di bootstrap, senza credenziali predefinite;
+- area di piattaforma minima per creare un tenant, un sito, un dominio (verificato a mano) e un utente `TenantAdmin`;
+- pagina amministrativa Razor protetta (layout Tabler) per creare/modificare una pagina di prova;
 - rendering pubblico Razor di una pagina pubblicata;
-- test automatici che provino accesso consentito e tentativo di accesso cross-tenant negato.
+- test automatici che provino accesso consentito, tentativo di accesso cross-tenant negato e tentativi di escalation di ruolo respinti.
 
 Non implementare subito l'e-commerce o il builder completo. Prima dimostrare che il confine tenant e il flusso di pubblicazione sono solidi.

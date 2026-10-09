@@ -9,22 +9,36 @@ Le scelte sotto non sono definite completamente. Gli agenti devono evitare di in
 - Locales supportate all'MVP e comportamento multilingua.
 - Requisiti quantitativi di carico, disponibilità e retention.
 
+## Decisioni prese (2026-10-09)
+
+- SQL Server è l'unico database (ADR-0012).
+- Ruoli `PlatformAdmin`, `TenantAdmin`, `Utente`, `Guest` (ADR-0011).
+- Tenant, utenti `TenantAdmin`, domini e certificati gestiti manualmente dal `PlatformAdmin`/operatori (ADR-0014).
+- Admin con Tabler e Tabler Icons (ADR-0013).
+
 ## Identity
 
 - Solo account locali o SSO/OIDC richiesto per clienti enterprise?
-- Policy password/MFA e processo di recupero account.
+- Policy password/MFA (in particolare per `PlatformAdmin` e `TenantAdmin`) e processo di recupero account (serve un provider email?).
+- `Guest`: è solo il visitatore anonimo o serve anche un account in sola lettura (es. revisore di preview)?
+- Permessi dell'`Utente`: confermare l'insieme iniziale (`Content.Edit`, `Content.Publish`, `Media.Manage`, `Store.Manage`).
+- Un `TenantAdmin` può avere più tenant? Può creare altri `TenantAdmin`? (decisione attuale: no, solo `PlatformAdmin`).
+- Account degli acquirenti dello store: tenant-scoped e separati dagli account admin?
 - Il supporto platform admin richiede approvazione/audit o impersonation controllata?
 
 ## Dati e hosting
 
 - Hosting cloud e regione/residenza dati.
-- Hosting/edition di SQL Server (primario), target di hosting PostgreSQL per la suite secondaria e relative strategie backup/restore. La scelta del provider primario è già definita.
+- Hosting/edition di SQL Server e relative strategie backup/restore. Il database è già definito (SQL Server, ADR-0012).
 - Object storage provider e CDN.
 - RPO/RTO, retention backup e obiettivi SLA.
 
 ## UI
 
-- Libreria CSS/admin (può restare CSS semplice al bootstrap).
+- Licenze: `tabler-emails` e `tabler-illustrations` sono a pagamento (licenza personale) e `tabler-avatars` non ha licenza visibile. Il repository è privato? Vanno tenuti, rimossi o spostati fuori dal repository?
+- Dimensione di `admin-theme/` (centinaia di MB): tenerla nel repository o ridurla ai soli `tabler` e `tabler-icons`?
+
+- ~~Libreria CSS/admin~~: decisa, Tabler + Tabler Icons (ADR-0013).
 - HTMX da aggiungere solo in base a una schermata/requisito preciso.
 - Design system e requisiti accessibilità dettagliati.
 

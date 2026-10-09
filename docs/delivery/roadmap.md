@@ -6,26 +6,30 @@ La roadmap è ordinata per dipendenze. Le stime vanno fatte solo dopo un primo e
 
 - Creare solution .NET 10, configurare nullable, formatter/analyzer e CI.
 - Decidere framework test, convenzioni ID, logging, gestione segreti e hosting target iniziale.
-- Stabilire le due serie di migrazioni EF Core (SQL Server primaria e PostgreSQL secondaria) e il setup locale.
+- Configurare SQL Server ed EF Core con una serie di migrazioni e il setup locale.
+- Preparare il layout admin Razor con Tabler e Tabler Icons (solo gli asset usati in `wwwroot`).
 - Creare i primi ADR specifici se si prendono decisioni nuove.
 
-**Exit criteria:** build pulita, test vuoto eseguibile in CI, SQL Server e PostgreSQL configurabili, entrambe le migrazioni iniziali applicabili da zero e setup locale documentato.
+**Exit criteria:** build pulita, test vuoto eseguibile in CI, SQL Server configurabile, migrazione iniziale applicabile da zero, layout admin Tabler renderizzato e setup locale documentato.
 
 ## M1 — Vertical slice tenant/sito/pagina
 
 - Tenant, site e domain registry.
+- Ruoli `PlatformAdmin`, `TenantAdmin`, `Utente`, `Guest` e comando di bootstrap del primo `PlatformAdmin`.
+- Area di piattaforma minima: crea tenant, sito, dominio (verificato a mano) e utente `TenantAdmin`.
 - Context tenant derivato dal dominio e membership admin.
 - Pagina semplice draft/published.
 - Rendering Razor per pagina pubblicata.
 - Test d'isolamento cross-tenant.
 
-**Exit criteria:** due tenant possono pubblicare lo stesso slug su due siti/domìni distinti; nessun accesso incrociato.
+**Exit criteria:** un `PlatformAdmin` crea due tenant con i rispettivi `TenantAdmin`; i due tenant pubblicano lo stesso slug su siti/domìni distinti; nessun accesso incrociato; tentativi di escalation di ruolo respinti.
 
 ## M2 — CMS guidato e revisioni
 
 - CRUD pagine e slug.
 - Template guidati iniziali e form Razor.
 - Revisioni immutabili, preview sicura, concorrenza optimistic.
+- Outbox minimo (tabella e worker semplice) per publish e invalidazione cache; la versione production-ready resta in M6.
 - SEO base, redirects e invalidazione cache.
 
 **Exit criteria:** creare/modificare/preview/publish/revert una pagina e verificare HTML pubblico.

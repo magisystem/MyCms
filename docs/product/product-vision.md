@@ -6,15 +6,12 @@ Realizzare un CMS SaaS multi-tenant in cui un operatore della piattaforma può g
 
 ## Utenti
 
-- **Platform operator:** gestisce tenant, piani, domini e operazioni tecniche di piattaforma.
-- **Tenant owner:** gestisce il cliente, gli utenti e i siti assegnati.
-- **Site administrator:** configura un sito, il tema e le impostazioni SEO.
-- **Editor:** modifica pagine e media.
-- **Publisher:** revisiona e pubblica contenuti.
-- **Store manager:** gestisce catalogo, inventario e ordini.
-- **Visitor/customer:** naviga il sito pubblico ed eventualmente acquista.
+- **PlatformAdmin:** operatore della piattaforma. Crea e gestisce tenant, siti, domini e utenti `TenantAdmin`.
+- **TenantAdmin:** amministratore di un cliente. Gestisce siti, tema, impostazioni SEO, contenuti e gli utenti `Utente` del proprio tenant.
+- **Utente:** lavora sui contenuti del tenant (modifica, pubblicazione, media, negozio) in base ai permessi ricevuti.
+- **Guest:** visitatore non autenticato che naviga il sito pubblico; ha accesso all'anteprima solo con token a scadenza breve.
 
-Un utente può avere membership in più tenant, con ruoli diversi per ciascuno.
+Un account può avere membership in più tenant, con ruoli diversi per ciascuno. I clienti non si registrano da soli: gli account sono creati dagli operatori (ADR-0014). Gli acquirenti dello store sono una questione aperta.
 
 ## Principi di prodotto
 

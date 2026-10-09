@@ -1,8 +1,8 @@
 # ADR-0003 — .NET 10, EF Core 10, SQL Server primario e PostgreSQL supportato
 
-- **Stato:** Accepted
+- **Stato:** Superseded in parte da [ADR-0012](ADR-0012-sql-server-only.md)
 - **Data:** 2026-10-09
-- **Nota:** questa decisione aggiorna la baseline iniziale PostgreSQL-first prima del bootstrap applicativo.
+- **Nota:** il supporto a PostgreSQL e la doppia serie di migrazioni non sono più in vigore (ADR-0012); restano validi .NET 10, EF Core 10 e SQL Server. Il testo sotto è conservato come storico. Questa decisione aggiornava la baseline iniziale PostgreSQL-first prima del bootstrap applicativo.
 
 ## Contesto
 

@@ -2,18 +2,18 @@
 
 ## Scelta
 
-Database relazionale condiviso (SQL Server primario, PostgreSQL supportato), tabelle condivise e isolamento logico per `TenantId`. Il modello ammette più siti e domini per tenant. Non creare un database per cliente per default; prevedere una futura opzione di isolamento dedicato solo con requisiti di compliance, scala o contratto.
+Database SQL Server condiviso, tabelle condivise e isolamento logico per `TenantId`. Il modello ammette più siti e domini per tenant. Non creare un database per cliente per default; prevedere una futura opzione di isolamento dedicato solo con requisiti di compliance, scala o contratto.
 
 ## Risoluzione host
 
-1. Accettare solo host normalizzati e registrati in `SiteDomains`.
+1. Accettare solo host normalizzati e registrati in `SiteDomains`, verificati e attivi. La registrazione e la verifica sono manuali, a cura del `PlatformAdmin` (ADR-0014).
 2. Normalizzare case, porta e formato del nome DNS secondo policy; non fidarsi di header forwarded inviati da client non attendibili.
 3. Configurare esplicitamente proxy attendibili prima di utilizzare `X-Forwarded-Host` o header equivalenti.
 4. Risolvere host → `SiteId` → `TenantId` tramite fonte dati attendibile.
 5. Rendere il `TenantContext` request-scoped e non modificabile dall'utente della richiesta.
 6. Per job/background work, includere tenant/site esplicitamente nel messaggio e verificare il contesto prima dell'esecuzione.
 
-L'admin su un dominio centrale può gestire più tenant: in tal caso l'utente seleziona un tenant, ma il server deve verificare una membership esplicita. La selezione UI non è autorizzazione.
+L'admin su un dominio centrale può gestire più tenant: in tal caso l'utente seleziona un tenant, ma il server deve verificare una membership esplicita. La selezione UI non è autorizzazione. Il dominio centrale dell'admin è configurato esplicitamente e non è un host di sito pubblico.
 
 ## Difesa a strati
 
@@ -21,11 +21,13 @@ L'admin su un dominio centrale può gestire più tenant: in tal caso l'utente se
 - Policy di autorizzazione membership/ruolo.
 - Filtri globali EF Core dove appropriati, con attenzione a query amministrative e bypass.
 - Foreign key e indici univoci compositi per prevenire relazioni cross-tenant.
-- Valutare Row-Level Security nativa di SQL Server o PostgreSQL solo come difesa aggiuntiva, con policy e test specifici per provider; non è l'unico controllo.
+- Valutare Row-Level Security nativa di SQL Server solo come difesa aggiuntiva, con policy e test dedicati; non è l'unico controllo.
 - Test d'integrazione che provano query, endpoint, media e operazioni con tenant errato.
 - Chiavi cache con tenant/site e invalidazione coerente.
 
 ## Admin di piattaforma
+
+La gestione di tenant, siti, domini e utenti `TenantAdmin` avviene nell'area di piattaforma, accessibile solo al ruolo `PlatformAdmin` (ADR-0011, ADR-0014). Nessuna registrazione self-service.
 
 Le operazioni cross-tenant devono essere esposte tramite casi d'uso privilegiati e auditabili; non devono dipendere da un `IgnoreQueryFilters()` generico sparso nel codice. Gli endpoint di supporto devono verificare un ruolo di piattaforma esplicito e registrare motivo e attore.
 
@@ -42,7 +44,8 @@ Per almeno due tenant di test:
 - modifica/cancellazione cross-tenant: negata;
 - associazione di asset/prodotto di altro tenant: rifiutata;
 - cache e media non condivisi accidentalmente;
-- job/outbox con tenant incoerente: scartato e segnalato.
+- job/outbox con tenant incoerente: scartato e segnalato;
+- `TenantAdmin` o `Utente` che tenta di creare/elevare un `TenantAdmin`, di assegnarsi un ruolo superiore o di operare sull'area di piattaforma: negato.
 
 ## Migrazione futura
 

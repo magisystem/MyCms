@@ -2,6 +2,7 @@
 
 - **Stato:** Accepted
 - **Data:** 2026-10-09
+- **Nota (ADR-0012):** il riferimento a PostgreSQL non è più applicabile; la Row-Level Security eventuale riguarda solo SQL Server.
 
 ## Contesto
 

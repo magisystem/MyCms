@@ -4,9 +4,12 @@ La sicurezza è un requisito di progetto, con particolare attenzione a isolament
 
 ## Identità e autorizzazione
 
-- Usare ASP.NET Core Identity come opzione iniziale e cookie sicuri per l'admin.
+- Usare ASP.NET Core Identity e cookie sicuri per l'admin. Nessuna registrazione self-service: gli account sono creati da chi ha il ruolo per farlo (ADR-0011, ADR-0014).
 - Autorizzare ogni operazione in base a identità, membership tenant/site, ruolo e risorsa.
-- Ruoli suggeriti: PlatformAdmin, TenantOwner, SiteAdmin, Editor, Publisher, StoreManager.
+- Ruoli: `PlatformAdmin` (globale), `TenantAdmin` e `Utente` (per membership), `Guest` (non autenticato). I permessi dell'`Utente` (`Content.Edit`, `Content.Publish`, `Media.Manage`, `Store.Manage`) sono assegnati dal `TenantAdmin`.
+- Solo il `PlatformAdmin` crea o eleva `TenantAdmin`; nessun ruolo assegna un ruolo superiore al proprio né modifica il proprio. Controllo lato server con test di non-escalation.
+- Il primo `PlatformAdmin` si crea con un comando di bootstrap, senza credenziali predefinite.
+- Le operazioni dell'area di piattaforma sono registrate in `AuditLog`.
 - Separare privilegi globali da ruoli tenant.
 - Proteggere form mutanti con antiforgery; applicare policy session/cookie appropriate.
 - Evitare IDOR: conoscere un GUID non equivale ad avere accesso.

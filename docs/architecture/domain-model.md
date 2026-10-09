@@ -6,10 +6,13 @@ Questo è il modello logico iniziale; i nomi e i tipi definitivi vanno tradotti 
 
 - `Tenant`: cliente/organizzazione contrattuale della piattaforma.
 - `Site`: sito appartenente a un tenant. Un tenant può avere più siti.
-- `SiteDomain`: host registrato, normalizzato e verificato associato a un sito.
-- `User`: identità applicativa.
-- `TenantMembership`: membership e ruolo di un utente nel tenant.
-- `SiteMembership` (opzionale inizialmente): restrizione dei ruoli a siti specifici.
+- `SiteDomain`: host registrato, normalizzato e associato a un sito, con `VerifiedAtUtc`, `VerifiedByUserId` e stato attivo/disattivo. La verifica è manuale (ADR-0014).
+- `User`: identità applicativa (ASP.NET Core Identity) con flag globale `IsPlatformAdmin`.
+- `TenantMembership`: membership di un utente in un tenant con ruolo `TenantAdmin` o `Utente`.
+- `MembershipPermission`: permessi dell'`Utente` (`Content.Edit`, `Content.Publish`, `Media.Manage`, `Store.Manage`).
+- `SiteMembership` (opzionale inizialmente): restrizione di una membership a siti specifici.
+
+Creare o elevare un `TenantAdmin` è riservato al `PlatformAdmin` (ADR-0011).
 
 ## CMS
 
@@ -19,9 +22,9 @@ Questo è il modello logico iniziale; i nomi e i tipi definitivi vanno tradotti 
 - `Slug`, `PageKind`, `Status`
 - `IsHomePage`, `Locale` (se multilingua abilitato)
 - `LatestDraftRevisionId`, `PublishedRevisionId`
-- `CreatedAtUtc`, `UpdatedAtUtc`, `ConcurrencyToken`
+- `CreatedAtUtc`, `UpdatedAtUtc`, `ConcurrencyToken` (`rowversion`)
 
-Slug univoco all'interno del sito e della lingua, quando applicabile. Cambiare slug di una pagina pubblicata deve passare da un caso d'uso che gestisce redirect/canonical.
+Slug univoco all'interno del sito e della lingua, quando applicabile. In SQL Server i NULL in un indice univoco sono considerati uguali: se `Locale` è nullable scegliere esplicitamente colonna non nullable, sentinella o indice filtrato. `Status` e `PublishedRevisionId` devono restare coerenti: definire gli stati (es. `Draft`, `Published`, `Unpublished`) e il caso d'uso di unpublish. Cambiare slug di una pagina pubblicata deve passare da un caso d'uso che gestisce redirect/canonical.
 
 ### `PageRevision`
 

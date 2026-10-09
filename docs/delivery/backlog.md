@@ -7,11 +7,14 @@ Le voci sono candidate a issue GitHub. Ogni issue deve essere piccola, verificab
 ### A-001: Creare solution e CI
 **Accettazione:** solution compila in .NET 10; workflow CI esegue restore/build/test; nessun secret nel repository.
 
-### A-002: Configurare SQL Server, PostgreSQL ed EF Core
-**Accettazione:** SQL Server è il default locale e della CI primaria; PostgreSQL è selezionabile come provider secondario; ogni provider ha la propria serie di migrazioni; entrambe si applicano a un database vuoto e hanno smoke test d'integrazione configurabili via environment variable.
+### A-002: Configurare SQL Server ed EF Core
+**Accettazione:** connection string da configurazione/segreti; una serie di migrazioni EF Core che si applica a un database vuoto; smoke test d'integrazione su SQL Server reale, configurabile via environment variable.
 
 ### A-003: Definire convenzioni e logging
 **Accettazione:** nullable abilitato, logging strutturato, correlation ID e convenzioni UTC documentate.
+
+### A-004: Layout admin Tabler
+**Accettazione:** layout Razor condiviso basato su Tabler 1.6.1 e Tabler Icons; in `wwwroot` solo gli asset usati; nessun CDN esterno; nessun file delle cartelle `tabler-emails`, `tabler-illustrations`, `tabler-avatars`; aggiornata la nota sulle licenze.
 
 ## EPIC B — Tenant e accessi
 
@@ -22,7 +25,16 @@ Le voci sono candidate a issue GitHub. Ogni issue deve essere piccola, verificab
 **Accettazione:** solo host registrati risolvono; host sconosciuti danno una risposta controllata; proxy forwarded configurati esplicitamente.
 
 ### B-003: Identity e membership
-**Accettazione:** login/logout; membership tenant; ogni admin request verifica ruolo e membership della risorsa.
+**Accettazione:** login/logout; membership tenant con ruolo `TenantAdmin` o `Utente` e permessi; flag `PlatformAdmin`; ogni admin request verifica ruolo e membership della risorsa; nessuna registrazione self-service.
+
+### B-005: Bootstrap del primo PlatformAdmin
+**Accettazione:** comando documentato che crea il primo `PlatformAdmin` senza credenziali predefinite; rifiuta l'esecuzione se esiste già un `PlatformAdmin` salvo opzione esplicita; test.
+
+### B-006: Area di piattaforma
+**Accettazione:** area Razor visibile solo al `PlatformAdmin`; CRUD tenant, siti e domini (con verifica manuale: chi e quando); sospensione/riattivazione tenant; operazioni registrate in `AuditLog`; i non-`PlatformAdmin` ricevono 403/404.
+
+### B-007: Gestione utenti e non-escalation
+**Accettazione:** solo il `PlatformAdmin` crea/eleva `TenantAdmin`; il `TenantAdmin` crea `Utente` e assegna permessi/siti nel proprio tenant; nessuno si auto-assegna ruoli superiori; test automatici di escalation per UI e richieste manipolate.
 
 ### B-004: Test isolamento tenant
 **Accettazione:** cross-tenant read/update/delete negati per pagine e media; test ripetibile in CI.
@@ -40,6 +52,12 @@ Le voci sono candidate a issue GitHub. Ogni issue deve essere piccola, verificab
 
 ### C-004: Preview e rollback
 **Accettazione:** preview richiede autorizzazione e non è indicizzabile; publish e rollback aggiornano puntatori in transazione.
+
+### C-006: Template guidati iniziali
+**Accettazione:** almeno un template versionato con form Razor e policy di editing; template immutabili per versione; test.
+
+### C-007: Outbox minimo
+**Accettazione:** il publish scrive l'evento outbox nella stessa transazione; un worker semplice processa gli eventi e invalida la cache; consegna ripetuta tollerata. La versione production-ready è G-001.
 
 ### C-005: SEO base e redirect
 **Accettazione:** title/description/canonical/robots; rename slug crea redirect secondo policy; no redirect loop.
