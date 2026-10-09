@@ -10,7 +10,7 @@ Piano di implementazione richiesto da `docs/AI_START_HERE.md`, preparato prima d
 | A-002 SQL Server ed EF Core | Completata (migrazione iniziale vuota; le tabelle arrivano con B-001 e A-009) |
 | A-003 Convenzioni e logging | Completata (`docs/development/convenzioni-codice.md`) |
 | A-009 Localizzatore | Completata |
-| A-004 Layout Tabler | Da fare |
+| A-004 Layout Tabler | Completata (layout `_LayoutAdmin`, pagina `/admin`) |
 
 ## 1. Stato attuale del repository
 

@@ -26,6 +26,7 @@ if (!applicazione.Environment.IsDevelopment())
     applicazione.UseExceptionHandler("/Errore");
 }
 
+applicazione.UseMiddleware<MiddlewareRisorseStatiche>();
 applicazione.UseStaticFiles();
 applicazione.UseRouting();
 applicazione.MapRazorPages();

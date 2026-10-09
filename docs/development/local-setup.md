@@ -90,4 +90,4 @@ Questi host puntano al computer locale (record DNS verso `127.0.0.1` o voci nel 
 
 ## Asset dell'admin
 
-Il tema admin (Tabler e Tabler Icons) è in `admin-theme/` (ADR-0013). Al bootstrap le cartelle `tabler` e `tabler-icons` si copiano per intero in `src/DvCms.Web/wwwroot/lib/`; le pagine HTML demo non devono essere servite. Gli altri pacchetti di `admin-theme/` non vanno in `wwwroot`. Npm non è necessario per Tabler: `dist/` è già compilato.
+Il tema admin (Tabler e Tabler Icons) è in `admin-theme/` (ADR-0013). Le cartelle `tabler` e `tabler-icons` sono copiate per intero in `src/DvCms.Web/wwwroot/lib/` (A-004); le pagine HTML demo e gli altri formati non consentiti non sono serviti (404). Per aggiornare il tema si sostituiscono le due cartelle in `admin-theme/` e in `wwwroot/lib/`. Gli altri pacchetti di `admin-theme/` non vanno in `wwwroot`. Npm non è necessario per Tabler: `dist/` è già compilato.

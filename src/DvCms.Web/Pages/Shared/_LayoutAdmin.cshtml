@@ -1,0 +1,59 @@
+@inject DvCms.Application.Localizzazione.IContestoLingua ContestoLingua
+<!DOCTYPE html>
+<html lang="@ContestoLingua.CodiceLingua" data-bs-navbar-position="vertical">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>@(ViewData["Titolo"] is string titolo ? titolo + " - " : string.Empty)DvCms</title>
+    <link href="~/lib/tabler/dashboard/dist/css/tabler.min.css" rel="stylesheet" />
+    <link href="~/lib/tabler-icons/webfont/tabler-icons.min.css" rel="stylesheet" />
+</head>
+<body>
+    <a href="#contenuto" class="visually-hidden-focusable skip-link">@_L["Vai al contenuto"]</a>
+    <script src="~/lib/tabler/dashboard/dist/js/tabler-theme.min.js"></script>
+
+    <div class="page">
+        <aside class="navbar navbar-vertical navbar-expand-lg">
+            <div class="container-fluid">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu-laterale"
+                        aria-controls="menu-laterale" aria-expanded="false" aria-label="@_L["Apri o chiudi il menu"]">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="navbar-brand navbar-brand-autodark">
+                    <a href="/admin" aria-label="DvCms"><span class="fs-2 fw-bold">DvCms</span></a>
+                </div>
+                <partial name="_UtenteMenuAdmin" />
+                <nav class="collapse navbar-collapse" id="menu-laterale" aria-label="@_L["Menu principale"]">
+                    <partial name="_MenuAdmin" />
+                </nav>
+            </div>
+        </aside>
+
+        <div class="page-wrapper">
+            <div class="page-header d-print-none">
+                <div class="container-xl">
+                    <div class="row g-2 align-items-center">
+                        <div class="col">
+                            <h1 class="page-title">@(ViewData["Titolo"] ?? "DvCms")</h1>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="page-body" id="contenuto">
+                <div class="container-xl">
+                    @RenderBody()
+                </div>
+            </div>
+            <footer class="footer footer-transparent d-print-none">
+                <div class="container-xl">
+                    <span class="text-secondary">DvCms</span>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <script src="~/lib/tabler/dashboard/dist/js/tabler.min.js"></script>
+    @await RenderSectionAsync("Script", required: false)
+</body>
+</html>

@@ -73,6 +73,21 @@ public partial class ConvenzioniCodiceTest
             + string.Join(", ", violazioni));
     }
 
+    [Fact]
+    public void SottoWwwrootLibCiSonoSoloTablerETablerIcons()
+    {
+        var radice = TrovaRadiceRepository();
+        var cartellaLib = Path.Combine(radice, "src", "DvCms.Web", "wwwroot", "lib");
+
+        var presenti = Directory.EnumerateDirectories(cartellaLib)
+            .Select(cartella => Path.GetFileName(cartella))
+            .Order(StringComparer.Ordinal)
+            .ToList();
+
+        // ADR-0013: tabler-emails, tabler-illustrations e tabler-avatars non vanno in wwwroot.
+        Assert.Equal(["tabler", "tabler-icons"], presenti);
+    }
+
     private static string TrovaRadiceRepository()
     {
         var cartella = new DirectoryInfo(AppContext.BaseDirectory);
