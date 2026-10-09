@@ -6,12 +6,12 @@ Realizzare un CMS SaaS multi-tenant in cui un operatore della piattaforma può g
 
 ## Utenti
 
-- **PlatformAdmin:** operatore della piattaforma. Dal menu "Platform" crea e gestisce tenant, siti, domini e utenti `TenantAdmin`; può aprire l'admin di qualunque tenant.
+- **PlatformAdmin:** operatore della piattaforma. Dal menu "Platform" crea e gestisce tenant, siti, domini e utenti `TenantAdmin`; entra nell'admin di qualunque tenant e vi lavora come un `TenantAdmin`.
 - **TenantAdmin:** amministratore di un cliente. Gestisce siti, tema, SEO, contenuti, media e, con l'e-commerce, catalogo e ordini.
 - **Utente:** acquirente registrato di un sito con e-commerce; può solo emettere ordini. Nei siti senza e-commerce non esiste.
-- **Guest:** visitatore del sito pubblico senza login, sempre legato al proprio tenant. Non può emettere ordini.
+- **Guest:** visitatore del sito pubblico senza login, sempre legato al proprio tenant; vede tutto ciò che è pubblico. Non può emettere ordini.
 
-Gli account amministrativi possono avere membership in più tenant. I clienti non si registrano da soli: gli account amministrativi sono creati dagli operatori (ADR-0014); solo gli acquirenti si registrano, e solo nei siti con e-commerce.
+Un `TenantAdmin` appartiene a un solo tenant; il `PlatformAdmin` accede a tutti. I clienti non si registrano da soli: gli account amministrativi sono creati dagli operatori (ADR-0014); solo gli acquirenti si registrano, e solo nei siti con e-commerce.
 
 ## Principi di prodotto
 

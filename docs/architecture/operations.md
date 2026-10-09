@@ -29,6 +29,10 @@ Tenant, domini e certificati sono gestiti dagli operatori (ADR-0014). Il runbook
 5. Verifica che l'host risolva il sito corretto e che host non registrati ricevano risposta controllata.
 6. Monitoraggio scadenze dei certificati con promemoria o alert.
 
+## Email
+
+Il canale di invio (Microsoft Graph, Gmail, SendGrid o SMTP, ADR-0015) si configura con `Email:Provider` e segreti fuori dal repository. Prima del primo invio in produzione, a mano: configurare l'app/account del canale scelto (registrazione app in Microsoft Entra, progetto OAuth Google, account SendGrid o server SMTP), il dominio mittente con SPF, DKIM e DMARC, e verificare la consegna; monitorare errori e code di invio dal worker.
+
 ## Background work e outbox
 
 Ogni evento che non può essere perso (publish, ordine, pagamento, webhook) deve avere un meccanismo di retry/idempotenza. Una tabella outbox scritta nella stessa transazione del cambiamento di dominio è il default iniziale. Un worker reclama i messaggi, li processa e marca il risultato; gestire retry con backoff e dead-letter/failed state.

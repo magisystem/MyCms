@@ -5,13 +5,14 @@ La sicurezza è un requisito di progetto, con particolare attenzione a isolament
 ## Identità e autorizzazione
 
 - Usare ASP.NET Core Identity e cookie sicuri per l'admin. Nessuna registrazione self-service per account amministrativi; la registrazione degli acquirenti esiste solo nei siti con e-commerce (ADR-0011, ADR-0014).
+- Il `TenantAdmin` accede solo al proprio tenant; il `PlatformAdmin` a tutti, con i poteri del `TenantAdmin` più il menu Platform.
 - Autorizzare ogni operazione in base a identità, membership tenant/site, ruolo e risorsa.
 - Ruoli: `PlatformAdmin` (globale), `TenantAdmin` (per membership), `Utente` (acquirente di un tenant, solo ordini), `Guest` (anonimo, sempre vincolato a un tenant).
 - Solo il `PlatformAdmin` crea o eleva `TenantAdmin`; nessun ruolo assegna un ruolo superiore al proprio né modifica il proprio. La registrazione crea solo `Utente`; il ruolo non è mai preso dalla richiesta. Controllo lato server con test di non-escalation.
 - Il primo `PlatformAdmin` si crea con un comando di bootstrap, senza credenziali predefinite.
 - Ingresso del `PlatformAdmin` nell'admin di un tenant e azioni del menu "Platform" sono registrati in `AuditLog`.
-- **Recupero password** (tutti gli account): risposta identica a prescindere dall'esistenza dell'account; email con codice OTP a scadenza breve, tentativi limitati, rate limiting, codice salvato come hash; poi email con link monouso a scadenza breve per impostare la nuova password, invalidato all'uso e da nuove richieste; al cambio password sessioni e token sono invalidati e arriva una notifica.
-- **Two-factor authentication:** requisito previsto, a priorità minima, da implementare per ultimo (ADR-0011). Se e quando verrà reso obbligatorio per `PlatformAdmin` e `TenantAdmin` sarà deciso con un ADR.
+- **Recupero password** (tutti gli account): risposta identica a prescindere dall'esistenza dell'account; **prima email** con codice OTP (6 cifre, 10 minuti, 5 tentativi, salvato come hash), **seconda email distinta** con link monouso (30 minuti), invalidato all'uso e da nuove richieste; rate limiting (3 richieste/ora per account e IP); al cambio password sessioni e token sono invalidati e arriva una notifica. I valori sono iniziali e configurabili (ADR-0011).
+- **Two-factor authentication:** requisito previsto, a priorità minima, da implementare per ultimo e non bloccante per il go-live (ADR-0011). Metodo e obbligatorietà per `PlatformAdmin` e `TenantAdmin` saranno decisi con un ADR.
 - **Registrazione acquirenti:** solo su siti con e-commerce attivo; conferma email, rate limiting e protezione anti-abuso.
 - Separare privilegi globali da ruoli tenant.
 - Proteggere form mutanti con antiforgery; applicare policy session/cookie appropriate.
@@ -58,6 +59,10 @@ La sicurezza è un requisito di progetto, con particolare attenzione a isolament
 - Verificare firma webhook, provider account e correlazione ordine/tenant.
 - Idempotency key e deduplicazione eventi.
 - Audit su transizioni finanziarie; non loggare payload sensibili.
+
+## Email
+
+L'invio passa da adapter intercambiabili (Microsoft Graph, Gmail, SendGrid, SMTP) via outbox (ADR-0015). Segreti dei canali fuori dal repository; OTP, token e link non vanno nei log; mittente con SPF/DKIM/DMARC; template email non modificabili dai tenant.
 
 ## Privacy e audit
 

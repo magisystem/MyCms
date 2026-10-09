@@ -13,6 +13,18 @@ Le voci sono candidate a issue GitHub. Ogni issue deve essere piccola, verificab
 ### A-003: Definire convenzioni e logging
 **Accettazione:** nullable abilitato, logging strutturato, correlation ID e convenzioni UTC documentate.
 
+### A-005: Contratto email e adapter
+**Accettazione:** contratto unico `IEmailSender` in Application; adapter SMTP (per primo) selezionabile da `Email:Provider`; valore sconosciuto fa fallire l'avvio; invio dal worker tramite outbox; fake nei test; nessun segreto nel repository. Gli adapter Microsoft Graph, Gmail API e SendGrid sono voci successive (A-006, A-007, A-008) con test di contratto comune.
+
+### A-006: Adapter Microsoft Graph
+**Accettazione:** invio tramite Graph con credenziali da configurazione; test con fake; documentate le attività manuali (registrazione app, permessi).
+
+### A-007: Adapter Gmail API
+**Accettazione:** invio tramite Gmail API; test con fake; documentate le attività manuali (progetto OAuth, eventuale delega di dominio).
+
+### A-008: Adapter SendGrid
+**Accettazione:** invio tramite SendGrid; test con fake; documentata la configurazione dell'account e del dominio mittente.
+
 ### A-004: Layout admin Tabler
 **Accettazione:** le cartelle `tabler` e `tabler-icons` di `admin-theme/` sono copiate per intero in `src/DvCms.Web/wwwroot/lib/`; le pagine HTML demo non sono servite al pubblico (test che `GET` di una pagina demo restituisce 404); layout Razor condiviso con menu laterale; nessun CDN esterno; nessun file di `tabler-emails`, `tabler-illustrations`, `tabler-avatars` in `wwwroot`.
 
@@ -25,7 +37,7 @@ Le voci sono candidate a issue GitHub. Ogni issue deve essere piccola, verificab
 **Accettazione:** solo host registrati risolvono; host sconosciuti danno una risposta controllata; proxy forwarded configurati esplicitamente.
 
 ### B-003: Identity e membership
-**Accettazione:** login/logout; membership tenant con ruolo `TenantAdmin`; flag `PlatformAdmin`; principal `Guest` legato al tenant risolto dall'host (profilo `TenantGuestProfile` creato con il tenant); ogni admin request verifica ruolo e membership della risorsa; nessuna registrazione per account amministrativi.
+**Accettazione:** login/logout; membership tenant con ruolo `TenantAdmin`; flag `PlatformAdmin`; principal `Guest` legato al tenant risolto dall'host (profilo `TenantGuestProfile` creato con il tenant); un `TenantAdmin` accede solo al proprio tenant, il `PlatformAdmin` a tutti con i poteri di un `TenantAdmin`; ogni admin request verifica ruolo e membership della risorsa; nessuna registrazione per account amministrativi.
 
 ### B-005: Bootstrap del primo PlatformAdmin
 **Accettazione:** comando documentato che crea il primo `PlatformAdmin` senza credenziali predefinite; rifiuta l'esecuzione se esiste già un `PlatformAdmin` salvo opzione esplicita; test.
@@ -37,7 +49,7 @@ Le voci sono candidate a issue GitHub. Ogni issue deve essere piccola, verificab
 **Accettazione:** solo il `PlatformAdmin` crea/eleva `TenantAdmin`; nessun ruolo si auto-assegna ruoli superiori; test automatici di escalation per UI e richieste manipolate.
 
 ### B-008: Recupero password
-**Accettazione:** richiesta con risposta uniforme; email con codice OTP (scadenza breve, tentativi limitati, hash, rate limiting); dopo OTP corretto, email con link monouso a scadenza breve; link invalidato all'uso e da nuove richieste; al cambio password sessioni invalidate e notifica email; invio via outbox; test su OTP errato/scaduto/riusato e su enumerazione.
+**Accettazione:** richiesta con risposta uniforme; prima email con codice OTP (scadenza breve, tentativi limitati, hash, rate limiting); dopo OTP corretto, seconda email distinta con link monouso a scadenza breve (mai mostrato a schermo); link invalidato all'uso e da nuove richieste; al cambio password sessioni invalidate e notifica email; invio via outbox; test su OTP errato/scaduto/riusato e su enumerazione.
 
 ### B-004: Test isolamento tenant
 **Accettazione:** cross-tenant read/update/delete negati per pagine e media; test ripetibile in CI.
@@ -134,7 +146,7 @@ Le voci sono candidate a issue GitHub. Ogni issue deve essere piccola, verificab
 **Accettazione:** procedura verificata su ambiente di test, con risultati documentati.
 
 ### G-006: Two-factor authentication
-**Priorità minima, da affrontare per ultima.** **Accettazione:** ADR su metodo, recupero e obbligatorietà per `PlatformAdmin`/`TenantAdmin`; implementazione e test; enrollment e recupero documentati.
+**Priorità minima, da affrontare per ultima; non bloccante per il go-live.** **Accettazione:** ADR su metodo, recupero e obbligatorietà per `PlatformAdmin`/`TenantAdmin`; implementazione e test; enrollment e recupero documentati.
 
 ### G-005: Security review
 **Accettazione:** checklist di `docs/architecture/security.md` completata; issue critiche risolte o accettate formalmente.

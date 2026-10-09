@@ -13,7 +13,7 @@ Database SQL Server condiviso, tabelle condivise e isolamento logico per `Tenant
 5. Rendere il `TenantContext` request-scoped e non modificabile dall'utente della richiesta.
 6. Per job/background work, includere tenant/site esplicitamente nel messaggio e verificare il contesto prima dell'esecuzione.
 
-L'admin su un dominio centrale può gestire più tenant: in tal caso l'utente seleziona un tenant, ma il server deve verificare una membership esplicita. La selezione UI non è autorizzazione. Il dominio centrale dell'admin è configurato esplicitamente e non è un host di sito pubblico.
+L'admin su un dominio centrale serve più tenant: il `TenantAdmin` opera solo sul tenant della sua membership; il `PlatformAdmin` può selezionare qualunque tenant. In ogni caso il server verifica ruolo e membership (o il ruolo `PlatformAdmin`): la selezione UI non è autorizzazione. Il dominio centrale dell'admin è configurato esplicitamente e non è un host di sito pubblico.
 
 ## Difesa a strati
 

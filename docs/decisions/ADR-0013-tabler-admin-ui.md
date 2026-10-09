@@ -28,5 +28,5 @@ L'admin è server-rendered con Razor Pages (ADR-0002). Serve un tema grafico com
 
 - Nessuna dipendenza Node in produzione: `dist/` è già compilato.
 - Le versioni di Tabler e Tabler Icons sono fissate nel repository; l'aggiornamento è una sostituzione deliberata della cartella con revisione.
-- La copia intera aumenta dimensione di repository e di pubblicazione (centinaia di MB, in gran parte demo e icone in formati non usati). Accettato dal committente; si può ridurre in seguito con un nuovo ADR.
+- La copia intera aumenta dimensione di repository e di pubblicazione (centinaia di MB, in gran parte demo e icone in formati non usati). I duplicati con `admin-theme/` sono accettati dal committente, che li ripulirà in seguito; la pulizia, se tocca ciò che l'app serve, richiede un nuovo ADR.
 - Accessibilità e mobile vanno verificati sulle schermate costruite, non assunti dal template.

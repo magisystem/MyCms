@@ -26,7 +26,9 @@ Implementare un CMS SaaS multi-tenant in C#/.NET, con rendering server-side Razo
 14. L'admin usa **Tabler** e **Tabler Icons** da `admin-theme/` (ADR-0013): al bootstrap le cartelle `tabler` e `tabler-icons` si copiano per intero in `wwwroot/lib/`, senza servire le pagine HTML demo. Non copiare in `wwwroot` né usare `tabler-emails`, `tabler-illustrations` e `tabler-avatars` senza una decisione esplicita. Non servire direttamente `admin-theme/`.
 15. Verifica dei domini e certificati TLS sono manuali (ADR-0014): non implementare ACME né verifica DNS automatica.
 16. Il nome del progetto è **DvCms**: solution `DvCms.sln`, namespace e progetti con prefisso `DvCms.` (es. `DvCms.Web`, `DvCms.Domain`). Codice e identificatori in inglese, documentazione in italiano.
-17. Recupero password: email con codice OTP, poi link monouso (ADR-0011). La two-factor authentication è prevista ma va implementata per ultima, non prima.
+17. Recupero password: prima email con codice OTP, seconda email distinta con link monouso (ADR-0011). La two-factor authentication è prevista ma va implementata per ultima, non è bloccante per il go-live e non va anticipata.
+18. Le email si inviano solo tramite il contratto unico e l'outbox, con adapter Microsoft Graph, Gmail API, SendGrid e SMTP scelti da configurazione (ADR-0015).
+19. Il `TenantAdmin` accede solo al proprio tenant; il `PlatformAdmin` entra in qualunque tenant con i poteri di un `TenantAdmin` più il menu Platform.
 
 ## Processo di lavoro richiesto
 

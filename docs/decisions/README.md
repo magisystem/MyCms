@@ -20,5 +20,6 @@ Stato: `Proposed`, `Accepted`, `Superseded`, `Deprecated`.
 - [ADR-0012 — SQL Server come unico database](ADR-0012-sql-server-only.md)
 - [ADR-0013 — Tabler e Tabler Icons per l'admin](ADR-0013-tabler-admin-ui.md)
 - [ADR-0014 — Amministrazione di piattaforma, domini e certificati manuali](ADR-0014-platform-administration.md)
+- [ADR-0015 — Invio email tramite adapter (Graph, Gmail, SendGrid, SMTP)](ADR-0015-email-delivery.md)
 
 Per le regole operative della persistenza, vedere [`docs/architecture/database.md`](../architecture/database.md).

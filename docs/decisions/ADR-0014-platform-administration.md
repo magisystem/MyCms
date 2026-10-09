@@ -10,7 +10,7 @@ I clienti non si registrano da soli: tenant, siti e account amministrativi sono 
 
 ## Decisione
 
-- Il `PlatformAdmin` usa la stessa interfaccia admin dei tenant. Può aprire l'admin di **qualunque tenant** e vede un menu aggiuntivo **"Platform"**, con cui gestisce tenant, siti, domini e utenti `TenantAdmin`.
+- Il `PlatformAdmin` usa la stessa interfaccia admin dei tenant. Può aprire l'admin di **qualunque tenant** e lì lavora **come un `TenantAdmin`** di quel tenant; in più vede il menu **"Platform"**, con cui gestisce tenant, siti, domini e utenti `TenantAdmin`. Il `TenantAdmin` invece accede solo al proprio tenant.
 - Il menu "Platform" è una Razor Area dedicata. La visibilità del menu è solo UX: ogni pagina e ogni azione dell'area è protetta lato server dalla policy `PlatformAdmin`.
 - Quando il `PlatformAdmin` entra nell'admin di un tenant, il contesto tenant è esplicito e l'ingresso è registrato in `AuditLog`.
 - Nessuna registrazione self-service per account amministrativi (`PlatformAdmin`, `TenantAdmin`). La registrazione degli acquirenti (`Utente`) esiste solo nei siti con e-commerce (ADR-0011).

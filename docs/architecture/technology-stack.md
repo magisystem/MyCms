@@ -15,6 +15,7 @@
 | Cache | Interfaccia cache; Redis quando si scala su più istanze | Non fare affidamento su cache in-memory per coerenza cross-instance. |
 | Background jobs | Hosted Service/worker + outbox iniziale | Valutare libreria di job solo con requisiti espliciti. |
 | Auth | ASP.NET Core Identity | Ruoli `PlatformAdmin`, `TenantAdmin`, `Utente` (acquirente), `Guest` per tenant (ADR-0011); recupero password con OTP e link monouso; 2FA per ultima. SSO/OIDC resta estensione futura se richiesta. |
+| Email | Adapter intercambiabili: Microsoft Graph API, Gmail API, SendGrid, SMTP | Contratto unico in Application, canale scelto da configurazione, invio dal worker via outbox (ADR-0015). |
 | Test | xUnit o NUnit, da selezionare prima del bootstrap | Non usare due framework test concorrenti senza ragione. |
 | Logging | ILogger + logging strutturato | Provider APM/trace da scegliere con hosting. |
 
