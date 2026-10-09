@@ -26,6 +26,9 @@ public enum CodiceEsito
 
     /// <summary>Esiste già un'altra pagina iniziale per quel sito e quella lingua.</summary>
     PaginaInizialeEsistente = 8,
+
+    /// <summary>La chiave di ambiente per cifrare i segreti (<c>Sicurezza:ChiaveSegreti</c>) manca o non è valida.</summary>
+    ChiaveSegretiMancante = 9,
 }
 
 public sealed record EsitoOperazione(CodiceEsito Codice, Guid? Id = null)

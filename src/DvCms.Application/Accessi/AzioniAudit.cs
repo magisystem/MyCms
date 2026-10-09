@@ -21,5 +21,7 @@ public static class AzioniAudit
     public const string DisabilitazioneUtenza = "DisabilitazioneUtenza";
     public const string RiabilitazioneUtenza = "RiabilitazioneUtenza";
     public const string ModificaTestoStatico = "ModificaTestoStatico";
+    public const string ModificaImpostazioniEmail = "ModificaImpostazioniEmail";
+    public const string ProvaInvioEmail = "ProvaInvioEmail";
     public const string OperazioneNegata = "OperazioneNegata";
 }

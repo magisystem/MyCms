@@ -29,19 +29,33 @@ public sealed class ScenarioWeb : IAsyncDisposable
 
     public DatiProva.TenantCreato B { get; }
 
-    public static async Task<ScenarioWeb> CreaAsync(string ambiente = "Development", int richiesteAlMinuto = 1000)
+    public static async Task<ScenarioWeb> CreaAsync(string ambiente = "Development", int richiesteAlMinuto = 1000, IReadOnlyDictionary<string, string?>? impostazioni = null)
     {
         var database = await DatabaseDiProva.CreaAsync(TestContext.Current.CancellationToken);
         var fabbrica = new FabbricaApplicazioneConConnessione(
             database.Connessione,
             ambiente,
-            new Dictionary<string, string?> { ["Sicurezza:Accesso:RichiesteAlMinuto"] = richiesteAlMinuto.ToString(System.Globalization.CultureInfo.InvariantCulture) });
+            ImpostazioniAvvio(richiesteAlMinuto, impostazioni));
         var esito = await DvCms.Web.Comandi.ComandoMigra.EseguiAsync(fabbrica.Services, TestContext.Current.CancellationToken);
         Assert.Equal(0, esito);
 
         var a = await DatiProva.CreaTenantAsync(fabbrica.Services, "Tenant A", HostA, annullamento: TestContext.Current.CancellationToken);
         var b = await DatiProva.CreaTenantAsync(fabbrica.Services, "Tenant B", HostB, annullamento: TestContext.Current.CancellationToken);
         return new ScenarioWeb(database, fabbrica, a, b);
+    }
+
+    private static Dictionary<string, string?> ImpostazioniAvvio(int richiesteAlMinuto, IReadOnlyDictionary<string, string?>? aggiuntive)
+    {
+        var impostazioni = new Dictionary<string, string?> { ["Sicurezza:Accesso:RichiesteAlMinuto"] = richiesteAlMinuto.ToString(System.Globalization.CultureInfo.InvariantCulture) };
+        if (aggiuntive is not null)
+        {
+            foreach (var coppia in aggiuntive)
+            {
+                impostazioni[coppia.Key] = coppia.Value;
+            }
+        }
+
+        return impostazioni;
     }
 
     public SessioneProva SessioneA() => Nuova(HostA);

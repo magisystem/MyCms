@@ -1,0 +1,123 @@
+@page "/admin/platform/tenant/{id:guid}/email"
+@model DvCms.Web.Areas.Platform.Pages.Tenant.EmailModel
+@using DvCms.Domain.Outbox
+@{
+    ViewData["Titolo"] = _L["Email del tenant"];
+}
+@if (Model.Messaggio is not null)
+{
+    <div class="alert alert-success" role="status">@Model.Messaggio</div>
+}
+@if (Model.ErroreDaMostrare is not null)
+{
+    <div class="alert alert-danger" role="alert">@Model.ErroreDaMostrare</div>
+}
+<div class="row row-cards">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">@Model.Scheda!.NomeTenant</h3>
+                <div class="card-actions"><a href="/admin/platform/tenant/@Model.IdTenant" class="btn btn-link">@_L["Torna al tenant"]</a></div>
+            </div>
+            <div class="card-body">
+                <form method="get" class="row g-2 align-items-end mb-4">
+                    <div class="col">
+                        <label class="form-label" for="Canale">@_L["Canale di invio"]</label>
+                        <select class="form-select" id="Canale" name="provider">
+                            @foreach (var provider in Enum.GetValues<DvCms.Domain.Email.ProviderEmail>())
+                            {
+                                <option value="@provider" selected="@(provider == Model.Provider)">@Model.NomeProvider(provider)</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-auto"><button type="submit" class="btn">@_L["Mostra i campi"]</button></div>
+                </form>
+
+                <form method="post" asp-page-handler="Salva" asp-route-id="@Model.IdTenant" autocomplete="off" novalidate>
+                    <input type="hidden" name="provider" value="@Model.Provider" />
+                    <input type="hidden" name="tokenConcorrenza" value="@Model.TokenConcorrenza" />
+                    @foreach (var campo in Model.Campi)
+                    {
+                        var invalido = Model.CampiNonValidi.Contains(campo.Nome);
+                        var nome = "v_" + campo.Nome;
+                        <div class="mb-3">
+                            <label class="form-label @(campo.Obbligatorio ? "required" : null)" for="@nome">@Model.Etichetta(campo.Nome)</label>
+                            @if (campo.Segreto)
+                            {
+                                var impostato = Model.SegretiImpostati.Contains(campo.Nome);
+                                <input type="password" class="form-control @(invalido ? "is-invalid" : null)" id="@nome" name="@nome" autocomplete="new-password"
+                                       placeholder="@(impostato ? _L["Impostato: lascia vuoto per non cambiarlo"] : string.Empty)" />
+                                @if (campo.Tipo == DvCms.Application.Email.TipoCampoEmail.TestoLungo)
+                                {
+                                    <div class="form-hint">@_L["Incolla qui il contenuto: non verrà più mostrato."]</div>
+                                }
+                                @if (impostato && !campo.Obbligatorio)
+                                {
+                                    <label class="form-check mt-1">
+                                        <input type="checkbox" class="form-check-input" name="@("r_" + campo.Nome)" value="true" />
+                                        <span class="form-check-label">@_L["Rimuovi il valore salvato"]</span>
+                                    </label>
+                                }
+                            }
+                            else if (campo.Tipo == DvCms.Application.Email.TipoCampoEmail.ModalitaTls)
+                            {
+                                var corrente = Model.Valori.GetValueOrDefault(campo.Nome);
+                                <select class="form-select @(invalido ? "is-invalid" : null)" id="@nome" name="@nome">
+                                    @foreach (var modalita in DvCms.Application.Email.DefinizioniProviderEmail.ModalitaTls)
+                                    {
+                                        <option value="@modalita" selected="@(modalita == corrente)">@Model.NomeTls(modalita)</option>
+                                    }
+                                </select>
+                            }
+                            else
+                            {
+                                <input type="@(campo.Tipo == DvCms.Application.Email.TipoCampoEmail.Numero ? "number" : campo.Tipo == DvCms.Application.Email.TipoCampoEmail.Email ? "email" : "text")"
+                                       class="form-control @(invalido ? "is-invalid" : null)" id="@nome" name="@nome" value="@Model.Valori.GetValueOrDefault(campo.Nome)" maxlength="500" />
+                            }
+                        </div>
+                    }
+                    <button type="submit" class="btn btn-primary">@_L["Salva"]</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header"><h3 class="card-title">@_L["Email di prova"]</h3></div>
+            <div class="card-body">
+                <form method="post" asp-page-handler="Prova" asp-route-id="@Model.IdTenant">
+                    <div class="mb-3">
+                        <label class="form-label" for="destinatario">@_L["Destinatario"]</label>
+                        <input type="email" class="form-control" id="destinatario" name="destinatario" maxlength="254" required />
+                    </div>
+                    <button type="submit" class="btn">@_L["Invia una prova"]</button>
+                </form>
+            </div>
+        </div>
+        <div class="card mt-3">
+            <div class="card-header"><h3 class="card-title">@_L["Invii non riusciti"]</h3></div>
+            @if (Model.Scheda.Problemi.Count == 0)
+            {
+                <div class="card-body text-secondary">@_L["Nessun problema."]</div>
+            }
+            else
+            {
+                <div class="list-group list-group-flush">
+                    @foreach (var problema in Model.Scheda.Problemi)
+                    {
+                        <div class="list-group-item">
+                            <span class="badge @(problema.Stato == StatoMessaggioOutbox.Fallito ? "bg-red-lt" : "bg-orange-lt")">@(problema.Stato == StatoMessaggioOutbox.Fallito ? _L["Fallito"] : _L["Nuovo tentativo"])</span>
+                            <span class="small text-secondary ms-1">@problema.CreatoIlUtc.ToString("yyyy-MM-dd HH:mm", System.Globalization.CultureInfo.InvariantCulture) UTC - @problema.Tentativi @_L["tentativi"]</span>
+                            <div class="small mt-1">@problema.UltimoErrore</div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Script {
+    <script src="~/js/canale-email.js"></script>
+}

@@ -81,6 +81,7 @@ public static class EstensioniServizi
         servizi.AddScoped<IAdapterEmail, AdapterSmtp>();
         servizi.TryAddScoped<IInvioEmail, InvioEmailPerTenant>();
         servizi.TryAddScoped<IAccodatoreEmail, AccodatoreEmail>();
+        servizi.TryAddScoped<IServizioImpostazioniEmail, ServizioImpostazioniEmail>();
         servizi.AddScoped<IGestoreOutbox, GestoreInvioEmail>();
     }
 
