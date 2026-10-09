@@ -173,7 +173,8 @@ public partial class PagineAdminWebTest
     {
         using var pagina = await sessione.GetAsync(percorso);
         var html = await pagina.Content.ReadAsStringAsync(Ct);
-        return TokenConcorrenza().Match(html).Groups[1].Value;
+        // Il valore nell'HTML è codificato ("+" come &#x2B;): un browser lo decodifica prima di inviarlo.
+        return System.Net.WebUtility.HtmlDecode(TokenConcorrenza().Match(html).Groups[1].Value);
     }
 
     private static async Task<int> ContaPagineAsync(ScenarioWeb scenario)

@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+    <PackageReference Include="xunit.v3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\DvCms.Web\DvCms.Web.csproj" />
+  </ItemGroup>
+
+  <!-- Gli strumenti di prova (database temporaneo, fabbrica dell'applicazione, sessioni) sono quelli dei test di integrazione. -->
+  <ItemGroup>
+    <Compile Include="..\DvCms.IntegrationTests\Supporto\*.cs" LinkBase="Supporto" />
+    <Compile Include="..\DvCms.IntegrationTests\Web\ScenarioWeb.cs" Link="Supporto\ScenarioWeb.cs" />
+  </ItemGroup>
+
+</Project>

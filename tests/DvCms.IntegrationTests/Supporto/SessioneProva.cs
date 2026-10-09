@@ -41,7 +41,7 @@ public sealed partial class SessioneProva
         {
             using var pagina = await GetAsync(percorsoModulo);
             var html = await pagina.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
-            token = TokenAntiforgery().Match(html) is { Success: true } trovato ? trovato.Groups[1].Value : null;
+            token = TokenAntiforgery().Match(html) is { Success: true } trovato ? System.Net.WebUtility.HtmlDecode(trovato.Groups[1].Value) : null;
         }
 
         var contenuto = new List<KeyValuePair<string, string>>(campi);

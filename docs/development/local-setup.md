@@ -29,7 +29,7 @@ dotnet test --solution DvCms.sln --configuration Release --no-build
 dotnet format DvCms.sln --verify-no-changes   # controllo di formattazione e stile, usato anche dalla CI
 ```
 
-I test usano xUnit v3 con Microsoft Testing Platform (impostato in `global.json`, richiesto da .NET 10): `dotnet test` richiede l'opzione `--solution`. Le versioni dei pacchetti NuGet sono centralizzate in `Directory.Packages.props`. La CI (`.github/workflows/ci.yml`) esegue gli stessi passaggi.
+I test usano xUnit v3 con Microsoft Testing Platform (impostato in `global.json`, richiesto da .NET 10): `dotnet test` richiede l'opzione `--solution`. Le versioni dei pacchetti NuGet sono centralizzate in `Directory.Packages.props`. La CI (`.github/workflows/ci.yml`) esegue gli stessi passaggi. I test di isolamento tra tenant stanno in `tests/DvCms.TenantIsolationTests` (riusano gli strumenti di prova dei test di integrazione) e includono il test end-to-end dei criteri di uscita di M1.
 
 ## SQL Server in locale (A-002)
 
