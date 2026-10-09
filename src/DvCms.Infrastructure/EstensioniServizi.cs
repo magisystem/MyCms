@@ -1,11 +1,13 @@
 using DvCms.Application.Accessi;
 using DvCms.Application.Cms;
 using DvCms.Application.Localizzazione;
+using DvCms.Application.Outbox;
 using DvCms.Application.Piattaforma;
 using DvCms.Application.Tenancy;
 using DvCms.Infrastructure.Accessi;
 using DvCms.Infrastructure.Cms;
 using DvCms.Infrastructure.Localizzazione;
+using DvCms.Infrastructure.Outbox;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.Infrastructure.Piattaforma;
 using DvCms.Infrastructure.Popolamento;
@@ -49,6 +51,7 @@ public static class EstensioniServizi
 
         AggiungiAccessi(servizi, configurazione);
         AggiungiLocalizzazione(servizi);
+        AggiungiOutbox(servizi, configurazione);
 
         return servizi;
     }
@@ -65,6 +68,29 @@ public static class EstensioniServizi
         servizi.TryAddScoped<IServizioPiattaforma, ServizioPiattaforma>();
         servizi.TryAddScoped<IServizioPagine, ServizioPagine>();
         servizi.TryAddScoped<IServizioPaginePubbliche, ServizioPaginePubbliche>();
+    }
+
+    private static void AggiungiOutbox(IServiceCollection servizi, IConfiguration configurazione)
+    {
+        var predefinite = OpzioniOutbox.Predefinite;
+        var abilitato = true;
+        if (!string.IsNullOrWhiteSpace(configurazione["Outbox:Abilitato"]) && !bool.TryParse(configurazione["Outbox:Abilitato"], out abilitato))
+        {
+            throw new InvalidOperationException("Valore non valido per 'Outbox:Abilitato': atteso true o false.");
+        }
+
+        var opzioni = new OpzioniOutbox(
+            abilitato,
+            TimeSpan.FromSeconds(LeggiIntero(configurazione, "Outbox:IntervalloSecondi", (int)predefinite.Intervallo.TotalSeconds, 1, 3600)),
+            LeggiIntero(configurazione, "Outbox:DimensioneLotto", predefinite.DimensioneLotto, 1, 500),
+            LeggiIntero(configurazione, "Outbox:TentativiMassimi", predefinite.TentativiMassimi, 1, 50),
+            predefinite.DurataPrenotazione);
+        servizi.TryAddSingleton(opzioni);
+        servizi.TryAddScoped<IOutbox, ScrittoreOutbox>();
+        servizi.TryAddSingleton<ElaboratoreOutbox>();
+        servizi.AddScoped<IGestoreOutbox, GestorePaginaPubblicata>();
+        servizi.AddScoped<IGestoreOutbox, GestorePaginaRitirata>();
+        servizi.AddHostedService<ServizioOutbox>();
     }
 
     private static OpzioniSicurezza LeggiOpzioniSicurezza(IConfiguration configurazione)

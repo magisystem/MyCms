@@ -20,6 +20,7 @@ public static class ServiziProva
         IDictionary<string, string?>? impostazioniAggiuntive = null,
         string ambiente = "Development",
         TimeProvider? orologio = null,
+        Action<IServiceCollection>? configura = null,
         CancellationToken annullamento = default)
     {
         var impostazioni = new Dictionary<string, string?>
@@ -47,6 +48,7 @@ public static class ServiziProva
         }
 
         servizi.AggiungiInfrastruttura(configurazione);
+        configura?.Invoke(servizi);
 
         var fornitore = servizi.BuildServiceProvider();
         await using (var ambito = fornitore.CreateAsyncScope())

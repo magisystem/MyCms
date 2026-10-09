@@ -1,9 +1,11 @@
 using DvCms.Application.Accessi;
 using DvCms.Application.Cms;
+using DvCms.Application.Outbox;
 using DvCms.Application.Piattaforma;
 using DvCms.Application.Tenancy;
 using DvCms.Domain.Accessi;
 using DvCms.Domain.Cms;
+using DvCms.Infrastructure.Outbox;
 using DvCms.Infrastructure.Persistenza;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,10 +16,12 @@ public sealed class ServizioPagine : IServizioPagine
     private readonly ContestoDatabase _contesto;
     private readonly IContestoTenant _tenant;
     private readonly IServizioAudit _audit;
+    private readonly IOutbox _outbox;
     private readonly TimeProvider _orologio;
 
-    public ServizioPagine(ContestoDatabase contesto, IContestoTenant tenant, IServizioAudit audit, TimeProvider orologio)
+    public ServizioPagine(ContestoDatabase contesto, IContestoTenant tenant, IServizioAudit audit, IOutbox outbox, TimeProvider orologio)
     {
+        _outbox = outbox;
         _contesto = contesto;
         _tenant = tenant;
         _audit = audit;
@@ -216,6 +220,8 @@ public sealed class ServizioPagine : IServizioPagine
             _contesto.Entry(pagina).Property(candidata => candidata.TokenConcorrenza).OriginalValue = token;
             var bozza = await _contesto.RevisioniPagina.AsNoTracking().SingleAsync(revisione => revisione.Id == idBozza, annullamento);
             pagina.Pubblica(bozza, _orologio);
+            // L'evento è scritto con la stessa SaveChanges della pubblicazione: o ci sono entrambi o nessuno (ADR-0010).
+            _outbox.Accoda(pagina.IdTenant, TipiEventoPagina.Pubblicata, new EventoPagina(pagina.Id, pagina.IdSito, pagina.Slug));
             await _contesto.SaveChangesAsync(annullamento);
             return new EsitoOperazione(CodiceEsito.Riuscito, pagina.Id);
         });
@@ -236,6 +242,7 @@ public sealed class ServizioPagine : IServizioPagine
 
             _contesto.Entry(pagina).Property(candidata => candidata.TokenConcorrenza).OriginalValue = token;
             pagina.Ritira(_orologio);
+            _outbox.Accoda(pagina.IdTenant, TipiEventoPagina.Ritirata, new EventoPagina(pagina.Id, pagina.IdSito, pagina.Slug));
             await _contesto.SaveChangesAsync(annullamento);
             return new EsitoOperazione(CodiceEsito.Riuscito, pagina.Id);
         });

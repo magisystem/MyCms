@@ -70,3 +70,11 @@ Definire prima della produzione RPO/RTO, retention e responsabilità operative. 
 - CI: DB dedicato effimero, migrazioni e test automatici.
 - Staging: domini/test provider e dati non reali.
 - Production: TLS, secret manager, backup, monitoring, deploy progressivo e rollback.
+
+## Outbox e worker (ADR-0010, C-007)
+
+- Gli eventi (pubblicazione e ritiro di una pagina oggi; email da A-005) si scrivono in `MessaggiOutbox` con la stessa `SaveChanges` della modifica di dominio. Il worker (`ServizioOutbox`, nello stesso processo web in M1b) li elabora a lotti: prenotazione atomica con `UPDLOCK, READPAST` (più istanze non si pestano), gestore per tipo (`IGestoreOutbox`), esito `Completato`.
+- Consegna **almeno una volta**: un gestore può ricevere due volte lo stesso messaggio (ad esempio dopo un arresto) e deve tollerarlo. La chiave di idempotenza (`ChiaveIdempotenza`, unica per tenant) evita di accodare due volte lo stesso evento.
+- Errori: ritentativo con attesa 10 s, 20 s, 40 s... al massimo un'ora; dopo `Outbox:TentativiMassimi` (predefinito 8) il messaggio diventa `Fallito` e resta in tabella per l'analisi. Un tipo senza gestore fallisce subito. L'ultimo errore è salvato (tipo e testo dell'eccezione, troncato): i gestori non devono mettere segreti nei messaggi di errore.
+- Configurazione: `Outbox:Abilitato` (predefinito vero), `Outbox:IntervalloSecondi` (5), `Outbox:DimensioneLotto` (20), `Outbox:TentativiMassimi` (8). Da monitorare: messaggi `Pendente` vecchi e messaggi `Fallito`.
+- La versione production-ready (worker separato, metriche, ripulitura dei messaggi completati) è G-001; l'invalidazione della cache delle pagine pubbliche si aggancia a `GestorePaginaPubblicata` con G-002.

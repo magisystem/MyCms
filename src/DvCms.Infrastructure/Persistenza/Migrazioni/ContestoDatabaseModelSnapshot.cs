@@ -375,6 +375,66 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.ToTable("TestiStatici", (string)null);
                 });
 
+            modelBuilder.Entity("DvCms.Domain.Outbox.MessaggioOutbox", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("BloccatoDa")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("BloccatoFinoAlUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ChiaveIdempotenza")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime>("CreatoIlUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("ElaboratoIlUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("IdTenant")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Payload")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("ProssimoTentativoIlUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Stato")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int>("Tentativi")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("UltimoErrore")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdTenant", "ChiaveIdempotenza")
+                        .IsUnique()
+                        .HasDatabaseName("IX_MessaggiOutbox_Idempotenza")
+                        .HasFilter("[ChiaveIdempotenza] IS NOT NULL");
+
+                    b.HasIndex("Stato", "ProssimoTentativoIlUtc");
+
+                    b.ToTable("MessaggiOutbox", (string)null);
+                });
+
             modelBuilder.Entity("DvCms.Domain.Tenancy.DominioSito", b =>
                 {
                     b.Property<Guid>("Id")
@@ -612,6 +672,15 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.HasOne("DvCms.Domain.Localizzazione.Lingua", null)
                         .WithMany()
                         .HasForeignKey("IdLingua")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DvCms.Domain.Outbox.MessaggioOutbox", b =>
+                {
+                    b.HasOne("DvCms.Domain.Tenancy.Tenant", null)
+                        .WithMany()
+                        .HasForeignKey("IdTenant")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
