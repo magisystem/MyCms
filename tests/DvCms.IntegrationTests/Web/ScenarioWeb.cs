@@ -57,6 +57,17 @@ public sealed class ScenarioWeb : IAsyncDisposable
             deveCambiarePassword: deveCambiarePassword,
             annullamento: TestContext.Current.CancellationToken);
 
+    public SessioneProva SessioneSu(string host) => Nuova(host);
+
+    public async Task DisabilitaTenantAsync(Guid idTenant)
+    {
+        await using var ambito = Fabbrica.Services.CreateAsyncScope();
+        var contesto = ambito.ServiceProvider.GetRequiredService<ContestoDatabase>();
+        var tenant = await contesto.Tenant.IgnoreQueryFilters().SingleAsync(candidato => candidato.Id == idTenant, TestContext.Current.CancellationToken);
+        tenant.Stato = DvCms.Domain.Tenancy.StatoTenant.Sospeso;
+        await contesto.SaveChangesAsync(TestContext.Current.CancellationToken);
+    }
+
     public Task<Guid> CreaPlatformAdminAsync(string email) =>
         DatiProva.CreaUtenzaAsync(
             Fabbrica.Services,

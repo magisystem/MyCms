@@ -1,0 +1,48 @@
+@page "/{slug?}"
+@model DvCms.Web.Pages.Pubblico.PaginaModel
+@{
+    Layout = null;
+    var pagina = Model.Contenuto;
+}
+<!DOCTYPE html>
+<html lang="@(pagina?.CodiceLingua ?? "it")">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@(pagina?.Titolo ?? _L["Pagina non trovata"])</title>
+    <link rel="stylesheet" href="~/css/pubblico.css" />
+    @if (pagina is null)
+    {
+        <meta name="robots" content="noindex" />
+    }
+</head>
+<body>
+    <main>
+        @if (pagina is null)
+        {
+            <h1>@_L["Pagina non trovata"]</h1>
+            <p>@_L["La pagina che cerchi non esiste o non è disponibile."]</p>
+        }
+        else
+        {
+            <article>
+                <h1>@pagina.Titolo</h1>
+                @foreach (var paragrafo in Model.Paragrafi)
+                {
+                    <p>
+                        @for (var i = 0; i < paragrafo.Count; i++)
+                        {
+                            if (i > 0)
+                            {
+                                <br />
+                            }
+
+                            @paragrafo[i]
+                        }
+                    </p>
+                }
+            </article>
+        }
+    </main>
+</body>
+</html>

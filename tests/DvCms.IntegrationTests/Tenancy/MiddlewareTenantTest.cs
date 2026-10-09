@@ -54,7 +54,7 @@ public class MiddlewareTenantTest
         client.DefaultRequestHeaders.Add("X-Tenant-Id", b.IdTenant.ToString());
         client.DefaultRequestHeaders.Add("X-Forwarded-Host", "b.esempio.it");
         client.DefaultRequestHeaders.Add("X-Original-Host", "b.esempio.it");
-        using var risposta = await client.GetAsync($"/?idTenant={b.IdTenant}&host=b.esempio.it", TestContext.Current.CancellationToken);
+        using var risposta = await client.GetAsync($"/admin/accesso?idTenant={b.IdTenant}&host=b.esempio.it", TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, risposta.StatusCode);
         Assert.Equal(["a.esempio.it"], fabbrica.Risoluzioni.Host);
@@ -75,7 +75,7 @@ public class MiddlewareTenantTest
         using var client = fabbrica.CreateClient();
         client.DefaultRequestHeaders.Host = "a.esempio.it";
         client.DefaultRequestHeaders.Add("X-Forwarded-Host", "b.esempio.it");
-        using var risposta = await client.GetAsync("/", TestContext.Current.CancellationToken);
+        using var risposta = await client.GetAsync("/admin/accesso", TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, risposta.StatusCode);
         Assert.Equal(["a.esempio.it"], fabbrica.Risoluzioni.Host);
@@ -100,7 +100,7 @@ public class MiddlewareTenantTest
         using var client = fabbrica.CreateClient();
         client.DefaultRequestHeaders.Host = "a.esempio.it";
         client.DefaultRequestHeaders.Add("X-Forwarded-Host", "b.esempio.it");
-        using var risposta = await client.GetAsync("/", TestContext.Current.CancellationToken);
+        using var risposta = await client.GetAsync("/admin/accesso", TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, risposta.StatusCode);
         Assert.Equal([hostAtteso], fabbrica.Risoluzioni.Host);
@@ -131,7 +131,7 @@ public class MiddlewareTenantTest
         // Il client di test usa l'host "localhost" per impostazione predefinita; la porta non conta.
         using var client = fabbrica.CreateClient();
         client.DefaultRequestHeaders.Host = "localhost:5173";
-        using var risposta = await client.GetAsync("/", TestContext.Current.CancellationToken);
+        using var risposta = await client.GetAsync("/admin/accesso", TestContext.Current.CancellationToken);
 
         Assert.Equal(atteso, risposta.StatusCode);
     }
@@ -149,6 +149,6 @@ public class MiddlewareTenantTest
     {
         using var client = fabbrica.CreateClient();
         client.DefaultRequestHeaders.Host = host;
-        return await client.GetAsync("/", TestContext.Current.CancellationToken);
+        return await client.GetAsync("/admin/accesso", TestContext.Current.CancellationToken);
     }
 }

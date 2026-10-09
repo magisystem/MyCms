@@ -64,6 +64,7 @@ public static class EstensioniServizi
         servizi.TryAddScoped<ServizioPopolamento>();
         servizi.TryAddScoped<IServizioPiattaforma, ServizioPiattaforma>();
         servizi.TryAddScoped<IServizioPagine, ServizioPagine>();
+        servizi.TryAddScoped<IServizioPaginePubbliche, ServizioPaginePubbliche>();
     }
 
     private static OpzioniSicurezza LeggiOpzioniSicurezza(IConfiguration configurazione)

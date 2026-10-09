@@ -17,11 +17,11 @@ public class AvvioApplicazioneTest : IClassFixture<FabbricaApplicazioneSenzaData
     }
 
     [Fact]
-    public async Task PaginaInizialeRispondeConSuccesso()
+    public async Task LaPaginaDiAccessoRispondeConSuccesso()
     {
         using var client = _fabbrica.CreateClient();
 
-        using var risposta = await client.GetAsync("/", TestContext.Current.CancellationToken);
+        using var risposta = await client.GetAsync("/admin/accesso", TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, risposta.StatusCode);
     }

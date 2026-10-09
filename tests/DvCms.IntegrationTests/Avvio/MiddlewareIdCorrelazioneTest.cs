@@ -18,7 +18,7 @@ public class MiddlewareIdCorrelazioneTest : IClassFixture<FabbricaApplicazioneSe
     {
         using var client = _fabbrica.CreateClient();
 
-        using var risposta = await client.GetAsync("/", TestContext.Current.CancellationToken);
+        using var risposta = await client.GetAsync("/admin/accesso", TestContext.Current.CancellationToken);
 
         var valori = risposta.Headers.GetValues(MiddlewareIdCorrelazione.NomeIntestazione).ToList();
         Assert.Single(valori);
@@ -29,7 +29,7 @@ public class MiddlewareIdCorrelazioneTest : IClassFixture<FabbricaApplicazioneSe
     public async Task RestituisceIdentificatoreRicevutoSeValido()
     {
         using var client = _fabbrica.CreateClient();
-        using var richiesta = new HttpRequestMessage(HttpMethod.Get, "/");
+        using var richiesta = new HttpRequestMessage(HttpMethod.Get, "/admin/accesso");
         richiesta.Headers.Add(MiddlewareIdCorrelazione.NomeIntestazione, "richiesta-123_ABC");
 
         using var risposta = await client.SendAsync(richiesta, TestContext.Current.CancellationToken);
@@ -47,7 +47,7 @@ public class MiddlewareIdCorrelazioneTest : IClassFixture<FabbricaApplicazioneSe
     public async Task SostituisceIdentificatoreNonSicuro(string ricevuto)
     {
         using var client = _fabbrica.CreateClient();
-        using var richiesta = new HttpRequestMessage(HttpMethod.Get, "/");
+        using var richiesta = new HttpRequestMessage(HttpMethod.Get, "/admin/accesso");
         richiesta.Headers.TryAddWithoutValidation(MiddlewareIdCorrelazione.NomeIntestazione, ricevuto);
 
         using var risposta = await client.SendAsync(richiesta, TestContext.Current.CancellationToken);
