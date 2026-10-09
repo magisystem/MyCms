@@ -1,6 +1,7 @@
 using DvCms.Application.Accessi;
 using DvCms.Domain;
 using DvCms.Domain.Accessi;
+using DvCms.Domain.Localizzazione;
 using DvCms.Domain.Tenancy;
 using DvCms.Infrastructure.Persistenza;
 using Microsoft.EntityFrameworkCore;
@@ -121,6 +122,7 @@ public sealed partial class ServizioPopolamento
         {
             sito = Sito.Crea(tenant.Id, richiesta.NomeSito, richiesta.FusoOrario, _orologio);
             _contesto.Siti.Add(sito);
+            _contesto.LingueSito.Add(LinguaSito.Crea(tenant.Id, sito.Id, Lingua.IdItaliano, predefinita: true, _orologio));
             creati.Add($"sito '{sito.Nome}' del tenant primario");
         }
         else if (!string.Equals(sito.Nome, richiesta.NomeSito, StringComparison.Ordinal))
@@ -216,6 +218,7 @@ public sealed partial class ServizioPopolamento
         var sito = Sito.Crea(tenant.Id, $"Sito di {richiesta.Nome}", null, _orologio);
         _contesto.Tenant.Add(tenant);
         _contesto.Siti.Add(sito);
+        _contesto.LingueSito.Add(LinguaSito.Crea(tenant.Id, sito.Id, Lingua.IdItaliano, predefinita: true, _orologio));
         _contesto.ProfiliGuest.Add(ProfiloGuest.Crea(tenant.Id, _orologio));
         _contesto.DominiSito.Add(DominioSito.CreaVerificato(tenant.Id, sito.Id, richiesta.Host, soloSviluppo: false, null, _orologio));
         _contesto.Utenze.Add(Utenza.Crea(

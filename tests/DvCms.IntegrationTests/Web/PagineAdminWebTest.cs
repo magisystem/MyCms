@@ -313,6 +313,39 @@ public partial class PagineAdminWebTest
         Assert.Contains("&quot;onmouseover=&quot;", html, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public async Task LaTraduzioneSiCreaDallaPaginaDOrigineESiVedeNelleLingue()
+    {
+        await using var scenario = await ScenarioWeb.CreaAsync();
+        await scenario.CreaTenantAdminAsync("anna@esempio.it");
+        var anna = scenario.SessioneA();
+        await anna.AccediAsync("anna@esempio.it", DatiProva.PasswordProva);
+        using var creazione = await anna.InviaModuloAsync("/admin/pagine/nuova", [new("Titolo", "Chi siamo"), new("Slug", "chi-siamo"), new("CodiceLingua", "it"), new("Contenuto", "x")]);
+        var percorso = SessioneProva.Destinazione(creazione)!;
+        var idOrigine = percorso[(percorso.LastIndexOf('/') + 1)..];
+
+        var modifica = await (await anna.GetAsync(percorso)).Content.ReadAsStringAsync(Ct);
+        Assert.Contains($"/admin/pagine/nuova?traduzioneDi={idOrigine}", modifica, StringComparison.Ordinal);
+
+        var modulo = await (await anna.GetAsync($"/admin/pagine/nuova?traduzioneDi={idOrigine}")).Content.ReadAsStringAsync(Ct);
+        Assert.Contains("Traduzione di", modulo, StringComparison.Ordinal);
+        Assert.Contains("value=\"en\"", modulo, StringComparison.Ordinal);
+        Assert.DoesNotContain("<option value=\"it\"", modulo, StringComparison.Ordinal);
+
+        using var traduzione = await anna.InviaModuloAsync(
+            $"/admin/pagine/nuova?traduzioneDi={idOrigine}",
+            [new("Titolo", "About us"), new("Slug", "chi-siamo"), new("CodiceLingua", "en"), new("Contenuto", "y")]);
+        Assert.True(SessioneProva.EReindirizzamento(traduzione));
+        Assert.Matches("^/admin/pagine/[0-9a-f-]{36}$", SessioneProva.Destinazione(traduzione)!);
+
+        var dopo = await (await anna.GetAsync(percorso)).Content.ReadAsStringAsync(Ct);
+        Assert.Contains("/chi-siamo", dopo, StringComparison.Ordinal);
+        Assert.DoesNotContain("Aggiungi una traduzione", dopo, StringComparison.Ordinal);
+        Assert.Contains($"href=\"{SessioneProva.Destinazione(traduzione)}\"", dopo, StringComparison.Ordinal);
+        using var altroOrigine = await anna.GetAsync($"/admin/pagine/nuova?traduzioneDi={Guid.NewGuid()}");
+        Assert.Equal(HttpStatusCode.NotFound, altroOrigine.StatusCode);
+    }
+
     private static async Task<string> IdRevisioneAsync(SessioneProva sessione, string percorso, int numero)
     {
         using var pagina = await sessione.GetAsync(percorso);

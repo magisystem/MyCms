@@ -240,6 +240,37 @@ public partial class PiattaformaWebTest
         Assert.Equal(HttpStatusCode.OK, elenco.StatusCode);
     }
 
+    [Fact]
+    public async Task IlPlatformAdminGestisceLeLingueDelSitoEUnTenantAdminNo()
+    {
+        await using var scenario = await ScenarioWeb.CreaAsync();
+        await scenario.CreaPlatformAdminAsync("platform@esempio.it");
+        await scenario.CreaTenantAdminAsync("anna@esempio.it");
+        var platform = scenario.SessioneB();
+        await platform.AccediAsync("platform@esempio.it", DatiProva.PasswordProva);
+        var anna = scenario.SessioneA();
+        await anna.AccediAsync("anna@esempio.it", DatiProva.PasswordProva);
+        var dettaglio = $"{Elenco}/{scenario.B.IdTenant}";
+
+        // Il tenant B ha già it (predefinita) ed en: si disabilita en e lo si riabilita dal modulo.
+        using var disabilita = await platform.InviaModuloAsync(dettaglio, [new("idSito", scenario.B.IdSito.ToString()), new("lingua", "en")], $"{dettaglio}?handler=DisabilitaLingua");
+        Assert.True(SessioneProva.EReindirizzamento(disabilita));
+        var senza = await (await platform.GetAsync(dettaglio)).Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        Assert.DoesNotContain("(en)</span>", senza, StringComparison.Ordinal);
+        Assert.Contains("<option value=\"en\">", senza, StringComparison.Ordinal);
+
+        using var abilita = await platform.InviaModuloAsync(dettaglio, [new("idSito", scenario.B.IdSito.ToString()), new("lingua", "en")], $"{dettaglio}?handler=AbilitaLingua");
+        var con = await (await platform.GetAsync(dettaglio)).Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        Assert.Contains("Lingua abilitata", con, StringComparison.Ordinal);
+        Assert.Contains("(en)", con, StringComparison.Ordinal);
+
+        foreach (var handler in new[] { "AbilitaLingua", "DisabilitaLingua", "LinguaPredefinita" })
+        {
+            using var negata = await anna.InviaModuloAsync("/admin", [new("idSito", scenario.A.IdSito.ToString()), new("lingua", "en")], $"{Elenco}/{scenario.A.IdTenant}?handler={handler}");
+            Assert.Equal(HttpStatusCode.Forbidden, negata.StatusCode);
+        }
+    }
+
     [GeneratedRegex("id=\"password-temporanea\".*?<code[^>]*>([^<]+)</code>", RegexOptions.Singleline | RegexOptions.CultureInvariant)]
     private static partial Regex PasswordMostrata();
 }

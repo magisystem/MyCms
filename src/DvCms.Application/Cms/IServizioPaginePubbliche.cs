@@ -9,7 +9,15 @@ public sealed record PaginaPubblica(
     DateTime PubblicatoIlUtc,
     string IdModello,
     int VersioneModello,
-    IReadOnlyDictionary<string, string> DatiModello);
+    IReadOnlyDictionary<string, string> DatiModello,
+    string Percorso,
+    IReadOnlyList<TraduzionePubblica> Traduzioni);
+
+/// <summary>Una versione linguistica pubblicata della pagina (anche quella corrente), con il suo percorso canonico.</summary>
+public sealed record TraduzionePubblica(string CodiceLingua, string NomeLingua, string Percorso, bool Predefinita);
+
+/// <summary>Una lingua abilitata per il sito dell'host.</summary>
+public sealed record LinguaPubblica(string Codice, string Nome, bool Predefinita);
 
 /// <summary>
 /// Lettura delle pagine per il sito pubblico (C-003). Lavora sul sito risolto dall'host; restituisce solo la
@@ -17,9 +25,12 @@ public sealed record PaginaPubblica(
 /// </summary>
 public interface IServizioPaginePubbliche
 {
+    /// <summary>Le lingue abilitate per il sito, quella predefinita per prima. La predefinita non ha prefisso nell'URL, le altre sì.</summary>
+    Task<IReadOnlyList<LinguaPubblica>> LingueAsync(CancellationToken annullamento);
+
     /// <summary>
-    /// Trova la pagina per slug (o la pagina iniziale se lo slug è nullo o vuoto). Se esistono più lingue con lo stesso
-    /// slug sceglie la lingua corrente, altrimenti quella predefinita.
+    /// Trova la pagina per slug (o la pagina iniziale se lo slug è nullo o vuoto) nella lingua indicata, o in quella
+    /// predefinita del sito se nulla. Nessun ripiego su un'altra lingua: se la pagina non esiste in quella lingua, nessun risultato.
     /// </summary>
-    Task<PaginaPubblica?> TrovaAsync(string? slug, CancellationToken annullamento);
+    Task<PaginaPubblica?> TrovaAsync(string? slug, string? codiceLingua, CancellationToken annullamento);
 }

@@ -10,7 +10,8 @@ public sealed record DatiNuovaPagina(
     string? CodiceLingua,
     bool PaginaIniziale,
     string? IdModello = null,
-    IReadOnlyDictionary<string, string>? DatiModello = null);
+    IReadOnlyDictionary<string, string>? DatiModello = null,
+    Guid? IdPaginaOrigine = null);
 
 public sealed record DatiModificaPagina(
     string? Slug,
@@ -41,6 +42,9 @@ public sealed record RevisioneInElenco(
     bool Pubblicata,
     bool UltimaBozza);
 
+/// <summary>Un'altra versione linguistica della stessa pagina (stesso gruppo di traduzione).</summary>
+public sealed record TraduzionePagina(Guid IdPagina, string CodiceLingua, string Slug, StatoPagina Stato);
+
 public sealed record DettaglioPagina(
     Guid Id,
     string Slug,
@@ -55,7 +59,9 @@ public sealed record DettaglioPagina(
     string IdModello,
     int VersioneModello,
     IReadOnlyDictionary<string, string> DatiModello,
-    int? VersioneModelloRecente);
+    int? VersioneModelloRecente,
+    IReadOnlyList<TraduzionePagina> Traduzioni,
+    IReadOnlyList<LinguaDisponibile> LingueMancanti);
 
 /// <summary>Contenuto di una revisione per l'anteprima (la bozza più recente, oppure una revisione precisa).</summary>
 public sealed record AnteprimaPagina(
@@ -79,6 +85,7 @@ public sealed record LinguaDisponibile(string Codice, string Nome);
 /// </summary>
 public interface IServizioPagine
 {
+    /// <summary>Le lingue abilitate per il sito dell'host, quella predefinita per prima.</summary>
     Task<IReadOnlyList<LinguaDisponibile>> ElencaLingueAsync(Guid idAttore, CancellationToken annullamento);
 
     Task<IReadOnlyList<RiepilogoPagina>> ElencaAsync(Guid idAttore, CancellationToken annullamento);

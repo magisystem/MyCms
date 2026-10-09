@@ -25,6 +25,8 @@ Creare o elevare un `TenantAdmin` è riservato al `PlatformAdmin` (ADR-0011).
 - `IdUltimaRevisioneBozza`, `IdRevisionePubblicata` (chiavi esterne composite `(Id, IdRevisione...)` verso `RevisioniPagina(IdPagina, Id)`: una pagina non può puntare alla revisione di un'altra pagina), `UltimoNumeroRevisione`
 - `CreatoIlUtc`, `AggiornatoIlUtc`, `PubblicatoIlUtc`, `TokenConcorrenza` (`rowversion`)
 
+`LingueSito` (C-008) elenca le lingue abilitate per ogni sito, con la predefinita (vedi `publishing-and-seo.md`); le pagine possono esistere solo nelle lingue abilitate.
+
 Pagina e revisione si puntano a vicenda: EF Core non ordina inserimenti circolari, quindi una pagina nuova si salva in due passi dentro una transazione (`SalvaNuovaPaginaAsync`: prima pagina e revisione, poi i puntatori). Una pagina ha al più una `PaginaIniziale` per sito e lingua (indice univoco filtrato). La chiave esterna composta `(IdTenant, IdSito)` impedisce a una pagina di puntare al sito di un altro tenant.
 
 Slug riservati: `admin` (area di amministrazione, `/admin`) e i percorsi degli asset statici (es. `lib`) non sono utilizzabili come slug di pagina e vanno rifiutati alla creazione. Ogni lingua di una pagina è una riga `Pagina` distinta con le proprie revisioni e il proprio slug; lo slug è univoco all'interno di sito e lingua (indice univoco su `(IdSito, IdLingua, Slug)`; `IdLingua` non è nullable, quindi non c'è ambiguità sui NULL). Cambiare slug di una pagina pubblicata deve passare da un caso d'uso che gestisce redirect/canonical.
@@ -120,7 +122,7 @@ Note:
 Le lingue iniziali sono **italiano** (lingua di base) e **inglese** (ADR-0018).
 
 - `Lingua` (`Lingue`): `Id`, `Codice` (`it`, `en`), `Nome`, `Cultura` (`it-IT`, `en-GB`), `Predefinita` (italiano), `Attiva`. Globale alla piattaforma, inserita dalla migrazione (`it` e `en`).
-- `LinguaSito` (`LingueSito`): `IdTenant`, `IdSito`, `IdLingua`, `Predefinita`, `Attiva`. Le lingue abilitate per ciascun sito e la lingua predefinita del sito.
+- `LinguaSito` (`LingueSito`): `IdTenant`, `IdSito`, `IdLingua`, `Predefinita`, `CreatoIlUtc` (una lingua si disabilita togliendo la riga). Le lingue abilitate per ciascun sito e la lingua predefinita del sito.
 - `TestoStatico` (`TestiStatici`): testi statici delle interfacce (HTML, messaggi, email). Globale alla piattaforma, **non** legata a un tenant: `Id`, `IdLingua`, `Chiave` (il testo statico in italiano così come scritto nella vista), `HashChiave` (SHA-256 della chiave, per l'indice), `Testo` (la traduzione nella lingua), `DaTradurre` (vero se il testo è stato creato in automatico con il testo italiano e non è ancora stato tradotto), `AggiornatoIlUtc`, `AggiornatoDaIdUtenza`. Indice univoco su `(IdLingua, HashChiave)`.
 - Testi dinamici creati dall'utente:
   - le **pagine** hanno una riga `Pagina` per lingua (stesso `IdGruppoTraduzione`), con revisioni, SEO e slug propri;

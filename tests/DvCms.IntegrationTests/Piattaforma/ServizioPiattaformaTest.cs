@@ -418,6 +418,112 @@ public class ServizioPiattaformaTest
         Assert.Equal(1, a.NumeroAmministratori);
     }
 
+    private static async Task<(Guid IdTenant, Guid IdSito)> NuovoTenantSoloItalianoAsync(Scenario s)
+    {
+        var creato = await s.ChiamaAsync(servizio => servizio.CreaTenantAsync(
+            s.IdPlatformAdmin, new DatiNuovoTenant("Cliente", "Sito", null, "cliente.esempio.it", true), TestContext.Current.CancellationToken));
+        var dettaglio = (await s.ChiamaAsync(servizio => servizio.LeggiTenantAsync(s.IdPlatformAdmin, creato.Id!.Value, TestContext.Current.CancellationToken)))!;
+        return (creato.Id!.Value, dettaglio.Siti.Single().Id);
+    }
+
+    [Fact]
+    public async Task UnSitoNuovoParlaItalianoEPuoAbilitareAltreLingue()
+    {
+        await using var s = await Scenario.CreaAsync();
+        var (idTenant, idSito) = await NuovoTenantSoloItalianoAsync(s);
+        var iniziale = (await s.ChiamaAsync(servizio => servizio.LeggiTenantAsync(s.IdPlatformAdmin, idTenant, TestContext.Current.CancellationToken)))!;
+        Assert.Equal([("it", true)], iniziale.Siti.Single().Lingue.Select(l => (l.Codice, l.Predefinita)));
+        Assert.Contains(iniziale.LingueDisponibili, l => l.Codice == "en");
+
+        var esito = await s.ChiamaAsync(servizio => servizio.AbilitaLinguaAsync(s.IdPlatformAdmin, idTenant, idSito, "EN", TestContext.Current.CancellationToken));
+        var doppia = await s.ChiamaAsync(servizio => servizio.AbilitaLinguaAsync(s.IdPlatformAdmin, idTenant, idSito, "en", TestContext.Current.CancellationToken));
+        var sconosciuta = await s.ChiamaAsync(servizio => servizio.AbilitaLinguaAsync(s.IdPlatformAdmin, idTenant, idSito, "xx", TestContext.Current.CancellationToken));
+        var altroTenant = await s.ChiamaAsync(servizio => servizio.AbilitaLinguaAsync(s.IdPlatformAdmin, s.B.IdTenant, idSito, "en", TestContext.Current.CancellationToken));
+
+        Assert.True(esito.Riuscito);
+        Assert.Equal(CodiceEsito.GiaPresente, doppia.Codice);
+        Assert.Equal(CodiceEsito.DatiNonValidi, sconosciuta.Codice);
+        Assert.Equal(CodiceEsito.NonTrovato, altroTenant.Codice);
+        var dopo = (await s.ChiamaAsync(servizio => servizio.LeggiTenantAsync(s.IdPlatformAdmin, idTenant, TestContext.Current.CancellationToken)))!;
+        Assert.Equal([("it", true), ("en", false)], dopo.Siti.Single().Lingue.Select(l => (l.Codice, l.Predefinita)));
+    }
+
+    [Fact]
+    public async Task LaLinguaPredefinitaEQuellaConPagineNonSiDisabilitano()
+    {
+        await using var s = await Scenario.CreaAsync();
+        var (idTenant, idSito) = await NuovoTenantSoloItalianoAsync(s);
+        await s.ChiamaAsync(servizio => servizio.AbilitaLinguaAsync(s.IdPlatformAdmin, idTenant, idSito, "en", TestContext.Current.CancellationToken));
+
+        var predefinita = await s.ChiamaAsync(servizio => servizio.DisabilitaLinguaAsync(s.IdPlatformAdmin, idTenant, idSito, "it", TestContext.Current.CancellationToken));
+        var nonAbilitata = await s.ChiamaAsync(servizio => servizio.DisabilitaLinguaAsync(s.IdPlatformAdmin, idTenant, idSito, "xx", TestContext.Current.CancellationToken));
+        Assert.Equal(CodiceEsito.NonConsentito, predefinita.Codice);
+        Assert.Equal(CodiceEsito.NonTrovato, nonAbilitata.Codice);
+
+        // Con una pagina inglese la lingua non si disabilita; senza sì.
+        var admin = await DatiProva.CreaUtenzaAsync(s.Fornitore, RuoloUtenza.TenantAdmin, idTenant, "anna@esempio.it", annullamento: TestContext.Current.CancellationToken);
+        await using (var ambito = s.Fornitore.CreateAsyncScope())
+        {
+            ambito.ServiceProvider.GetRequiredService<ContestoTenant>().Imposta(new DatiTenantRisolto(idTenant, idSito, Guid.NewGuid(), "cliente.esempio.it", false));
+            var pagine = ambito.ServiceProvider.GetRequiredService<DvCms.Application.Cms.IServizioPagine>();
+            Assert.True((await pagine.CreaAsync(admin, new DvCms.Application.Cms.DatiNuovaPagina("page", "Page", "x", "en", false), TestContext.Current.CancellationToken)).Riuscito);
+        }
+
+        var conPagine = await s.ChiamaAsync(servizio => servizio.DisabilitaLinguaAsync(s.IdPlatformAdmin, idTenant, idSito, "en", TestContext.Current.CancellationToken));
+        Assert.Equal(CodiceEsito.NonConsentito, conPagine.Codice);
+
+        var (altroTenant, altroSito) = (s.B.IdTenant, s.B.IdSito);
+        var libera = await s.ChiamaAsync(servizio => servizio.DisabilitaLinguaAsync(s.IdPlatformAdmin, altroTenant, altroSito, "en", TestContext.Current.CancellationToken));
+        Assert.True(libera.Riuscito);
+    }
+
+    [Fact]
+    public async Task LaLinguaPredefinitaSiCambiaSoloSenzaPagineEUnaSolaResta()
+    {
+        await using var s = await Scenario.CreaAsync();
+        var (idTenant, idSito) = await NuovoTenantSoloItalianoAsync(s);
+        await s.ChiamaAsync(servizio => servizio.AbilitaLinguaAsync(s.IdPlatformAdmin, idTenant, idSito, "en", TestContext.Current.CancellationToken));
+
+        var disabilitata = await s.ChiamaAsync(servizio => servizio.ImpostaLinguaPredefinitaAsync(s.IdPlatformAdmin, idTenant, idSito, "xx", TestContext.Current.CancellationToken));
+        var cambio = await s.ChiamaAsync(servizio => servizio.ImpostaLinguaPredefinitaAsync(s.IdPlatformAdmin, idTenant, idSito, "en", TestContext.Current.CancellationToken));
+
+        Assert.Equal(CodiceEsito.NonTrovato, disabilitata.Codice);
+        Assert.True(cambio.Riuscito);
+        var dopo = (await s.ChiamaAsync(servizio => servizio.LeggiTenantAsync(s.IdPlatformAdmin, idTenant, TestContext.Current.CancellationToken)))!;
+        Assert.Equal("en", Assert.Single(dopo.Siti.Single().Lingue, l => l.Predefinita).Codice);
+
+        // Con una pagina pubblicata il cambio non è più consentito (cambierebbe tutti gli indirizzi).
+        var admin = await DatiProva.CreaUtenzaAsync(s.Fornitore, RuoloUtenza.TenantAdmin, idTenant, "anna@esempio.it", annullamento: TestContext.Current.CancellationToken);
+        await using (var ambito = s.Fornitore.CreateAsyncScope())
+        {
+            ambito.ServiceProvider.GetRequiredService<ContestoTenant>().Imposta(new DatiTenantRisolto(idTenant, idSito, Guid.NewGuid(), "cliente.esempio.it", false));
+            var pagine = ambito.ServiceProvider.GetRequiredService<DvCms.Application.Cms.IServizioPagine>();
+            var id = (await pagine.CreaAsync(admin, new DvCms.Application.Cms.DatiNuovaPagina("page", "Page", "x", null, false), TestContext.Current.CancellationToken)).Id!.Value;
+            var letta = (await pagine.LeggiAsync(admin, id, TestContext.Current.CancellationToken))!;
+            Assert.True((await pagine.PubblicaAsync(admin, id, letta.TokenConcorrenza, TestContext.Current.CancellationToken)).Riuscito);
+        }
+
+        var bloccato = await s.ChiamaAsync(servizio => servizio.ImpostaLinguaPredefinitaAsync(s.IdPlatformAdmin, idTenant, idSito, "it", TestContext.Current.CancellationToken));
+        Assert.Equal(CodiceEsito.NonConsentito, bloccato.Codice);
+        var invariato = (await s.ChiamaAsync(servizio => servizio.LeggiTenantAsync(s.IdPlatformAdmin, idTenant, TestContext.Current.CancellationToken)))!;
+        Assert.Equal("en", Assert.Single(invariato.Siti.Single().Lingue, l => l.Predefinita).Codice);
+    }
+
+    [Fact]
+    public async Task LeLingueDelSitoSonoSoloDelPlatformAdmin()
+    {
+        await using var s = await Scenario.CreaAsync();
+        var admin = await DatiProva.CreaUtenzaAsync(s.Fornitore, RuoloUtenza.TenantAdmin, s.A.IdTenant, "anna@esempio.it", annullamento: TestContext.Current.CancellationToken);
+        var ct = TestContext.Current.CancellationToken;
+
+        var a = await s.ChiamaAsync(servizio => servizio.AbilitaLinguaAsync(admin, s.A.IdTenant, s.A.IdSito, "en", ct));
+        var b = await s.ChiamaAsync(servizio => servizio.DisabilitaLinguaAsync(admin, s.A.IdTenant, s.A.IdSito, "en", ct));
+        var c = await s.ChiamaAsync(servizio => servizio.ImpostaLinguaPredefinitaAsync(admin, s.A.IdTenant, s.A.IdSito, "en", ct));
+
+        Assert.All(new[] { a, b, c }, esito => Assert.Equal(CodiceEsito.NonAutorizzato, esito.Codice));
+        Assert.Equal(["it", "en"], (await s.ChiamaAsync(servizio => servizio.LeggiTenantAsync(s.IdPlatformAdmin, s.A.IdTenant, ct)))!.Siti.Single().Lingue.Select(l => l.Codice));
+    }
+
     private const string ScenarioHostA = "a.esempio.it";
 
     private sealed class Scenario : IAsyncDisposable

@@ -161,6 +161,48 @@
                             </tbody>
                         </table>
 
+                        <div class="mb-3">
+                            <div class="form-label">@_L["Lingue del sito"]</div>
+                            <div class="d-flex flex-wrap gap-2 align-items-center">
+                                @foreach (var lingua in sito.Lingue)
+                                {
+                                    <span class="badge @(lingua.Predefinita ? "bg-blue-lt" : "bg-secondary-lt")">
+                                        @lingua.Nome (@lingua.Codice)@(lingua.Predefinita ? " - " + _L["predefinita"] : string.Empty)
+                                    </span>
+                                    @if (!lingua.Predefinita)
+                                    {
+                                        <form method="post" asp-page-handler="LinguaPredefinita" asp-route-id="@tenant.Id" class="d-inline">
+                                            <input type="hidden" name="idSito" value="@sito.Id" />
+                                            <input type="hidden" name="lingua" value="@lingua.Codice" />
+                                            <button type="submit" class="btn btn-sm">@_L["Rendi predefinita"]</button>
+                                        </form>
+                                        <form method="post" asp-page-handler="DisabilitaLingua" asp-route-id="@tenant.Id" class="d-inline">
+                                            <input type="hidden" name="idSito" value="@sito.Id" />
+                                            <input type="hidden" name="lingua" value="@lingua.Codice" />
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">@_L["Disabilita"]</button>
+                                        </form>
+                                    }
+                                }
+                                @{
+                                    var daAggiungere = tenant.LingueDisponibili.Where(l => sito.Lingue.All(x => x.Codice != l.Codice)).ToList();
+                                }
+                                @if (daAggiungere.Count > 0)
+                                {
+                                    <form method="post" asp-page-handler="AbilitaLingua" asp-route-id="@tenant.Id" class="d-inline-flex gap-1">
+                                        <input type="hidden" name="idSito" value="@sito.Id" />
+                                        <select name="lingua" class="form-select form-select-sm" aria-label="@_L["Lingua da abilitare"]">
+                                            @foreach (var l in daAggiungere)
+                                            {
+                                                <option value="@l.Codice">@l.Nome (@l.Codice)</option>
+                                            }
+                                        </select>
+                                        <button type="submit" class="btn btn-sm">@_L["Abilita"]</button>
+                                    </form>
+                                }
+                            </div>
+                            <div class="form-hint">@_L["La lingua predefinita non ha prefisso nell'indirizzo, le altre sì (ad esempio /en/pagina)."]</div>
+                        </div>
+
                         <form method="post" asp-page-handler="NuovoDominio" asp-route-id="@tenant.Id" class="row g-2 align-items-end">
                             <input type="hidden" name="idSito" value="@sito.Id" />
                             <div class="col-md">

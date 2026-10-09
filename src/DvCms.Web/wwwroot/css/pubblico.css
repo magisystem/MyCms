@@ -45,3 +45,11 @@ h1 {
     text-decoration: none;
     font-weight: 600;
 }
+
+.lingue {
+    max-width: 46rem;
+    margin: 0 auto;
+    padding: 1rem 1rem 0;
+    display: flex;
+    gap: 1rem;
+}

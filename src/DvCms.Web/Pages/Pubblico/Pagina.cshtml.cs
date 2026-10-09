@@ -1,4 +1,5 @@
 using DvCms.Application.Cms;
+using DvCms.Web.Localizzazione;
 using DvCms.Web.Pubblico;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -6,8 +7,9 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 namespace DvCms.Web.Pages.Pubblico;
 
 /// <summary>
-/// Sito pubblico (C-003): <c>/</c> mostra la pagina iniziale e <c>/{slug}</c> la pagina con quello slug, sul sito
-/// risolto dall'host. Mostra solo la revisione pubblicata; bozze, pagine ritirate e inesistenti rispondono 404.
+/// Sito pubblico (C-003, C-008): <c>/</c> mostra la pagina iniziale e <c>/{slug}</c> la pagina con quello slug nella lingua
+/// predefinita del sito; le altre lingue abilitate hanno il prefisso (<c>/en</c>, <c>/en/{slug}</c>). Mostra solo la revisione
+/// pubblicata; bozze, pagine ritirate, pagine che non esistono in quella lingua e percorsi non validi rispondono 404.
 /// Il contenuto è testo semplice: ogni riga è codificata da Razor e non viene mai emesso come HTML.
 /// </summary>
 public class PaginaModel : PageModel
@@ -21,16 +23,68 @@ public class PaginaModel : PageModel
 
     public VistaPagina? Vista { get; private set; }
 
-    public async Task<IActionResult> OnGetAsync(string? slug, CancellationToken annullamento)
+    public async Task<IActionResult> OnGetAsync(string? primo, string? secondo, CancellationToken annullamento)
     {
-        var contenuto = await _pagine.TrovaAsync(slug, annullamento);
-        if (contenuto is null)
+        var lingue = await _pagine.LingueAsync(annullamento);
+        var predefinita = lingue.FirstOrDefault(lingua => lingua.Predefinita);
+
+        // Il primo segmento è un prefisso solo se è una lingua abilitata non predefinita; altrimenti è lo slug.
+        var prefissata = lingue.FirstOrDefault(lingua => !lingua.Predefinita && string.Equals(lingua.Codice, primo, StringComparison.OrdinalIgnoreCase));
+        string? slug;
+        if (prefissata is not null)
         {
-            Response.StatusCode = StatusCodes.Status404NotFound;
-            return Page();
+            slug = secondo;
+        }
+        else if (secondo is null)
+        {
+            slug = primo;
+        }
+        else
+        {
+            return NonTrovata(predefinita?.Codice);
         }
 
-        Vista = new VistaPagina(contenuto.Titolo, contenuto.CodiceLingua, VistaPagina.DividiParagrafi(contenuto.Contenuto), NonIndicizzare: false, null, contenuto.IdModello, contenuto.VersioneModello, contenuto.DatiModello);
+        var codice = prefissata?.Codice ?? predefinita?.Codice;
+        if (codice is not null)
+        {
+            HttpContext.Items[ContestoLinguaRichiesta.ChiaveElemento] = codice;
+        }
+
+        var contenuto = await _pagine.TrovaAsync(slug, prefissata?.Codice, annullamento);
+        if (contenuto is null)
+        {
+            return NonTrovata(codice);
+        }
+
+        var origine = $"{Request.Scheme}://{Request.Host}";
+        var voci = contenuto.Traduzioni.Count > 1
+            ? contenuto.Traduzioni
+                .Select(t => new VoceLingua(t.CodiceLingua, t.NomeLingua, origine + t.Percorso, t.CodiceLingua == contenuto.CodiceLingua))
+                .ToList()
+            : (IReadOnlyList<VoceLingua>)[];
+        Vista = new VistaPagina(
+            contenuto.Titolo,
+            contenuto.CodiceLingua,
+            VistaPagina.DividiParagrafi(contenuto.Contenuto),
+            NonIndicizzare: false,
+            null,
+            contenuto.IdModello,
+            contenuto.VersioneModello,
+            contenuto.DatiModello,
+            origine + contenuto.Percorso,
+            voci,
+            contenuto.Traduzioni.FirstOrDefault(t => t.Predefinita) is { } predefinitaTradotta ? origine + predefinitaTradotta.Percorso : null);
+        return Page();
+    }
+
+    private PageResult NonTrovata(string? codiceLingua)
+    {
+        if (codiceLingua is not null)
+        {
+            HttpContext.Items[ContestoLinguaRichiesta.ChiaveElemento] = codiceLingua;
+        }
+
+        Response.StatusCode = StatusCodes.Status404NotFound;
         return Page();
     }
 }

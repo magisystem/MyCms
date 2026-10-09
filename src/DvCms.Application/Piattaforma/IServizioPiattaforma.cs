@@ -61,12 +61,15 @@ public sealed record DettaglioDominio(
     DateTime? VerificatoIlUtc,
     string? VerificatoDa);
 
+public sealed record LinguaDelSito(string Codice, string Nome, bool Predefinita);
+
 public sealed record DettaglioSito(
     Guid Id,
     string Nome,
     string FusoOrario,
     StatoSito Stato,
-    IReadOnlyList<DettaglioDominio> Domini);
+    IReadOnlyList<DettaglioDominio> Domini,
+    IReadOnlyList<LinguaDelSito> Lingue);
 
 public sealed record DettaglioAccount(
     Guid Id,
@@ -84,7 +87,8 @@ public sealed record DettaglioTenant(
     bool Primario,
     DateTime CreatoIlUtc,
     IReadOnlyList<DettaglioSito> Siti,
-    IReadOnlyList<DettaglioAccount> Account);
+    IReadOnlyList<DettaglioAccount> Account,
+    IReadOnlyList<LinguaDelSito> LingueDisponibili);
 
 /// <summary>
 /// Operazioni riservate al <see cref="RuoloUtenza.PlatformAdmin"/> (ADR-0014). Ogni metodo verifica sul database che
@@ -122,6 +126,21 @@ public interface IServizioPiattaforma
         string? host,
         bool verificato,
         CancellationToken annullamento);
+
+    /// <summary>Abilita una lingua (attiva nella piattaforma) per il sito: le sue pagine avranno il prefisso di lingua nell'URL.</summary>
+    Task<EsitoOperazione> AbilitaLinguaAsync(Guid idAttore, Guid idTenant, Guid idSito, string? codiceLingua, CancellationToken annullamento);
+
+    /// <summary>
+    /// Disabilita una lingua del sito. Non si può disabilitare la lingua predefinita né una lingua che ha ancora pagine
+    /// (le ssposterebbero nel nulla): prima si eliminano o si portano altrove.
+    /// </summary>
+    Task<EsitoOperazione> DisabilitaLinguaAsync(Guid idAttore, Guid idTenant, Guid idSito, string? codiceLingua, CancellationToken annullamento);
+
+    /// <summary>
+    /// Cambia la lingua predefinita (quella senza prefisso nell'URL). Cambia gli indirizzi di tutte le pagine, quindi è
+    /// consentito solo finché il sito non ha pagine pubblicate.
+    /// </summary>
+    Task<EsitoOperazione> ImpostaLinguaPredefinitaAsync(Guid idAttore, Guid idTenant, Guid idSito, string? codiceLingua, CancellationToken annullamento);
 
     /// <summary>Registra la verifica (manuale) del possesso del dominio: chi e quando.</summary>
     Task<EsitoOperazione> VerificaDominioAsync(Guid idAttore, Guid idTenant, Guid idDominio, CancellationToken annullamento);

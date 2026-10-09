@@ -67,7 +67,8 @@ public class Pagina
         ContenutoRevisione contenuto,
         bool paginaIniziale,
         Guid idAutore,
-        TimeProvider orologio)
+        TimeProvider orologio,
+        Guid? idGruppoTraduzione = null)
     {
         ArgumentNullException.ThrowIfNull(orologio);
         if (!NormalizzatoreSlug.TentaNormalizza(slug, out var slugNormalizzato))
@@ -82,7 +83,7 @@ public class Pagina
             IdTenant = idTenant,
             IdSito = idSito,
             IdLingua = idLingua,
-            IdGruppoTraduzione = Identificativi.Nuovo(orologio),
+            IdGruppoTraduzione = idGruppoTraduzione ?? Identificativi.Nuovo(orologio),
             Slug = slugNormalizzato,
             PaginaIniziale = paginaIniziale,
             Stato = StatoPagina.Bozza,

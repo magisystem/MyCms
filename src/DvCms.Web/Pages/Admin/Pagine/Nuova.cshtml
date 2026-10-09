@@ -11,7 +11,15 @@
                 {
                     <div class="alert alert-danger" role="alert">@Model.Errore</div>
                 }
+                @if (Model.TitoloOrigine is not null)
+                {
+                    <div class="alert alert-info" role="status">@_L["Traduzione di"]: <strong>@Model.TitoloOrigine</strong></div>
+                }
                 <form method="get" class="row g-2 align-items-end mb-4">
+                    @if (Model.TraduzioneDi is { } origine)
+                    {
+                        <input type="hidden" name="traduzioneDi" value="@origine" />
+                    }
                     <div class="col">
                         <label class="form-label" for="modello">@_L["Modello di pagina"]</label>
                         <select class="form-select" id="modello" name="modello" data-auto-invio>
@@ -23,7 +31,7 @@
                     </div>
                     <div class="col-auto"><button type="submit" class="btn">@_L["Usa questo modello"]</button></div>
                 </form>
-                <form method="post" asp-route-modello="@Model.Modello.Id" novalidate>
+                <form method="post" asp-route-modello="@Model.Modello.Id" asp-route-traduzioneDi="@Model.TraduzioneDi" novalidate>
                     <div class="mb-3">
                         <label class="form-label" for="Titolo">@_L["Titolo"]</label>
                         <input class="form-control" id="Titolo" name="Titolo" value="@Model.Titolo" maxlength="200" required />

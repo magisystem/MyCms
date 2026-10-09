@@ -1,5 +1,8 @@
 namespace DvCms.Web.Pubblico;
 
+/// <summary>Una versione linguistica di una pagina: indirizzo assoluto, nome per il selettore e se è la corrente.</summary>
+public sealed record VoceLingua(string Codice, string Nome, string Url, bool Corrente);
+
 /// <summary>Dati per disegnare una pagina del sito pubblico (o la sua anteprima) nel documento HTML condiviso.</summary>
 public sealed record VistaPagina(
     string Titolo,
@@ -9,8 +12,14 @@ public sealed record VistaPagina(
     string? EtichettaAnteprima = null,
     string IdModello = "testo-semplice",
     int VersioneModello = 1,
-    IReadOnlyDictionary<string, string>? DatiModello = null)
+    IReadOnlyDictionary<string, string>? DatiModello = null,
+    string? UrlCanonico = null,
+    IReadOnlyList<VoceLingua>? Lingue = null,
+    string? UrlPredefinito = null)
 {
+    /// <summary>Le versioni linguistiche pubblicate (per hreflang e selettore); vuoto se la pagina esiste in una sola lingua.</summary>
+    public IReadOnlyList<VoceLingua> VociLingua => Lingue ?? [];
+
     public string Dato(string nome) => DatiModello is not null && DatiModello.TryGetValue(nome, out var valore) ? valore : string.Empty;
 
     /// <summary>Divide il testo semplice in paragrafi (riga vuota) e righe: ogni riga sarà codificata da Razor.</summary>

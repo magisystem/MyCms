@@ -82,3 +82,29 @@ internal sealed class ConfigurazioneProfiloGuest : IEntityTypeConfiguration<Prof
         entita.HasIndex(profilo => profilo.IdTenant).IsUnique();
     }
 }
+
+internal sealed class ConfigurazioneLinguaSito : IEntityTypeConfiguration<LinguaSito>
+{
+    public void Configure(EntityTypeBuilder<LinguaSito> entita)
+    {
+        entita.ToTable("LingueSito");
+        entita.HasKey(lingua => lingua.Id);
+        entita.Property(lingua => lingua.Id).ValueGeneratedNever();
+
+        // Il sito deve essere dello stesso tenant (chiave esterna composta).
+        entita.HasOne<Sito>()
+            .WithMany()
+            .HasForeignKey(lingua => new { lingua.IdTenant, lingua.IdSito })
+            .HasPrincipalKey(sito => new { sito.IdTenant, sito.Id })
+            .OnDelete(DeleteBehavior.Restrict);
+        entita.HasOne<DvCms.Domain.Localizzazione.Lingua>().WithMany().HasForeignKey(lingua => lingua.IdLingua).OnDelete(DeleteBehavior.Restrict);
+
+        entita.HasIndex(lingua => new { lingua.IdSito, lingua.IdLingua }).IsUnique();
+
+        // Una sola lingua predefinita per sito.
+        entita.HasIndex(lingua => lingua.IdSito)
+            .IsUnique()
+            .HasFilter("[Predefinita] = 1")
+            .HasDatabaseName("IX_LingueSito_Predefinita");
+    }
+}

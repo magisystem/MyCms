@@ -56,6 +56,15 @@ public class DettaglioModel : PaginaPiattaforma
         CancellationToken annullamento) =>
         EseguiAsync(id, () => _piattaforma.ModificaSitoAsync(IdAttore, id, idSito, nome, fusoOrario, attivo, annullamento), Localizzatore.Traduci("Sito aggiornato."));
 
+    public Task<IActionResult> OnPostAbilitaLinguaAsync(Guid id, Guid idSito, string? lingua, CancellationToken annullamento) =>
+        EseguiAsync(id, () => _piattaforma.AbilitaLinguaAsync(IdAttore, id, idSito, lingua, annullamento), Localizzatore.Traduci("Lingua abilitata."));
+
+    public Task<IActionResult> OnPostDisabilitaLinguaAsync(Guid id, Guid idSito, string? lingua, CancellationToken annullamento) =>
+        EseguiAsync(id, () => _piattaforma.DisabilitaLinguaAsync(IdAttore, id, idSito, lingua, annullamento), Localizzatore.Traduci("Lingua disabilitata."));
+
+    public Task<IActionResult> OnPostLinguaPredefinitaAsync(Guid id, Guid idSito, string? lingua, CancellationToken annullamento) =>
+        EseguiAsync(id, () => _piattaforma.ImpostaLinguaPredefinitaAsync(IdAttore, id, idSito, lingua, annullamento), Localizzatore.Traduci("Lingua predefinita cambiata."));
+
     public Task<IActionResult> OnPostNuovoDominioAsync(Guid id, Guid idSito, string? host, bool verificato, CancellationToken annullamento) =>
         EseguiAsync(id, () => _piattaforma.AggiungiDominioAsync(IdAttore, id, idSito, host, verificato, annullamento), Localizzatore.Traduci("Dominio aggiunto."));
 

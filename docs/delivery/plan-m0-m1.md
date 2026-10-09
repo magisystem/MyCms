@@ -27,6 +27,7 @@ Piano di implementazione richiesto da `docs/AI_START_HERE.md`, preparato prima d
 | B-008 Recupero password | Completata (M1b: OTP + link monouso in due email, limiti, invalidazioni, notifica; esclusi PlatformAdmin) |
 | C-004 Preview e rollback (M2) | Completata (anteprima protetta e noindex, pubblicazione di una revisione passata, ripristino come nuova bozza) |
 | C-006 Template guidati (M2) | Completata (registro versionato e immutabile, modelli `testo-semplice` e `presentazione`, form Razor, policy di editing, passaggio di versione su richiesta) |
+| C-008 Pagine in più lingue (M2) | Completata (`LingueSito`, prefisso di lingua, traduzioni collegate, 404 per lingua, canonical/hreflang, selettore, gestione lingue nel menu Platform) |
 | B-010 Gestione testi statici | Completata (`/admin/platform/testi`: ricerca, filtri, modifica, cache e audit) |
 | B-007 Creazione TenantAdmin e non-escalation | Completata (password temporanea mostrata una volta; elevazione `Utente` → `TenantAdmin`) |
 

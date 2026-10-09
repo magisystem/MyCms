@@ -19,6 +19,7 @@ public static class DatiProva
         bool soloSviluppo = false,
         bool verificato = true,
         bool dominioAttivo = true,
+        bool abilitaInglese = true,
         StatoTenant statoTenant = StatoTenant.Attivo,
         StatoSito statoSito = StatoSito.Attivo,
         CancellationToken annullamento = default)
@@ -41,6 +42,12 @@ public static class DatiProva
         contesto.Tenant.Add(tenant);
         contesto.Siti.Add(sito);
         contesto.DominiSito.Add(dominio);
+        contesto.LingueSito.Add(LinguaSito.Crea(tenant.Id, sito.Id, DvCms.Domain.Localizzazione.Lingua.IdItaliano, predefinita: true, orologio));
+        if (abilitaInglese)
+        {
+            contesto.LingueSito.Add(LinguaSito.Crea(tenant.Id, sito.Id, DvCms.Domain.Localizzazione.Lingua.IdInglese, predefinita: false, orologio));
+        }
+
         contesto.ProfiliGuest.Add(ProfiloGuest.Crea(tenant.Id, orologio));
         await contesto.SaveChangesAsync(annullamento);
 

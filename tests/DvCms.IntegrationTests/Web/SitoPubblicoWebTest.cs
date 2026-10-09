@@ -3,6 +3,7 @@ using DvCms.Application.Cms;
 using DvCms.Application.Tenancy;
 using DvCms.Domain.Accessi;
 using DvCms.IntegrationTests.Supporto;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
@@ -153,20 +154,100 @@ public class SitoPubblicoWebTest
     }
 
     [Fact]
-    public async Task SeEsistonoPiuLingueSiUsaQuellaPredefinitaOQuellaDisponibile()
+    public async Task LaLinguaPredefinitaNonHaPrefissoLeAltreSi()
     {
         await using var s = await Contesto.CreaAsync();
-        await s.CreaPaginaAsync(s.A, "news", "Notizie", "x", lingua: "it", pubblica: true);
-        await s.CreaPaginaAsync(s.A, "news", "News", "x", lingua: "en", pubblica: true);
+        var it = await s.CreaPaginaAsync(s.A, "news", "Notizie", "x", lingua: "it", pubblica: true);
+        await s.CreaPaginaAsync(s.A, "news", "News", "x", lingua: "en", pubblica: true, traduzioneDi: it);
+
+        var italiano = await (await s.SessioneA().GetAsync("/news")).Content.ReadAsStringAsync(Ct);
+        var inglese = await (await s.SessioneA().GetAsync("/en/news")).Content.ReadAsStringAsync(Ct);
+
+        Assert.Contains("<h1>Notizie</h1>", italiano, StringComparison.Ordinal);
+        Assert.Contains("<html lang=\"it\">", italiano, StringComparison.Ordinal);
+        Assert.Contains("<h1>News</h1>", inglese, StringComparison.Ordinal);
+        Assert.Contains("<html lang=\"en\">", inglese, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("/en/solo-it")]
+    [InlineData("/solo-en")]
+    [InlineData("/fr/qualcosa")]
+    [InlineData("/it/solo-it")]
+    [InlineData("/en/solo-it/altro")]
+    [InlineData("/EN/")]
+    public async Task UnaPaginaCheNonEsisteNellaLinguaRichiestaDa404SenzaRipiego(string percorso)
+    {
+        await using var s = await Contesto.CreaAsync();
+        await s.CreaPaginaAsync(s.A, "solo-it", "Solo italiano", "x", lingua: "it", pubblica: true);
         await s.CreaPaginaAsync(s.A, "solo-en", "Only English", "x", lingua: "en", pubblica: true);
 
-        var news = await (await s.SessioneA().GetAsync("/news")).Content.ReadAsStringAsync(Ct);
-        var soloEn = await (await s.SessioneA().GetAsync("/solo-en")).Content.ReadAsStringAsync(Ct);
+        using var risposta = await s.SessioneA().GetAsync(percorso);
 
-        Assert.Contains("<h1>Notizie</h1>", news, StringComparison.Ordinal);
-        Assert.Contains("<html lang=\"it\">", news, StringComparison.Ordinal);
-        Assert.Contains("<h1>Only English</h1>", soloEn, StringComparison.Ordinal);
-        Assert.Contains("<html lang=\"en\">", soloEn, StringComparison.Ordinal);
+        Assert.Equal(HttpStatusCode.NotFound, risposta.StatusCode);
+    }
+
+    [Fact]
+    public async Task OgniLinguaHaLaPropriaPaginaIniziale()
+    {
+        await using var s = await Contesto.CreaAsync();
+        using var vuoto = await s.SessioneA().GetAsync("/en");
+        Assert.Equal(HttpStatusCode.NotFound, vuoto.StatusCode);
+        var it = await s.CreaPaginaAsync(s.A, "home", "Benvenuti", "x", lingua: "it", iniziale: true, pubblica: true);
+        await s.CreaPaginaAsync(s.A, "home", "Welcome", "x", lingua: "en", iniziale: true, pubblica: true, traduzioneDi: it);
+
+        var radice = await (await s.SessioneA().GetAsync("/")).Content.ReadAsStringAsync(Ct);
+        var radiceInglese = await (await s.SessioneA().GetAsync("/en")).Content.ReadAsStringAsync(Ct);
+
+        Assert.Contains("Benvenuti", radice, StringComparison.Ordinal);
+        Assert.Contains("Welcome", radiceInglese, StringComparison.Ordinal);
+        Assert.Contains("<link rel=\"canonical\" href=\"http://a.esempio.it/\" />", radice, StringComparison.Ordinal);
+        Assert.Contains("<link rel=\"canonical\" href=\"http://a.esempio.it/en\" />", radiceInglese, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task CanonicalHreflangESelettoreMostranoSoloLeTraduzioniPubblicate()
+    {
+        await using var s = await Contesto.CreaAsync();
+        var it = await s.CreaPaginaAsync(s.A, "news", "Notizie", "x", lingua: "it", pubblica: true);
+        await s.CreaPaginaAsync(s.A, "news", "News", "x", lingua: "en", pubblica: true, traduzioneDi: it);
+        var senzaTraduzione = await s.CreaPaginaAsync(s.A, "contatti", "Contatti", "x", lingua: "it", pubblica: true);
+        var bozzaEn = await s.CreaPaginaAsync(s.A, "contatti", "Contacts", "x", lingua: "en", pubblica: false, traduzioneDi: senzaTraduzione);
+        Assert.NotEqual(Guid.Empty, bozzaEn);
+
+        var news = await (await s.SessioneA().GetAsync("/news")).Content.ReadAsStringAsync(Ct);
+        var contatti = await (await s.SessioneA().GetAsync("/contatti")).Content.ReadAsStringAsync(Ct);
+
+        Assert.Contains("<link rel=\"canonical\" href=\"http://a.esempio.it/news\" />", news, StringComparison.Ordinal);
+        Assert.Contains("<link rel=\"alternate\" hreflang=\"it\" href=\"http://a.esempio.it/news\" />", news, StringComparison.Ordinal);
+        Assert.Contains("<link rel=\"alternate\" hreflang=\"en\" href=\"http://a.esempio.it/en/news\" />", news, StringComparison.Ordinal);
+        Assert.Contains("<link rel=\"alternate\" hreflang=\"x-default\" href=\"http://a.esempio.it/news\" />", news, StringComparison.Ordinal);
+        Assert.Contains("<nav class=\"lingue\"", news, StringComparison.Ordinal);
+        Assert.Contains("hreflang=\"en\" lang=\"en\"", news, StringComparison.Ordinal);
+
+        // La traduzione è ancora bozza: né hreflang né selettore, ma il canonical c'è.
+        Assert.Contains("<link rel=\"canonical\" href=\"http://a.esempio.it/contatti\" />", contatti, StringComparison.Ordinal);
+        Assert.DoesNotContain("hreflang", contatti, StringComparison.Ordinal);
+        Assert.DoesNotContain("class=\"lingue\"", contatti, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task UnaLinguaNonPiuAbilitataSparisceDalSitoEDaiCollegamenti()
+    {
+        await using var s = await Contesto.CreaAsync();
+        var it = await s.CreaPaginaAsync(s.A, "news", "Notizie", "x", lingua: "it", pubblica: true);
+        await s.CreaPaginaAsync(s.A, "news", "News", "x", lingua: "en", pubblica: true, traduzioneDi: it);
+        await using (var ambito = s.Web.Fabbrica.Services.CreateAsyncScope())
+        {
+            await ambito.ServiceProvider.GetRequiredService<DvCms.Infrastructure.Persistenza.ContestoDatabase>().LingueSito.IgnoreQueryFilters()
+                .Where(ls => ls.IdSito == s.A.IdSito && !ls.Predefinita).ExecuteDeleteAsync(Ct);
+        }
+
+        using var inglese = await s.SessioneA().GetAsync("/en/news");
+        var italiano = await (await s.SessioneA().GetAsync("/news")).Content.ReadAsStringAsync(Ct);
+
+        Assert.Equal(HttpStatusCode.NotFound, inglese.StatusCode);
+        Assert.DoesNotContain("hreflang", italiano, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -235,9 +316,10 @@ public class SitoPubblicoWebTest
             string contenuto,
             string lingua = "it",
             bool iniziale = false,
-            bool pubblica = false)
+            bool pubblica = false,
+            Guid? traduzioneDi = null)
         {
-            var esito = await ComeAsync(tenant, (servizio, attore) => servizio.CreaAsync(attore, new DatiNuovaPagina(slug, titolo, contenuto, lingua, iniziale), Ct));
+            var esito = await ComeAsync(tenant, (servizio, attore) => servizio.CreaAsync(attore, new DatiNuovaPagina(slug, titolo, contenuto, lingua, iniziale, null, null, traduzioneDi), Ct));
             Assert.True(esito.Riuscito, esito.Codice.ToString());
             if (pubblica)
             {

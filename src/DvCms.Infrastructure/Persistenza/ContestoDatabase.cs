@@ -49,6 +49,8 @@ public class ContestoDatabase : DbContext
 
     public DbSet<DominioSito> DominiSito => Set<DominioSito>();
 
+    public DbSet<LinguaSito> LingueSito => Set<LinguaSito>();
+
     public DbSet<ProfiloGuest> ProfiliGuest => Set<ProfiloGuest>();
 
     public DbSet<Utenza> Utenze => Set<Utenza>();
@@ -76,6 +78,7 @@ public class ContestoDatabase : DbContext
         // Isolamento tenant (difesa a più livelli, docs/architecture/multi-tenancy.md): filtro globale sui dati con IdTenant.
         modelBuilder.Entity<Sito>().HasQueryFilter(sito => sito.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<DominioSito>().HasQueryFilter(dominio => dominio.IdTenant == IdTenantCorrente);
+        modelBuilder.Entity<LinguaSito>().HasQueryFilter(lingua => lingua.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<ProfiloGuest>().HasQueryFilter(profilo => profilo.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<Pagina>().HasQueryFilter(pagina => pagina.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<RevisionePagina>().HasQueryFilter(revisione => revisione.IdTenant == IdTenantCorrente);

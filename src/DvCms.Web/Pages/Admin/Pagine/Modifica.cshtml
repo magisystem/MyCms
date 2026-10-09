@@ -109,6 +109,25 @@
         </div>
     </div>
     <div class="col-lg-4">
+        <div class="card mb-3">
+            <div class="card-header"><h3 class="card-title">@_L["Lingue"]</h3></div>
+            <div class="list-group list-group-flush">
+                <div class="list-group-item"><strong>@pagina.CodiceLingua</strong> <span class="text-secondary">/@pagina.Slug</span> <span class="badge bg-blue-lt ms-1">@_L["questa pagina"]</span></div>
+                @foreach (var traduzione in pagina.Traduzioni)
+                {
+                    <a class="list-group-item list-group-item-action" href="/admin/pagine/@traduzione.IdPagina">
+                        <strong>@traduzione.CodiceLingua</strong> <span class="text-secondary">/@traduzione.Slug</span>
+                        <span class="badge @(traduzione.Stato == StatoPagina.Pubblicata ? "bg-green-lt" : "bg-secondary-lt") ms-1">@(traduzione.Stato == StatoPagina.Pubblicata ? _L["Pubblicata"] : _L["Bozza"])</span>
+                    </a>
+                }
+                @if (pagina.LingueMancanti.Count > 0)
+                {
+                    <div class="list-group-item">
+                        <a href="/admin/pagine/nuova?traduzioneDi=@pagina.Id" class="btn btn-sm">@_L["Aggiungi una traduzione"] (@string.Join(", ", pagina.LingueMancanti.Select(l => l.Codice)))</a>
+                    </div>
+                }
+            </div>
+        </div>
         <div class="card">
             <div class="card-header"><h3 class="card-title">@_L["Revisioni"]</h3></div>
             <div class="list-group list-group-flush">

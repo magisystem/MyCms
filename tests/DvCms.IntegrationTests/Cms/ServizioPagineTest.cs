@@ -4,6 +4,7 @@ using DvCms.Application.Piattaforma;
 using DvCms.Application.Tenancy;
 using DvCms.Domain.Accessi;
 using DvCms.Domain.Cms;
+using DvCms.Domain.Localizzazione;
 using DvCms.Domain.Tenancy;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Supporto;
@@ -275,7 +276,7 @@ public class ServizioPagineTest
         await s.PubblicaUltimaAsync(s.A, esito.Id!.Value);
         await using var ambito = s.Fornitore.CreateAsyncScope();
         ambito.ServiceProvider.GetRequiredService<ContestoTenant>().Imposta(s.A);
-        var pubblica = (await ambito.ServiceProvider.GetRequiredService<IServizioPaginePubbliche>().TrovaAsync("vetrina", Ct))!;
+        var pubblica = (await ambito.ServiceProvider.GetRequiredService<IServizioPaginePubbliche>().TrovaAsync("vetrina", null, Ct))!;
         Assert.Equal("presentazione", pubblica.IdModello);
         Assert.Equal("Scopri", pubblica.DatiModello["EtichettaPulsante"]);
     }
@@ -426,6 +427,90 @@ public class ServizioPagineTest
         var ripristinata = (await s.ComeAsync(s.A, servizio => servizio.LeggiAsync(s.AdminA, id, Ct)))!;
         Assert.Equal(_datiPresentazione, ripristinata.DatiModello);
         Assert.Equal("presentazione", ripristinata.IdModello);
+    }
+
+    [Fact]
+    public async Task LeLingueDelSitoHannoLaPredefinitaPerPrimaEIlCodiceDiDefaultEQuelloDelSito()
+    {
+        await using var s = await Scenario.CreaAsync();
+
+        var lingue = await s.ComeAsync(s.A, servizio => servizio.ElencaLingueAsync(s.AdminA, Ct));
+        var esito = await s.ComeAsync(s.A, servizio => servizio.CreaAsync(s.AdminA, new DatiNuovaPagina("pagina", "Pagina", "x", null, false), Ct));
+
+        Assert.Equal(["it", "en"], lingue.Select(l => l.Codice));
+        Assert.Equal("it", (await s.ComeAsync(s.A, servizio => servizio.LeggiAsync(s.AdminA, esito.Id!.Value, Ct)))!.CodiceLingua);
+    }
+
+    [Fact]
+    public async Task SiCreanoPagineSoloNelleLingueAbilitateDelSito()
+    {
+        await using var s = await Scenario.CreaAsync();
+        await s.RimuoviInglesePerSitoAsync(s.B);
+
+        var inglese = await s.ComeAsync(s.B, servizio => servizio.CreaAsync(s.AdminB, new DatiNuovaPagina("pagina", "Pagina", "x", "en", false), Ct));
+        var francese = await s.ComeAsync(s.A, servizio => servizio.CreaAsync(s.AdminA, new DatiNuovaPagina("pagina", "Pagina", "x", "fr", false), Ct));
+        var abilitata = await s.ComeAsync(s.A, servizio => servizio.CreaAsync(s.AdminA, new DatiNuovaPagina("pagina", "Pagina", "x", "en", false), Ct));
+
+        Assert.Equal(CodiceEsito.DatiNonValidi, inglese.Codice);
+        Assert.Equal(CodiceEsito.DatiNonValidi, francese.Codice);
+        Assert.True(abilitata.Riuscito);
+        Assert.Equal(["it"], (await s.ComeAsync(s.B, servizio => servizio.ElencaLingueAsync(s.AdminB, Ct))).Select(l => l.Codice));
+    }
+
+    [Fact]
+    public async Task UnaTraduzioneSiLegaAllaPaginaDOrigineNelloStessoGruppo()
+    {
+        await using var s = await Scenario.CreaAsync();
+        var it = await s.CreaPaginaAsync(s.A, s.AdminA, "chi-siamo");
+        var prima = (await s.ComeAsync(s.A, servizio => servizio.LeggiAsync(s.AdminA, it, Ct)))!;
+        Assert.Empty(prima.Traduzioni);
+        Assert.Equal(["en"], prima.LingueMancanti.Select(l => l.Codice));
+
+        // Stesso slug in una lingua diversa: consentito, perché lo slug è unico per sito e lingua.
+        var en = await s.ComeAsync(s.A, servizio => servizio.CreaAsync(s.AdminA, new DatiNuovaPagina("chi-siamo", "About us", "x", "en", false, null, null, it), Ct));
+
+        Assert.True(en.Riuscito);
+        var dopoIt = (await s.ComeAsync(s.A, servizio => servizio.LeggiAsync(s.AdminA, it, Ct)))!;
+        var dopoEn = (await s.ComeAsync(s.A, servizio => servizio.LeggiAsync(s.AdminA, en.Id!.Value, Ct)))!;
+        Assert.Equal([("en", "chi-siamo")], dopoIt.Traduzioni.Select(t => (t.CodiceLingua, t.Slug)));
+        Assert.Equal([("it", "chi-siamo")], dopoEn.Traduzioni.Select(t => (t.CodiceLingua, t.Slug)));
+        Assert.Empty(dopoIt.LingueMancanti);
+        Assert.Equal("en", dopoEn.CodiceLingua);
+    }
+
+    [Fact]
+    public async Task UnaTraduzioneNonSiDuplicaNonUsaPagineAltruiNeSlugRiservatiDalleLingue()
+    {
+        await using var s = await Scenario.CreaAsync();
+        var it = await s.CreaPaginaAsync(s.A, s.AdminA, "pagina");
+        var idB = await s.CreaPaginaAsync(s.B, s.AdminB, "di-b");
+        await s.ComeAsync(s.A, servizio => servizio.CreaAsync(s.AdminA, new DatiNuovaPagina("page", "Page", "x", "en", false, null, null, it), Ct));
+
+        var doppia = await s.ComeAsync(s.A, servizio => servizio.CreaAsync(s.AdminA, new DatiNuovaPagina("page-2", "Page 2", "x", "en", false, null, null, it), Ct));
+        var stessaLingua = await s.ComeAsync(s.A, servizio => servizio.CreaAsync(s.AdminA, new DatiNuovaPagina("pagina-bis", "Bis", "x", "it", false, null, null, it), Ct));
+        var altroTenant = await s.ComeAsync(s.A, servizio => servizio.CreaAsync(s.AdminA, new DatiNuovaPagina("x", "X", "x", "en", false, null, null, idB), Ct));
+        var inesistente = await s.ComeAsync(s.A, servizio => servizio.CreaAsync(s.AdminA, new DatiNuovaPagina("y", "Y", "x", "en", false, null, null, Guid.NewGuid()), Ct));
+        var slugLingua = await s.ComeAsync(s.A, servizio => servizio.CreaAsync(s.AdminA, new DatiNuovaPagina("en", "En", "x", "it", false), Ct));
+        var slugIt = await s.ComeAsync(s.A, servizio => servizio.CreaAsync(s.AdminA, new DatiNuovaPagina("IT", "It", "x", "en", false), Ct));
+
+        Assert.Equal(CodiceEsito.GiaPresente, doppia.Codice);
+        Assert.Equal(CodiceEsito.GiaPresente, stessaLingua.Codice);
+        Assert.Equal(CodiceEsito.NonTrovato, altroTenant.Codice);
+        Assert.Equal(CodiceEsito.NonTrovato, inesistente.Codice);
+        Assert.Equal(CodiceEsito.DatiNonValidi, slugLingua.Codice);
+        Assert.Equal(CodiceEsito.DatiNonValidi, slugIt.Codice);
+    }
+
+    [Fact]
+    public async Task UnoSlugNonPuoDiventareIlCodiceDiUnaLingua()
+    {
+        await using var s = await Scenario.CreaAsync();
+        var id = await s.CreaPaginaAsync(s.A, s.AdminA, "pagina");
+        var letta = (await s.ComeAsync(s.A, servizio => servizio.LeggiAsync(s.AdminA, id, Ct)))!;
+
+        var esito = await s.ComeAsync(s.A, servizio => servizio.SalvaAsync(s.AdminA, id, new DatiModificaPagina("en", letta.Titolo, letta.Contenuto, null, false, letta.TokenConcorrenza), Ct));
+
+        Assert.Equal(CodiceEsito.DatiNonValidi, esito.Codice);
     }
 
     [Fact]
@@ -591,6 +676,8 @@ public class ServizioPagineTest
             var sito = Sito.Crea(tenant.IdTenant, "Secondo sito", null, TimeProvider.System);
             var dominio = DominioSito.CreaVerificato(tenant.IdTenant, sito.Id, "secondo.esempio.it", false, null, TimeProvider.System);
             contesto.Siti.Add(sito);
+            contesto.LingueSito.Add(LinguaSito.Crea(tenant.IdTenant, sito.Id, Lingua.IdItaliano, true, TimeProvider.System));
+            contesto.LingueSito.Add(LinguaSito.Crea(tenant.IdTenant, sito.Id, Lingua.IdInglese, false, TimeProvider.System));
             contesto.DominiSito.Add(dominio);
             await contesto.SaveChangesAsync(Ct);
             return new DatiTenantRisolto(tenant.IdTenant, sito.Id, dominio.Id, dominio.Host, false);
@@ -611,6 +698,13 @@ public class ServizioPagineTest
         }
 
         public string Connessione => _database.Connessione;
+
+        public async Task RimuoviInglesePerSitoAsync(DatiTenantRisolto host)
+        {
+            await using var ambito = Fornitore.CreateAsyncScope();
+            await ambito.ServiceProvider.GetRequiredService<ContestoDatabase>().LingueSito.IgnoreQueryFilters()
+                .Where(ls => ls.IdSito == host.IdSito && !ls.Predefinita).ExecuteDeleteAsync(Ct);
+        }
 
         public async Task PubblicaUltimaAsync(DatiTenantRisolto host, Guid id)
         {

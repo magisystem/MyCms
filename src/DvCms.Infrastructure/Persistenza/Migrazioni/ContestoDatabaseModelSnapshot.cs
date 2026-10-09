@@ -621,6 +621,43 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                         });
                 });
 
+            modelBuilder.Entity("DvCms.Domain.Tenancy.LinguaSito", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatoIlUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("IdLingua")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdSito")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdTenant")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("Predefinita")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdLingua");
+
+                    b.HasIndex("IdSito")
+                        .IsUnique()
+                        .HasDatabaseName("IX_LingueSito_Predefinita")
+                        .HasFilter("[Predefinita] = 1");
+
+                    b.HasIndex("IdSito", "IdLingua")
+                        .IsUnique();
+
+                    b.HasIndex("IdTenant", "IdSito");
+
+                    b.ToTable("LingueSito", (string)null);
+                });
+
             modelBuilder.Entity("DvCms.Domain.Tenancy.ProfiloGuest", b =>
                 {
                     b.Property<Guid>("Id")
@@ -872,6 +909,22 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                         .WithMany()
                         .HasForeignKey("VerificatoDaIdUtenza")
                         .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("DvCms.Domain.Tenancy.Sito", null)
+                        .WithMany()
+                        .HasForeignKey("IdTenant", "IdSito")
+                        .HasPrincipalKey("IdTenant", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DvCms.Domain.Tenancy.LinguaSito", b =>
+                {
+                    b.HasOne("DvCms.Domain.Localizzazione.Lingua", null)
+                        .WithMany()
+                        .HasForeignKey("IdLingua")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("DvCms.Domain.Tenancy.Sito", null)
                         .WithMany()

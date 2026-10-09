@@ -2,6 +2,8 @@ using DvCms.Application.Accessi;
 using DvCms.Application.Piattaforma;
 using DvCms.Domain;
 using DvCms.Domain.Accessi;
+using DvCms.Domain.Cms;
+using DvCms.Domain.Localizzazione;
 using DvCms.Domain.Tenancy;
 using DvCms.Infrastructure.Persistenza;
 using Microsoft.EntityFrameworkCore;
@@ -63,6 +65,15 @@ public sealed class ServizioPiattaforma : IServizioPiattaforma
             .Where(dominio => dominio.IdTenant == idTenant).OrderBy(dominio => dominio.Host).ToListAsync(annullamento);
         var account = await _contesto.Utenze.IgnoreQueryFilters().AsNoTracking()
             .Where(utenza => utenza.IdTenant == idTenant).OrderBy(utenza => utenza.Email).ToListAsync(annullamento);
+        var lingueSito = await (
+            from ls in _contesto.LingueSito.IgnoreQueryFilters().AsNoTracking()
+            join lingua in _contesto.Lingue.AsNoTracking() on ls.IdLingua equals lingua.Id
+            where ls.IdTenant == idTenant
+            orderby ls.Predefinita descending, lingua.Codice
+            select new { ls.IdSito, Lingua = new LinguaDelSito(lingua.Codice, lingua.Nome, ls.Predefinita) })
+            .ToListAsync(annullamento);
+        var lingueDisponibili = await _contesto.Lingue.AsNoTracking().Where(l => l.Attiva).OrderBy(l => l.Codice)
+            .Select(l => new LinguaDelSito(l.Codice, l.Nome, l.Predefinita)).ToListAsync(annullamento);
         var idVerificatori = domini.Where(dominio => dominio.VerificatoDaIdUtenza is not null).Select(dominio => dominio.VerificatoDaIdUtenza!.Value).Distinct().ToList();
         var verificatori = await _contesto.Utenze.IgnoreQueryFilters().AsNoTracking()
             .Where(utenza => idVerificatori.Contains(utenza.Id))
@@ -85,7 +96,8 @@ public sealed class ServizioPiattaforma : IServizioPiattaforma
                     dominio.Attivo,
                     dominio.SoloSviluppo,
                     dominio.VerificatoIlUtc,
-                    dominio.VerificatoDaIdUtenza is { } id && verificatori.TryGetValue(id, out var email) ? email : null))]))],
+                    dominio.VerificatoDaIdUtenza is { } id && verificatori.TryGetValue(id, out var email) ? email : null))],
+                [.. lingueSito.Where(l => l.IdSito == sito.Id).Select(l => l.Lingua)]))],
             [.. account.Select(utenza => new DettaglioAccount(
                 utenza.Id,
                 utenza.Email,
@@ -93,7 +105,8 @@ public sealed class ServizioPiattaforma : IServizioPiattaforma
                 utenza.Ruolo,
                 utenza.Stato,
                 utenza.DeveCambiarePassword,
-                utenza.UltimoAccessoIlUtc))]);
+                utenza.UltimoAccessoIlUtc))],
+            lingueDisponibili);
     }
 
     public Task<EsitoOperazione> CreaTenantAsync(Guid idAttore, DatiNuovoTenant dati, CancellationToken annullamento)
@@ -119,6 +132,7 @@ public sealed class ServizioPiattaforma : IServizioPiattaforma
             var sito = Sito.Crea(tenant.Id, nomeSito, fuso, _orologio);
             _contesto.Tenant.Add(tenant);
             _contesto.Siti.Add(sito);
+            _contesto.LingueSito.Add(LinguaSito.Crea(tenant.Id, sito.Id, Lingua.IdItaliano, predefinita: true, _orologio));
             _contesto.ProfiliGuest.Add(ProfiloGuest.Crea(tenant.Id, _orologio));
             _contesto.DominiSito.Add(NuovoDominio(tenant.Id, sito.Id, host, dati.DominioVerificato, attore));
             return Esito.Ok(tenant.Id, tenant.Id, $"tenant '{tenant.Nome}', dominio '{host}'{(dati.DominioVerificato ? " verificato" : " da verificare")}");
@@ -178,6 +192,7 @@ public sealed class ServizioPiattaforma : IServizioPiattaforma
 
             var sito = Sito.Crea(idTenant, nomeValido, fuso, _orologio);
             _contesto.Siti.Add(sito);
+            _contesto.LingueSito.Add(LinguaSito.Crea(idTenant, sito.Id, Lingua.IdItaliano, predefinita: true, _orologio));
             return Esito.Ok(sito.Id, idTenant, $"sito '{sito.Nome}'");
         }, annullamento);
 
@@ -208,6 +223,114 @@ public sealed class ServizioPiattaforma : IServizioPiattaforma
             sito.AggiornatoIlUtc = Adesso();
             return Esito.Ok(sito.Id, idTenant, $"sito '{sito.Nome}', stato {sito.Stato}");
         }, annullamento);
+
+    public Task<EsitoOperazione> AbilitaLinguaAsync(Guid idAttore, Guid idTenant, Guid idSito, string? codiceLingua, CancellationToken annullamento) =>
+        EseguiAsync(idAttore, AzioniAudit.AbilitazioneLingua, "Sito", idTenant, async _ =>
+        {
+            if (!await _contesto.Siti.IgnoreQueryFilters().AnyAsync(s => s.Id == idSito && s.IdTenant == idTenant, annullamento))
+            {
+                return Esito.Non(CodiceEsito.NonTrovato);
+            }
+
+            var lingua = await TrovaLinguaAttivaAsync(codiceLingua, annullamento);
+            if (lingua is null)
+            {
+                return Esito.Non(CodiceEsito.DatiNonValidi);
+            }
+
+            if (await _contesto.LingueSito.IgnoreQueryFilters().AnyAsync(ls => ls.IdSito == idSito && ls.IdLingua == lingua.Id, annullamento))
+            {
+                return Esito.Non(CodiceEsito.GiaPresente);
+            }
+
+            // La prima lingua di un sito (non dovrebbe capitare) diventa la predefinita.
+            var haPredefinita = await _contesto.LingueSito.IgnoreQueryFilters().AnyAsync(ls => ls.IdSito == idSito && ls.Predefinita, annullamento);
+            var riga = LinguaSito.Crea(idTenant, idSito, lingua.Id, predefinita: !haPredefinita, _orologio);
+            _contesto.LingueSito.Add(riga);
+            return Esito.Ok(riga.Id, idTenant, $"lingua {lingua.Codice}");
+        }, annullamento);
+
+    public Task<EsitoOperazione> DisabilitaLinguaAsync(Guid idAttore, Guid idTenant, Guid idSito, string? codiceLingua, CancellationToken annullamento) =>
+        EseguiAsync(idAttore, AzioniAudit.DisabilitazioneLingua, "Sito", idTenant, async _ =>
+        {
+            var riga = await TrovaLinguaSitoAsync(idTenant, idSito, codiceLingua, annullamento);
+            if (riga is null)
+            {
+                return Esito.Non(CodiceEsito.NonTrovato);
+            }
+
+            if (riga.Predefinita
+                || await _contesto.Pagine.IgnoreQueryFilters().AnyAsync(p => p.IdSito == idSito && p.IdLingua == riga.IdLingua, annullamento))
+            {
+                return Esito.Non(CodiceEsito.NonConsentito);
+            }
+
+            _contesto.LingueSito.Remove(riga);
+            return Esito.Ok(riga.Id, idTenant, $"lingua {codiceLingua}");
+        }, annullamento);
+
+    public async Task<EsitoOperazione> ImpostaLinguaPredefinitaAsync(Guid idAttore, Guid idTenant, Guid idSito, string? codiceLingua, CancellationToken annullamento)
+    {
+        // L'indice univoco "una sola predefinita" impedisce di cambiare le due righe in un solo salvataggio:
+        // la modifica avviene in due passi dentro una transazione.
+        await using var transazione = await _contesto.Database.BeginTransactionAsync(annullamento);
+        var esito = await EseguiAsync(idAttore, AzioniAudit.ImpostazioneLinguaPredefinita, "Sito", idTenant, async _ =>
+        {
+            var nuova = await TrovaLinguaSitoAsync(idTenant, idSito, codiceLingua, annullamento);
+            if (nuova is null)
+            {
+                return Esito.Non(CodiceEsito.NonTrovato);
+            }
+
+            if (nuova.Predefinita)
+            {
+                return Esito.Ok(nuova.Id, idTenant, "invariata");
+            }
+
+            if (await _contesto.Pagine.IgnoreQueryFilters().AnyAsync(p => p.IdSito == idSito && p.Stato == StatoPagina.Pubblicata, annullamento))
+            {
+                return Esito.Non(CodiceEsito.NonConsentito);
+            }
+
+            var vecchia = await _contesto.LingueSito.IgnoreQueryFilters().SingleOrDefaultAsync(ls => ls.IdSito == idSito && ls.Predefinita, annullamento);
+            if (vecchia is not null)
+            {
+                vecchia.Predefinita = false;
+                await _contesto.SaveChangesAsync(annullamento);
+            }
+
+            nuova.Predefinita = true;
+            return Esito.Ok(nuova.Id, idTenant, $"lingua predefinita {codiceLingua}");
+        }, annullamento);
+        // Si conferma se è riuscita o se è stata negata (il tentativo negato va nell'audit); ogni altro esito annulla anche il primo passo.
+        if (esito.Riuscito || esito.Codice == CodiceEsito.NonAutorizzato)
+        {
+            await transazione.CommitAsync(annullamento);
+        }
+
+        return esito;
+    }
+
+    private Task<Lingua?> TrovaLinguaAttivaAsync(string? codice, CancellationToken annullamento)
+    {
+        if (string.IsNullOrWhiteSpace(codice))
+        {
+            return Task.FromResult<Lingua?>(null);
+        }
+
+        var normalizzato = codice.Trim().ToLowerInvariant();
+        return _contesto.Lingue.AsNoTracking().SingleOrDefaultAsync(l => l.Codice == normalizzato && l.Attiva, annullamento);
+    }
+
+    private async Task<LinguaSito?> TrovaLinguaSitoAsync(Guid idTenant, Guid idSito, string? codice, CancellationToken annullamento)
+    {
+        var lingua = await TrovaLinguaAttivaAsync(codice, annullamento);
+        return lingua is null
+            ? null
+            : await _contesto.LingueSito.IgnoreQueryFilters().SingleOrDefaultAsync(
+                ls => ls.IdTenant == idTenant && ls.IdSito == idSito && ls.IdLingua == lingua.Id,
+                annullamento);
+    }
 
     public Task<EsitoOperazione> AggiungiDominioAsync(
         Guid idAttore,

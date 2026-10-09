@@ -39,10 +39,7 @@ public sealed class ServizioPagine : IServizioPagine
     public async Task<IReadOnlyList<LinguaDisponibile>> ElencaLingueAsync(Guid idAttore, CancellationToken annullamento)
     {
         await RichiediAttoreAsync(idAttore, annullamento);
-        return await _contesto.Lingue.AsNoTracking().Where(lingua => lingua.Attiva)
-            .OrderByDescending(lingua => lingua.Predefinita).ThenBy(lingua => lingua.Nome)
-            .Select(lingua => new LinguaDisponibile(lingua.Codice, lingua.Nome))
-            .ToListAsync(annullamento);
+        return [.. (await LingueDelSito.ElencaAsync(_contesto, _tenant.IdSito, annullamento)).Select(lingua => new LinguaDisponibile(lingua.Codice, lingua.Nome))];
     }
 
     public async Task<IReadOnlyList<RiepilogoPagina>> ElencaAsync(Guid idAttore, CancellationToken annullamento)
@@ -97,6 +94,18 @@ public sealed class ServizioPagine : IServizioPagine
                 revisione.Id == idBozza))
             .ToListAsync(annullamento);
         var bozza = await _contesto.RevisioniPagina.AsNoTracking().SingleAsync(revisione => revisione.Id == idBozza, annullamento);
+        var gruppo = await (
+            from altra in _contesto.Pagine.AsNoTracking()
+            join lingua in _contesto.Lingue.AsNoTracking() on altra.IdLingua equals lingua.Id
+            where altra.IdSito == idSito && altra.IdGruppoTraduzione == pagina.IdGruppoTraduzione && altra.Id != pagina.Id
+            orderby lingua.Codice
+            select new TraduzionePagina(altra.Id, lingua.Codice, altra.Slug, altra.Stato))
+            .ToListAsync(annullamento);
+        var lingueSito = await LingueDelSito.ElencaAsync(_contesto, idSito, annullamento);
+        var mancanti = lingueSito
+            .Where(abilitata => abilitata.Codice != codiceLingua && gruppo.All(t => t.CodiceLingua != abilitata.Codice))
+            .Select(abilitata => new LinguaDisponibile(abilitata.Codice, abilitata.Nome))
+            .ToList();
 
         return new DettaglioPagina(
             pagina.Id,
@@ -112,7 +121,9 @@ public sealed class ServizioPagine : IServizioPagine
             bozza.IdModello,
             bozza.VersioneModello,
             bozza.DatiModello,
-            _modelli.Ultimo(bozza.IdModello) is { } recente && recente.Versione > bozza.VersioneModello ? recente.Versione : null);
+            _modelli.Ultimo(bozza.IdModello) is { } recente && recente.Versione > bozza.VersioneModello ? recente.Versione : null,
+            gruppo,
+            mancanti);
     }
 
     public Task<EsitoOperazione> CreaAsync(Guid idAttore, DatiNuovaPagina dati, CancellationToken annullamento)
@@ -127,20 +138,41 @@ public sealed class ServizioPagine : IServizioPagine
                 return new EsitoOperazione(CodiceEsito.DatiNonValidi);
             }
 
-            var codice = string.IsNullOrWhiteSpace(dati.CodiceLingua) ? "it" : dati.CodiceLingua.Trim().ToLowerInvariant();
-            var lingua = await _contesto.Lingue.AsNoTracking().SingleOrDefaultAsync(candidata => candidata.Codice == codice && candidata.Attiva, annullamento);
-            if (lingua is null)
+            var idSito = _tenant.IdSito;
+            var lingueSito = await LingueDelSito.ElencaAsync(_contesto, idSito, annullamento);
+            var codice = string.IsNullOrWhiteSpace(dati.CodiceLingua)
+                ? lingueSito.FirstOrDefault(abilitata => abilitata.Predefinita)?.Codice
+                : dati.CodiceLingua.Trim().ToLowerInvariant();
+            var lingua = lingueSito.FirstOrDefault(abilitata => abilitata.Codice == codice);
+            if (lingua is null || await SlugRiservatoDaLinguaAsync(slug, annullamento))
             {
                 return new EsitoOperazione(CodiceEsito.DatiNonValidi);
             }
 
-            var idSito = _tenant.IdSito;
-            if (await _contesto.Pagine.AnyAsync(pagina => pagina.IdSito == idSito && pagina.IdLingua == lingua.Id && pagina.Slug == slug, annullamento))
+            // Una traduzione si lega a una pagina esistente dello stesso sito, e quella lingua non deve già esserci nel gruppo.
+            Guid? idGruppo = null;
+            if (dati.IdPaginaOrigine is { } idOrigine)
+            {
+                var origine = await _contesto.Pagine.AsNoTracking().SingleOrDefaultAsync(candidata => candidata.Id == idOrigine && candidata.IdSito == idSito, annullamento);
+                if (origine is null)
+                {
+                    return new EsitoOperazione(CodiceEsito.NonTrovato);
+                }
+
+                if (await _contesto.Pagine.AnyAsync(altra => altra.IdSito == idSito && altra.IdGruppoTraduzione == origine.IdGruppoTraduzione && altra.IdLingua == lingua.IdLingua, annullamento))
+                {
+                    return new EsitoOperazione(CodiceEsito.GiaPresente);
+                }
+
+                idGruppo = origine.IdGruppoTraduzione;
+            }
+
+            if (await _contesto.Pagine.AnyAsync(pagina => pagina.IdSito == idSito && pagina.IdLingua == lingua.IdLingua && pagina.Slug == slug, annullamento))
             {
                 return new EsitoOperazione(CodiceEsito.GiaPresente);
             }
 
-            if (dati.PaginaIniziale && await EsisteInizialeAsync(idSito, lingua.Id, null, annullamento))
+            if (dati.PaginaIniziale && await EsisteInizialeAsync(idSito, lingua.IdLingua, null, annullamento))
             {
                 return new EsitoOperazione(CodiceEsito.PaginaInizialeEsistente);
             }
@@ -160,12 +192,13 @@ public sealed class ServizioPagine : IServizioPagine
             var (pagina, revisione) = Pagina.Crea(
                 _tenant.IdTenant,
                 idSito,
-                lingua.Id,
+                lingua.IdLingua,
                 slug,
                 new ContenutoRevisione(titolo, contenuto, modello.Id, modello.Versione, RegistroModelliPagina.Normalizza(dati.DatiModello)),
                 dati.PaginaIniziale,
                 attore.Id,
-                _orologio);
+                _orologio,
+                idGruppo);
             await _contesto.SalvaNuovaPaginaAsync(pagina, revisione, annullamento);
             return new EsitoOperazione(CodiceEsito.Riuscito, pagina.Id);
         });
@@ -199,7 +232,7 @@ public sealed class ServizioPagine : IServizioPagine
                     return new EsitoOperazione(CodiceEsito.NonConsentito);
                 }
 
-                if (!NormalizzatoreSlug.TentaNormalizza(dati.Slug, out var nuovoSlug))
+                if (!NormalizzatoreSlug.TentaNormalizza(dati.Slug, out var nuovoSlug) || await SlugRiservatoDaLinguaAsync(nuovoSlug, annullamento))
                 {
                     return new EsitoOperazione(CodiceEsito.DatiNonValidi);
                 }
@@ -472,6 +505,10 @@ public sealed class ServizioPagine : IServizioPagine
             $"azione richiesta: {azione}",
             CancellationToken.None);
     }
+
+    /// <summary>I codici delle lingue (<c>en</c>, <c>it</c>, ...) sono prefissi di percorso: non si possono usare come slug.</summary>
+    private Task<bool> SlugRiservatoDaLinguaAsync(string slug, CancellationToken annullamento) =>
+        _contesto.Lingue.AnyAsync(lingua => lingua.Codice == slug, annullamento);
 
     private Task<Pagina?> TrovaPaginaAsync(Guid idPagina, CancellationToken annullamento)
     {

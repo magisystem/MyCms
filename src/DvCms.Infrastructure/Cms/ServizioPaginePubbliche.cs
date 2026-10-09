@@ -1,5 +1,4 @@
 using DvCms.Application.Cms;
-using DvCms.Application.Localizzazione;
 using DvCms.Application.Tenancy;
 using DvCms.Domain.Cms;
 using DvCms.Infrastructure.Persistenza;
@@ -11,16 +10,17 @@ public sealed class ServizioPaginePubbliche : IServizioPaginePubbliche
 {
     private readonly ContestoDatabase _contesto;
     private readonly IContestoTenant _tenant;
-    private readonly IContestoLingua _lingua;
 
-    public ServizioPaginePubbliche(ContestoDatabase contesto, IContestoTenant tenant, IContestoLingua lingua)
+    public ServizioPaginePubbliche(ContestoDatabase contesto, IContestoTenant tenant)
     {
         _contesto = contesto;
         _tenant = tenant;
-        _lingua = lingua;
     }
 
-    public async Task<PaginaPubblica?> TrovaAsync(string? slug, CancellationToken annullamento)
+    public async Task<IReadOnlyList<LinguaPubblica>> LingueAsync(CancellationToken annullamento) =>
+        [.. (await LingueDelSito.ElencaAsync(_contesto, _tenant.IdSito, annullamento)).Select(lingua => new LinguaPubblica(lingua.Codice, lingua.Nome, lingua.Predefinita))];
+
+    public async Task<PaginaPubblica?> TrovaAsync(string? slug, string? codiceLingua, CancellationToken annullamento)
     {
         var cercaIniziale = string.IsNullOrWhiteSpace(slug);
         var slugNormalizzato = string.Empty;
@@ -29,33 +29,57 @@ public sealed class ServizioPaginePubbliche : IServizioPaginePubbliche
             return null;
         }
 
-        // Solo pagine con una revisione pubblicata, del sito dell'host (il filtro di tenant è già nel contesto).
         var idSito = _tenant.IdSito;
-        var query =
+        var lingueSito = await LingueDelSito.ElencaAsync(_contesto, idSito, annullamento);
+        var lingua = string.IsNullOrWhiteSpace(codiceLingua)
+            ? lingueSito.FirstOrDefault(abilitata => abilitata.Predefinita)
+            : lingueSito.FirstOrDefault(abilitata => string.Equals(abilitata.Codice, codiceLingua, StringComparison.OrdinalIgnoreCase));
+        if (lingua is null)
+        {
+            return null;
+        }
+
+        // Solo la revisione pubblicata di una pagina pubblicata, nella lingua richiesta, del sito dell'host (il filtro di tenant è nel contesto).
+        var trovata = await (
             from pagina in _contesto.Pagine.AsNoTracking()
             join revisione in _contesto.RevisioniPagina.AsNoTracking() on pagina.IdRevisionePubblicata equals revisione.Id
-            join lingua in _contesto.Lingue.AsNoTracking() on pagina.IdLingua equals lingua.Id
             where pagina.IdSito == idSito
+                && pagina.IdLingua == lingua.IdLingua
                 && pagina.Stato == StatoPagina.Pubblicata
-                && lingua.Attiva
                 && (cercaIniziale ? pagina.PaginaIniziale : pagina.Slug == slugNormalizzato)
-            select new { pagina, revisione, lingua.Codice, lingua.Predefinita };
+            select new { pagina, revisione })
+            .SingleOrDefaultAsync(annullamento);
+        if (trovata is null)
+        {
+            return null;
+        }
 
-        var candidate = await query.ToListAsync(annullamento);
-        var scelta = candidate.FirstOrDefault(riga => string.Equals(riga.Codice, _lingua.CodiceLingua, StringComparison.OrdinalIgnoreCase))
-            ?? candidate.FirstOrDefault(riga => riga.Predefinita)
-            ?? candidate.OrderBy(riga => riga.Codice, StringComparer.Ordinal).FirstOrDefault();
+        // Le versioni collegate già pubblicate, nelle lingue ancora abilitate (per hreflang e selettore).
+        var gruppo = await (
+            from altra in _contesto.Pagine.AsNoTracking()
+            where altra.IdSito == idSito && altra.IdGruppoTraduzione == trovata.pagina.IdGruppoTraduzione && altra.Stato == StatoPagina.Pubblicata
+            select new { altra.IdLingua, altra.Slug, altra.PaginaIniziale })
+            .ToListAsync(annullamento);
+        var traduzioni = lingueSito
+            .Select(abilitata => (Lingua: abilitata, Pagina: gruppo.FirstOrDefault(p => p.IdLingua == abilitata.IdLingua)))
+            .Where(coppia => coppia.Pagina is not null)
+            .Select(coppia => new TraduzionePubblica(
+                coppia.Lingua.Codice,
+                coppia.Lingua.Nome,
+                LingueDelSito.Percorso(coppia.Lingua.Codice, coppia.Lingua.Predefinita, coppia.Pagina!.Slug, coppia.Pagina.PaginaIniziale),
+                coppia.Lingua.Predefinita))
+            .ToList();
 
-        return scelta is null
-            ? null
-            : new PaginaPubblica(
-                scelta.revisione.Titolo,
-                scelta.revisione.Contenuto,
-                scelta.Codice,
-                scelta.pagina.Slug,
-                scelta.pagina.PubblicatoIlUtc ?? scelta.revisione.CreatoIlUtc,
-                scelta.revisione.IdModello,
-                scelta.revisione.VersioneModello,
-                scelta.revisione.DatiModello);
+        return new PaginaPubblica(
+            trovata.revisione.Titolo,
+            trovata.revisione.Contenuto,
+            lingua.Codice,
+            trovata.pagina.Slug,
+            trovata.pagina.PubblicatoIlUtc ?? trovata.revisione.CreatoIlUtc,
+            trovata.revisione.IdModello,
+            trovata.revisione.VersioneModello,
+            trovata.revisione.DatiModello,
+            LingueDelSito.Percorso(lingua.Codice, lingua.Predefinita, trovata.pagina.Slug, trovata.pagina.PaginaIniziale),
+            traduzioni);
     }
 }

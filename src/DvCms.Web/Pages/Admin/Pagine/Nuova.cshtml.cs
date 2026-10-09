@@ -46,14 +46,21 @@ public class NuovaModel : PaginaAdmin
 
     public IReadOnlyList<LinguaDisponibile> Lingue { get; private set; } = [];
 
-    public async Task OnGetAsync(CancellationToken annullamento)
+    /// <summary>Se presente, la nuova pagina è la traduzione di questa pagina (stesso gruppo, lingua diversa).</summary>
+    [BindProperty(SupportsGet = true, Name = "traduzioneDi")]
+    public Guid? TraduzioneDi { get; set; }
+
+    public string? TitoloOrigine { get; private set; }
+
+    public async Task<IActionResult> OnGetAsync(CancellationToken annullamento)
     {
-        Lingue = await _pagine.ElencaLingueAsync(IdAttore, annullamento);
+        await CaricaLingueAsync(annullamento);
+        return TraduzioneDi is not null && TitoloOrigine is null ? NotFound() : Page();
     }
 
     public async Task<IActionResult> OnPostAsync(CancellationToken annullamento)
     {
-        var esito = await _pagine.CreaAsync(IdAttore, new DatiNuovaPagina(Slug, Titolo, Contenuto, CodiceLingua, PaginaIniziale, Modello.Id, DatiDelModulo()), annullamento);
+        var esito = await _pagine.CreaAsync(IdAttore, new DatiNuovaPagina(Slug, Titolo, Contenuto, CodiceLingua, PaginaIniziale, Modello.Id, DatiDelModulo(), TraduzioneDi), annullamento);
         if (esito.Riuscito)
         {
             Messaggio = Localizzatore.Traduci("Bozza creata.");
@@ -63,8 +70,19 @@ public class NuovaModel : PaginaAdmin
         Errore = TestoErrore(esito.Codice);
         Valori = DatiDelModulo();
         CampiNonValidi = esito.CampiNonValidi ?? [];
-        Lingue = await _pagine.ElencaLingueAsync(IdAttore, annullamento);
+        await CaricaLingueAsync(annullamento);
         return Page();
+    }
+
+    /// <summary>Le lingue del sito; per una traduzione solo quelle in cui la pagina d'origine non esiste ancora.</summary>
+    private async Task CaricaLingueAsync(CancellationToken annullamento)
+    {
+        Lingue = await _pagine.ElencaLingueAsync(IdAttore, annullamento);
+        if (TraduzioneDi is { } idOrigine && await _pagine.LeggiAsync(IdAttore, idOrigine, annullamento) is { } origine)
+        {
+            TitoloOrigine = origine.Titolo;
+            Lingue = origine.LingueMancanti;
+        }
     }
 
     private Dictionary<string, string> DatiDelModulo() =>

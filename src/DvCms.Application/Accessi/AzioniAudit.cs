@@ -13,6 +13,9 @@ public static class AzioniAudit
     public const string RiattivazioneTenant = "RiattivazioneTenant";
     public const string CreazioneSito = "CreazioneSito";
     public const string ModificaSito = "ModificaSito";
+    public const string AbilitazioneLingua = "AbilitazioneLingua";
+    public const string DisabilitazioneLingua = "DisabilitazioneLingua";
+    public const string ImpostazioneLinguaPredefinita = "ImpostazioneLinguaPredefinita";
     public const string CreazioneDominio = "CreazioneDominio";
     public const string VerificaDominio = "VerificaDominio";
     public const string DisattivazioneDominio = "DisattivazioneDominio";
