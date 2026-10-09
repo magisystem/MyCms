@@ -14,13 +14,14 @@ Sono in italiano:
 
 - tabelle, colonne, indici, chiavi e vincoli del database;
 - classi, interfacce, proprietà, metodi e funzioni, variabili, enumerazioni e i loro valori;
-- namespace e nomi di progetto (`DvCms.Dominio`, `DvCms.Applicazione`, `DvCms.Infrastruttura`, `DvCms.Negozio`, `DvCms.Temi.*`, `DvCms.ServizioBackground`, `DvCms.TestUnitari`, `DvCms.TestIntegrazione`, `DvCms.TestIsolamentoTenant`; `DvCms.Web` resta);
-- chiavi di configurazione e sezioni (`Seed:TenantPrimario`, `ConnectionStrings:Predefinita`, ...), nomi dei file di configurazione scelti da noi e delle cartelle del repository (`frontend/editor-pagine`);
+- i namespace interni ai progetti e ai loro sottodomini (cartelle e sotto-namespace);
+- chiavi di configurazione e sezioni (`Seed:TenantPrimario`, `ConnectionStrings:Predefinita`, ...), nomi dei file di configurazione scelti da noi e delle cartelle del repository (`frontend/page-builder`);
 - chiavi e nomi del documento JSON dei contenuti e identificatori dei componenti (`versioneSchema`, `nodi`, `contenuto.hero`, `negozio.griglia-prodotti`);
 - commenti, messaggi di log e di errore nel codice, e documentazione.
 
-Restano in inglese, perché non sono nostri:
+Restano in inglese, perché non sono nostri o per scelta del committente:
 
+- **i nomi dei progetti e dei loro namespace radice** (`DvCms.Web`, `DvCms.Domain`, `DvCms.Application`, `DvCms.Infrastructure`, `DvCms.Store`, `DvCms.Themes.*`, `DvCms.Worker`, `DvCms.UnitTests`, `DvCms.IntegrationTests`, `DvCms.TenantIsolationTests`) e la cartella `frontend/page-builder`: scelta confermata dal committente;
 - API, tipi e metodi del framework e delle librerie (`DbContext`, `ILogger`, `CancellationToken`, `ToTable`, `Guid`, ecc.) e i nomi imposti da convenzioni di ASP.NET (`appsettings.json`, `Program`, `Development`, `Production`, `wwwroot`);
 - nomi di prodotti e servizi (`Smtp`, `Graph`, `Gmail`, `SendGrid`, `GrapesJS`, `Tabler`, `BCrypt`);
 - i nomi dei ruoli stabiliti dal committente (`PlatformAdmin`, `TenantAdmin`, `Utente`, `Guest`), il termine `Tenant` (`IdTenant`, `ContestoTenant`), `Slug`, e il comando `seed` (`DvCms.Web seed`) già approvato;

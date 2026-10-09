@@ -26,7 +26,7 @@ public interface IDefinizioneTema
 }
 ```
 
-È un esempio illustrativo, non un contratto definitivo. Evitare che il tema acceda direttamente al `DbContext`: riceve dati view-model già caricati e autorizzati dall'livello applicazione.
+È un esempio illustrativo, non un contratto definitivo. Evitare che il tema acceda direttamente al `DbContext`: riceve dati view-model già caricati e autorizzati dall'application layer.
 
 ## Rendering
 

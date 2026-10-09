@@ -74,7 +74,7 @@ I confini definitivi di imposte, spedizioni, prenotazione giacenza, multi-valuta
 
 ## Denominazione in italiano
 
-Tutto ciò che è nostro è in italiano (ADR-0017): tabelle, colonne, classi, proprietà, metodi, namespace, progetti, chiavi di configurazione e valori di stato. Restano in inglese solo le API e i nomi del framework e delle librerie (`DbContext`, `ILogger`, `CancellationToken`, `ToTable`, ecc.), i nomi dei prodotti (`Smtp`, `Graph`, `Gmail`, `SendGrid`), i nomi dei ruoli stabiliti dal committente (`PlatformAdmin`, `TenantAdmin`, `Utente`, `Guest`), il termine `Tenant`, lo `Slug`, i nomi degli ambienti ASP.NET (`Development`, `Production`) e il comando `seed`.
+Tutto ciò che è nostro è in italiano (ADR-0017): tabelle, colonne, classi, proprietà, metodi, namespace interni, chiavi di configurazione e valori di stato. I nomi dei progetti (`DvCms.Domain`, `DvCms.Application`, ...) restano in inglese. Restano in inglese anche le API e i nomi del framework e delle librerie (`DbContext`, `ILogger`, `CancellationToken`, `ToTable`, ecc.), i nomi dei prodotti (`Smtp`, `Graph`, `Gmail`, `SendGrid`), i nomi dei ruoli stabiliti dal committente (`PlatformAdmin`, `TenantAdmin`, `Utente`, `Guest`), il termine `Tenant`, lo `Slug`, i nomi degli ambienti ASP.NET (`Development`, `Production`) e il comando `seed`.
 
 Convenzioni per il database:
 

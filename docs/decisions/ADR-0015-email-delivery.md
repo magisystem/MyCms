@@ -9,8 +9,8 @@ Il progetto deve inviare email: recupero password (OTP e link monouso, ADR-0011)
 
 ## Decisione
 
-- L'applicazione dipende da un contratto unico (ad esempio `IInvioEmail`, definito in `DvCms.Applicazione`) e non conosce il canale di invio.
-- Sono previsti quattro adapter in `DvCms.Infrastruttura`: **Microsoft Graph API**, **Gmail API**, **SendGrid**, **SMTP**.
+- L'applicazione dipende da un contratto unico (ad esempio `IInvioEmail`, definito in `DvCms.Application`) e non conosce il canale di invio.
+- Sono previsti quattro adapter in `DvCms.Infrastructure`: **Microsoft Graph API**, **Gmail API**, **SendGrid**, **SMTP**.
 - **Il canale è una proprietà del tenant.** Il tenant ha un campo `ProviderEmail` (`Smtp`, `Graph`, `Gmail`, `SendGrid`) e le impostazioni del canale scelto (`ImpostazioniEmailTenant`). Non esiste un ordine di priorità fra i canali: ogni tenant usa quello configurato.
 - La configurazione si modifica solo dalla schermata di configurazione del tenant nel menu "Platform" (solo `PlatformAdmin`). La UI mostra un selettore del tipo di provider e, in base alla scelta, **solo i campi necessari** a quel provider. Campi indicativi (da affinare in implementazione):
   - SMTP: host, porta, modalità TLS, utente, password, indirizzo e nome mittente.
@@ -44,7 +44,7 @@ Non c'è una priorità fra i canali per l'utilizzo. Per lo sviluppo si parte da 
 
 ## Conseguenze
 
-- Ogni SDK o libreria aggiunta (Microsoft Graph, Google API, SendGrid, libreria SMTP) rispetta la regola 11 di `AGENTS.md`: motivazione, licenza, manutenzione, limitata a `DvCms.Infrastruttura`. In alternativa si valuta `HttpClient` diretto.
+- Ogni SDK o libreria aggiunta (Microsoft Graph, Google API, SendGrid, libreria SMTP) rispetta la regola 11 di `AGENTS.md`: motivazione, licenza, manutenzione, limitata a `DvCms.Infrastructure`. In alternativa si valuta `HttpClient` diretto.
 - Ogni canale richiede configurazione esterna manuale (registrazione app in Microsoft Entra, progetto/OAuth Google, account SendGrid, server SMTP) e dominio mittente con SPF/DKIM/DMARC; queste attività sono parte del runbook (`docs/architecture/operations.md`).
 - Ogni tenant ha le proprie credenziali e il proprio mittente: il `PlatformAdmin` deve configurarle per ogni tenant, con SPF/DKIM/DMARC del dominio usato.
 - Servono la cifratura dei segreti nel database e un processo per conservare e ripristinare la chiave (sezione "Chiavi di cifratura").

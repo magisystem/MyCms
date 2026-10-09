@@ -26,7 +26,7 @@ Le scelte sotto non sono definite completamente. Gli agenti devono evitare di in
 - `Guest` per tenant senza impostazioni: vede tutto ciò che è pubblico; limitare la visibilità è un'evoluzione futura.
 - Duplicati fra `admin-theme/` e `wwwroot` accettati; li ripulirà il committente.
 - `admin-theme/`: licenze possedute, repository privato; `tabler` e `tabler-icons` copiati per intero in `wwwroot`.
-- Account locali propri nella tabella `Utenze`, senza ASP.NET Core Identity, con password BCrypt e blocco di 5 minuti dopo 5 tentativi falliti (ADR-0016). Comando di seeding `DvCms.Web seed`. Tutto in italiano: tabelle, colonne, funzioni, progetti, configurazione (ADR-0017); `Tenant`, `Slug`, i nomi dei ruoli e `seed` restano. Lingue italiano e inglese; testi statici con `@_L["TESTO"]` nel database, modificabili dal `PlatformAdmin` (ADR-0018). Seeding idempotente del tenant primario e del primo `PlatformAdmin` da configurazione e segreti (ADR-0014).
+- Account locali propri nella tabella `Utenze`, senza ASP.NET Core Identity, con password BCrypt e blocco di 5 minuti dopo 5 tentativi falliti (ADR-0016). Comando di seeding `DvCms.Web seed`. Tutto in italiano: tabelle, colonne, funzioni, configurazione (ADR-0017); nomi dei progetti in inglese; `Tenant`, `Slug`, i nomi dei ruoli e `seed` restano. Lingue italiano (`it`, lingua di base e predefinita) e inglese (`en`, cultura `en-GB`); lingua dell'admin dalla preferenza dell'account, del sito pubblico dal prefisso del percorso (`/en/...`) o, senza prefisso, dalla lingua predefinita del sito; pagina inesistente nella lingua richiesta = 404; cache dei testi con invalidazione solo locale per ora; testi statici con `@_L["TESTO"]` nel database, modificabili dal `PlatformAdmin` (ADR-0018). Seeding idempotente del tenant primario e del primo `PlatformAdmin` da configurazione e segreti (ADR-0014).
 - Tenant, utenti `TenantAdmin` e domini gestiti manualmente dal `PlatformAdmin`; certificati TLS dell'hosting tramite reverse proxy (ADR-0014).
 - Admin con Tabler e Tabler Icons (ADR-0013).
 
@@ -37,10 +37,7 @@ Le scelte sotto non sono definite completamente. Gli agenti devono evitare di in
 
 ## Da confermare per M0/M1 (vedi `docs/delivery/plan-m0-m1.md`)
 
-- Lingua corrente: admin dalla preferenza dell'account (predefinita italiano); sito pubblico dal prefisso del percorso (`/en/...`), senza prefisso la lingua predefinita del sito (proposta, ADR-0018).
-- Cultura dell'inglese (`en-GB` o `en-US`) per date e numeri.
 - Pulizia delle chiavi di testo non più usate dai testi statici (non prioritaria).
-- Sincronizzazione della cache dei testi statici con più istanze (fino a una sola istanza è sufficiente l'invalidazione locale).
 
 
 - Framework di test: xUnit (proposta).

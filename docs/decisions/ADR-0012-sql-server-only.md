@@ -12,7 +12,7 @@ ADR-0003 richiedeva SQL Server primario e PostgreSQL come secondo provider, con 
 
 - SQL Server è l'unico database supportato, tramite EF Core 10.
 - Una sola serie di migrazioni EF Core.
-- Restano validi di ADR-0003: .NET 10 LTS, ASP.NET Core 10, EF Core 10 con provider della stessa major e il divieto di dipendenze dal provider in Dominio e Applicazione.
+- Restano validi di ADR-0003: .NET 10 LTS, ASP.NET Core 10, EF Core 10 con provider della stessa major e il divieto di dipendenze dal provider in Domain e Application.
 - Non si aggiunge PostgreSQL (né un altro provider) senza un nuovo ADR.
 
 ## Alternative considerate
@@ -22,7 +22,7 @@ ADR-0003 richiedeva SQL Server primario e PostgreSQL come secondo provider, con 
 
 ## Conseguenze
 
-- Si possono usare con cautela le funzionalità di SQL Server (`rowversion`, indici filtrati, hint di locking nel claim outbox, Row-Level Security), isolandole in Infrastruttura.
+- Si possono usare con cautela le funzionalità di SQL Server (`rowversion`, indici filtrati, hint di locking nel claim outbox, Row-Level Security), isolandole in Infrastructure.
 - Il modello e le migrazioni sono più semplici e la CI più veloce.
 - Il passaggio a un altro motore richiederebbe lavoro e un ADR dedicato. Il costo è accettato.
 - Le regole operative sono in [`docs/architecture/database.md`](../architecture/database.md).

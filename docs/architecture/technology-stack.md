@@ -15,13 +15,13 @@
 | Cache | Interfaccia cache; Redis quando si scala su più istanze | Non fare affidamento su cache in-memory per coerenza cross-instance. |
 | Background jobs | Hosted Service/worker + outbox iniziale | Valutare libreria di job solo con requisiti espliciti. |
 | Auth | Account locali propri (tabella `Utenze`), cookie authentication di ASP.NET Core, hash password BCrypt (`BCrypt.Net-Next`, da verificare); senza ASP.NET Core Identity (ADR-0016) | Ruoli `PlatformAdmin`, `TenantAdmin`, `Utente` (acquirente), `Guest` per tenant (ADR-0011); recupero password con OTP e link monouso; 2FA per ultima. SSO/OIDC resta estensione futura se richiesta. |
-| Email | Adapter intercambiabili: Microsoft Graph API, Gmail API, SendGrid, SMTP | Contratto unico in Applicazione, canale scelto da configurazione, invio dal worker via outbox (ADR-0015). |
+| Email | Adapter intercambiabili: Microsoft Graph API, Gmail API, SendGrid, SMTP | Contratto unico in Application, canale scelto da configurazione, invio dal worker via outbox (ADR-0015). |
 | Test | xUnit o NUnit, da selezionare prima del bootstrap | Non usare due framework test concorrenti senza ragione. |
 | Logging | ILogger + logging strutturato | Provider APM/trace da scegliere con hosting. |
 
 ## Strategia database
 
-La piattaforma usa **Microsoft SQL Server** come unico database supportato (ADR-0012), con EF Core 10 e una sola serie di migrazioni. Le funzionalità specifiche di SQL Server si usano solo in Infrastruttura, con test su un'istanza reale. Per i dettagli operativi leggere [Database SQL Server](database.md).
+La piattaforma usa **Microsoft SQL Server** come unico database supportato (ADR-0012), con EF Core 10 e una sola serie di migrazioni. Le funzionalità specifiche di SQL Server si usano solo in Infrastructure, con test su un'istanza reale. Per i dettagli operativi leggere [Database SQL Server](database.md).
 
 ## Versioning
 

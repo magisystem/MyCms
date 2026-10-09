@@ -11,7 +11,7 @@ Il progetto è un CMS: la maggior parte dei siti è semplice e non prevede regis
 
 ## Decisione
 
-Gli account sono locali, con tabelle e logica proprie, senza ASP.NET Core Identity (ADR-0016). Ogni account, tranne il `PlatformAdmin`, appartiene a **un solo tenant** (`IdTenant` dell'account). Centralizzare le policy di autorizzazione nell'livello applicazione.
+Gli account sono locali, con tabelle e logica proprie, senza ASP.NET Core Identity (ADR-0016). Ogni account, tranne il `PlatformAdmin`, appartiene a **un solo tenant** (`IdTenant` dell'account). Centralizzare le policy di autorizzazione nell'application layer.
 
 ### Appartenenza ai tenant e unicità dell'email
 

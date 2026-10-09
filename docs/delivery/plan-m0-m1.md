@@ -40,15 +40,15 @@ Struttura minima (si crea il necessario, non tutta la struttura raccomandata):
 ```text
 DvCms.sln
 global.json  Directory.Build.props  Directory.Packages.props  .editorconfig
-src/DvCms.Web  src/DvCms.Dominio  src/DvCms.Applicazione  src/DvCms.Infrastruttura
-tests/DvCms.TestUnitari  tests/DvCms.TestIntegrazione  tests/DvCms.TestIsolamentoTenant
+src/DvCms.Web  src/DvCms.Domain  src/DvCms.Application  src/DvCms.Infrastructure
+tests/DvCms.UnitTests  tests/DvCms.IntegrationTests  tests/DvCms.TenantIsolationTests
 .github/workflows/ci.yml
 ```
 
 Passi, uno per PR (CONTRIBUTING: PR piccole e verificabili):
 
 1. **A-001 — Solution e CI.** Progetti, nullable abilitato, analyzer, `.editorconfig`, versioni NuGet centralizzate, workflow di restore/build/test. `.gitignore` esteso per `appsettings.Production.json` e simili.
-2. **A-002 — SQL Server ed EF Core.** `DbContext` in Infrastruttura, connection string da configurazione, prima migrazione, smoke test di integrazione che applica le migrazioni su database vuoto.
+2. **A-002 — SQL Server ed EF Core.** `DbContext` in Infrastructure, connection string da configurazione, prima migrazione, smoke test di integrazione che applica le migrazioni su database vuoto.
 3. **A-003 — Convenzioni.** Logging strutturato, correlation ID, convenzioni UTC (`datetime2`), `Guid` v7.
 4. **A-009 — Localizzatore dei testi statici (ADR-0018).** Tabelle `Lingue` e `TestiStatici`, `ILocalizzatore` e `@_L["TESTO"]`, algoritmo di creazione delle righe mancanti, cache, controllo che gli argomenti siano costanti letterali; deve precedere il layout, così ogni testo nasce già localizzato.
 5. **A-004 — Layout admin Tabler.** Copia integrale di `tabler` e `tabler-icons` in `src/DvCms.Web/wwwroot/lib/`; regola dei file statici che non serve le pagine HTML demo; layout Razor condiviso (menu laterale, icone); nessun asset di `tabler-emails`, `tabler-illustrations`, `tabler-avatars`.
@@ -83,7 +83,7 @@ Unit: normalizzazione host e slug, regole di escalation dei ruoli, stati di pagi
 
 Integrazione (SQL Server reale): migrazioni da zero; vincoli (dominio, slug per sito, email per tenant ripetibile fra tenant); risoluzione host (ignoto, porta ignorata, `localhost` solo in `Development`, non risolve in `Production`); login (credenziali giuste/errate, `TenantAdmin` dall'host di un altro tenant fallisce con l'errore uniforme, `PlatformAdmin` da qualunque host); autorizzazione del menu "Platform" (403/404 per `TenantAdmin`); creazione `TenantAdmin` solo dal `PlatformAdmin`, rifiuto dell'auto-elevazione; audit di ingresso e azioni; pubblicazione (bozza mai pubblica, pubblicata visibile, 404 corretto).
 
-Isolamento (`DvCms.TestIsolamentoTenant`): con Tenant A e B, lettura/modifica/cancellazione di pagine e account altrui negate, stesso slug su siti diversi senza conflitti, nessun `IdTenant` dal client accettato.
+Isolamento (`DvCms.TenantIsolationTests`): con Tenant A e B, lettura/modifica/cancellazione di pagine e account altrui negate, stesso slug su siti diversi senza conflitti, nessun `IdTenant` dal client accettato.
 
 Ogni PR riporta comandi ed esiti reali dei test eseguiti.
 

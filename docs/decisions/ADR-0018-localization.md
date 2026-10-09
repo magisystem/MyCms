@@ -24,7 +24,7 @@ Tabella `Lingue` (`Id`, `Codice` `it`/`en`, `Nome`, `Cultura`, `Predefinita`, `A
   3. se la chiave non esiste affatto, si creano le righe di tutte le lingue attive: italiano (`DaTradurre` falso) e le altre con il testo italiano (`DaTradurre` vero).
   La creazione è sicura rispetto alla concorrenza (indice univoco `(IdLingua, HashChiave)`, un duplicato è ignorato).
 - **Solo testi letterali.** L'argomento di `_L[...]` deve essere una costante nel codice sorgente. I dati degli utenti o dei visitatori non passano mai dal localizzatore: eviterebbero la creazione illimitata di righe e l'inserimento di contenuto non attendibile. Un test automatico (o un analyzer) lo verifica.
-- **Prestazioni:** i testi sono tenuti in una cache in memoria per lingua; la lettura non interroga il database a ogni richiesta. La cache si invalida quando un testo viene modificato (con più istanze serve un meccanismo condiviso, vedi `operations.md`).
+- **Prestazioni:** i testi sono tenuti in una cache in memoria per lingua; la lettura non interroga il database a ogni richiesta. La cache si invalida quando un testo viene modificato; per ora l'invalidazione è locale all'istanza, e con più istanze andrà introdotto un meccanismo condiviso (vedi `operations.md`).
 - **Sicurezza:** il risultato è codificato in HTML dal motore Razor; i testi sono testo semplice. HTML nei testi tradotti non è ammesso (un'eventuale variante con HTML sanificato richiederà un nuovo ADR).
 - **Ambito globale:** `TestiStatici` è comune a tutti i tenant, senza `IdTenant`; non esistono sostituzioni per tenant. Nelle chiavi e nei testi non vanno dati di tenant o personali.
 
@@ -38,9 +38,10 @@ Il menu **Platform** ha una schermata "Testi" riservata al `PlatformAdmin`: elen
 - **Altre entità** (prodotti, categorie, collezioni, testo alternativo dei media, ecc.): tabelle `Traduzioni<Entità>` con chiave `(IdEntità, IdLingua)`; se manca la traduzione si usa la lingua predefinita del sito.
 - Nell'admin la modifica avviene per lingua (schede o selettore).
 
-### Scelta della lingua (assunzione da confermare)
+### Scelta della lingua (confermata)
 
-- **Admin:** preferenza dell'account, predefinita italiano.
+- **Lingua di base e predefinita:** `it` (italiano).
+- **Admin:** preferenza dell'account, predefinita `it`.
 - **Sito pubblico:** lingua dedotta dal prefisso del percorso (`/en/...`); senza prefisso, la lingua predefinita del sito. Il selettore di lingua è esplicito.
 
 ## Alternative considerate

@@ -47,7 +47,7 @@ Ogni evento che non può essere perso (publish, ordine, pagamento, webhook) deve
 
 ## Cache
 
-- Testi statici: cache in memoria per lingua, invalidata alla modifica; con più istanze serve un meccanismo condiviso (ad esempio una versione dei testi controllata periodicamente) o una cache distribuita.
+- Testi statici: cache in memoria per lingua, invalidata alla modifica; l'invalidazione è solo locale all'istanza (decisione per ora); prima di usare più istanze serve un meccanismo condiviso (ad esempio una versione dei testi controllata periodicamente) o una cache distribuita.
 - Distinguere output cache pubblica da cache di dati.
 - Includere in chiave le dimensioni che determinano il risultato (site, path, revisione, locale e contesto ove necessario).
 - Invalidare tramite eventi/outbox al publish, cambio tema, modifica prodotto o asset.

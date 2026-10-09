@@ -27,7 +27,7 @@ Questo file descrive il target di setup; i comandi precisi vanno completati dura
 5. Eseguire il seeding del tenant primario e del primo `PlatformAdmin` (ADR-0014): configurazione `Seed:TenantPrimario` e password del `PlatformAdmin` da user-secrets o environment variable, nessuna credenziale predefinita. In `Development` il seeding può creare anche i tenant di test `cms1`/`cms2` da `Seed:TenantSviluppo`.
 6. Avviare `DvCms.Web`.
 7. Eseguire test unitari e d'integrazione.
-8. Per il builder, entrare in `frontend/editor-pagine`, installare le dipendenze dal lockfile e avviare/buildare l'asset secondo lo script documentato.
+8. Per il builder, entrare in `frontend/page-builder`, installare le dipendenze dal lockfile e avviare/buildare l'asset secondo lo script documentato.
 
 Gli agenti non devono inventare comandi finali prima che i file di progetto siano stati creati. Aggiornare questa pagina nello stesso PR del bootstrap.
 
