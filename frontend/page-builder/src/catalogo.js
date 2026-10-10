@@ -3,8 +3,9 @@
 // legge solo questi attributi. L'aspetto nel canvas è calcolato nella vista (classi e testo dell'elemento, mai nel modello),
 // quindi non entra nel progetto salvato.
 import { consentito } from './vincoli.js';
+import { analizza, costruisci, urlConsentito } from './testoRicco.js';
 
-const FOGLIE = new Set(['contenuto.titolo', 'contenuto.testo', 'contenuto.immagine', 'contenuto.pulsante', 'contenuto.hero', 'contenuto.cta', 'contenuto.voce']);
+const FOGLIE = new Set(['contenuto.titolo', 'contenuto.testo', 'contenuto.testo-ricco', 'contenuto.immagine', 'contenuto.pulsante', 'contenuto.hero', 'contenuto.cta', 'contenuto.voce']);
 
 const TAG = {
   'layout.sezione': 'section',
@@ -12,6 +13,7 @@ const TAG = {
   'layout.colonna': 'div',
   'contenuto.titolo': 'h2',
   'contenuto.testo': 'p',
+  'contenuto.testo-ricco': 'div',
   'contenuto.immagine': 'img',
   'contenuto.pulsante': 'a',
   'contenuto.hero': 'section',
@@ -116,6 +118,14 @@ function aspetto(tipo, el, modello) {
       impostaClassi(el, ['dv-testo', `dv-allineamento-${p('data-s-allineamento', 'sinistra')}`]);
       el.textContent = p('data-p-testo');
       break;
+    case 'contenuto.testo-ricco': {
+      impostaClassi(el, ['dv-testo-ricco', `dv-allineamento-${p('data-s-allineamento', 'sinistra')}`]);
+      // Anteprima con la stessa grammatica del server; se il markup non è valido si vede com'è, evidenziato (il server lo rifiuterà).
+      const blocchi = analizza(p('data-p-testo'));
+      el.classList.toggle('dv-markup-non-valido', blocchi === null);
+      el.replaceChildren(blocchi ? costruisci(el.ownerDocument, blocchi) : el.ownerDocument.createTextNode(p('data-p-testo')));
+      break;
+    }
     case 'contenuto.immagine': {
       impostaClassi(el, ['dv-immagine']);
       const id = p('data-p-id-risorsa');
@@ -176,6 +186,8 @@ function creaTrait(definizione, config) {
       return { ...base, type: 'checkbox', valueTrue: 'si', valueFalse: 'no' };
     case 'TestoLungo':
       return { ...base, type: 'dv-textarea', maxlength: definizione.lunghezzaMassima };
+    case 'TestoRicco':
+      return { ...base, type: 'dv-markup', maxlength: definizione.lunghezzaMassima };
     default:
       return { ...base, type: 'text', placeholder: definizione.tipo === 'Url' ? '/pagina oppure https://…' : undefined, maxlength: definizione.lunghezzaMassima };
   }
@@ -195,6 +207,72 @@ export function registraComponenti(editor, catalogo, vincoli, config) {
     },
     onEvent({ elInput, component, trait }) {
       component.addAttributes({ [trait.getName()]: elInput.value });
+    },
+  });
+
+  // Testo con formattazione: area di testo con la barra del markup (grassetto, corsivo, collegamento, elenco) e controllo immediato.
+  editor.TraitManager.addType('dv-markup', {
+    createInput({ trait }) {
+      const t = config.testi;
+      const radice = document.createElement('div');
+      radice.className = 'dv-markup';
+      const barra = document.createElement('div');
+      barra.className = 'dv-markup-barra';
+      const area = document.createElement('textarea');
+      area.rows = 9;
+      area.maxLength = trait.get('maxlength') || 5000;
+      const modifica = (fn) => {
+        const { selectionStart: inizio, selectionEnd: fine, value } = area;
+        const esito = fn(value.slice(0, inizio), value.slice(inizio, fine), value.slice(fine));
+        area.value = esito.testo;
+        area.setSelectionRange(esito.da, esito.a);
+        area.dispatchEvent(new Event('change', { bubbles: true }));
+        area.focus();
+      };
+      const racchiudi = (marcatore) => () => modifica((prima, scelto, dopo) => ({ testo: `${prima}${marcatore}${scelto}${marcatore}${dopo}`, da: prima.length + marcatore.length, a: prima.length + marcatore.length + scelto.length }));
+      const bottone = (etichetta, titolo, azione) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.textContent = etichetta;
+        b.title = titolo;
+        b.addEventListener('click', azione);
+        barra.append(b);
+      };
+      bottone('B', t.grassetto ?? 'Grassetto', racchiudi('**'));
+      bottone('I', t.corsivo ?? 'Corsivo', racchiudi('*'));
+      bottone('Link', t.collegamento ?? 'Collegamento', () => {
+        const indirizzo = (window.prompt(t.indirizzoCollegamento ?? 'Indirizzo (/percorso o https://…)', 'https://') ?? '').trim();
+        if (!indirizzo || !urlConsentito(indirizzo) || indirizzo.includes('(')) return;
+        modifica((prima, scelto, dopo) => {
+          const etichetta = (scelto || indirizzo).replace(/[\\*[\]]/g, (m) => `\\${m}`);
+          const inserto = `[${etichetta}](${indirizzo})`;
+          return { testo: `${prima}${inserto}${dopo}`, da: prima.length + inserto.length, a: prima.length + inserto.length };
+        });
+      });
+      bottone('•', t.elenco ?? 'Elenco puntato', () => modifica((prima, scelto, dopo) => {
+        const inizioRiga = prima.lastIndexOf('\n') + 1;
+        const intestazione = prima.slice(0, inizioRiga);
+        const corpo = (prima.slice(inizioRiga) + scelto).split('\n').map((riga) => (riga.startsWith('- ') ? riga : `- ${riga}`)).join('\n');
+        return { testo: `${intestazione}${corpo}${dopo}`, da: intestazione.length, a: intestazione.length + corpo.length };
+      }));
+      const suggerimento = document.createElement('div');
+      suggerimento.className = 'dv-markup-nota';
+      const controlla = () => {
+        const valido = analizza(area.value) !== null || area.value.trim() === '';
+        area.classList.toggle('dv-markup-non-valido', !valido);
+        suggerimento.textContent = valido ? '' : (t.markupNonValido ?? 'Formattazione non valida');
+      };
+      area.addEventListener('input', controlla);
+      radice.append(barra, area, suggerimento);
+      return radice;
+    },
+    onUpdate({ elInput, component, trait }) {
+      const area = elInput.querySelector('textarea');
+      area.value = component.getAttributes()[trait.getName()] ?? '';
+      area.dispatchEvent(new Event('input'));
+    },
+    onEvent({ elInput, component, trait }) {
+      component.addAttributes({ [trait.getName()]: elInput.querySelector('textarea').value });
     },
   });
 
@@ -232,6 +310,11 @@ export function registraComponenti(editor, catalogo, vincoli, config) {
         },
         onRender() {
           aspetto(tipo, this.el, this.model);
+          if (tipo === 'contenuto.testo-ricco' && this.el.dataset.dvFocus !== '1') {
+            // Il testo formattato si scrive nel pannello (con la barra del markup): il doppio clic porta lì il cursore.
+            this.el.dataset.dvFocus = '1';
+            this.el.addEventListener('dblclick', () => document.querySelector('.dv-proprieta textarea')?.focus());
+          }
           const inLinea = TESTI_IN_LINEA[tipo];
           if (inLinea) {
             const massima = [...definizione.proprieta, ...definizione.stili].find((d) => d.attributo === inLinea.attributo)?.lunghezzaMassima || 5000;
@@ -261,6 +344,8 @@ function contenutoBlocco(tipo, config) {
       return { type: tipo, attributes: { 'data-p-titolo': config.testi.componenti[tipo] ?? 'Titolo' } };
     case 'contenuto.cta':
       return { type: tipo, attributes: { 'data-p-titolo': config.testi.componenti[tipo] ?? 'Titolo', 'data-p-etichetta': 'Scopri', 'data-p-url': '/' } };
+    case 'contenuto.testo-ricco':
+      return { type: tipo, attributes: { 'data-p-testo': 'Testo con **grassetto**, *corsivo* e [collegamenti](/pagina).\n\n- primo punto\n- secondo punto' } };
     case 'contenuto.fisarmonica':
       return { type: tipo, components: [{ type: 'contenuto.voce', attributes: { 'data-p-domanda': 'Domanda', 'data-p-risposta': 'Risposta' } }] };
     default:

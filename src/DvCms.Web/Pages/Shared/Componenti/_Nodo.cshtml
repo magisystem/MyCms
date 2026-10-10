@@ -95,6 +95,17 @@
             }
         }
         break;
+    case "contenuto.testo-ricco":
+        {
+            // Il markup si rianalizza: ciò che non rispetta la grammatica non produce nulla. Gli elementi sono fissi (p, br, strong, em, a, ul, li).
+            if (TestoRicco.TentaAnalizza(Valore(Model.Proprieta, "testo", string.Empty), out var blocchi))
+            {
+                <div class="@("dv-testo-ricco " + Allineamento(Model.Stili) + Animazione(Model.Stili))">
+                    <partial name="Componenti/_TestoRicco" model="blocchi" />
+                </div>
+            }
+        }
+        break;
     case "contenuto.immagine":
         {
             // L'identificativo è un GUID in forma canonica (ricontrollato): non può portare altro nell'indirizzo.

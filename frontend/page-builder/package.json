@@ -7,7 +7,8 @@
   "type": "module",
   "scripts": {
     "build": "node build.mjs",
-    "verifica": "node build.mjs --verifica"
+    "verifica": "node build.mjs --verifica",
+    "test": "node --test test/testo-ricco.test.mjs"
   },
   "dependencies": {
     "grapesjs": "0.23.6"

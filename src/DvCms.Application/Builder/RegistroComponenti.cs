@@ -17,6 +17,9 @@ public enum TipoProprieta
 
     /// <summary>"si" oppure "no".</summary>
     Booleano = 6,
+
+    /// <summary>Testo con formattazione in markup a grammatica chiusa (<see cref="Builder.TestoRicco"/>), memorizzato in forma canonica.</summary>
+    TestoRicco = 7,
 }
 
 /// <summary>Una proprietà (o uno stile) ammessa da un componente. Gli stili sono sempre enumerazioni: token e varianti, mai CSS libero.</summary>
@@ -54,7 +57,7 @@ public sealed partial class RegistroComponenti
     public const int ErroriMassimi = 50;
     public const int LunghezzaMassimaId = 64;
 
-    private static readonly string[] _contenutoBase = ["contenuto.titolo", "contenuto.testo", "contenuto.immagine", "contenuto.pulsante"];
+    private static readonly string[] _contenutoBase = ["contenuto.titolo", "contenuto.testo", "contenuto.testo-ricco", "contenuto.immagine", "contenuto.pulsante"];
 
     /// <summary>Effetto e ritardo di comparsa: valori da elenco, applicati con classi CSS e uno script fidato (rispetta <c>prefers-reduced-motion</c>).</summary>
     private static readonly IReadOnlyList<DefinizioneProprieta> _animazione =
@@ -95,7 +98,7 @@ public sealed partial class RegistroComponenti
     /// </summary>
     public static IReadOnlyList<DefinizioneComponente> Predefiniti { get; } =
     [
-        new("layout.sezione", 2, [],
+        new("layout.sezione", 3, [],
             [
                 new("spaziatura", TipoProprieta.Enumerazione, Valori: ["compatta", "normale", "ampia"], Predefinito: "normale"),
                 new("sfondo", TipoProprieta.Enumerazione, Valori: ["nessuno", "chiaro", "scuro"], Predefinito: "nessuno"),
@@ -103,7 +106,7 @@ public sealed partial class RegistroComponenti
             ],
             ["layout.colonne", .. _contenutoBase, "contenuto.hero", "contenuto.cta", "contenuto.fisarmonica"], FigliMassimi: 50),
         new("layout.colonne", 2, [], [.. _animazione], ["layout.colonna"], FigliMinimi: 2, FigliMassimi: 3),
-        new("layout.colonna", 1, [], [], [.. _contenutoBase, "contenuto.fisarmonica"], FigliMassimi: 20),
+        new("layout.colonna", 2, [], [], [.. _contenutoBase, "contenuto.fisarmonica"], FigliMassimi: 20),
         new("contenuto.titolo", 2,
             [
                 new("testo", TipoProprieta.TestoBreve, Obbligatoria: true, LunghezzaMassima: 200),
@@ -112,6 +115,9 @@ public sealed partial class RegistroComponenti
             [.. _allineamento, .. _animazione], []),
         new("contenuto.testo", 2,
             [new("testo", TipoProprieta.TestoLungo, Obbligatoria: true, LunghezzaMassima: 5000)],
+            [.. _allineamento, .. _animazione], []),
+        new("contenuto.testo-ricco", 1,
+            [new("testo", TipoProprieta.TestoRicco, Obbligatoria: true, LunghezzaMassima: TestoRicco.LunghezzaMassima)],
             [.. _allineamento, .. _animazione], []),
         new("contenuto.immagine", 2,
             [
@@ -228,10 +234,24 @@ public sealed partial class RegistroComponenti
         var definizione = Trova(nodo.Tipo);
         return nodo with
         {
-            Proprieta = Ripulisci(nodo.Proprieta, definizione?.Proprieta),
+            Proprieta = Canonicalizza(Ripulisci(nodo.Proprieta, definizione?.Proprieta), definizione?.Proprieta),
             Stili = Ripulisci(nodo.Stili, definizione?.Stili),
             Figli = [.. nodo.Figli.Select(Normalizza)],
         };
+    }
+
+    /// <summary>I testi con formattazione si memorizzano in forma canonica (se non sono validi restano come sono: li segnala la validazione).</summary>
+    private static Dictionary<string, string> Canonicalizza(Dictionary<string, string> valori, IReadOnlyList<DefinizioneProprieta>? definizioni)
+    {
+        foreach (var definizione in definizioni?.Where(d => d.Tipo == TipoProprieta.TestoRicco) ?? [])
+        {
+            if (valori.TryGetValue(definizione.Nome, out var testo) && TestoRicco.Canonico(testo) is { } canonico)
+            {
+                valori[definizione.Nome] = canonico;
+            }
+        }
+
+        return valori;
     }
 
     private static Dictionary<string, string> Ripulisci(IReadOnlyDictionary<string, string> valori, IReadOnlyList<DefinizioneProprieta>? definizioni) =>
@@ -369,6 +389,7 @@ public sealed partial class RegistroComponenti
         TipoProprieta.Enumerazione => definizione.Valori?.Contains(valore, StringComparer.Ordinal) == true,
         TipoProprieta.IdRisorsa => Guid.TryParseExact(valore, "D", out var guid) && guid != Guid.Empty && guid.ToString("D") == valore,
         TipoProprieta.Booleano => valore is "si" or "no",
+        TipoProprieta.TestoRicco => valore.Length <= definizione.LunghezzaMassima && TestoRicco.TentaAnalizza(valore, out _),
         _ => false,
     };
 

@@ -35,3 +35,7 @@ Lo spike ha dimostrato che la conversione è affidabile per il catalogo di base 
 
 Le revisioni restano immutabili: nessuna si modifica dopo la creazione. Per non riempire la cronologia con i salvataggi intermedi dell'editor, una revisione marcata `SalvataggioAutomatico` che sia **in cima alla cronologia, non pubblicata e dello stesso autore** viene *rimossa* (mai modificata) quando arriva il salvataggio successivo, automatico o manuale, che crea una nuova revisione. Non vengono mai rimosse revisioni manuali né pubblicate, né una revisione automatica non più in cima o di un altro autore. I numeri di revisione non si riusano. Questa è l'unica eccezione alla conservazione di tutte le revisioni e riguarda solo bozze effimere che nessuno ha scelto di tenere.
 
+## Testo formattato (M5, 2026-10-10)
+
+Il documento non contiene HTML del tenant nemmeno per il testo formattato: `contenuto.testo-ricco` porta un markup a grammatica chiusa che il server analizza, riscrive in forma canonica e rifiuta se non conforme; il renderer ricostruisce elementi fissi. Questa scelta sostituisce l'ipotesi iniziale ("HTML ammesso solo dopo sanitizzazione", `page-builder.md`): evita una dipendenza di sanitizzazione e una classe intera di bypass, al prezzo di un insieme di formattazioni volutamente piccolo (grassetto, corsivo, collegamenti, elenchi puntati). Se serviranno formattazioni più ricche (titoli interni, tabelle, immagini in linea) si estenderà la grammatica (con vettori di prova) o si useranno componenti dedicati, non HTML libero.
+

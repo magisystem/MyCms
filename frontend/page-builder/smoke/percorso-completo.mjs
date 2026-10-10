@@ -135,6 +135,38 @@ assert.equal(automatico.status(), 200);
 assert.match(await pagina.textContent('.dv-stato'), /automaticamente/i);
 passo('salvataggio automatico dopo una pausa');
 
+// Testo formattato: anteprima con la stessa grammatica del server, barra del markup, controllo immediato.
+const idRicco = await pagina.evaluate(() => {
+  const e = window.dvEditor;
+  const [nuovo] = e.getWrapper().find('#corpo')[0].append({ type: 'contenuto.testo-ricco', attributes: { 'data-p-testo': 'Ciao **mondo**' } });
+  e.select(nuovo);
+  return nuovo.getAttributes().id;
+});
+await pagina.waitForTimeout(300);
+const ricco = () => pagina.evaluate((id) => {
+  const el = window.dvEditor.Canvas.getDocument().getElementById(id);
+  return { html: el.innerHTML, nonValido: el.classList.contains('dv-markup-non-valido') };
+}, idRicco);
+assert.equal((await ricco()).html, '<p>Ciao <strong>mondo</strong></p>');
+const area = pagina.locator('.dv-proprieta textarea');
+await area.fill('Testo *nuovo* [vai](/dove)\n\n- uno\n- due');
+await area.dispatchEvent('change');
+assert.equal((await ricco()).html, '<p>Testo <em>nuovo</em> <a href="/dove">vai</a></p><ul><li>uno</li><li>due</li></ul>');
+await area.fill('parola');
+await area.evaluate((el) => el.setSelectionRange(0, 6));
+await pagina.click('.dv-markup-barra button[title="Grassetto"]');
+assert.equal(await area.inputValue(), '**parola**');
+assert.equal((await ricco()).html, '<p><strong>parola</strong></p>');
+await area.fill('**aperto');
+await area.dispatchEvent('change');
+assert.equal((await ricco()).nonValido, true, 'il markup non valido è evidenziato');
+assert.ok(await area.evaluate((el) => el.classList.contains('dv-markup-non-valido')));
+await area.fill('<img src=x onerror=alert(1)> ok');
+await area.dispatchEvent('change');
+assert.equal((await ricco()).html, '<p>&lt;img src=x onerror=alert(1)&gt; ok</p>');
+assert.equal(await pagina.evaluate((id) => window.dvEditor.Canvas.getDocument().getElementById(id).querySelectorAll('img').length, idRicco), 0);
+passo('testo formattato: anteprima, barra del markup, controllo immediato, nessun HTML');
+
 // Manomissione: si toglie un nodo bloccato aggirando l'interfaccia; il server rifiuta.
 await pagina.evaluate(() => { const a = window.dvEditor.getWrapper().find('#avviso')[0]; a.set('removable', true); a.remove(); });
 const [rifiutato] = await Promise.all([pagina.waitForResponse((r) => r.url().includes('handler=Salva')), pagina.click('.dv-pulsante-salva')]);

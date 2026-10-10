@@ -127,6 +127,11 @@ public sealed class RegistroTemplateBuilder
         2,
         ["layout.colonne", "contenuto.titolo", "contenuto.testo", "contenuto.immagine", "contenuto.pulsante", "contenuto.hero", "contenuto.cta", "contenuto.fisarmonica"]);
 
+    /// <summary>Versione 3 (M5): il corpo ammette anche il testo con formattazione. I documenti della v1 e v2 restano validi.</summary>
+    public static TemplateBuilder TemplateIntestazioneFissaV3 { get; } = CreaIntestazioneFissa(
+        3,
+        ["layout.colonne", "contenuto.titolo", "contenuto.testo", "contenuto.testo-ricco", "contenuto.immagine", "contenuto.pulsante", "contenuto.hero", "contenuto.cta", "contenuto.fisarmonica"]);
+
     private static TemplateBuilder CreaIntestazioneFissa(int versione, IReadOnlyList<string> tipiNelCorpo) => new(
         IntestazioneFissa,
         versione,
@@ -162,7 +167,7 @@ public sealed class RegistroTemplateBuilder
                 ]),
         ]);
 
-    public static IReadOnlyList<TemplateBuilder> Predefiniti { get; } = [TemplatePaginaLibera, TemplateIntestazioneFissa, TemplateIntestazioneFissaV2];
+    public static IReadOnlyList<TemplateBuilder> Predefiniti { get; } = [TemplatePaginaLibera, TemplateIntestazioneFissa, TemplateIntestazioneFissaV2, TemplateIntestazioneFissaV3];
 
     public IReadOnlyList<TemplateBuilder> Tutti => [.. _template.Values.OrderBy(t => t.Id, StringComparer.Ordinal).ThenBy(t => t.Versione)];
 

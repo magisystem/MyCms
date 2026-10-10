@@ -15,6 +15,7 @@ public static class ModelliVista
         [(RegistroTemplateBuilder.PaginaLibera, 1)] = "Modelli/_documento_v1",
         [(RegistroTemplateBuilder.IntestazioneFissa, 1)] = "Modelli/_documento_v1",
         [(RegistroTemplateBuilder.IntestazioneFissa, 2)] = "Modelli/_documento_v1",
+        [(RegistroTemplateBuilder.IntestazioneFissa, 3)] = "Modelli/_documento_v1",
     };
 
     public static string Vista(string id, int versione) =>

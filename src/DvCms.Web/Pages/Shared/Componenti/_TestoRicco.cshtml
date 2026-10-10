@@ -1,0 +1,44 @@
+@using DvCms.Application.Builder
+@using DvCms.Application.Cms
+@model IReadOnlyList<BloccoTestoRicco>
+@* Testo con formattazione: solo elementi fissi, ogni valore codificato da Razor; gli indirizzi si ricontrollano in uscita. *@
+@functions {
+    private static bool Valido(string indirizzo) => RegistroModelliPagina.UrlConsentito(indirizzo);
+}
+@foreach (var blocco in Model)
+{
+    switch (blocco)
+    {
+        case BloccoTestoRicco.Paragrafo paragrafo:
+            <p>@foreach (var elemento in paragrafo.Contenuto)
+            {
+                @Inline(elemento)
+            }</p>
+            break;
+        case BloccoTestoRicco.Elenco elenco:
+            <ul>
+                @foreach (var voce in elenco.Voci)
+                {
+                    <li>@foreach (var elemento in voce)
+                    {
+                        @Inline(elemento)
+                    }</li>
+                }
+            </ul>
+            break;
+    }
+}
+@{
+    Microsoft.AspNetCore.Html.IHtmlContent Inline(InlineTestoRicco elemento) => elemento switch
+    {
+        InlineTestoRicco.ACapo => new Microsoft.AspNetCore.Html.HtmlString("<br />"),
+        InlineTestoRicco.Collegamento c when Valido(c.Indirizzo) => Html.Raw(string.Concat(
+            "<a href=\"", System.Net.WebUtility.HtmlEncode(c.Indirizzo), "\" rel=\"noopener\">", System.Net.WebUtility.HtmlEncode(c.Etichetta), "</a>")),
+        InlineTestoRicco.Collegamento c => new Microsoft.AspNetCore.Html.HtmlString(System.Net.WebUtility.HtmlEncode(c.Etichetta)),
+        InlineTestoRicco.Testo t => Html.Raw(string.Concat(
+            t.Grassetto ? "<strong>" : string.Empty, t.Corsivo ? "<em>" : string.Empty,
+            System.Net.WebUtility.HtmlEncode(t.Valore),
+            t.Corsivo ? "</em>" : string.Empty, t.Grassetto ? "</strong>" : string.Empty)),
+        _ => new Microsoft.AspNetCore.Html.HtmlString(string.Empty),
+    };
+}

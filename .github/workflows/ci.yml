@@ -98,6 +98,11 @@ jobs:
         working-directory: frontend/page-builder
         run: npm audit --audit-level=high
 
+      # Grammatica del testo formattato dell'editor, con gli stessi vettori dei test .NET.
+      - name: Test del testo formattato
+        working-directory: frontend/page-builder
+        run: npm test
+
       - name: Verifica che il bundle versionato sia aggiornato
         working-directory: frontend/page-builder
         run: npm run verifica

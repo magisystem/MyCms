@@ -33,6 +33,7 @@ public sealed class TemplateEAdapterTest
         Assert.Equal("7311A05FA8822C268A01034509A4FB38F4A713DC6E3F7A7DC12F931B3DC445E2", RegistroTemplateBuilder.TemplatePaginaLibera.Impronta);
         Assert.Equal("25C07D3EB1BF71104F6D410014450418F8B1B14C84EABCB3154AF10BE83E3738", RegistroTemplateBuilder.TemplateIntestazioneFissa.Impronta);
         Assert.Equal("9BB90F19375FF34AF5456E7FF1CC92E0BCD285BB2ADC1E14C0FA37A70C1A0C78", RegistroTemplateBuilder.TemplateIntestazioneFissaV2.Impronta);
+        Assert.Equal("78557BFD3AFDA3B795763D472917AFAB165FEC0666F0868BBE417B6B6AA49841", RegistroTemplateBuilder.TemplateIntestazioneFissaV3.Impronta);
     }
 
     [Fact]
@@ -53,7 +54,19 @@ public sealed class TemplateEAdapterTest
         Assert.Empty(_registro.Valida(conFisarmonica));
         // Un documento valido per la v1 lo è anche per la v2 (presupposto del passaggio di versione).
         Assert.Empty(ValidatoreTemplate.Valida(v2, Iniziale()));
-        Assert.Same(v2, _template.Ultimo(RegistroTemplateBuilder.IntestazioneFissa));
+    }
+
+    [Fact]
+    public void LaVersione3AmmetteIlTestoFormattatoELeVersioniPrecedentiNo()
+    {
+        var conTestoRicco = Sostituisci(Iniziale(), "corpo", corpo => Con(corpo, figli: [Nodo("r", "contenuto.testo-ricco", new() { ["testo"] = "Un **testo** formattato" })]));
+
+        Assert.Contains(ValidatoreTemplate.Valida(RegistroTemplateBuilder.TemplateIntestazioneFissa, conTestoRicco), e => e.Codice == "TipoNonAmmessoNelloSlot");
+        Assert.Contains(ValidatoreTemplate.Valida(RegistroTemplateBuilder.TemplateIntestazioneFissaV2, conTestoRicco), e => e.Codice == "TipoNonAmmessoNelloSlot");
+        Assert.Empty(ValidatoreTemplate.Valida(RegistroTemplateBuilder.TemplateIntestazioneFissaV3, conTestoRicco));
+        Assert.Empty(_registro.Valida(conTestoRicco));
+        Assert.Empty(ValidatoreTemplate.Valida(RegistroTemplateBuilder.TemplateIntestazioneFissaV3, Iniziale()));
+        Assert.Same(RegistroTemplateBuilder.TemplateIntestazioneFissaV3, _template.Ultimo(RegistroTemplateBuilder.IntestazioneFissa));
     }
 
     [Theory]

@@ -58,8 +58,8 @@ public partial class BuilderWebTest
         Assert.True(System.Text.Json.Nodes.JsonNode.DeepEquals(
             System.Text.Json.Nodes.JsonNode.Parse(stato.GetProperty("progetto").GetRawText()),
             System.Text.Json.Nodes.JsonNode.Parse(Progetto(Iniziale()))));
-        Assert.Equal(11, stato.GetProperty("catalogo").GetArrayLength());
-        Assert.Equal(2, stato.GetProperty("versioneTemplate").GetInt32());
+        Assert.Equal(12, stato.GetProperty("catalogo").GetArrayLength());
+        Assert.Equal(3, stato.GetProperty("versioneTemplate").GetInt32());
         Assert.True(stato.GetProperty("vincoli").GetProperty("nodi").GetProperty("avviso").GetProperty("bloccato").GetBoolean());
         Assert.Equal(30, stato.GetProperty("vincoli").GetProperty("nodi").GetProperty("corpo").GetProperty("slot").GetProperty("figliMassimi").GetInt32());
 
@@ -288,7 +288,7 @@ public partial class BuilderWebTest
     }
 
     [Fact]
-    public async Task UnaPaginaDellaVersione1PassaAllaVersione2SoloSeIlDocumentoEValido()
+    public async Task UnaPaginaDellaVersione1PassaAllUltimaVersioneSoloSeIlDocumentoEValido()
     {
         await using var c = await Contesto.CreaAsync();
         var (id, percorso) = await c.CreaPaginaAsync("pagina-con-intestazione-fissa", "vecchia");
@@ -311,10 +311,10 @@ public partial class BuilderWebTest
         Assert.True(SessioneProva.EReindirizzamento(passaggio));
 
         var revisioni = await c.RevisioniAsync(id);
-        Assert.Equal(2, revisioni[^1].VersioneModello);
+        Assert.Equal(3, revisioni[^1].VersioneModello);
         Assert.Equal(revisioni[^2].DocumentoRenderJson, revisioni[^1].DocumentoRenderJson);
         var dopo = await c.StatoAsync(id);
-        Assert.Equal(2, dopo.GetProperty("versioneTemplate").GetInt32());
+        Assert.Equal(3, dopo.GetProperty("versioneTemplate").GetInt32());
         using var oraAccettato = await c.SalvaAsync(id, dopo.GetProperty("token").GetString()!, Progetto(ConCorpo(Iniziale(), Nodo("h", "contenuto.hero", new() { ["titolo"] = "x" }))));
         Assert.Equal(HttpStatusCode.OK, oraAccettato.StatusCode);
     }
@@ -334,6 +334,47 @@ public partial class BuilderWebTest
         Assert.True(SessioneProva.EReindirizzamento(passaggio));
         Assert.Single(await c.RevisioniAsync(id));
         Assert.Equal(1, (await c.RevisioniAsync(id))[0].VersioneModello);
+    }
+
+    [Fact]
+    public async Task IlTestoFormattatoSiDisegnaConElementiFissiEUnMarkupNonValidoEDifeso()
+    {
+        await using var c = await Contesto.CreaAsync();
+        var (id, percorso) = await c.CreaPaginaAsync("pagina-con-intestazione-fissa", "formattata", slug: "formattata");
+        var stato = await c.StatoAsync(id);
+        var markup = "**Grassetto** <script>alert(1)</script> *corsivo* [Interno](/chi-siamo) [Esterno](https://esempio.it/x?a=1&b=2)\nSeconda riga\n\n- uno\n- **due**";
+        using var salvato = await c.SalvaAsync(id, stato.GetProperty("token").GetString()!, Progetto(ConCorpo(Iniziale(), Nodo("r", "contenuto.testo-ricco", new() { ["testo"] = markup }))));
+        Assert.Equal(HttpStatusCode.OK, salvato.StatusCode);
+        await c.PubblicaAsync(percorso);
+
+        using var pubblica = await c.Web.SessioneA().GetAsync("/formattata");
+        var html = Regex.Replace(await pubblica.Content.ReadAsStringAsync(Ct), "\\s+", " ");
+
+        Assert.Contains("<strong>Grassetto</strong> &lt;script&gt;alert(1)&lt;/script&gt; <em>corsivo</em>", html, StringComparison.Ordinal);
+        Assert.Contains("<a href=\"/chi-siamo\" rel=\"noopener\">Interno</a>", html, StringComparison.Ordinal);
+        Assert.Contains("<a href=\"https://esempio.it/x?a=1&amp;b=2\" rel=\"noopener\">Esterno</a>", html, StringComparison.Ordinal);
+        Assert.Contains("<br />Seconda riga", html, StringComparison.Ordinal);
+        Assert.Contains("<ul>", html, StringComparison.Ordinal);
+        Assert.Contains("<li><strong>due</strong></li>", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("<script>alert", html, StringComparison.Ordinal);
+
+        // Markup fuori dalla grammatica: rifiutato dal server, nulla di salvato.
+        var token = (await c.StatoAsync(id)).GetProperty("token").GetString()!;
+        foreach (var cattivo in new[] { "**non chiuso", "[x](javascript:alert(1))", "[x](http://non-sicuro.example)", "testo ] spaiato" })
+        {
+            using var rifiutato = await c.SalvaAsync(id, token, Progetto(ConCorpo(Iniziale(), Nodo("r", "contenuto.testo-ricco", new() { ["testo"] = cattivo }))));
+            Assert.Equal(HttpStatusCode.BadRequest, rifiutato.StatusCode);
+            Assert.Contains((await Json(rifiutato)).GetProperty("errori").EnumerateArray(), e => e.GetProperty("codice").GetString() == "ProprietaNonValida" && e.GetProperty("idNodo").GetString() == "r");
+        }
+
+        Assert.Equal(2, (await c.RevisioniAsync(id)).Count);
+
+        // Un documento alterato nel database con un collegamento ostile non produce il collegamento né script.
+        await c.ScriviDocumentoDirettoAsync(id, """{"versioneSchema":1,"nodi":[{"id":"r","tipo":"contenuto.testo-ricco","proprieta":{"testo":"[clic](javascript:alert(1)) **ok**"},"stili":{},"figli":[]}]}""");
+        using var alterata = await c.Web.SessioneA().GetAsync("/formattata");
+        var htmlAlterato = await alterata.Content.ReadAsStringAsync(Ct);
+        Assert.DoesNotContain("javascript:", htmlAlterato, StringComparison.Ordinal);
+        Assert.DoesNotContain("<strong>ok", htmlAlterato, StringComparison.Ordinal);
     }
 
     [Fact]

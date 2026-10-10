@@ -27,7 +27,7 @@ public sealed class DocumentoCmsTest
 
     [Fact]
     public void LeDefinizioniDeiComponentiHannoUnImprontaFissata() =>
-        Assert.Equal("46743FEB489A50E3F727665DB1AF13F73A73A971E10864976EE795E6DFD84B59", _registro.Impronta);
+        Assert.Equal("411D850BA96AF59B03FB5B349F03A58E49AF7A587D45B4D7665E27E9856A4630", _registro.Impronta);
 
     [Fact]
     public void IlRegistroRifiutaDefinizioniDuplicateOFigliSconosciuti()
@@ -222,4 +222,37 @@ public sealed class DocumentoCmsTest
     [MemberData(nameof(AvanzatiNonValidi))]
     public void UnComponenteAvanzatoManomessoEDichiaratoNonValido(string codiceAtteso, Func<DocumentoCms> crea) =>
         Assert.Contains(_registro.Valida(crea()), e => e.Codice == codiceAtteso);
+
+    [Fact]
+    public void IlTestoFormattatoValidoSiMemorizzaInFormaCanonica()
+    {
+        var documento = new DocumentoCms(1, [Nodo("s", "layout.sezione", null, null, Nodo("r", "contenuto.testo-ricco", new() { ["testo"] = "  **grassetto** e *corsivo*  \n\n\n- uno\r\n- due  " }))]);
+
+        Assert.Empty(_registro.Valida(documento));
+        var normalizzato = _registro.Normalizza(documento);
+        Assert.Equal("**grassetto** e *corsivo*\n\n- uno\n- due", normalizzato.Nodi[0].Figli[0].Proprieta["testo"]);
+        Assert.Equal(SerializzatoreDocumento.Scrivi(normalizzato), SerializzatoreDocumento.Scrivi(_registro.Normalizza(normalizzato)));
+    }
+
+    [Theory]
+    [InlineData("**aperto")]
+    [InlineData("[clic](javascript:alert(1))")]
+    [InlineData("[clic](http://non-sicuro.example)")]
+    [InlineData("<script>alert(1)</script> ]")]
+    [InlineData("")]
+    public void IlTestoFormattatoNonValidoEDichiaratoTale(string markup)
+    {
+        var documento = new DocumentoCms(1, [Nodo("r", "contenuto.testo-ricco", new() { ["testo"] = markup })]);
+
+        Assert.Contains(_registro.Valida(documento), e => e.Codice is "ProprietaNonValida" or "ProprietaMancante");
+    }
+
+    [Fact]
+    public void UnTestoConMarcatoriHtmlSenzaFormattazioneEUnTestoValido()
+    {
+        // Non c'è HTML da ripulire: i caratteri < e > sono testo e verranno codificati in uscita.
+        var documento = new DocumentoCms(1, [Nodo("r", "contenuto.testo-ricco", new() { ["testo"] = "<img src=x onerror=alert(1)> & \"ok\"" })]);
+
+        Assert.Empty(_registro.Valida(documento));
+    }
 }

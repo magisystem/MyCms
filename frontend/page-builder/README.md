@@ -10,6 +10,8 @@ in `src/DvCms.Web/wwwroot/lib/page-builder/` (in produzione non serve alcuna too
 |---|---|
 | `src/main.js` | Avvio: legge la configurazione dagli attributi `data-*` di `#builder`, carica lo stato dal server, monta GrapesJS |
 | `src/catalogo.js` | Tipi di componente e blocchi, generati dal catalogo che il server serve (stessa fonte di `RegistroComponenti`) |
+| `src/testoRicco.js` | Grammatica del testo formattato (stessa di `TestoRicco` in C#): anteprima nel canvas e controllo immediato |
+| `test/` | Vettori di prova del testo formattato (condivisi con i test .NET) e test `node --test` (`npm test`, in CI) |
 | `src/vincoli.js` | Vincoli dei template applicati all'interfaccia (nodi bloccati, slot). Solo guida: il server riverifica tutto |
 | `src/salvataggio.js` | Salvataggio con token di concorrenza e gestione degli errori restituiti dal server |
 | `src/interfaccia.js` | Scheletro dell'interfaccia (solo API del DOM, nessun `innerHTML`) |
@@ -23,6 +25,7 @@ in `src/DvCms.Web/wwwroot/lib/page-builder/` (in produzione non serve alcuna too
 cd frontend/page-builder
 npm ci                  # installa esattamente ciò che dice package-lock.json
 npm run build           # rigenera src/DvCms.Web/wwwroot/lib/page-builder/ (poi versionare il risultato)
+npm test                # grammatica del testo formattato con i vettori condivisi
 npm run verifica        # esce con 1 se il bundle versionato non corrisponde a sorgenti e lockfile (lo fa la CI)
 npm audit               # vulnerabilità delle dipendenze (la CI fallisce da "high" in su)
 ```

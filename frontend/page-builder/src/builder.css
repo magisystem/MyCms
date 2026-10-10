@@ -46,3 +46,8 @@ body.dv-builder { display: flex; flex-direction: column; background: #f4f6fa; co
 .dv-dispositivi { display: flex; gap: 0.25rem; }
 .dv-dispositivo { padding: 0.25rem 0.75rem; border: 1px solid #475569; border-radius: 4px; background: transparent; color: #cbd5e1; cursor: pointer; }
 .dv-dispositivo[aria-pressed="true"] { background: #e2e8f0; color: #1f2937; }
+
+.dv-markup-barra { display: flex; gap: 0.25rem; margin-bottom: 0.25rem; }
+.dv-markup-barra button { min-width: 2rem; padding: 0.15rem 0.5rem; border: 1px solid #cbd2d9; border-radius: 3px; background: #fff; cursor: pointer; font-weight: 600; }
+.dv-markup-nota { color: #b91c1c; font-size: 0.8rem; min-height: 1rem; }
+.dv-markup .dv-markup-non-valido, textarea.dv-markup-non-valido { outline: 2px solid #b91c1c; }

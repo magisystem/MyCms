@@ -1,0 +1,199 @@
+[
+ {
+  "input": "Ciao mondo",
+  "canonico": "Ciao mondo",
+  "html": "<p>Ciao mondo</p>"
+ },
+ {
+  "input": "**grassetto** e *corsivo*",
+  "canonico": "**grassetto** e *corsivo*",
+  "html": "<p><strong>grassetto</strong> e <em>corsivo</em></p>"
+ },
+ {
+  "input": "***entrambi***",
+  "canonico": "***entrambi***",
+  "html": "<p><strong><em>entrambi</em></strong></p>"
+ },
+ {
+  "input": "a **b *c* d** e",
+  "canonico": "a **b *****c***** d** e",
+  "html": "<p>a <strong>b </strong><strong><em>c</em></strong><strong> d</strong> e</p>"
+ },
+ {
+  "input": "[Link](/pagina)",
+  "canonico": "[Link](/pagina)",
+  "html": "<p><a href=\"/pagina\">Link</a></p>"
+ },
+ {
+  "input": "[Esterno](https://esempio.it/x?a=1&b=2)",
+  "canonico": "[Esterno](https://esempio.it/x?a=1&b=2)",
+  "html": "<p><a href=\"https://esempio.it/x?a=1&amp;b=2\">Esterno</a></p>"
+ },
+ {
+  "input": "Riga uno\nRiga due",
+  "canonico": "Riga uno\nRiga due",
+  "html": "<p>Riga uno<br>Riga due</p>"
+ },
+ {
+  "input": "Uno\n\nDue",
+  "canonico": "Uno\n\nDue",
+  "html": "<p>Uno</p><p>Due</p>"
+ },
+ {
+  "input": "- a\n- b",
+  "canonico": "- a\n- b",
+  "html": "<ul><li>a</li><li>b</li></ul>"
+ },
+ {
+  "input": "- a\nb",
+  "canonico": "\\- a\nb",
+  "html": "<p>- a<br>b</p>"
+ },
+ {
+  "input": "\\- non elenco",
+  "canonico": "\\- non elenco",
+  "html": "<p>- non elenco</p>"
+ },
+ {
+  "input": "a \\* b \\[ c \\] d \\\\ e",
+  "canonico": "a \\* b \\[ c \\] d \\\\ e",
+  "html": "<p>a * b [ c ] d \\ e</p>"
+ },
+ {
+  "input": "Testo <b>x</b> & \"y\"",
+  "canonico": "Testo <b>x</b> & \"y\"",
+  "html": "<p>Testo &lt;b&gt;x&lt;/b&gt; &amp; &quot;y&quot;</p>"
+ },
+ {
+  "input": "  spazi  intorno  \n\n\n\n  secondo  ",
+  "canonico": "spazi  intorno\n\nsecondo",
+  "html": "<p>spazi  intorno</p><p>secondo</p>"
+ },
+ {
+  "input": "**a**b",
+  "canonico": "**a**b",
+  "html": "<p><strong>a</strong>b</p>"
+ },
+ {
+  "input": "- **voce** [l](/x)\n- *due*",
+  "canonico": "- **voce** [l](/x)\n- *due*",
+  "html": "<ul><li><strong>voce</strong> <a href=\"/x\">l</a></li><li><em>due</em></li></ul>"
+ },
+ {
+  "input": "**a\nb**",
+  "canonico": "**a**\n**b**",
+  "html": "<p><strong>a</strong><br><strong>b</strong></p>"
+ },
+ {
+  "input": "Voce - con trattino",
+  "canonico": "Voce - con trattino",
+  "html": "<p>Voce - con trattino</p>"
+ },
+ {
+  "input": "1 \\* 2 = 2",
+  "canonico": "1 \\* 2 = 2",
+  "html": "<p>1 * 2 = 2</p>"
+ },
+ {
+  "input": "**aperto",
+  "errore": true
+ },
+ {
+  "input": "*aperto",
+  "errore": true
+ },
+ {
+  "input": "testo ]",
+  "errore": true
+ },
+ {
+  "input": "[senza](indirizzo)",
+  "errore": true
+ },
+ {
+  "input": "[x](javascript:alert(1))",
+  "errore": true
+ },
+ {
+  "input": "[x](JaVaScRiPt:alert(1))",
+  "errore": true
+ },
+ {
+  "input": "[x](http://a.example)",
+  "errore": true
+ },
+ {
+  "input": "[x](//a.example)",
+  "errore": true
+ },
+ {
+  "input": "[x](data:text/html;base64,AAAA)",
+  "errore": true
+ },
+ {
+  "input": "[](/x)",
+  "errore": true
+ },
+ {
+  "input": "[x](/a b)",
+  "errore": true
+ },
+ {
+  "input": "[x]",
+  "errore": true
+ },
+ {
+  "input": "[x(/a)",
+  "errore": true
+ },
+ {
+  "input": "\\q",
+  "errore": true
+ },
+ {
+  "input": "a\u0001b",
+  "errore": true
+ },
+ {
+  "input": "",
+  "errore": true
+ },
+ {
+  "input": "   ",
+  "errore": true
+ },
+ {
+  "input": "\n\n",
+  "errore": true
+ },
+ {
+  "input": "**a*",
+  "errore": true
+ },
+ {
+  "input": "[a *b* ](/x)",
+  "errore": true
+ },
+ {
+  "input": "[x](/a(b))",
+  "errore": true
+ },
+ {
+  "input": "a\\",
+  "errore": true
+ },
+ {
+  "input": "[x](/y",
+  "errore": true
+ },
+ {
+  "input": "- \n- b",
+  "canonico": "-\n\\- b",
+  "html": "<p>-<br>- b</p>"
+ },
+ {
+  "input": "[x](/a)(b)extra)",
+  "canonico": "[x](/a)(b)extra)",
+  "html": "<p><a href=\"/a\">x</a>(b)extra)</p>"
+ }
+]
