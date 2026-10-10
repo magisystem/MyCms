@@ -1,0 +1,15 @@
+@model DvCms.Web.Pubblico.VistaPagina
+@{
+    var piePagina = Model.ValoreTema("TestoPiePagina");
+    var larga = Model.ValoreTema("Larghezza") == "Larga";
+}
+<header class="tema-intestazione">
+    <div class="tema-intestazione-contenuto">
+        <a class="tema-nome-sito" href="@Model.PercorsoRadice">@Model.Tema?.NomeSito</a>
+        <partial name="Temi/_SelettoreLingua" model="Model" />
+    </div>
+</header>
+<main class="@(larga ? "larga" : "stretta")">
+    <partial name="@DvCms.Web.Pubblico.ModelliVista.Vista(Model.IdModello, Model.VersioneModello)" model="Model" />
+</main>
+<footer class="tema-piepagina">@(piePagina.Length > 0 ? piePagina : Model.Tema?.NomeSito)</footer>

@@ -1,0 +1,32 @@
+/* Tema "classico" v1: intestazione sobria con filetto del colore primario. Una versione non si modifica: se ne aggiunge una nuova. */
+.tema-classico .tema-intestazione {
+    max-width: 46rem;
+    margin: 0 auto;
+    padding: 1.25rem 1rem 0.75rem;
+    border-bottom: 3px solid var(--tema-colore-primario, #1f4e8c);
+}
+
+.tema-classico .tema-nome-sito {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--tema-colore-primario, #1f4e8c);
+    text-decoration: none;
+}
+
+.tema-classico a {
+    color: var(--tema-colore-primario, #1f4e8c);
+}
+
+.tema-classico .pulsante {
+    color: #ffffff;
+    background: var(--tema-colore-primario, #1f4e8c);
+}
+
+.tema-classico .tema-piepagina {
+    max-width: 46rem;
+    margin: 0 auto;
+    padding: 1rem;
+    border-top: 1px solid #cbd2d9;
+    font-size: 0.9rem;
+    color: #52606d;
+}

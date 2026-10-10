@@ -24,6 +24,7 @@ public static class AzioniAudit
     public const string ElevazioneATenantAdmin = "ElevazioneATenantAdmin";
     public const string DisabilitazioneUtenza = "DisabilitazioneUtenza";
     public const string RiabilitazioneUtenza = "RiabilitazioneUtenza";
+    public const string ModificaTema = "ModificaTema";
     public const string InvitoInviato = "InvitoInviato";
     public const string InvitoAccettato = "InvitoAccettato";
     public const string ModificaTestoStatico = "ModificaTestoStatico";

@@ -1,0 +1,17 @@
+@model DvCms.Web.Pubblico.VistaPagina
+@if (Model is { NonIndicizzare: false } && Model.VociLingua.Count > 1)
+{
+    <nav class="lingue" aria-label="@_L["Lingue"]">
+        @foreach (var voce in Model.VociLingua)
+        {
+            @if (voce.Corrente)
+            {
+                <span aria-current="true" lang="@voce.Codice">@voce.Nome</span>
+            }
+            else
+            {
+                <a href="@voce.Url" hreflang="@voce.Codice" lang="@voce.Codice">@voce.Nome</a>
+            }
+        }
+    </nav>
+}

@@ -1,0 +1,15 @@
+@model DvCms.Web.Pubblico.VistaPagina
+@{
+    var piePagina = Model.ValoreTema("TestoPiePagina");
+}
+<header class="tema-intestazione">
+    <a class="tema-nome-sito" href="@Model.PercorsoRadice">@Model.Tema?.NomeSito</a>
+</header>
+<partial name="Temi/_SelettoreLingua" model="Model" />
+<main>
+    <partial name="@DvCms.Web.Pubblico.ModelliVista.Vista(Model.IdModello, Model.VersioneModello)" model="Model" />
+</main>
+@if (piePagina.Length > 0)
+{
+    <footer class="tema-piepagina">@piePagina</footer>
+}

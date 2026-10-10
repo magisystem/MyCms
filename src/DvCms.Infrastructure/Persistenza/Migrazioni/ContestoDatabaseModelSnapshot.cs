@@ -672,6 +672,53 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.ToTable("MessaggiOutbox", (string)null);
                 });
 
+            modelBuilder.Entity("DvCms.Domain.Temi.ImpostazioniTemaSito", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("AggiornatoDaIdUtenza")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("AggiornatoIlUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ChiaveTema")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<Guid>("IdSito")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdTenant")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ImpostazioniJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<byte[]>("TokenConcorrenza")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int>("VersioneTema")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AggiornatoDaIdUtenza");
+
+                    b.HasIndex("IdSito")
+                        .IsUnique();
+
+                    b.HasIndex("IdTenant", "IdSito");
+
+                    b.ToTable("ImpostazioniTemaSito", (string)null);
+                });
+
             modelBuilder.Entity("DvCms.Domain.Tenancy.DominioSito", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1041,6 +1088,21 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.HasOne("DvCms.Domain.Tenancy.Tenant", null)
                         .WithMany()
                         .HasForeignKey("IdTenant")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DvCms.Domain.Temi.ImpostazioniTemaSito", b =>
+                {
+                    b.HasOne("DvCms.Domain.Accessi.Utenza", null)
+                        .WithMany()
+                        .HasForeignKey("AggiornatoDaIdUtenza")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("DvCms.Domain.Tenancy.Sito", null)
+                        .WithMany()
+                        .HasForeignKey("IdTenant", "IdSito")
+                        .HasPrincipalKey("IdTenant", "Id")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

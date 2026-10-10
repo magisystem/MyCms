@@ -1,0 +1,73 @@
+@page "/admin/tema"
+@model DvCms.Web.Pages.Admin.Tema.IndexModel
+@using DvCms.Application.Temi
+@{
+    ViewData["Titolo"] = _L["Aspetto del sito"];
+    var configurazione = Model.Configurazione!;
+    var tema = Model.TemaMostrato!;
+}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        @if (Model.Messaggio is not null)
+        {
+            <div class="alert alert-success" role="status">@Model.Messaggio</div>
+        }
+        <div class="card">
+            <div class="card-body">
+                @if (Model.ErroreDaMostrare is not null)
+                {
+                    <div class="alert alert-danger" role="alert">@Model.ErroreDaMostrare</div>
+                }
+                @if (configurazione.Predefinito)
+                {
+                    <p class="text-secondary">@_L["Il sito usa il tema predefinito. Scegli un tema e salva per configurarlo."]</p>
+                }
+                <form method="get" class="row g-2 align-items-end mb-4">
+                    <div class="col">
+                        <label class="form-label" for="tema">@_L["Tema"]</label>
+                        <select class="form-select" id="tema" name="tema" data-auto-invio>
+                            @foreach (var disponibile in configurazione.Disponibili)
+                            {
+                                <option value="@disponibile.Chiave" selected="@(disponibile.Chiave == tema.Chiave)">@DvCms.Web.Cms.EtichetteTemi.NomeTema(_L, disponibile.Chiave)</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-auto"><button type="submit" class="btn">@_L["Mostra le impostazioni"]</button></div>
+                </form>
+                <form method="post" asp-route-tema="@tema.Chiave" novalidate>
+                    <input type="hidden" name="tokenConcorrenza" value="@configurazione.TokenConcorrenza" />
+                    <p class="text-secondary small">@_L["Versione del tema"]: v@(tema.Versione)</p>
+                    @foreach (var campo in tema.Campi)
+                    {
+                        var valore = Model.Valori.GetValueOrDefault(campo.Nome) ?? string.Empty;
+                        <div class="mb-3">
+                            <label class="form-label" for="t_@campo.Nome">@DvCms.Web.Cms.EtichetteTemi.Campo(_L, campo.Nome)</label>
+                            @if (campo.Tipo == TipoCampoTema.Colore)
+                            {
+                                <input type="color" class="form-control form-control-color @(Model.CampiNonValidi.Contains(campo.Nome) ? "is-invalid" : null)" id="t_@campo.Nome" name="t_@campo.Nome" value="@(valore.Length > 0 ? valore : campo.Predefinito)" />
+                            }
+                            else if (campo.Tipo == TipoCampoTema.Scelta)
+                            {
+                                <select class="form-select @(Model.CampiNonValidi.Contains(campo.Nome) ? "is-invalid" : null)" id="t_@campo.Nome" name="t_@campo.Nome">
+                                    @foreach (var ammesso in campo.Valori ?? [])
+                                    {
+                                        <option value="@ammesso" selected="@((valore.Length > 0 ? valore : campo.Predefinito) == ammesso)">@DvCms.Web.Cms.EtichetteTemi.Valore(_L, campo.Nome, ammesso)</option>
+                                    }
+                                </select>
+                            }
+                            else
+                            {
+                                <input class="form-control @(Model.CampiNonValidi.Contains(campo.Nome) ? "is-invalid" : null)" id="t_@campo.Nome" name="t_@campo.Nome" value="@valore" maxlength="@campo.LunghezzaMassima" />
+                            }
+                        </div>
+                    }
+                    <button type="submit" class="btn btn-primary">@_L["Salva il tema"]</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Script {
+    <script src="~/js/auto-invio.js"></script>
+}

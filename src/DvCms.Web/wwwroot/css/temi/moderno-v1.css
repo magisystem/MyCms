@@ -1,0 +1,64 @@
+/* Tema "moderno" v1: banda scura in testa e in fondo, titoli del colore primario. */
+.tema-moderno .tema-intestazione {
+    color: #ffffff;
+    background: var(--tema-colore-intestazione, #111827);
+}
+
+.tema-moderno .tema-intestazione-contenuto {
+    max-width: 64rem;
+    margin: 0 auto;
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.tema-moderno .tema-nome-sito {
+    font-size: 1.4rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #ffffff;
+    text-decoration: none;
+}
+
+.tema-moderno .lingue {
+    margin: 0;
+    padding: 0;
+}
+
+.tema-moderno .lingue a,
+.tema-moderno .lingue span {
+    color: #ffffff;
+}
+
+.tema-moderno main.stretta {
+    max-width: 38rem;
+}
+
+.tema-moderno main.larga {
+    max-width: 64rem;
+}
+
+.tema-moderno h1 {
+    color: var(--tema-colore-primario, #0f766e);
+    font-size: 2.4rem;
+}
+
+.tema-moderno a {
+    color: var(--tema-colore-primario, #0f766e);
+}
+
+.tema-moderno .pulsante {
+    border-radius: 999px;
+    color: #ffffff;
+    background: var(--tema-colore-primario, #0f766e);
+}
+
+.tema-moderno .tema-piepagina {
+    padding: 1.5rem 1rem;
+    text-align: center;
+    color: #d1d5db;
+    background: var(--tema-colore-intestazione, #111827);
+}

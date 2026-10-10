@@ -4,6 +4,7 @@ using DvCms.Domain.Cms;
 using DvCms.Domain.Email;
 using DvCms.Domain.Localizzazione;
 using DvCms.Domain.Outbox;
+using DvCms.Domain.Temi;
 using DvCms.Domain.Tenancy;
 using DvCms.Infrastructure.Segreti;
 using Microsoft.EntityFrameworkCore;
@@ -69,6 +70,8 @@ public class ContestoDatabase : DbContext
 
     public DbSet<RichiestaRecuperoPassword> RichiesteRecuperoPassword => Set<RichiestaRecuperoPassword>();
 
+    public DbSet<ImpostazioniTemaSito> ImpostazioniTemaSito => Set<ImpostazioniTemaSito>();
+
     public DbSet<InvitoAccount> InvitiAccount => Set<InvitoAccount>();
 
     public DbSet<RegistroAudit> RegistroAudit => Set<RegistroAudit>();
@@ -89,6 +92,7 @@ public class ContestoDatabase : DbContext
         modelBuilder.Entity<RedirectPagina>().HasQueryFilter(redirect => redirect.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<ImpostazioniEmailTenant>().HasQueryFilter(impostazioni => impostazioni.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<RichiestaRecuperoPassword>().HasQueryFilter(richiesta => richiesta.IdTenant == IdTenantCorrente);
+        modelBuilder.Entity<ImpostazioniTemaSito>().HasQueryFilter(impostazioni => impostazioni.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<InvitoAccount>().HasQueryFilter(invito => invito.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<MessaggioOutbox>().HasQueryFilter(messaggio => messaggio.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<Utenza>().HasQueryFilter(utenza => utenza.IdTenant == IdTenantCorrente);

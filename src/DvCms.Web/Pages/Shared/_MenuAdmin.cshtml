@@ -13,6 +13,12 @@
             <span class="nav-link-title">@_L["Pagine"]</span>
         </a>
     </li>
+    <li class="nav-item">
+        <a class="nav-link" href="/admin/tema">
+            <span class="nav-link-icon"><i class="ti ti-palette"></i></span>
+            <span class="nav-link-title">@_L["Aspetto"]</span>
+        </a>
+    </li>
     @* La visibilità è solo comodità: ogni pagina dell'area Platform è protetta lato server dalla politica del PlatformAdmin. *@
     @if (User.IsInRole("PlatformAdmin"))
     {

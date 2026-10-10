@@ -13,6 +13,10 @@
         <meta name="description" content="@descrizione" />
     }
     <link rel="stylesheet" href="~/css/pubblico.css" />
+    @if (vista is not null)
+    {
+        <link rel="stylesheet" href="@DvCms.Web.Pubblico.TemiVista.Foglio(vista.Tema)" asp-append-version="true" />
+    }
     @if (vista is { NonIndicizzare: false, UrlCanonico: { } canonico })
     {
         <link rel="canonical" href="@canonico" />
@@ -56,37 +60,22 @@
         <meta name="robots" content="noindex, follow" />
     }
 </head>
-<body>
+<body class="@DvCms.Web.Pubblico.TemiVista.Classe(vista?.Tema)" style="@vista?.Tema?.VariabiliCss">
     @if (vista?.EtichettaAnteprima is { } etichetta)
     {
         <div class="anteprima" role="status">@etichetta</div>
     }
-    @if (vista is { NonIndicizzare: false } && vista.VociLingua.Count > 1)
+    @if (vista is null)
     {
-        <nav class="lingue" aria-label="@_L["Lingue"]">
-            @foreach (var voce in vista.VociLingua)
-            {
-                @if (voce.Corrente)
-                {
-                    <span aria-current="true" lang="@voce.Codice">@voce.Nome</span>
-                }
-                else
-                {
-                    <a href="@voce.Url" hreflang="@voce.Codice" lang="@voce.Codice">@voce.Nome</a>
-                }
-            }
-        </nav>
-    }
-    <main>
-        @if (vista is null)
-        {
+        <main>
             <h1>@_L["Pagina non trovata"]</h1>
             <p>@_L["La pagina che cerchi non esiste o non è disponibile."]</p>
-        }
-        else
-        {
-            <partial name="@DvCms.Web.Pubblico.ModelliVista.Vista(vista.IdModello, vista.VersioneModello)" model="vista" />
-        }
-    </main>
+        </main>
+    }
+    else
+    {
+        @* Il tema decide l'aspetto (intestazione, selettore di lingua, contenitore, piè di pagina); il contenuto è lo stesso per ogni tema. *@
+        <partial name="@DvCms.Web.Pubblico.TemiVista.Vista(vista.Tema)" model="vista" />
+    }
 </body>
 </html>

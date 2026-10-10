@@ -1,3 +1,5 @@
+using DvCms.Application.Temi;
+
 namespace DvCms.Web.Pubblico;
 
 /// <summary>Una versione linguistica di una pagina: indirizzo assoluto, nome per il selettore e se è la corrente.</summary>
@@ -17,8 +19,13 @@ public sealed record VistaPagina(
     IReadOnlyList<VoceLingua>? Lingue = null,
     string? UrlPredefinito = null,
     string? TitoloSeo = null,
-    string? DescrizioneSeo = null)
+    string? DescrizioneSeo = null,
+    TemaRisolto? Tema = null,
+    string PercorsoRadice = "/")
 {
+    /// <summary>Valore in vigore di un'impostazione del tema (vuoto se il tema non la prevede).</summary>
+    public string ValoreTema(string nome) => Tema is not null && Tema.Valori.TryGetValue(nome, out var valore) ? valore : string.Empty;
+
     /// <summary>Titolo del documento: quello per i motori di ricerca se presente, altrimenti il titolo della pagina.</summary>
     public string TitoloDocumento => string.IsNullOrWhiteSpace(TitoloSeo) ? Titolo : TitoloSeo;
 

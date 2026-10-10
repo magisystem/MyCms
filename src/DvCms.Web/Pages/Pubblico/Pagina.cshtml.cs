@@ -1,4 +1,5 @@
 using DvCms.Application.Cms;
+using DvCms.Application.Temi;
 using DvCms.Web.Localizzazione;
 using DvCms.Web.Pubblico;
 using Microsoft.AspNetCore.Mvc;
@@ -15,10 +16,12 @@ namespace DvCms.Web.Pages.Pubblico;
 public class PaginaModel : PageModel
 {
     private readonly IServizioPaginePubbliche _pagine;
+    private readonly IRisolutoreTema _temi;
 
-    public PaginaModel(IServizioPaginePubbliche pagine)
+    public PaginaModel(IServizioPaginePubbliche pagine, IRisolutoreTema temi)
     {
         _pagine = pagine;
+        _temi = temi;
     }
 
     public VistaPagina? Vista { get; private set; }
@@ -86,7 +89,9 @@ public class PaginaModel : PageModel
             voci,
             contenuto.Traduzioni.FirstOrDefault(t => t.Predefinita) is { } predefinitaTradotta ? origine + predefinitaTradotta.Percorso : null,
             contenuto.TitoloSeo,
-            contenuto.DescrizioneSeo);
+            contenuto.DescrizioneSeo,
+            await _temi.RisolviAsync(annullamento),
+            prefissata is null ? "/" : "/" + prefissata.Codice);
         return Page();
     }
 

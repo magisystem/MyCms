@@ -1,5 +1,6 @@
 using DvCms.Application.Cms;
 using DvCms.Application.Localizzazione;
+using DvCms.Application.Temi;
 using DvCms.Web.Pubblico;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,11 +14,13 @@ namespace DvCms.Web.Pages.Admin.Pagine;
 public class AnteprimaModel : PaginaAdmin
 {
     private readonly IServizioPagine _pagine;
+    private readonly IRisolutoreTema _temi;
 
-    public AnteprimaModel(IServizioPagine pagine, ILocalizzatore localizzatore)
+    public AnteprimaModel(IServizioPagine pagine, IRisolutoreTema temi, ILocalizzatore localizzatore)
         : base(localizzatore)
     {
         _pagine = pagine;
+        _temi = temi;
     }
 
     public VistaPagina? Vista { get; private set; }
@@ -47,7 +50,8 @@ public class AnteprimaModel : PaginaAdmin
             $"{stato} (#{anteprima.NumeroRevisione})",
             anteprima.IdModello,
             anteprima.VersioneModello,
-            anteprima.DatiModello);
+            anteprima.DatiModello,
+            Tema: await _temi.RisolviAsync(annullamento));
         return Page();
     }
 }
