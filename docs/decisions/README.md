@@ -24,5 +24,6 @@ Stato: `Proposed`, `Accepted`, `Superseded`, `Deprecated`.
 - [ADR-0016 — Autenticazione locale propria, senza ASP.NET Core Identity](ADR-0016-local-authentication.md)
 - [ADR-0017 — Denominazione in italiano](ADR-0017-italian-naming.md)
 - [ADR-0018 — Localizzazione dei testi (italiano e inglese)](ADR-0018-localization.md)
+- [ADR-0019 — Autenticazione a due fattori (TOTP e codici di recupero)](ADR-0019-two-factor-authentication.md)
 
 Per le regole operative della persistenza, vedere [`docs/architecture/database.md`](../architecture/database.md).

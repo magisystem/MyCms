@@ -9,6 +9,7 @@ using DvCms.Domain.Accessi;
 using DvCms.Domain.Cms;
 using DvCms.Domain.Localizzazione;
 using DvCms.Domain.Tenancy;
+using DvCms.Infrastructure.Accessi;
 using DvCms.Infrastructure.Persistenza;
 using Microsoft.EntityFrameworkCore;
 
@@ -125,7 +126,8 @@ public sealed class ServizioPiattaforma : IServizioPiattaforma
                 utenza.Ruolo,
                 utenza.Stato,
                 utenza.DeveCambiarePassword,
-                utenza.UltimoAccessoIlUtc))],
+                utenza.UltimoAccessoIlUtc,
+                utenza.DueFattoriAttivi))],
             lingueDisponibili,
             await _contesto.ImpostazioniEmailTenant.IgnoreQueryFilters().AnyAsync(impostazioni => impostazioni.IdTenant == idTenant, annullamento));
     }
@@ -650,6 +652,22 @@ public sealed class ServizioPiattaforma : IServizioPiattaforma
             utenza.Stato = attiva ? StatoUtenza.Attiva : StatoUtenza.Disabilitata;
             utenza.TimbroSicurezza = Guid.NewGuid();
             utenza.AggiornatoIlUtc = Adesso();
+            return Esito.Ok(utenza.Id, idTenant, $"account '{utenza.Email}'");
+        }, annullamento);
+
+    public Task<EsitoOperazione> ReimpostaDueFattoriAsync(Guid idAttore, Guid idTenant, Guid idUtenza, CancellationToken annullamento) =>
+        EseguiAsync(idAttore, AzioniAudit.ReimpostazioneDueFattori, "Utenza", idTenant, async _ =>
+        {
+            // Solo i TenantAdmin del tenant indicato: il PlatformAdmin si reimposta con il comando operativo, mai da questa pagina.
+            var utenza = await _contesto.Utenze.IgnoreQueryFilters().SingleOrDefaultAsync(
+                candidata => candidata.Id == idUtenza && candidata.IdTenant == idTenant && candidata.Ruolo == RuoloUtenza.TenantAdmin,
+                annullamento);
+            if (utenza is null)
+            {
+                return Esito.Non(CodiceEsito.NonTrovato);
+            }
+
+            await AzzeramentoDueFattori.ApplicaAsync(_contesto, utenza, Adesso(), annullamento);
             return Esito.Ok(utenza.Id, idTenant, $"account '{utenza.Email}'");
         }, annullamento);
 

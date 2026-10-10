@@ -1,4 +1,5 @@
 using DvCms.Application.Accessi;
+using DvCms.Application.Accessi.DueFattori;
 using DvCms.Application.Cms;
 using DvCms.Application.Email;
 using DvCms.Application.Localizzazione;
@@ -76,7 +77,10 @@ public static class EstensioniServizi
         servizi.TryAddSingleton<IHashPassword, HashPasswordBCrypt>();
         servizi.TryAddSingleton<HashFinto>();
         servizi.TryAddScoped<IServizioAudit, ServizioAudit>();
+        servizi.TryAddSingleton(LeggiOpzioniDueFattori(configurazione));
+        servizi.TryAddScoped<ContatoreTentativi>();
         servizi.TryAddScoped<IServizioAccesso, ServizioAccesso>();
+        servizi.TryAddScoped<IServizioDueFattori, ServizioDueFattori>();
         servizi.TryAddSingleton(LeggiOpzioniRecuperoPassword(configurazione));
         servizi.TryAddScoped<IServizioRecuperoPassword, ServizioRecuperoPassword>();
         servizi.TryAddSingleton(new OpzioniInviti(TimeSpan.FromHours(LeggiIntero(configurazione, "Sicurezza:Inviti:OreValidita", (int)OpzioniInviti.Predefinite.Validita.TotalHours, 1, 720))));
@@ -212,6 +216,20 @@ public static class EstensioniServizi
             TimeSpan.FromMinutes(LeggiIntero(configurazione, "Sicurezza:RecuperoPassword:MinutiValiditaLink", (int)p.ValiditaLink.TotalMinutes, 1, 1440)),
             LeggiIntero(configurazione, "Sicurezza:RecuperoPassword:RichiesteOrarieAccount", p.RichiesteOrarieAccount, 1, 100),
             LeggiIntero(configurazione, "Sicurezza:RecuperoPassword:RichiesteOrarieIp", p.RichiesteOrarieIp, 1, 1000));
+    }
+
+    private static OpzioniDueFattori LeggiOpzioniDueFattori(IConfiguration configurazione)
+    {
+        var obbligo = OpzioniDueFattori.Predefinite.Obbligo;
+        var testo = configurazione["Sicurezza:DueFattori:Obbligo"];
+        if (!string.IsNullOrWhiteSpace(testo)
+            && (!Enum.TryParse(testo.Trim(), ignoreCase: true, out obbligo) || !Enum.IsDefined(obbligo)))
+        {
+            throw new InvalidOperationException("Valore non valido per 'Sicurezza:DueFattori:Obbligo': atteso Nessuno, PlatformAdmin o Amministratori.");
+        }
+
+        var emittente = configurazione["Sicurezza:DueFattori:Emittente"];
+        return new OpzioniDueFattori(obbligo, string.IsNullOrWhiteSpace(emittente) ? OpzioniDueFattori.Predefinite.Emittente : emittente.Trim());
     }
 
     private static OpzioniSicurezza LeggiOpzioniSicurezza(IConfiguration configurazione)

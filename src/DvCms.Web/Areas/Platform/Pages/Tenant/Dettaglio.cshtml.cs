@@ -80,6 +80,9 @@ public class DettaglioModel : PaginaPiattaforma
     public Task<IActionResult> OnPostAccountAttivoAsync(Guid id, Guid idUtenza, bool attiva, CancellationToken annullamento) =>
         EseguiAsync(id, () => _piattaforma.ImpostaUtenzaAttivaAsync(IdAttore, id, idUtenza, attiva, annullamento), Localizzatore.Traduci("Account aggiornato."));
 
+    public Task<IActionResult> OnPostReimpostaDueFattoriAsync(Guid id, Guid idUtenza, CancellationToken annullamento) =>
+        EseguiAsync(id, () => _piattaforma.ReimpostaDueFattoriAsync(IdAttore, id, idUtenza, annullamento), Localizzatore.Traduci("Autenticazione a due fattori reimpostata: l'account dovrà configurarla di nuovo."));
+
     public async Task<IActionResult> OnPostInviaInvitoAsync(Guid id, Guid idUtenza, CancellationToken annullamento) =>
         await EseguiAsync(id, () => _piattaforma.InviaInvitoAsync(IdAttore, id, idUtenza, LinkInvito(), annullamento), Localizzatore.Traduci("Invito inviato."));
 

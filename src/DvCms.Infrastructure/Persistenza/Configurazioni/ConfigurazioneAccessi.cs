@@ -23,6 +23,8 @@ internal sealed class ConfigurazioneUtenza : IEntityTypeConfiguration<Utenza>
         entita.Property(utenza => utenza.NomeVisualizzato).HasMaxLength(200).IsRequired();
         entita.Property(utenza => utenza.HashPassword).HasMaxLength(200).IsRequired();
         entita.Property(utenza => utenza.Stato).HasConversion<string>().HasMaxLength(20).IsRequired();
+        entita.Property(utenza => utenza.SegretoTotpProtetto).HasMaxLength(500);
+        entita.Property(utenza => utenza.SegretoTotpInAttesaProtetto).HasMaxLength(500);
         entita.Property(utenza => utenza.TokenConcorrenza).IsRowVersion();
 
         // L'email è unica nel tenant e può ripetersi in tenant diversi. Fra i PlatformAdmin (IdTenant nullo) è unica
@@ -50,5 +52,19 @@ internal sealed class ConfigurazioneRegistroAudit : IEntityTypeConfiguration<Reg
         entita.HasOne<Tenant>().WithMany().HasForeignKey(voce => voce.IdTenant).OnDelete(DeleteBehavior.Restrict);
         entita.HasOne<Utenza>().WithMany().HasForeignKey(voce => voce.IdUtenzaAttore).OnDelete(DeleteBehavior.Restrict);
         entita.HasIndex(voce => new { voce.IdTenant, voce.CreatoIlUtc });
+    }
+}
+
+internal sealed class ConfigurazioneCodiceRecuperoUtenza : IEntityTypeConfiguration<CodiceRecuperoUtenza>
+{
+    public void Configure(EntityTypeBuilder<CodiceRecuperoUtenza> entita)
+    {
+        entita.ToTable("CodiciRecuperoUtenza");
+        entita.HasKey(codice => codice.Id);
+        entita.Property(codice => codice.Id).ValueGeneratedNever();
+        entita.Property(codice => codice.HashCodice).HasColumnType("binary(32)").IsRequired();
+
+        entita.HasOne<Utenza>().WithMany().HasForeignKey(codice => codice.IdUtenza).OnDelete(DeleteBehavior.Restrict);
+        entita.HasIndex(codice => new { codice.IdUtenza, codice.HashCodice }).IsUnique();
     }
 }

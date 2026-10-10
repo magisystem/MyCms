@@ -1,0 +1,140 @@
+@page "/admin/sicurezza"
+@model DvCms.Web.Pages.Admin.SicurezzaModel
+@{
+    ViewData["Titolo"] = _L["Verifica in due passaggi"];
+}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        @if (Model.Obbligatoria)
+        {
+            <div class="alert alert-warning" role="alert">@_L["La verifica in due passaggi è obbligatoria per il tuo ruolo: configurala per continuare a usare l'amministrazione."]</div>
+        }
+        @if (Model.Messaggio is not null)
+        {
+            <div class="alert alert-success" role="alert">@Model.Messaggio</div>
+        }
+        @if (Model.MessaggioErrore is not null)
+        {
+            <div class="alert alert-danger" role="alert">@Model.MessaggioErrore</div>
+        }
+
+        @if (Model.CodiciRecupero.Count > 0)
+        {
+            <div class="card mb-3" id="codici-recupero">
+                <div class="card-header"><h3 class="card-title">@_L["Codici di recupero"]</h3></div>
+                <div class="card-body">
+                    <p>@_L["Conservali in un luogo sicuro: ognuno vale una sola volta e serve se perdi il telefono. Non verranno mostrati di nuovo."]</p>
+                    <ul class="list-unstyled font-monospace fs-3">
+                        @foreach (var codice in Model.CodiciRecupero)
+                        {
+                            <li>@codice</li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        }
+
+        @if (Model.Configurazione is not null)
+        {
+            <div class="card mb-3" id="configurazione">
+                <div class="card-header"><h3 class="card-title">@_L["Collega l'app di autenticazione"]</h3></div>
+                <div class="card-body">
+                    <p>@_L["Inquadra il codice QR con la tua app di autenticazione (ad esempio Microsoft Authenticator, Google Authenticator o un gestore di password), oppure inserisci la chiave a mano."]</p>
+                    <div class="mb-3" style="max-width: 220px">@Html.Raw(Model.QrSvg)</div>
+                    <p class="mb-3">@_L["Chiave:"] <code class="user-select-all" id="chiave-totp">@Model.Configurazione.ChiaveTestuale</code></p>
+                    <form method="post" asp-page-handler="Conferma" autocomplete="off" novalidate>
+                        <div class="mb-3">
+                            <label class="form-label" for="CodiceConferma">@_L["Codice generato dall'app"]</label>
+                            <input type="text" class="form-control" id="CodiceConferma" name="Codice" inputmode="numeric" autocomplete="one-time-code" required />
+                        </div>
+                        <button type="submit" class="btn btn-primary">@_L["Conferma e attiva"]</button>
+                    </form>
+                </div>
+            </div>
+        }
+        else if (Model.Stato.ConfigurazioneInCorso)
+        {
+            <div class="alert alert-info" role="alert">@_L["Hai una configurazione avviata ma la chiave non può essere mostrata di nuovo: avviala da capo."]</div>
+        }
+
+        <div class="card mb-3">
+            <div class="card-header">
+                <h3 class="card-title">@_L["Verifica in due passaggi"]</h3>
+                <div class="card-actions">
+                    @if (Model.Stato.Attivi)
+                    {
+                        <span class="badge bg-green-lt">@_L["Attiva"]</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary-lt">@_L["Non attiva"]</span>
+                    }
+                </div>
+            </div>
+            <div class="card-body">
+                @if (Model.Stato.Attivi)
+                {
+                    <p>@_L["Codici di recupero ancora validi:"] <strong>@Model.Stato.CodiciRecuperoResidui</strong></p>
+                    <form method="post" asp-page-handler="Avvia" autocomplete="off" novalidate class="mb-4">
+                        <h4>@_L["Cambia dispositivo"]</h4>
+                        <p class="text-secondary">@_L["Per sicurezza servono la password e un codice attuale."]</p>
+                        <div class="row g-2">
+                            <div class="col-md-6">
+                                <label class="form-label" for="PasswordCambio">@_L["Password"]</label>
+                                <input type="password" class="form-control" id="PasswordCambio" name="Password" autocomplete="current-password" required />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="CodiceCambio">@_L["Codice"]</label>
+                                <input type="text" class="form-control" id="CodiceCambio" name="Codice" autocomplete="one-time-code" required />
+                            </div>
+                        </div>
+                        <button type="submit" class="btn mt-2">@_L["Cambia dispositivo"]</button>
+                    </form>
+                    <form method="post" asp-page-handler="Rigenera" autocomplete="off" novalidate class="mb-4">
+                        <h4>@_L["Rigenera i codici di recupero"]</h4>
+                        <p class="text-secondary">@_L["I codici attuali smetteranno di valere."]</p>
+                        <div class="row g-2">
+                            <div class="col-md-6">
+                                <label class="form-label" for="PasswordRigenera">@_L["Password"]</label>
+                                <input type="password" class="form-control" id="PasswordRigenera" name="Password" autocomplete="current-password" required />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="CodiceRigenera">@_L["Codice"]</label>
+                                <input type="text" class="form-control" id="CodiceRigenera" name="Codice" autocomplete="one-time-code" required />
+                            </div>
+                        </div>
+                        <button type="submit" class="btn mt-2">@_L["Rigenera"]</button>
+                    </form>
+                    @if (!Model.Stato.Obbligatoria)
+                    {
+                        <form method="post" asp-page-handler="Disattiva" autocomplete="off" novalidate>
+                            <h4>@_L["Disattiva"]</h4>
+                            <div class="row g-2">
+                                <div class="col-md-6">
+                                    <label class="form-label" for="PasswordDisattiva">@_L["Password"]</label>
+                                    <input type="password" class="form-control" id="PasswordDisattiva" name="Password" autocomplete="current-password" required />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label" for="CodiceDisattiva">@_L["Codice"]</label>
+                                    <input type="text" class="form-control" id="CodiceDisattiva" name="Codice" autocomplete="one-time-code" required />
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-outline-danger mt-2">@_L["Disattiva la verifica in due passaggi"]</button>
+                        </form>
+                    }
+                    else
+                    {
+                        <p class="text-secondary mb-0">@_L["La verifica in due passaggi è obbligatoria per il tuo ruolo e non si può disattivare."]</p>
+                    }
+                }
+                else
+                {
+                    <p>@_L["Aggiunge al tuo account un secondo controllo, con un codice generato da un'app sul telefono."]</p>
+                    <form method="post" asp-page-handler="Avvia">
+                        <button type="submit" class="btn btn-primary">@_L["Configura"]</button>
+                    </form>
+                }
+            </div>
+        </div>
+    </div>
+</div>

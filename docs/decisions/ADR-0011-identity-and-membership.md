@@ -81,7 +81,7 @@ Le email passano dall'outbox (ADR-0010) e dagli adapter di ADR-0015 (Microsoft G
 
 ### Two-factor authentication
 
-È un requisito previsto ma **non prioritario**: va implementato per ultimo, dopo le altre funzionalità, e **non è un gate del go-live**. Quando verrà affrontato servirà un ADR (metodo, recupero, obbligo per `PlatformAdmin` e `TenantAdmin`).
+Metodo, recupero e obbligatorietà sono decisi in [ADR-0019](ADR-0019-two-factor-authentication.md): TOTP con codici di recupero, obbligatoria per `PlatformAdmin` e `TenantAdmin` (configurabile). Resta non bloccante per il go-live solo nel senso che `Sicurezza:DueFattori:Obbligo=Nessuno` la rende facoltativa.
 
 ## Alternative considerate
 

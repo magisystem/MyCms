@@ -52,6 +52,7 @@ public static class ServiziProva
         {
             ["ConnectionStrings:Predefinita"] = connessione,
             ["Sicurezza:Password:FattoreLavoroBcrypt"] = "4",
+            ["Sicurezza:DueFattori:Obbligo"] = "Nessuno",
             ["Archivio:Percorso"] = Path.Combine(Path.GetTempPath(), "dvcms-prova-" + Guid.NewGuid().ToString("N")),
         };
         if (impostazioniAggiuntive is not null)

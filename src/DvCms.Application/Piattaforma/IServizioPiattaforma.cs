@@ -84,7 +84,8 @@ public sealed record DettaglioAccount(
     RuoloUtenza Ruolo,
     StatoUtenza Stato,
     bool DeveCambiarePassword,
-    DateTime? UltimoAccessoIlUtc);
+    DateTime? UltimoAccessoIlUtc,
+    bool DueFattoriAttivi = false);
 
 public sealed record DettaglioTenant(
     Guid Id,
@@ -184,4 +185,10 @@ public interface IServizioPiattaforma
 
     /// <summary>Disabilita o riabilita un account del tenant (mai un <c>PlatformAdmin</c>); la disabilitazione invalida le sessioni.</summary>
     Task<EsitoOperazione> ImpostaUtenzaAttivaAsync(Guid idAttore, Guid idTenant, Guid idUtenza, bool attiva, CancellationToken annullamento);
+
+    /// <summary>
+    /// Dispositivo perso: azzera la 2FA di un <c>TenantAdmin</c> del tenant (mai di un <c>PlatformAdmin</c>), cancella i suoi codici di
+    /// recupero e invalida le sessioni. Al successivo accesso dovrà configurarla di nuovo (ADR-0019).
+    /// </summary>
+    Task<EsitoOperazione> ReimpostaDueFattoriAsync(Guid idAttore, Guid idTenant, Guid idUtenza, CancellationToken annullamento);
 }

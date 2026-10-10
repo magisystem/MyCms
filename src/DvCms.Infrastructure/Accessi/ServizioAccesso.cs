@@ -1,4 +1,5 @@
 using DvCms.Application.Accessi;
+using DvCms.Application.Accessi.DueFattori;
 using DvCms.Application.Tenancy;
 using DvCms.Domain.Accessi;
 using DvCms.Domain.Localizzazione;
@@ -19,7 +20,8 @@ public sealed partial class ServizioAccesso : IServizioAccesso
     private readonly IContestoTenant _tenant;
     private readonly IHashPassword _hash;
     private readonly HashFinto _hashFinto;
-    private readonly OpzioniSicurezza _opzioni;
+    private readonly ContatoreTentativi _contatore;
+    private readonly OpzioniDueFattori _dueFattori;
     private readonly TimeProvider _orologio;
     private readonly IServizioAudit _audit;
     private readonly ILogger<ServizioAccesso> _logger;
@@ -29,7 +31,8 @@ public sealed partial class ServizioAccesso : IServizioAccesso
         IContestoTenant tenant,
         IHashPassword hash,
         HashFinto hashFinto,
-        OpzioniSicurezza opzioni,
+        ContatoreTentativi contatore,
+        OpzioniDueFattori dueFattori,
         TimeProvider orologio,
         IServizioAudit audit,
         ILogger<ServizioAccesso> logger)
@@ -38,7 +41,8 @@ public sealed partial class ServizioAccesso : IServizioAccesso
         _tenant = tenant;
         _hash = hash;
         _hashFinto = hashFinto;
-        _opzioni = opzioni;
+        _contatore = contatore;
+        _dueFattori = dueFattori;
         _orologio = orologio;
         _audit = audit;
         _logger = logger;
@@ -85,6 +89,21 @@ public sealed partial class ServizioAccesso : IServizioAccesso
         {
             await RegistraTentativoFallitoAsync(utenza, adesso, annullamento);
             return RisultatoAccesso.Fallito;
+        }
+
+        if (utenza.DueFattoriAttivi)
+        {
+            // La password da sola non basta: il contatore dei tentativi NON si azzera qui, ma solo a secondo fattore verificato
+            // (altrimenti si potrebbero indovinare i codici alternando password corretta e codice sbagliato senza mai arrivare al blocco).
+            if (_hash.RichiedeAggiornamento(utenza.HashPassword))
+            {
+                var nuovoHash = _hash.Calcola(password);
+                var idUtenza = utenza.Id;
+                await _contesto.Utenze.IgnoreQueryFilters().Where(u => u.Id == idUtenza)
+                    .ExecuteUpdateAsync(aggiornamento => aggiornamento.SetProperty(u => u.HashPassword, nuovoHash), annullamento);
+            }
+
+            return RisultatoAccesso.SecondoFattoreRichiesto(new SfidaSecondoFattore(utenza.Id, utenza.TimbroSicurezza));
         }
 
         utenza.ContatoreAccessiFalliti = 0;
@@ -190,33 +209,8 @@ public sealed partial class ServizioAccesso : IServizioAccesso
         return EsitoCambioPassword.Riuscito;
     }
 
-    /// <summary>
-    /// Conta un tentativo fallito con un aggiornamento atomico sul database (<c>Contatore = Contatore + 1</c>): con molte richieste
-    /// parallele sullo stesso account ogni tentativo viene contato, invece di perderne tutti tranne uno per il conflitto di
-    /// concorrenza (che permetterebbe di provare molte password prima del blocco). Il blocco scatta con un secondo aggiornamento
-    /// condizionato alla soglia, anch'esso atomico.
-    /// </summary>
-    private async Task RegistraTentativoFallitoAsync(Utenza utenza, DateTime adesso, CancellationToken annullamento)
-    {
-        var soglia = _opzioni.TentativiMassimi;
-        var bloccoFinoAl = adesso + _opzioni.DurataBlocco;
-        var id = utenza.Id;
-
-        await _contesto.Utenze.IgnoreQueryFilters().Where(u => u.Id == id).ExecuteUpdateAsync(
-            aggiornamento => aggiornamento
-                .SetProperty(u => u.ContatoreAccessiFalliti, u => u.ContatoreAccessiFalliti + 1)
-                .SetProperty(u => u.AggiornatoIlUtc, adesso),
-            annullamento);
-        var bloccati = await _contesto.Utenze.IgnoreQueryFilters().Where(u => u.Id == id && u.ContatoreAccessiFalliti >= soglia).ExecuteUpdateAsync(
-            aggiornamento => aggiornamento
-                .SetProperty(u => u.BloccatoFinoAlUtc, bloccoFinoAl)
-                .SetProperty(u => u.ContatoreAccessiFalliti, 0),
-            annullamento);
-        if (bloccati > 0)
-        {
-            RegistraBlocco(_logger, id);
-        }
-    }
+    private Task RegistraTentativoFallitoAsync(Utenza utenza, DateTime adesso, CancellationToken annullamento) =>
+        _contatore.RegistraFallimentoAsync(utenza.Id, adesso, annullamento);
 
     private async Task SalvaSenzaBloccareAsync(CancellationToken annullamento)
     {
@@ -248,13 +242,12 @@ public sealed partial class ServizioAccesso : IServizioAccesso
             utenza.NomeVisualizzato,
             utenza.TimbroSicurezza,
             utenza.DeveCambiarePassword,
-            codiceLingua ?? Lingua.CodiceItaliano);
+            codiceLingua ?? Lingua.CodiceItaliano,
+            utenza.DueFattoriAttivi,
+            !utenza.DueFattoriAttivi && _dueFattori.RichiestaPer(utenza.Ruolo));
     }
 
     private void ConsumaTempoDiVerifica() => _hash.Verifica("password-inesistente", _hashFinto.Valore);
-
-    [LoggerMessage(Level = LogLevel.Warning, Message = "Account bloccato per 5 minuti dopo troppi tentativi falliti: {IdUtenza}")]
-    private static partial void RegistraBlocco(ILogger logger, Guid idUtenza);
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Più account corrispondono all'email nel tenant {IdTenant}: accesso rifiutato")]
     private static partial void RegistraAmbiguita(ILogger logger, Guid idTenant);

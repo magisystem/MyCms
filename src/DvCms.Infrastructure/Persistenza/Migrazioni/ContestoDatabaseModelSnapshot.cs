@@ -22,6 +22,32 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("DvCms.Domain.Accessi.CodiceRecuperoUtenza", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatoIlUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<byte[]>("HashCodice")
+                        .IsRequired()
+                        .HasColumnType("binary(32)");
+
+                    b.Property<Guid>("IdUtenza")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UsatoIlUtc")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdUtenza", "HashCodice")
+                        .IsUnique();
+
+                    b.ToTable("CodiciRecuperoUtenza", (string)null);
+                });
+
             modelBuilder.Entity("DvCms.Domain.Accessi.InvitoAccount", b =>
                 {
                     b.Property<Guid>("Id")
@@ -201,6 +227,12 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.Property<bool>("DeveCambiarePassword")
                         .HasColumnType("bit");
 
+                    b.Property<DateTime?>("DueFattoriAttivatiIlUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("DueFattoriAttivi")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(254)
@@ -235,6 +267,14 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
+                    b.Property<string>("SegretoTotpInAttesaProtetto")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("SegretoTotpProtetto")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
                     b.Property<string>("Stato")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -251,6 +291,9 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
 
                     b.Property<DateTime?>("UltimoAccessoIlUtc")
                         .HasColumnType("datetime2");
+
+                    b.Property<long>("UltimoPassoTotp")
+                        .HasColumnType("bigint");
 
                     b.HasKey("Id");
 
@@ -1058,6 +1101,15 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.HasKey("Id");
 
                     b.ToTable("ChiaviSegrete", (string)null);
+                });
+
+            modelBuilder.Entity("DvCms.Domain.Accessi.CodiceRecuperoUtenza", b =>
+                {
+                    b.HasOne("DvCms.Domain.Accessi.Utenza", null)
+                        .WithMany()
+                        .HasForeignKey("IdUtenza")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("DvCms.Domain.Accessi.InvitoAccount", b =>

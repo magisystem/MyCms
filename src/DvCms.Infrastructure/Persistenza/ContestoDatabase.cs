@@ -81,6 +81,8 @@ public class ContestoDatabase : DbContext
 
     public DbSet<InvitoAccount> InvitiAccount => Set<InvitoAccount>();
 
+    public DbSet<CodiceRecuperoUtenza> CodiciRecuperoUtenza => Set<CodiceRecuperoUtenza>();
+
     public DbSet<RegistroAudit> RegistroAudit => Set<RegistroAudit>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

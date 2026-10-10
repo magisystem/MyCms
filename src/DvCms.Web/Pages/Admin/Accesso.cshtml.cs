@@ -13,11 +13,13 @@ public class AccessoModel : PageModel
 {
     private readonly IServizioAccesso _accesso;
     private readonly IContestoTenant _tenant;
+    private readonly SfidaSecondoFattoreWeb _sfida;
 
-    public AccessoModel(IServizioAccesso accesso, IContestoTenant tenant)
+    public AccessoModel(IServizioAccesso accesso, IContestoTenant tenant, SfidaSecondoFattoreWeb sfida)
     {
         _accesso = accesso;
         _tenant = tenant;
+        _sfida = sfida;
     }
 
     [BindProperty]
@@ -45,6 +47,13 @@ public class AccessoModel : PageModel
     public async Task<IActionResult> OnPostAsync(CancellationToken annullamento)
     {
         var risultato = await _accesso.AccediAsync(Email, Password, annullamento);
+        if (risultato.Sfida is { } sfida)
+        {
+            // Password corretta ma serve il secondo fattore: nessuna sessione, solo una sfida a vita breve.
+            _sfida.Emetti(HttpContext, sfida, _tenant.IdTenant, DestinazioneAccesso.Sicura(Url, ReturnUrl));
+            return LocalRedirect(SfidaSecondoFattoreWeb.PercorsoVerifica);
+        }
+
         if (!risultato.EsitoPositivo || risultato.Identita is null)
         {
             // Messaggio e risposta identici per ogni causa di fallimento: nessuna enumerazione di account.
@@ -58,14 +67,6 @@ public class AccessoModel : PageModel
             PrincipalSessione.Crea(risultato.Identita, _tenant.IdTenant),
             new AuthenticationProperties { IsPersistent = false, AllowRefresh = true });
 
-        return LocalRedirect(DestinazioneSicura(ReturnUrl));
+        return LocalRedirect(DestinazioneAccesso.Sicura(Url, ReturnUrl));
     }
-
-    /// <summary>Solo percorsi locali dell'area admin: nessun reindirizzamento verso siti esterni.</summary>
-    private string DestinazioneSicura(string? destinazione) =>
-        !string.IsNullOrEmpty(destinazione)
-        && Url.IsLocalUrl(destinazione)
-        && destinazione.StartsWith(ConfigurazioneAccessiWeb.PercorsoAdmin, StringComparison.OrdinalIgnoreCase)
-            ? destinazione
-            : ConfigurazioneAccessiWeb.PercorsoAdmin;
 }

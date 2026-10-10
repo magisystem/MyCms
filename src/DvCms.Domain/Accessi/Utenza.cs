@@ -45,6 +45,19 @@ public class Utenza
 
     public DateTime AggiornatoIlUtc { get; set; }
 
+    /// <summary>Segreto TOTP attivo, cifrato con la chiave dei segreti (ADR-0019); nullo se la 2FA non è attiva.</summary>
+    public string? SegretoTotpProtetto { get; set; }
+
+    /// <summary>Segreto generato ma non ancora confermato con un codice: non vale come secondo fattore.</summary>
+    public string? SegretoTotpInAttesaProtetto { get; set; }
+
+    public bool DueFattoriAttivi { get; set; }
+
+    public DateTime? DueFattoriAttivatiIlUtc { get; set; }
+
+    /// <summary>Ultimo passo TOTP accettato: un codice è valido solo se il suo passo è maggiore (anti-replay).</summary>
+    public long UltimoPassoTotp { get; set; }
+
     public byte[] TokenConcorrenza { get; set; } = [];
 
     public static Utenza Crea(

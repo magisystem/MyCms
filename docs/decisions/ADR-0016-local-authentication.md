@@ -21,7 +21,7 @@ ADR-0011 prevedeva ASP.NET Core Identity. Il committente preferisce account loca
 - **Login:** l'account si cerca solo nel tenant dell'host più i `PlatformAdmin` globali; errore uniforme per credenziali errate, account inesistente, account di un altro tenant, account bloccato o disabilitato; **blocco di 5 minuti dopo 5 tentativi falliti consecutivi** (soglia confermata), con contatore azzerato al primo accesso riuscito; rate limiting sugli endpoint di login e recupero.
 - **Autorizzazione:** policy di ASP.NET Core basate su claims creati dal nostro caso d'uso di accesso, applicate nell'application layer (ADR-0011).
 - **Recupero password, inviti e cambio password** usano tabelle e casi d'uso propri (`RichiestaRecuperoPassword`, ADR-0011), con email dagli adapter di ADR-0015.
-- **Two-factor authentication** (ultima priorità): sarà trattata con un ADR dedicato (TOTP, libreria o implementazione RFC 6238).
+- **Two-factor authentication:** TOTP implementato con la sola libreria di base (RFC 6238), vedi [ADR-0019](ADR-0019-two-factor-authentication.md).
 - Restano usati i componenti del framework estranei a Identity: cookie authentication, antiforgery, Data Protection, rate limiting.
 
 ## Alternative considerate

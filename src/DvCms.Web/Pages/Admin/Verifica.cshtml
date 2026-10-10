@@ -1,0 +1,26 @@
+@page "/admin/accesso/verifica"
+@model DvCms.Web.Pages.Admin.VerificaModel
+@{
+    Layout = "_LayoutAccesso";
+    ViewData["Titolo"] = _L["Verifica in due passaggi"];
+}
+<div class="card card-md">
+    <div class="card-body">
+        <h2 class="h2 text-center mb-2">@_L["Verifica in due passaggi"]</h2>
+        <p class="text-secondary text-center mb-4">@_L["Inserisci il codice a 6 cifre generato dalla tua app di autenticazione, oppure uno dei codici di recupero."]</p>
+        @if (Model.Errore)
+        {
+            <div class="alert alert-danger" role="alert">@_L["Codice non valido."]</div>
+        }
+        <form method="post" autocomplete="off" novalidate>
+            <div class="mb-3">
+                <label class="form-label" for="Codice">@_L["Codice"]</label>
+                <input type="text" class="form-control" id="Codice" name="Codice" inputmode="text" autocomplete="one-time-code" autofocus required />
+            </div>
+            <div class="form-footer">
+                <button type="submit" class="btn btn-primary w-100">@_L["Verifica"]</button>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="text-center text-secondary mt-3"><a href="/admin/accesso">@_L["Torna all'accesso"]</a></div>

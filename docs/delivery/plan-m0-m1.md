@@ -38,6 +38,7 @@ Piano di implementazione richiesto da `docs/AI_START_HERE.md`, preparato prima d
 | G-002 Invalidazione della cache (M6) | Completata (cache in memoria per sito di pagine, lingue, tema e sitemap; registro `InvalidazioniCache` scritto nella transazione della modifica e letto da ogni istanza; durata massima di sicurezza) |
 | G-004 Backup/restore e runbook | Completata (runbook `docs/operations/backup-e-ripristino.md`, prova automatica `RipristinoTest` con backup, ripristino e confronto di tutte le tabelle, comando `verifica-archivio`; resta da registrare la prima prova su infrastruttura reale) |
 | G-005 Security review | Completata, con rischi accettati da confermare (`docs/operations/revisione-sicurezza.md`: intestazioni e CSP verificate con Chromium, blocco account atomico, limiti per /64, cache normalizzata, controllo vulnerabilità in CI; restano penetration test esterno e prove in produzione) |
+| G-006 Autenticazione a due fattori | Completata (ADR-0019: TOTP RFC 6238 con la sola libreria di base, segreto cifrato a riposo, anti-replay atomico, 10 codici di recupero monouso con hash, accesso in due passi con cookie di sfida di 5 minuti, secondo fattore sullo stesso contatore di blocco della password, obbligo predefinito per `PlatformAdmin` e `TenantAdmin` con configurazione forzata, reimpostazione dal `PlatformAdmin` e comando operativo `reset-2fa`; runbook `docs/operations/runbook-due-fattori.md`) |
 | B-010 Gestione testi statici | Completata (`/admin/platform/testi`: ricerca, filtri, modifica, cache e audit) |
 | B-007 Creazione TenantAdmin e non-escalation | Completata (password temporanea mostrata una volta; elevazione `Utente` → `TenantAdmin`) |
 
@@ -70,7 +71,7 @@ Bloccanti per M0/M1, con proposta di default (da confermare):
 6. **Identificatori:** `Guid.CreateVersion7()` generati dall'applicazione (`database.md`).
 7. **Versione dell'SDK:** `global.json` con l'SDK .NET 10 corrente; versione esatta fissata al bootstrap dopo la verifica dei pacchetti.
 
-Non bloccanti per M0/M1 (restano aperte): ADR-0005 e ADR-0007 (servono da M4), hosting, RPO/RTO, policy password dettagliate, provider email per tenant (M1b), 2FA.
+Non bloccanti per M0/M1 (restano aperte): ADR-0005 e ADR-0007 (servono da M4), hosting, RPO/RTO, policy password dettagliate, provider email per tenant (M1b). La 2FA è decisa in ADR-0019.
 
 ## 4. M0 — Bootstrap
 

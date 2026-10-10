@@ -257,6 +257,10 @@
                                 <td>@account.NomeVisualizzato</td>
                                 <td>
                                     @account.Ruolo
+                                    @if (account.DueFattoriAttivi)
+                                    {
+                                        <span class="badge bg-blue-lt ms-1">@_L["2FA attiva"]</span>
+                                    }
                                     @if (account.DeveCambiarePassword)
                                     {
                                         <span class="badge bg-orange-lt ms-1">@_L["Password temporanea"]</span>
@@ -285,6 +289,13 @@
                                         <form method="post" asp-page-handler="InviaInvito" asp-route-id="@tenant.Id" class="d-inline">
                                             <input type="hidden" name="idUtenza" value="@account.Id" />
                                             <button type="submit" class="btn btn-sm">@_L["Invia l'invito"]</button>
+                                        </form>
+                                    }
+                                    @if (account.Ruolo == RuoloUtenza.TenantAdmin && account.DueFattoriAttivi)
+                                    {
+                                        <form method="post" asp-page-handler="ReimpostaDueFattori" asp-route-id="@tenant.Id" class="d-inline">
+                                            <input type="hidden" name="idUtenza" value="@account.Id" />
+                                            <button type="submit" class="btn btn-sm" title="@_L["Dispositivo perso: verifica prima l'identità della persona. Dovrà configurare di nuovo la 2FA."]">@_L["Reimposta 2FA"]</button>
                                         </form>
                                     }
                                     <form method="post" asp-page-handler="AccountAttivo" asp-route-id="@tenant.Id" class="d-inline">

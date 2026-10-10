@@ -6,6 +6,11 @@ public static class AzioniAudit
     public const string Popolamento = "Popolamento";
     public const string AccessoPlatformAdmin = "AccessoPlatformAdmin";
     public const string CambioPassword = "CambioPassword";
+    public const string AttivazioneDueFattori = "AttivazioneDueFattori";
+    public const string DisattivazioneDueFattori = "DisattivazioneDueFattori";
+    public const string ReimpostazioneDueFattori = "ReimpostazioneDueFattori";
+    public const string RigenerazioneCodiciRecupero = "RigenerazioneCodiciRecupero";
+    public const string UsoCodiceRecupero = "UsoCodiceRecupero";
     public const string RecuperoPasswordCompletato = "RecuperoPasswordCompletato";
     public const string CreazioneTenant = "CreazioneTenant";
     public const string ModificaTenant = "ModificaTenant";

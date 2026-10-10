@@ -35,6 +35,8 @@ public static class ConfigurazioneAccessiWeb
         // Sicuri ovunque tranne in sviluppo, dove si lavora solo in HTTP (docs/development/local-setup.md).
         var politicaSicurezza = ambiente.IsDevelopment() ? CookieSecurePolicy.SameAsRequest : CookieSecurePolicy.Always;
 
+        servizi.AddSingleton<SfidaSecondoFattoreWeb>();
+
         servizi.AddAuthentication(Schemi.Admin)
             .AddCookie(Schemi.Admin, opzioni =>
             {

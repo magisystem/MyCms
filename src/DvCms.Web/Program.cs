@@ -13,11 +13,13 @@ costruttore.Services.AddRazorPages(opzioni =>
     // Tutta l'area /admin richiede un amministratore del tenant (o il PlatformAdmin); l'accesso è l'unica eccezione.
     opzioni.Conventions.AuthorizeFolder("/Admin", Politiche.AmministratoreTenant);
     opzioni.Conventions.AllowAnonymousToPage("/Admin/Accesso");
+    opzioni.Conventions.AllowAnonymousToPage("/Admin/Verifica");
     opzioni.Conventions.AllowAnonymousToFolder("/Admin/Recupero");
     opzioni.Conventions.AllowAnonymousToFolder("/Admin/Invito");
     // Il menu "Platform" è un'area dedicata: solo il PlatformAdmin, verificato lato server a ogni richiesta.
     opzioni.Conventions.AuthorizeAreaFolder("Platform", "/", Politiche.AmministratorePiattaforma);
     opzioni.Conventions.ConfigureFilter(new FiltroCambioPasswordObbligatorio());
+    opzioni.Conventions.ConfigureFilter(new FiltroDueFattoriObbligatorio());
 });
 ConfigurazioneAccessiWeb.Aggiungi(costruttore.Services, costruttore.Configuration, costruttore.Environment);
 costruttore.Services.AggiungiInfrastruttura(costruttore.Configuration);
@@ -46,6 +48,11 @@ if (args is [ComandoVerificaArchivio.Nome])
     return await ComandoVerificaArchivio.EseguiAsync(applicazione.Services);
 }
 
+if (args is [ComandoReimpostaDueFattori.Nome, var emailPlatformAdmin])
+{
+    return await ComandoReimpostaDueFattori.EseguiAsync(applicazione.Services, emailPlatformAdmin);
+}
+
 if (args is [ComandoSeed.Nome])
 {
     return await ComandoSeed.EseguiAsync(applicazione.Services, consentiRichiestaInterattiva: true);
@@ -54,6 +61,19 @@ if (args is [ComandoSeed.Nome])
 if (!applicazione.Environment.IsDevelopment() && string.IsNullOrWhiteSpace(applicazione.Configuration[ConfigurazioneAccessiWeb.ChiaveConfigurazioneChiaviCookie]))
 {
     AvvisiAvvio.ChiaviCookieNonPersistenti(applicazione.Logger);
+}
+
+if (!applicazione.Environment.IsDevelopment())
+{
+    var dueFattori = applicazione.Services.GetRequiredService<DvCms.Application.Accessi.DueFattori.OpzioniDueFattori>();
+    if (dueFattori.Obbligo == DvCms.Application.Accessi.DueFattori.ObbligoDueFattori.Nessuno)
+    {
+        AvvisiAvvio.DueFattoriNonObbligatori(applicazione.Logger);
+    }
+    else if (string.IsNullOrWhiteSpace(applicazione.Configuration["Sicurezza:ChiaveSegreti"]))
+    {
+        AvvisiAvvio.ChiaveSegretiMancanteConDueFattori(applicazione.Logger);
+    }
 }
 
 if (!applicazione.Environment.IsDevelopment() && !usaProxyAttendibili)

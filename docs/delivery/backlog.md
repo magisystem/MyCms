@@ -162,7 +162,7 @@ Le voci sono candidate a issue GitHub. Ogni issue deve essere piccola, verificab
 **Accettazione:** procedura verificata su ambiente di test, con risultati documentati.
 
 ### G-006: Two-factor authentication
-**Priorità minima, da affrontare per ultima; non bloccante per il go-live.** **Accettazione:** ADR su metodo, recupero e obbligatorietà per `PlatformAdmin`/`TenantAdmin`; implementazione e test; enrollment e recupero documentati.
+**Completata** ([ADR-0019](../decisions/ADR-0019-two-factor-authentication.md), `docs/architecture/security.md`, `docs/operations/runbook-due-fattori.md`). **Accettazione:** ADR su metodo, recupero e obbligatorietà per `PlatformAdmin`/`TenantAdmin`; implementazione e test; enrollment e recupero documentati.
 
 ### G-005: Security review
 **Accettazione:** checklist di `docs/architecture/security.md` completata; issue critiche risolte o accettate formalmente.

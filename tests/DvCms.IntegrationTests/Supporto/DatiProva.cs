@@ -2,6 +2,7 @@ using DvCms.Application.Accessi;
 using DvCms.Domain.Accessi;
 using DvCms.Domain.Tenancy;
 using DvCms.Infrastructure.Persistenza;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace DvCms.IntegrationTests.Supporto;
@@ -99,5 +100,42 @@ public static class DatiProva
         contesto.Utenze.Add(utenza);
         await contesto.SaveChangesAsync(annullamento);
         return utenza.Id;
+    }
+
+    /// <summary>
+    /// Attiva la 2FA di un account direttamente sul database (come dopo una configurazione completata) e restituisce il segreto
+    /// e i codici di recupero in chiaro. Richiede la chiave dei segreti nella configurazione.
+    /// </summary>
+    public static async Task<(byte[] Segreto, IReadOnlyList<string> CodiciRecupero)> AttivaDueFattoriAsync(
+        IServiceProvider fornitore,
+        Guid idUtenza,
+        CancellationToken annullamento = default)
+    {
+        var segreto = DvCms.Application.Accessi.DueFattori.Totp.GeneraSegreto();
+        var codici = DvCms.Application.Accessi.DueFattori.CodiciRecupero.Genera();
+        await using var ambito = fornitore.CreateAsyncScope();
+        var contesto = ambito.ServiceProvider.GetRequiredService<ContestoDatabase>();
+        var protettore = ambito.ServiceProvider.GetRequiredService<DvCms.Application.Email.IProtettoreSegreti>();
+        var protetto = protettore.Proteggi(DvCms.Application.Accessi.DueFattori.Base32.Codifica(segreto));
+        var adesso = DateTime.UtcNow;
+        await contesto.Utenze.IgnoreQueryFilters().Where(u => u.Id == idUtenza).ExecuteUpdateAsync(
+            u => u.SetProperty(x => x.SegretoTotpProtetto, protetto)
+                .SetProperty(x => x.DueFattoriAttivi, true)
+                .SetProperty(x => x.DueFattoriAttivatiIlUtc, adesso)
+                .SetProperty(x => x.UltimoPassoTotp, 0L),
+            annullamento);
+        foreach (var codice in codici)
+        {
+            contesto.CodiciRecuperoUtenza.Add(new CodiceRecuperoUtenza
+            {
+                Id = Guid.NewGuid(),
+                IdUtenza = idUtenza,
+                HashCodice = DvCms.Application.Accessi.DueFattori.CodiciRecupero.Hash(DvCms.Application.Accessi.DueFattori.CodiciRecupero.Normalizza(codice)!),
+                CreatoIlUtc = adesso,
+            });
+        }
+
+        await contesto.SaveChangesAsync(annullamento);
+        return (segreto, codici);
     }
 }

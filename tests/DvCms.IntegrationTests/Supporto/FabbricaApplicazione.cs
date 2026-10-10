@@ -53,6 +53,8 @@ public abstract class FabbricaApplicazione : WebApplicationFactory<Program>
         builder.UseSetting("Outbox:Abilitato", "false");
         builder.UseSetting("Manutenzione:Abilitata", "false");
         builder.UseSetting("Cache:IntervalloLetturaSecondi", "600");
+        // La 2FA obbligatoria (predefinita in produzione) è attivata solo dai test che la verificano.
+        builder.UseSetting("Sicurezza:DueFattori:Obbligo", "Nessuno");
         if (_impostazioni is not null)
         {
             foreach (var coppia in _impostazioni)

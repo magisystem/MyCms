@@ -70,6 +70,13 @@ Per ogni canale, oltre ai valori inseriti nella schermata del tenant, servono qu
 
 Il `PlatformAdmin` non ha recupero password e per ora non è previsto uno strumento dedicato: se serve un reset lo gestisce l'operatore a mano sul database, con una procedura che definirà in seguito (da descrivere nel runbook, annotando ogni reset).
 
+## Autenticazione a due fattori (G-006)
+
+- `Sicurezza:DueFattori:Obbligo`: `Amministratori` (predefinito), `PlatformAdmin` o `Nessuno`. Con l'obbligo attivo serve anche `Sicurezza:ChiaveSegreti` (cifra i segreti TOTP). `Sicurezza:DueFattori:Emittente` (predefinito `DvCms`) è il nome mostrato nell'app di autenticazione.
+- Primo avvio con l'obbligo predefinito: il `PlatformAdmin` creato dal popolamento accede con la password e viene portato a `/admin/sicurezza` per configurare l'app; lo stesso vale per ogni `TenantAdmin` al primo accesso.
+- Dispositivo perso: `DvCms.Web reset-2fa <email>` (solo `PlatformAdmin`, codice di uscita 0/1) oppure, per i `TenantAdmin`, "Reimposta 2FA" nel dettaglio del tenant. Procedura completa e verifica dell'identità in [`docs/operations/runbook-due-fattori.md`](../operations/runbook-due-fattori.md).
+- Il backup del database da solo non basta: i segreti TOTP sono leggibili solo con la stessa chiave dei segreti ([runbook di backup](../operations/backup-e-ripristino.md)).
+
 ## Background work e outbox
 
 Ogni evento che non può essere perso (publish, ordine, pagamento, webhook) deve avere un meccanismo di retry/idempotenza. Una tabella outbox scritta nella stessa transazione del cambiamento di dominio è il default iniziale. Un worker reclama i messaggi, li processa e marca il risultato; gestire retry con backoff e dead-letter/failed state.

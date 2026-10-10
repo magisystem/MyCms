@@ -107,4 +107,4 @@ Non iniziare M5 prima che il proof of concept M4 convalidi il modello documento/
 
 ## Ultima priorità — Two-factor authentication
 
-Requisito previsto ma non prioritario: si affronta dopo il resto (G-006), con un ADR dedicato, e non blocca il go-live. Il recupero password via OTP e link monouso è invece in M1.
+Completata (G-006, [ADR-0019](../decisions/ADR-0019-two-factor-authentication.md)): TOTP con codici di recupero, obbligatoria per `PlatformAdmin` e `TenantAdmin` per impostazione predefinita. Il recupero password via OTP e link monouso è in M1.

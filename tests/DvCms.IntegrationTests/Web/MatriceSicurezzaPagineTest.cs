@@ -22,6 +22,7 @@ public class MatriceSicurezzaPagineTest
     private static readonly string[] _pagineAnonime =
     [
         "/Pages/Admin/Accesso.cshtml",
+        "/Pages/Admin/Verifica.cshtml",
         "/Pages/Admin/Recupero/Richiesta.cshtml",
         "/Pages/Admin/Recupero/Codice.cshtml",
         "/Pages/Admin/Recupero/Reimposta.cshtml",

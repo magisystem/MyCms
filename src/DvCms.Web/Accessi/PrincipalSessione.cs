@@ -21,6 +21,7 @@ public static class PrincipalSessione
             new(TipiClaim.TimbroSicurezza, identita.TimbroSicurezza.ToString()),
             new(TipiClaim.DeveCambiarePassword, identita.DeveCambiarePassword.ToString(CultureInfo.InvariantCulture)),
             new(TipiClaim.CodiceLingua, identita.CodiceLingua),
+            new(TipiClaim.DeveAttivareDueFattori, identita.DeveAttivareDueFattori.ToString(CultureInfo.InvariantCulture)),
         };
 
         return new ClaimsPrincipal(new ClaimsIdentity(claim, Schemi.Admin, ClaimTypes.Name, ClaimTypes.Role));
@@ -40,5 +41,11 @@ public static class PrincipalSessione
     {
         ArgumentNullException.ThrowIfNull(principal);
         return string.Equals(principal.FindFirstValue(TipiClaim.DeveCambiarePassword), bool.TrueString, StringComparison.OrdinalIgnoreCase);
+    }
+
+    public static bool DeveAttivareDueFattori(ClaimsPrincipal principal)
+    {
+        ArgumentNullException.ThrowIfNull(principal);
+        return string.Equals(principal.FindFirstValue(TipiClaim.DeveAttivareDueFattori), bool.TrueString, StringComparison.OrdinalIgnoreCase);
     }
 }

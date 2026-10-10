@@ -10,7 +10,7 @@ namespace DvCms.Web.Accessi;
 /// </summary>
 public sealed class FiltroCambioPasswordObbligatorio : IAsyncPageFilter
 {
-    private static readonly string[] _pagineConsentite = ["/Admin/Password", "/Admin/Esci", "/Admin/Accesso"];
+    private static readonly string[] _pagineConsentite = ["/Admin/Password", "/Admin/Esci", "/Admin/Accesso", "/Admin/Verifica"];
 
     public Task OnPageHandlerSelectionAsync(PageHandlerSelectedContext context) => Task.CompletedTask;
 

@@ -13,7 +13,7 @@ Le scelte sotto non sono definite completamente. Gli agenti devono evitare di in
 - Nome progetto **DvCms**: solution `DvCms.sln`, namespace e sotto-progetti `DvCms.*`.
 - Ruoli `PlatformAdmin`, `TenantAdmin`, `Utente` (acquirente), `Guest` per tenant (ADR-0011). Il `TenantAdmin` svolge tutto il lavoro sui contenuti; nessun ruolo editor/publisher per ora.
 - Registrazione solo per gli acquirenti dei siti con e-commerce; nessun guest checkout; possono ordinare `Utente`, `TenantAdmin` e `PlatformAdmin`.
-- Recupero password: prima email con codice OTP, seconda email con link monouso (ADR-0011). Two-factor authentication prevista, per ultima, non bloccante per il go-live.
+- Recupero password: prima email con codice OTP, seconda email con link monouso (ADR-0011). Two-factor authentication: TOTP con codici di recupero, obbligatoria per `PlatformAdmin` e `TenantAdmin` (ADR-0019).
 - Email: adapter Microsoft Graph, Gmail API, SendGrid e SMTP dietro un contratto unico; provider scelto per tenant dal `PlatformAdmin` con UI dinamica; nessuna priorità fra i canali (ADR-0015).
 - Un tenant può avere più `TenantAdmin`; un account `TenantAdmin` o `Utente` appartiene a un solo tenant; la stessa email vale in un tenant e può ripetersi in tenant diversi (ADR-0011).
 - Il tenant è deciso solo dall'host dell'URL: un account non può accedere dall'host di un altro tenant (salvo il `PlatformAdmin`), nessun dominio centrale di amministrazione (ADR-0011).

@@ -21,6 +21,9 @@ public sealed partial class SessioneProva
 
     public IReadOnlyDictionary<string, string> Cookie => _cookie;
 
+    /// <summary>Imposta a mano un cookie (ad esempio uno copiato da un'altra sessione o manomesso).</summary>
+    public void ImpostaCookie(string nome, string valore) => _cookie[nome] = valore;
+
     public string? CookieAdmin => _cookie.GetValueOrDefault(".DvCms.Admin");
 
     public async Task<HttpResponseMessage> GetAsync(string percorso)

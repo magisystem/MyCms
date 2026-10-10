@@ -11,6 +11,9 @@ public static class TipiClaim
     public const string DeveCambiarePassword = "dvcms:deve-cambiare-password";
 
     public const string CodiceLingua = "dvcms:codice-lingua";
+
+    /// <summary>La 2FA è obbligatoria per il ruolo ma l'account non l'ha ancora configurata.</summary>
+    public const string DeveAttivareDueFattori = "dvcms:deve-attivare-2fa";
 }
 
 public static class Schemi
