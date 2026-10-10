@@ -46,6 +46,12 @@ Per ogni canale, oltre ai valori inseriti nella schermata del tenant, servono qu
 - **Gmail API:** in Google Cloud creare un progetto, abilitare la *Gmail API*, creare un **account di servizio** e una chiave JSON (da incollare nel campo credenziali: è un segreto, cifrato nel database). In Google Workspace, console di amministrazione → Sicurezza → Controlli API → **Delega a livello di dominio**: autorizzare l'ID client dell'account di servizio con lo scope `https://www.googleapis.com/auth/gmail.send`. L'utente mittente è un utente reale del dominio Workspace. Senza delega l'invio fallisce con un errore di autorizzazione. Gli account Gmail personali non supportano la delega: in quel caso usare SMTP.
 - **SendGrid:** creare un account, verificare il dominio mittente (*Domain Authentication*, con i record DNS forniti) o almeno un mittente singolo, creare una chiave API con il solo permesso *Mail Send* e usarla nel campo chiave. Ruotare la chiave in caso di sospetta esposizione.
 
+## Configurazione di sicurezza dietro un reverse proxy (G-005)
+
+- `ProxyAttendibili:Indirizzi` / `ProxyAttendibili:Reti` (CIDR): senza, le intestazioni `X-Forwarded-*` sono ignorate e fuori da Development l'avvio scrive un avviso. Dietro un proxy è obbligatorio: altrimenti tutti i client hanno l'indirizzo del proxy (i limiti per indirizzo diventano globali), lo schema resta `http` (link delle email, HSTS) e l'host non viene letto dal proxy.
+- `Sicurezza:ChiaviCookie:Percorso`: cartella persistente e condivisa fra le istanze per le chiavi di sessione e antiforgery (da un volume, con permessi riservati all'utente del processo; non è la chiave dei segreti dei tenant, che è `Sicurezza:ChiaveSegreti`).
+- `Sicurezza:Csp:SoloSegnalazione=true`: la CSP diventa `Content-Security-Policy-Report-Only` (utile per provare modifiche senza bloccare nulla).
+
 ## Cache dei contenuti pubblici (G-002)
 
 - **Cosa si memorizza:** in memoria, per sito, il risultato della risoluzione di una pagina (il contenuto o il reindirizzamento 301), l'elenco delle lingue, il tema in vigore e la sitemap. **Mai** le anteprime né nulla dell'area `/admin`, le assenze (404: chi cerca indirizzi a caso non riempie la memoria), i media, né dati personali (carrello, account, checkout non esistono ancora e non andranno mai qui). La chiave è sito + lingua + slug: tenant e sito derivano dall'host, quindi nessuna voce è condivisa fra tenant (test di isolamento).

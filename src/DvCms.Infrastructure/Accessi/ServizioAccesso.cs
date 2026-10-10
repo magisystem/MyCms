@@ -190,18 +190,32 @@ public sealed partial class ServizioAccesso : IServizioAccesso
         return EsitoCambioPassword.Riuscito;
     }
 
+    /// <summary>
+    /// Conta un tentativo fallito con un aggiornamento atomico sul database (<c>Contatore = Contatore + 1</c>): con molte richieste
+    /// parallele sullo stesso account ogni tentativo viene contato, invece di perderne tutti tranne uno per il conflitto di
+    /// concorrenza (che permetterebbe di provare molte password prima del blocco). Il blocco scatta con un secondo aggiornamento
+    /// condizionato alla soglia, anch'esso atomico.
+    /// </summary>
     private async Task RegistraTentativoFallitoAsync(Utenza utenza, DateTime adesso, CancellationToken annullamento)
     {
-        utenza.ContatoreAccessiFalliti++;
-        if (utenza.ContatoreAccessiFalliti >= _opzioni.TentativiMassimi)
-        {
-            utenza.BloccatoFinoAlUtc = adesso + _opzioni.DurataBlocco;
-            utenza.ContatoreAccessiFalliti = 0;
-            RegistraBlocco(_logger, utenza.Id);
-        }
+        var soglia = _opzioni.TentativiMassimi;
+        var bloccoFinoAl = adesso + _opzioni.DurataBlocco;
+        var id = utenza.Id;
 
-        utenza.AggiornatoIlUtc = adesso;
-        await SalvaSenzaBloccareAsync(annullamento);
+        await _contesto.Utenze.IgnoreQueryFilters().Where(u => u.Id == id).ExecuteUpdateAsync(
+            aggiornamento => aggiornamento
+                .SetProperty(u => u.ContatoreAccessiFalliti, u => u.ContatoreAccessiFalliti + 1)
+                .SetProperty(u => u.AggiornatoIlUtc, adesso),
+            annullamento);
+        var bloccati = await _contesto.Utenze.IgnoreQueryFilters().Where(u => u.Id == id && u.ContatoreAccessiFalliti >= soglia).ExecuteUpdateAsync(
+            aggiornamento => aggiornamento
+                .SetProperty(u => u.BloccatoFinoAlUtc, bloccoFinoAl)
+                .SetProperty(u => u.ContatoreAccessiFalliti, 0),
+            annullamento);
+        if (bloccati > 0)
+        {
+            RegistraBlocco(_logger, id);
+        }
     }
 
     private async Task SalvaSenzaBloccareAsync(CancellationToken annullamento)

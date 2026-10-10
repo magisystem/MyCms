@@ -91,10 +91,11 @@ public sealed class ServizioPagine : IServizioPagine
                 revisione.NumeroRevisione,
                 revisione.Titolo,
                 revisione.NotaRevisione,
-                autore.Email,
+                autore.Ruolo == RuoloUtenza.PlatformAdmin ? null : autore.Email,
                 revisione.CreatoIlUtc,
                 revisione.Id == pagina.IdRevisionePubblicata,
-                revisione.Id == idBozza))
+                revisione.Id == idBozza,
+                autore.Ruolo == RuoloUtenza.PlatformAdmin))
             .ToListAsync(annullamento);
         var bozza = await _contesto.RevisioniPagina.AsNoTracking().SingleAsync(revisione => revisione.Id == idBozza, annullamento);
         var gruppo = await (

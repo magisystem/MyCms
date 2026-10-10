@@ -1,6 +1,7 @@
 using DvCms.Application.Cms;
 using DvCms.Application.Temi;
 using DvCms.Application.Tenancy;
+using DvCms.Domain.Cms;
 
 namespace DvCms.Infrastructure.Cache;
 
@@ -30,8 +31,16 @@ public sealed class ServizioPaginePubblicheConCache : IServizioPaginePubbliche
 
     public async Task<RisoluzionePagina> RisolviAsync(string? slug, string? codiceLingua, CancellationToken annullamento)
     {
-        // La chiave usa i valori come arrivano; un valore diverso ma equivalente (maiuscole) è solo una voce in più.
-        var chiave = $"pagina|{codiceLingua?.ToLowerInvariant()}|{slug?.ToLowerInvariant()}";
+        // La chiave usa lo slug normalizzato (spazi tolti, minuscolo): varianti equivalenti dello stesso indirizzo ("/%20about",
+        // "/About") condividono la voce e non possono riempire la cache. Uno slug che non si normalizza non è mai in cache.
+        var slugVuoto = string.IsNullOrWhiteSpace(slug);
+        var slugNormalizzato = string.Empty;
+        if (!slugVuoto && !NormalizzatoreSlug.TentaNormalizza(slug, out slugNormalizzato))
+        {
+            return await _interno.RisolviAsync(slug, codiceLingua, annullamento);
+        }
+
+        var chiave = $"pagina|{codiceLingua?.Trim().ToLowerInvariant()}|{slugNormalizzato}";
         var risoluzione = await _cache.OttieniAsync(
             _tenant.IdSito,
             chiave,

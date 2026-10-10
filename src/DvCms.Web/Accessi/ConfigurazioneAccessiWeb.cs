@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.RateLimiting;
 
 namespace DvCms.Web.Accessi;
@@ -13,12 +14,23 @@ public static class ConfigurazioneAccessiWeb
     public const string PercorsoAdmin = "/admin";
     public const string PercorsoAccesso = "/admin/accesso";
     public const int RichiesteAccessoAlMinutoPredefinite = 10;
+    public const string ChiaveConfigurazioneChiaviCookie = "Sicurezza:ChiaviCookie:Percorso";
 
     public static void Aggiungi(IServiceCollection servizi, IConfiguration configurazione, IWebHostEnvironment ambiente)
     {
         ArgumentNullException.ThrowIfNull(servizi);
         ArgumentNullException.ThrowIfNull(configurazione);
         ArgumentNullException.ThrowIfNull(ambiente);
+
+        // Chiavi di cookie e antiforgery: nome applicazione fisso (altrimenti dipende dal percorso di installazione e ogni istanza o
+        // ogni distribuzione ha un anello diverso) e, se configurato, anello su una cartella condivisa e persistente. Senza cartella
+        // le chiavi stanno nel profilo dell'utente del processo: valido per una sola istanza, ma le sessioni non sopravvivono a un
+        // contenitore ricreato (l'avvio lo segnala). Le chiavi dei segreti dei tenant sono un'altra cosa (ProtettoreSegreti).
+        var chiavi = servizi.AddDataProtection().SetApplicationName("DvCms.Web");
+        if (configurazione[ChiaveConfigurazioneChiaviCookie] is { Length: > 0 } cartella)
+        {
+            chiavi.PersistKeysToFileSystem(new DirectoryInfo(cartella));
+        }
 
         // Sicuri ovunque tranne in sviluppo, dove si lavora solo in HTTP (docs/development/local-setup.md).
         var politicaSicurezza = ambiente.IsDevelopment() ? CookieSecurePolicy.SameAsRequest : CookieSecurePolicy.Always;
@@ -68,7 +80,7 @@ public static class ConfigurazioneAccessiWeb
             opzioni.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
             opzioni.AddPolicy(Politiche.LimiteAccesso, contesto =>
                 RateLimitPartition.GetFixedWindowLimiter(
-                    contesto.Connection.RemoteIpAddress?.ToString() ?? "sconosciuto",
+                    ChiaveIndirizzoIp.Calcola(contesto.Connection.RemoteIpAddress),
                     _ => new FixedWindowRateLimiterOptions
                     {
                         PermitLimit = richiesteAlMinuto,

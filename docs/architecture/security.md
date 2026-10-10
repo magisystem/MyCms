@@ -61,7 +61,9 @@ La sicurezza è un requisito di progetto, con particolare attenzione a isolament
 ## Web e API
 
 - HTTPS obbligatorio in produzione, terminato dall'hosting sul reverse proxy; l'app dietro il proxy accetta gli header forwarded solo dai proxy configurati e i cookie di autenticazione sono `Secure` (la politica meno restrittiva è ammessa solo in sviluppo, dove si usa solo HTTP).
-- Rate limiting sugli endpoint sensibili.
+- Rate limiting sugli endpoint sensibili (accesso, recupero, inviti): per IPv4 per indirizzo, per IPv6 per rete /64.
+- **Intestazioni e CSP (G-005):** su ogni risposta `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, `Cross-Origin-Opener-Policy` e una CSP con solo risorse della stessa origine e nessuno script in linea; per l'admin anche `frame-ancestors 'none'`, `X-Frame-Options: DENY` e `Cache-Control: no-store`; HSTS fuori da Development. Dettagli e verifica in `docs/operations/revisione-sicurezza.md`.
+- **Chiavi dei cookie e dell'antiforgery:** `Sicurezza:ChiaviCookie:Percorso` (cartella persistente e condivisa fra le istanze, permessi riservati: contiene chiavi in chiaro); senza, le sessioni non sopravvivono a un contenitore ricreato.
 - Protezione dei proxy forwarded configurando proxy noti.
 - Validazione dei redirect e delle URL esterne per prevenire open redirect/SSRF.
 - Error page pubbliche senza stack trace; log interni senza segreti.
@@ -88,12 +90,15 @@ Minimizzare dati personali, definire retention ed export/delete secondo requisit
 
 ## Security gate prima del go-live
 
-- Threat model aggiornato.
-- Test isolamento tenant per CRUD/API/media/cache/jobs/commerce.
-- Test XSS, CSRF, IDOR, upload e webhook.
-- Segreti gestiti fuori dal repository.
-- Backup/restore testati.
-- Dipendenze con vulnerabilità note valutate.
+Stato della revisione G-005 (dettagli, problemi corretti e rischi accettati in `docs/operations/revisione-sicurezza.md`):
+
+- [x] Threat model aggiornato.
+- [x] Test isolamento tenant per CRUD/media/cache/jobs (commerce e API: da ripetere quando esisteranno).
+- [x] Test XSS, CSRF, IDOR, upload (webhook: da ripetere con i pagamenti).
+- [x] Segreti gestiti fuori dal repository.
+- [x] Backup/restore testati (`docs/operations/backup-e-ripristino.md`).
+- [x] Dipendenze con vulnerabilità note valutate, controllo automatico in CI.
+- [ ] Penetration test esterno e verifica in produzione (elenco "Da rifare prima del go-live").
 
 ## Gestione delle pagine (C-002)
 

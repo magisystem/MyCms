@@ -1,0 +1,18 @@
+# Aggiornamenti delle dipendenze (G-005): pacchetti NuGet e azioni di GitHub, una volta a settimana.
+# Le proposte arrivano come pull request normali: passano dalla CI (build, formato, test, vulnerabilità) prima di essere unite.
+version: 2
+updates:
+  - package-ecosystem: nuget
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      microsoft:
+        patterns:
+          - "Microsoft.*"
+          - "System.*"
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

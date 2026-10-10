@@ -37,6 +37,7 @@ Piano di implementazione richiesto da `docs/AI_START_HERE.md`, preparato prima d
 | G-001 Outbox e worker (coda consultabile) | Completata (`/admin/platform/coda` con ultimo errore, ripresa e scarto dei falliti, metriche `DvCms.Outbox`, manutenzione a lotti dei dati scaduti) |
 | G-002 Invalidazione della cache (M6) | Completata (cache in memoria per sito di pagine, lingue, tema e sitemap; registro `InvalidazioniCache` scritto nella transazione della modifica e letto da ogni istanza; durata massima di sicurezza) |
 | G-004 Backup/restore e runbook | Completata (runbook `docs/operations/backup-e-ripristino.md`, prova automatica `RipristinoTest` con backup, ripristino e confronto di tutte le tabelle, comando `verifica-archivio`; resta da registrare la prima prova su infrastruttura reale) |
+| G-005 Security review | Completata, con rischi accettati da confermare (`docs/operations/revisione-sicurezza.md`: intestazioni e CSP verificate con Chromium, blocco account atomico, limiti per /64, cache normalizzata, controllo vulnerabilità in CI; restano penetration test esterno e prove in produzione) |
 | B-010 Gestione testi statici | Completata (`/admin/platform/testi`: ricerca, filtri, modifica, cache e audit) |
 | B-007 Creazione TenantAdmin e non-escalation | Completata (password temporanea mostrata una volta; elevazione `Utente` → `TenantAdmin`) |
 

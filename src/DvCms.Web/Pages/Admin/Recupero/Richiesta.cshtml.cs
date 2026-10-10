@@ -25,7 +25,7 @@ public class RichiestaModel : PageModel
 
     public async Task<IActionResult> OnPostAsync(CancellationToken annullamento)
     {
-        var riferimento = await _recupero.RichiediAsync(Email, HttpContext.Connection.RemoteIpAddress?.ToString(), annullamento);
+        var riferimento = await _recupero.RichiediAsync(Email, ChiaveIndirizzoIp.Calcola(HttpContext.Connection.RemoteIpAddress), annullamento);
         CookieRecupero.Imposta(HttpContext, riferimento);
         return LocalRedirect(CookieRecupero.PercorsoCodice);
     }

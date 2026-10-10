@@ -25,6 +25,14 @@ costruttore.Services.AddHttpContextAccessor();
 var usaProxyAttendibili = ConfigurazioneProxy.Aggiungi(costruttore.Services, costruttore.Configuration);
 costruttore.Services.AddScoped<IContestoLingua, ContestoLinguaRichiesta>();
 
+costruttore.Services.AddHsts(opzioni =>
+{
+    // Sei mesi, senza sottodomini né precaricamento: ogni tenant ha i propri domini e non spetta all'applicazione impegnarli oltre.
+    opzioni.MaxAge = TimeSpan.FromDays(180);
+    opzioni.IncludeSubDomains = false;
+    opzioni.Preload = false;
+});
+
 var applicazione = costruttore.Build();
 
 // Comandi di servizio: eseguono un'operazione e terminano senza avviare il server.
@@ -43,6 +51,16 @@ if (args is [ComandoSeed.Nome])
     return await ComandoSeed.EseguiAsync(applicazione.Services, consentiRichiestaInterattiva: true);
 }
 
+if (!applicazione.Environment.IsDevelopment() && string.IsNullOrWhiteSpace(applicazione.Configuration[ConfigurazioneAccessiWeb.ChiaveConfigurazioneChiaviCookie]))
+{
+    AvvisiAvvio.ChiaviCookieNonPersistenti(applicazione.Logger);
+}
+
+if (!applicazione.Environment.IsDevelopment() && !usaProxyAttendibili)
+{
+    AvvisiAvvio.ProxyNonConfigurato(applicazione.Logger);
+}
+
 if (usaProxyAttendibili)
 {
     applicazione.UseForwardedHeaders();
@@ -56,6 +74,13 @@ if (applicazione.Configuration.GetValue<bool>("Seed:EseguiAllAvvio"))
     {
         return esito;
     }
+}
+
+applicazione.UseMiddleware<MiddlewareIntestazioniSicurezza>();
+if (!applicazione.Environment.IsDevelopment())
+{
+    // HTTPS terminato dal proxy (intestazioni inoltrate dei proxy attendibili): HSTS solo fuori dallo sviluppo.
+    applicazione.UseHsts();
 }
 
 applicazione.UseMiddleware<MiddlewareIdCorrelazione>();

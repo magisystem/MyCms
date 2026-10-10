@@ -180,7 +180,11 @@
                         </div>
                         <div class="text-secondary small">
                             @revisione.CreatoIlUtc.ToString("yyyy-MM-dd HH:mm", System.Globalization.CultureInfo.InvariantCulture) UTC
-                            @if (revisione.Autore is not null)
+                            @if (revisione.AutoreDiPiattaforma)
+                            {
+                                <span>- @_L["Amministratore della piattaforma"]</span>
+                            }
+                            else if (revisione.Autore is not null)
                             {
                                 <span>- @revisione.Autore</span>
                             }

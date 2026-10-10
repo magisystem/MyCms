@@ -53,6 +53,15 @@ jobs:
       - name: Restore
         run: dotnet restore DvCms.sln
 
+      # Dipendenze con vulnerabilità note (anche transitive): il job fallisce se ce n'è almeno una (G-005).
+      - name: Verifica vulnerabilità delle dipendenze
+        run: |
+          dotnet list DvCms.sln package --vulnerable --include-transitive 2>&1 | tee vulnerabilita.txt
+          if grep -q "has the following vulnerable packages" vulnerabilita.txt; then
+            echo "::error::Dipendenze con vulnerabilità note: vedi l'elenco sopra."
+            exit 1
+          fi
+
       - name: Verifica formattazione
         run: dotnet format DvCms.sln --no-restore --verify-no-changes
 

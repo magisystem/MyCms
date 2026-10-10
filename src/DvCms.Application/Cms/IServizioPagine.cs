@@ -46,7 +46,8 @@ public sealed record RevisioneInElenco(
     string? Autore,
     DateTime CreatoIlUtc,
     bool Pubblicata,
-    bool UltimaBozza);
+    bool UltimaBozza,
+    bool AutoreDiPiattaforma = false);
 
 /// <summary>Un'altra versione linguistica della stessa pagina (stesso gruppo di traduzione).</summary>
 public sealed record TraduzionePagina(Guid IdPagina, string CodiceLingua, string Slug, StatoPagina Stato);
