@@ -54,6 +54,10 @@ Preferire token CSS dichiarativi e asset versionati. Generare nomi asset content
 
 Se un documento contiene un componente non supportato, non eseguire fallback arbitrari. In preview/editor mostrare un errore diagnostico. Sul sito live usare un fallback controllato, logging e una strategia di rollback della revisione; non esporre stack trace o JSON interno al visitatore.
 
+## Componenti del page builder (M4)
+
+Le pagine del builder si disegnano con `Modelli/_documento_v1` e `Componenti/_Nodo` (markup indipendente dal tema, classi `dv-*`). Gli stili dei componenti stanno in `wwwroot/css/componenti.css`, separato dai fogli dei temi perché le versioni di tema rilasciate sono immutabili; usa le variabili del tema (`--tema-colore-primario`, `--tema-colore-intestazione`) e poche regole per tema (`.tema-classico`, `.tema-moderno`). Un contratto esplicito fra componenti e temi (variabili e punti di estensione per ogni componente) è da definire prima di ampliare il catalogo (M5).
+
 ## Attuazione (D-001, D-002)
 
 - **Registro (allow-list):** `RegistroTemi` (Application) contiene le versioni rilasciate (`classico` v1, `moderno` v1). Una definizione è chiave, versione e schema delle impostazioni; la vista e il foglio di stile di ogni versione sono associati in codice (`TemiVista`), mai letti da dati. Il registro rifiuta chiavi non valide (solo `[a-z][a-z0-9-]*`), versioni duplicate, schemi malformati e l'assenza del tema predefinito; un test fissa l'impronta SHA-256 di ogni versione rilasciata (come per i modelli di pagina): per cambiare un tema si aggiunge una versione nuova.

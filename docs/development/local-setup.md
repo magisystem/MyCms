@@ -83,7 +83,7 @@ Senza la variabile i test sul database risultano saltati (non passati); con `CI=
    In sviluppo la 2FA non è obbligatoria (`appsettings.Development.json` imposta `Sicurezza:DueFattori:Obbligo` a `Nessuno`); per provarla, rimuovere quel valore (o impostarlo a `Amministratori`) e configurare la chiave dei segreti qui sotto: al primo accesso si viene portati a `/admin/sicurezza`. Per configurare e inviare email serve anche la chiave dei segreti (ADR-0015): `dotnet user-secrets --project src/DvCms.Web set "Sicurezza:ChiaveSegreti" "$(openssl rand -base64 32)"`. Va conservata e salvata a parte dal database: senza di essa i segreti dei tenant (password SMTP, chiavi API) non sono più leggibili.
 6. Avviare `DvCms.Web`.
 7. Eseguire test unitari e d'integrazione.
-8. Per il builder, entrare in `frontend/page-builder`, installare le dipendenze dal lockfile e avviare/buildare l'asset secondo lo script documentato.
+8. Per il builder, entrare in `frontend/page-builder`: `npm ci` e `npm run build` rigenerano il bundle in `src/DvCms.Web/wwwroot/lib/page-builder` (da versionare; la CI esegue `npm run verifica`). Non serve per avviare il backend: il bundle è già nel repository. Per la verifica con un browser vero vedere `frontend/page-builder/README.md`.
 
 Gli agenti non devono inventare comandi non ancora implementati (builder). Aggiornare questa pagina nello stesso PR che li introduce.
 

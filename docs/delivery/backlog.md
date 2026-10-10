@@ -107,21 +107,27 @@ Le voci sono candidate a issue GitHub. Ogni issue deve essere piccola, verificab
 ## EPIC E — Page builder
 
 ### E-001: Spike GrapesJS
+**Stato:** Completata (M4): `/admin/pagine/{id}/builder`, bundle isolato in `frontend/page-builder`, licenze e dipendenze in `frontend/page-builder/README.md`.
 **Accettazione:** builder montato in Razor Page, project JSON salvato e ricaricato da endpoint .NET; licenza/dependency review registrata.
 
 ### E-002: Schema document CMS
+**Stato:** Completata (M4): `DocumentoCms`, `RegistroComponenti`, JSON canonico e limiti.
 **Accettazione:** `versioneSchema`, nodi tipizzati, registry componenti, validazione e limiti di profondità/dimensione.
 
 ### E-003: Adapter editor/documento
+**Stato:** Completata (M4) per il catalogo di base: `AdapterGrapesJs`, test round-trip, errori espliciti.
 **Accettazione:** conversione deterministica per componenti supportati; test round-trip; errori loss/non supportati non silenziosi.
 
 ### E-004: Policy template lato server
+**Stato:** Completata (M4): `TemplateBuilder` e `ValidatoreTemplate`, nodi bloccati e slot.
 **Accettazione:** nodo bloccato non può essere modificato/eliminato tramite payload API manipolato; slot accetta solo tipi allow-list.
 
 ### E-005: Autosave e concorrenza
+**Stato:** Parzialmente completata (M4): token di concorrenza, salvataggio senza modifiche che non crea revisioni, validazione lato server; il debounce lato client (autosave) è in M5.
 **Accettazione:** debounce client, validazione server, token concorrenza; nessuna sovrascrittura silenziosa.
 
 ### E-006: Componenti e animazioni
+**Stato:** Non iniziata (M5).
 **Accettazione:** animazioni declarative; nessuna esecuzione di JavaScript arbitrario del tenant; prefers-reduced-motion considerato.
 
 ## EPIC F — Commerce

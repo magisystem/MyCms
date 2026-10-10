@@ -34,7 +34,7 @@ La piattaforma usa **Microsoft SQL Server** come unico database supportato (ADR-
 
 ## Frontend
 
-Le normali pagine Razor non richiedono una pipeline Node. La cartella del page builder può usare npm e un bundler (per esempio Vite) limitatamente alla build degli asset del builder. Il runtime di produzione è ASP.NET Core; non viene aggiunto un server Node.
+Le normali pagine Razor non richiedono una pipeline Node. `frontend/page-builder` usa npm e **esbuild** limitatamente alla build del bundle del builder (GrapesJS 0.23.6, BSD-3-Clause; dipendenze e licenze in `frontend/page-builder/README.md`); il bundle compilato è versionato in `wwwroot/lib/page-builder` e la CI ne verifica la corrispondenza. Il runtime di produzione è ASP.NET Core; non viene aggiunto un server Node.
 
 L'admin usa Tabler (CSS/JS precompilati) e Tabler Icons da `admin-theme/` (ADR-0013). Al bootstrap si copiano in `wwwroot` solo gli asset usati; nessuna pipeline Node per l'admin.
 

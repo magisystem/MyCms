@@ -68,6 +68,8 @@ Il piano dettagliato è in [`plan-m0-m1.md`](plan-m0-m1.md).
 
 **Exit criteria:** builder valutato con criteri espliciti; se conversione non è affidabile, aggiornare ADR prima di estendere il catalogo.
 
+**Stato:** completato il 2026-10-10. Valutazione in [`valutazione-poc-m4.md`](valutazione-poc-m4.md): conversione affidabile per il catalogo di base, ADR-0005 e ADR-0007 confermati (*Accepted*) con precisazioni. Si può procedere con M5.
+
 ## M5 — Page builder MVP
 
 - Desktop/tablet/mobile preview.
