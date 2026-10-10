@@ -265,6 +265,30 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                         });
                 });
 
+            modelBuilder.Entity("DvCms.Domain.Cms.InvalidazioneCache", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("CreatoIlUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("IdSito")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdTenant")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatoIlUtc");
+
+                    b.ToTable("InvalidazioniCache", (string)null);
+                });
+
             modelBuilder.Entity("DvCms.Domain.Cms.Pagina", b =>
                 {
                     b.Property<Guid>("Id")

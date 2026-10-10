@@ -18,6 +18,7 @@ public sealed class ServizioPagine : IServizioPagine
     private readonly IServizioAudit _audit;
     private readonly IOutbox _outbox;
     private readonly RegistroModelliPagina _modelli;
+    private readonly IInvalidazioneCache _invalidazione;
     private readonly TimeProvider _orologio;
 
     public ServizioPagine(
@@ -26,8 +27,10 @@ public sealed class ServizioPagine : IServizioPagine
         IServizioAudit audit,
         IOutbox outbox,
         RegistroModelliPagina modelli,
+        IInvalidazioneCache invalidazione,
         TimeProvider orologio)
     {
+        _invalidazione = invalidazione;
         _outbox = outbox;
         _modelli = modelli;
         _contesto = contesto;
@@ -219,6 +222,7 @@ public sealed class ServizioPagine : IServizioPagine
             _contesto.RedirectPagine.RemoveRange(await _contesto.RedirectPagine
                 .Where(redirect => redirect.IdSito == idSito && redirect.IdLingua == lingua.IdLingua && redirect.SlugOrigine == slug)
                 .ToListAsync(annullamento));
+            _invalidazione.Registra(pagina.IdTenant, pagina.IdSito);
             await _contesto.SalvaNuovaPaginaAsync(pagina, revisione, annullamento);
             return new EsitoOperazione(CodiceEsito.Riuscito, pagina.Id);
         });
@@ -324,6 +328,7 @@ public sealed class ServizioPagine : IServizioPagine
             }
 
             pagina.AggiornatoIlUtc = _orologio.GetUtcNow().UtcDateTime;
+            _invalidazione.Registra(pagina.IdTenant, pagina.IdSito);
             await _contesto.SaveChangesAsync(annullamento);
             return new EsitoOperazione(CodiceEsito.Riuscito, pagina.Id);
         });
@@ -461,6 +466,7 @@ public sealed class ServizioPagine : IServizioPagine
             }
 
             _contesto.RedirectPagine.Remove(redirect);
+            _invalidazione.Registra(pagina.IdTenant, pagina.IdSito);
             await _contesto.SaveChangesAsync(annullamento);
             return new EsitoOperazione(CodiceEsito.Riuscito, pagina.Id);
         });
@@ -493,6 +499,7 @@ public sealed class ServizioPagine : IServizioPagine
             _contesto.Entry(pagina).Property(candidata => candidata.TokenConcorrenza).OriginalValue = token;
             pagina.Pubblica(revisione, _orologio);
             // L'evento è scritto con la stessa SaveChanges della pubblicazione: o ci sono entrambi o nessuno (ADR-0010).
+            _invalidazione.Registra(pagina.IdTenant, pagina.IdSito);
             _outbox.Accoda(pagina.IdTenant, TipiEventoPagina.Pubblicata, new EventoPagina(pagina.Id, pagina.IdSito, pagina.Slug));
             await _contesto.SaveChangesAsync(annullamento);
             return new EsitoOperazione(CodiceEsito.Riuscito, pagina.Id);
@@ -514,6 +521,7 @@ public sealed class ServizioPagine : IServizioPagine
 
             _contesto.Entry(pagina).Property(candidata => candidata.TokenConcorrenza).OriginalValue = token;
             pagina.Ritira(_orologio);
+            _invalidazione.Registra(pagina.IdTenant, pagina.IdSito);
             _outbox.Accoda(pagina.IdTenant, TipiEventoPagina.Ritirata, new EventoPagina(pagina.Id, pagina.IdSito, pagina.Slug));
             await _contesto.SaveChangesAsync(annullamento);
             return new EsitoOperazione(CodiceEsito.Riuscito, pagina.Id);

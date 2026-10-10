@@ -52,6 +52,7 @@ public abstract class FabbricaApplicazione : WebApplicationFactory<Program>
         // Il worker dell'outbox non parte da solo nei test: i test lo invocano direttamente.
         builder.UseSetting("Outbox:Abilitato", "false");
         builder.UseSetting("Manutenzione:Abilitata", "false");
+        builder.UseSetting("Cache:IntervalloLetturaSecondi", "600");
         if (_impostazioni is not null)
         {
             foreach (var coppia in _impostazioni)

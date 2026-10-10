@@ -8,6 +8,7 @@ using DvCms.Application.Piattaforma;
 using DvCms.Application.Temi;
 using DvCms.Application.Tenancy;
 using DvCms.Infrastructure.Accessi;
+using DvCms.Infrastructure.Cache;
 using DvCms.Infrastructure.Cms;
 using DvCms.Infrastructure.Email;
 using DvCms.Infrastructure.Localizzazione;
@@ -50,7 +51,10 @@ public static class EstensioniServizi
                 "impostarla con user-secrets o con la variabile d'ambiente ConnectionStrings__Predefinita.");
         }
 
-        servizi.AddDbContext<ContestoDatabase>(opzioni => opzioni.UseSqlServer(connessione, ConfiguraSqlServer));
+        AggiungiCache(servizi, configurazione);
+        servizi.AddDbContext<ContestoDatabase>((fornitore, opzioni) => opzioni
+            .UseSqlServer(connessione, ConfiguraSqlServer)
+            .AddInterceptors(fornitore.GetRequiredService<InterceptorInvalidazioneCache>()));
         servizi.TryAddSingleton(TimeProvider.System);
 
         servizi.TryAddScoped<ContestoTenant>();
@@ -78,15 +82,18 @@ public static class EstensioniServizi
         servizi.TryAddSingleton(new OpzioniInviti(TimeSpan.FromHours(LeggiIntero(configurazione, "Sicurezza:Inviti:OreValidita", (int)OpzioniInviti.Predefinite.Validita.TotalHours, 1, 720))));
         servizi.TryAddScoped<IServizioInviti, ServizioInviti>();
         servizi.TryAddScoped<ServizioPopolamento>();
-        servizi.TryAddScoped<IServizioSitemap, ServizioSitemap>();
+        servizi.TryAddScoped<ServizioSitemap>();
+        servizi.TryAddScoped<IServizioSitemap>(f => new ServizioSitemapConCache(f.GetRequiredService<ServizioSitemap>(), f.GetRequiredService<ICachePubblica>(), f.GetRequiredService<IContestoTenant>()));
         servizi.TryAddSingleton(new RegistroTemi(RegistroTemi.Predefiniti));
         servizi.TryAddScoped<IServizioTemi, ServizioTemi>();
-        servizi.TryAddScoped<IRisolutoreTema, RisolutoreTema>();
+        servizi.TryAddScoped<RisolutoreTema>();
+        servizi.TryAddScoped<IRisolutoreTema>(f => new RisolutoreTemaConCache(f.GetRequiredService<RisolutoreTema>(), f.GetRequiredService<ICachePubblica>(), f.GetRequiredService<IContestoTenant>()));
         AggiungiMedia(servizi, configurazione);
         servizi.TryAddScoped<IServizioPiattaforma, ServizioPiattaforma>();
         servizi.TryAddSingleton(new RegistroModelliPagina(RegistroModelliPagina.Predefiniti));
         servizi.TryAddScoped<IServizioPagine, ServizioPagine>();
-        servizi.TryAddScoped<IServizioPaginePubbliche, ServizioPaginePubbliche>();
+        servizi.TryAddScoped<ServizioPaginePubbliche>();
+        servizi.TryAddScoped<IServizioPaginePubbliche>(f => new ServizioPaginePubblicheConCache(f.GetRequiredService<ServizioPaginePubbliche>(), f.GetRequiredService<ICachePubblica>(), f.GetRequiredService<IContestoTenant>()));
     }
 
     private static void AggiungiEmail(IServiceCollection servizi, IConfiguration configurazione)
@@ -128,6 +135,27 @@ public static class EstensioniServizi
         servizi.AddScoped<IGestoreOutbox, GestorePaginaRitirata>();
         servizi.AddScoped<IGestoreOutbox, GestorePaginaRinominata>();
         servizi.AddHostedService<ServizioOutbox>();
+    }
+
+    private static void AggiungiCache(IServiceCollection servizi, IConfiguration configurazione)
+    {
+        var p = OpzioniCache.Predefinite;
+        var abilitata = true;
+        if (!string.IsNullOrWhiteSpace(configurazione["Cache:Abilitata"]) && !bool.TryParse(configurazione["Cache:Abilitata"], out abilitata))
+        {
+            throw new InvalidOperationException("Valore non valido per 'Cache:Abilitata': atteso true o false.");
+        }
+
+        servizi.TryAddSingleton(new OpzioniCache(
+            abilitata,
+            TimeSpan.FromSeconds(LeggiIntero(configurazione, "Cache:SecondiValidita", (int)p.Durata.TotalSeconds, 1, 86_400)),
+            LeggiIntero(configurazione, "Cache:VociMassime", p.VociMassime, 10, 1_000_000),
+            TimeSpan.FromSeconds(LeggiIntero(configurazione, "Cache:IntervalloLetturaSecondi", (int)p.IntervalloLettura.TotalSeconds, 1, 600))));
+        servizi.TryAddSingleton<ICachePubblica, CachePubblica>();
+        servizi.TryAddSingleton<InterceptorInvalidazioneCache>();
+        servizi.TryAddScoped<IInvalidazioneCache, ScrittoreInvalidazioneCache>();
+        servizi.TryAddSingleton<ServizioInvalidazioneCache>();
+        servizi.AddHostedService(fornitore => fornitore.GetRequiredService<ServizioInvalidazioneCache>());
     }
 
     private static void AggiungiManutenzione(IServiceCollection servizi, IConfiguration configurazione)

@@ -80,6 +80,16 @@ public sealed partial class ManutenzioneDati
                 .ExecuteDeleteAsync(annullamento),
             annullamento);
 
+        // Il registro delle invalidazioni serve alle istanze per pochi secondi: due ore coprono anche un riavvio lento.
+        var invalidazioni = adesso - TimeSpan.FromHours(2);
+        totale += await RipulisciAsync(
+            "InvalidazioniCache",
+            () => contesto.InvalidazioniCache.IgnoreQueryFilters()
+                .Where(i => i.CreatoIlUtc < invalidazioni)
+                .Take(lotto)
+                .ExecuteDeleteAsync(annullamento),
+            annullamento);
+
         if (totale > 0)
         {
             RegistraRipulitura(_logger, totale);

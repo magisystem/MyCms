@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using DvCms.Application.Accessi;
+using DvCms.Application.Cms;
 using DvCms.Application.Email;
 using DvCms.Application.Localizzazione;
 using DvCms.Application.Piattaforma;
@@ -28,6 +29,7 @@ public sealed class ServizioPiattaforma : IServizioPiattaforma
     private readonly IAccodatoreEmail _email;
     private readonly ILocalizzatore _localizzatore;
     private readonly OpzioniInviti _opzioniInviti;
+    private readonly IInvalidazioneCache _invalidazione;
     private readonly TimeProvider _orologio;
 
     public ServizioPiattaforma(
@@ -37,8 +39,10 @@ public sealed class ServizioPiattaforma : IServizioPiattaforma
         IAccodatoreEmail email,
         ILocalizzatore localizzatore,
         OpzioniInviti opzioniInviti,
+        IInvalidazioneCache invalidazione,
         TimeProvider orologio)
     {
+        _invalidazione = invalidazione;
         _contesto = contesto;
         _audit = audit;
         _hash = hash;
@@ -238,6 +242,7 @@ public sealed class ServizioPiattaforma : IServizioPiattaforma
             sito.FusoOrario = fuso;
             sito.Stato = attivo ? StatoSito.Attivo : StatoSito.Disattivato;
             sito.AggiornatoIlUtc = Adesso();
+            _invalidazione.Registra(idTenant, sito.Id);
             return Esito.Ok(sito.Id, idTenant, $"sito '{sito.Nome}', stato {sito.Stato}");
         }, annullamento);
 
@@ -264,6 +269,7 @@ public sealed class ServizioPiattaforma : IServizioPiattaforma
             var haPredefinita = await _contesto.LingueSito.IgnoreQueryFilters().AnyAsync(ls => ls.IdSito == idSito && ls.Predefinita, annullamento);
             var riga = LinguaSito.Crea(idTenant, idSito, lingua.Id, predefinita: !haPredefinita, _orologio);
             _contesto.LingueSito.Add(riga);
+            _invalidazione.Registra(idTenant, idSito);
             return Esito.Ok(riga.Id, idTenant, $"lingua {lingua.Codice}");
         }, annullamento);
 
@@ -283,6 +289,7 @@ public sealed class ServizioPiattaforma : IServizioPiattaforma
             }
 
             _contesto.LingueSito.Remove(riga);
+            _invalidazione.Registra(idTenant, idSito);
             return Esito.Ok(riga.Id, idTenant, $"lingua {codiceLingua}");
         }, annullamento);
 
@@ -317,6 +324,7 @@ public sealed class ServizioPiattaforma : IServizioPiattaforma
             }
 
             nuova.Predefinita = true;
+            _invalidazione.Registra(idTenant, idSito);
             return Esito.Ok(nuova.Id, idTenant, $"lingua predefinita {codiceLingua}");
         }, annullamento);
         // Si conferma se è riuscita o se è stata negata (il tentativo negato va nell'audit); ogni altro esito annulla anche il primo passo.

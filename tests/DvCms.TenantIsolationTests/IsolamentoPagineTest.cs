@@ -195,4 +195,28 @@ public class IsolamentoPagineTest
         Assert.Contains($"http://{d.Web.B.Host}/contatti", sitemapB, StringComparison.Ordinal);
         Assert.DoesNotContain(d.Web.A.Host, sitemapB, StringComparison.Ordinal);
     }
+
+    [Fact]
+    public async Task LaCacheDeiContenutiPubbliciNonMescolaITenantNemmenoDopoUnaInvalidazione()
+    {
+        await using var d = await DatiIsolamento.CreaAsync();
+        var sessioneA = d.Web.SessioneA();
+        var sessioneB = d.Web.SessioneB();
+
+        // Si riempie la cache di entrambi i tenant con lo stesso slug, poi si invalida solo A (nuova pubblicazione).
+        await (await sessioneA.GetAsync("/contatti")).Content.ReadAsStringAsync(Ct);
+        await (await sessioneB.GetAsync("/contatti")).Content.ReadAsStringAsync(Ct);
+        var dettaglio = (await d.ComeAsync(d.A, (s, a) => s.LeggiAsync(a, d.PaginaA, Ct)))!;
+        await d.ComeAsync(d.A, (s, a) => s.SalvaAsync(a, d.PaginaA, new DatiModificaPagina(null, "Contatti di A, aggiornati", dettaglio.Contenuto, null, false, dettaglio.TokenConcorrenza), Ct));
+        var aggiornata = (await d.ComeAsync(d.A, (s, a) => s.LeggiAsync(a, d.PaginaA, Ct)))!;
+        await d.ComeAsync(d.A, (s, a) => s.PubblicaAsync(a, d.PaginaA, aggiornata.TokenConcorrenza, Ct));
+
+        var daA = await (await sessioneA.GetAsync("/contatti")).Content.ReadAsStringAsync(Ct);
+        var daB = await (await sessioneB.GetAsync("/contatti")).Content.ReadAsStringAsync(Ct);
+
+        Assert.Contains("Contatti di A, aggiornati", daA, StringComparison.Ordinal);
+        Assert.DoesNotContain("Contatti di B", daA, StringComparison.Ordinal);
+        Assert.Contains("Contatti di B", daB, StringComparison.Ordinal);
+        Assert.DoesNotContain("Contatti di A", daB, StringComparison.Ordinal);
+    }
 }

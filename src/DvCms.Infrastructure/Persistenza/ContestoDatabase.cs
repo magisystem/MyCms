@@ -71,6 +71,8 @@ public class ContestoDatabase : DbContext
 
     public DbSet<RichiestaRecuperoPassword> RichiesteRecuperoPassword => Set<RichiestaRecuperoPassword>();
 
+    public DbSet<InvalidazioneCache> InvalidazioniCache => Set<InvalidazioneCache>();
+
     public DbSet<RisorsaMedia> RisorseMedia => Set<RisorsaMedia>();
 
     public DbSet<TraduzioneRisorsaMedia> TraduzioniRisorseMedia => Set<TraduzioneRisorsaMedia>();

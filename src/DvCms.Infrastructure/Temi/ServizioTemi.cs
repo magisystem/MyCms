@@ -1,5 +1,6 @@
 using System.Text.Json;
 using DvCms.Application.Accessi;
+using DvCms.Application.Cms;
 using DvCms.Application.Piattaforma;
 using DvCms.Application.Temi;
 using DvCms.Application.Tenancy;
@@ -19,10 +20,12 @@ public sealed class ServizioTemi : IServizioTemi
     private readonly IContestoTenant _tenant;
     private readonly IServizioAudit _audit;
     private readonly RegistroTemi _registro;
+    private readonly IInvalidazioneCache _invalidazione;
     private readonly TimeProvider _orologio;
 
-    public ServizioTemi(ContestoDatabase contesto, IContestoTenant tenant, IServizioAudit audit, RegistroTemi registro, TimeProvider orologio)
+    public ServizioTemi(ContestoDatabase contesto, IContestoTenant tenant, IServizioAudit audit, RegistroTemi registro, IInvalidazioneCache invalidazione, TimeProvider orologio)
     {
+        _invalidazione = invalidazione;
         _contesto = contesto;
         _tenant = tenant;
         _audit = audit;
@@ -99,6 +102,7 @@ public sealed class ServizioTemi : IServizioTemi
         riga.ImpostazioniJson = normalizzati;
         riga.AggiornatoIlUtc = adesso;
         riga.AggiornatoDaIdUtenza = attore.Id;
+        _invalidazione.Registra(_tenant.IdTenant, idSito);
 
         try
         {
