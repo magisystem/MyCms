@@ -14,6 +14,8 @@ public class ModelliPaginaTest
     [Theory]
     [InlineData("testo-semplice", 1, "BF1A7CAEAE3A20E9C41FC77A989284A2B85A8945E22C6A118EA9853D861F94FD")]
     [InlineData("presentazione", 1, "8AAA6B15B624132003681A18AAE6A7D8790AD14947CD5E9AB8D4446467F153B0")]
+    [InlineData("pagina-libera", 1, "AAFD0894A5EF93E37DDBA262441E051699C99166F5E7DBA29D27C66BB21FD033")]
+    [InlineData("pagina-con-intestazione-fissa", 1, "FC8786F51D964A2C9EE4FCD3BF8204EDDE6DCACA4ED615B642CF0048593F64C0")]
     public void LeVersioniRilasciateSonoImmutabili(string id, int versione, string improntaAttesa)
     {
         Assert.Equal(improntaAttesa, _registro.Trova(id, versione)!.Impronta);
@@ -22,7 +24,7 @@ public class ModelliPaginaTest
     [Fact]
     public void TutteLeVersioniPredefiniteHannoUnaImprontaFissata()
     {
-        var fissate = new HashSet<(string, int)> { ("testo-semplice", 1), ("presentazione", 1) };
+        var fissate = new HashSet<(string, int)> { ("testo-semplice", 1), ("presentazione", 1), ("pagina-libera", 1), ("pagina-con-intestazione-fissa", 1) };
 
         Assert.All(_registro.Tutti, modello => Assert.Contains((modello.Id, modello.Versione), fissate));
     }

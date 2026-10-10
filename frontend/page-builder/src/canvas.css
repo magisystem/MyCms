@@ -1,0 +1,7 @@
+/* Caricato dentro il canvas dell'editor (iframe), dopo pubblico.css e componenti.css: avvicina l'aspetto a quello pubblico. */
+body { min-height: 100vh; }
+.dv-sezione > * { max-width: 46rem; margin-left: auto; margin-right: auto; padding: 0 1rem; box-sizing: border-box; }
+.dv-sezione:empty, .dv-colonna:empty { min-height: 4rem; outline: 1px dashed #94a3b8; }
+.dv-testo { white-space: pre-wrap; }
+.dv-immagine { display: block; max-width: 100%; height: auto; }
+a.pulsante { display: inline-block; }

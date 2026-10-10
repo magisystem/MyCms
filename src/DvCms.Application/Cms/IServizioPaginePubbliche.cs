@@ -14,7 +14,8 @@ public sealed record PaginaPubblica(
     IReadOnlyList<TraduzionePubblica> Traduzioni,
     string? TitoloSeo = null,
     string? DescrizioneSeo = null,
-    bool NonIndicizzare = false);
+    bool NonIndicizzare = false,
+    string? DocumentoRenderJson = null);
 
 /// <summary>
 /// Esito della richiesta di un indirizzo pubblico: la pagina da mostrare, oppure il percorso (relativo al sito) verso cui

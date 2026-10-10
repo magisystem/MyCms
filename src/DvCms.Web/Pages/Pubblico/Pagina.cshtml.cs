@@ -91,7 +91,8 @@ public class PaginaModel : PageModel
             contenuto.TitoloSeo,
             contenuto.DescrizioneSeo,
             await _temi.RisolviAsync(annullamento),
-            prefissata is null ? "/" : "/" + prefissata.Codice);
+            prefissata is null ? "/" : "/" + prefissata.Codice,
+            VistaPagina.LeggiDocumento(contenuto.DocumentoRenderJson));
         return Page();
     }
 

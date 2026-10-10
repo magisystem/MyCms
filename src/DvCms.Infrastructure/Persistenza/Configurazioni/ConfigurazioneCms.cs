@@ -70,6 +70,8 @@ internal sealed class ConfigurazioneRevisionePagina : IEntityTypeConfiguration<R
         entita.Property(revisione => revisione.TitoloSeo).HasMaxLength(RevisionePagina.LunghezzaMassimaTitoloSeo);
         entita.Property(revisione => revisione.DescrizioneSeo).HasMaxLength(RevisionePagina.LunghezzaMassimaDescrizioneSeo);
         entita.Property(revisione => revisione.NonIndicizzare).HasDefaultValue(false);
+        entita.Property(revisione => revisione.ProgettoEditorJson);
+        entita.Property(revisione => revisione.DocumentoRenderJson);
         entita.Property(revisione => revisione.NotaRevisione).HasMaxLength(RevisionePagina.LunghezzaMassimaNota);
 
         entita.HasOne<Pagina>()

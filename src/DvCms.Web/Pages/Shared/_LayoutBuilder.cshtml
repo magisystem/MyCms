@@ -1,0 +1,16 @@
+@inject DvCms.Application.Localizzazione.IContestoLingua ContestoLingua
+<!DOCTYPE html>
+<html lang="@ContestoLingua.CodiceLingua">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>@(ViewData["Titolo"] is string titolo ? titolo + " - " : string.Empty)DvCms</title>
+    <link href="~/lib/page-builder/page-builder.css" rel="stylesheet" asp-append-version="true" />
+</head>
+<body class="dv-builder">
+    @RenderBody()
+    @* Bundle isolato di GrapesJS: caricato solo in questa pagina, dalla stessa origine (CSP script-src 'self'). *@
+    <script src="~/lib/page-builder/page-builder.js" asp-append-version="true"></script>
+</body>
+</html>

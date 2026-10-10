@@ -83,7 +83,8 @@ public sealed class ServizioPaginePubbliche : IServizioPaginePubbliche
             traduzioni,
             trovata.revisione.TitoloSeo,
             trovata.revisione.DescrizioneSeo,
-            trovata.revisione.NonIndicizzare);
+            trovata.revisione.NonIndicizzare,
+            trovata.revisione.DocumentoRenderJson);
     }
 
     public async Task<RisoluzionePagina> RisolviAsync(string? slug, string? codiceLingua, CancellationToken annullamento)

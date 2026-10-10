@@ -51,7 +51,8 @@ public class AnteprimaModel : PaginaAdmin
             anteprima.IdModello,
             anteprima.VersioneModello,
             anteprima.DatiModello,
-            Tema: await _temi.RisolviAsync(annullamento));
+            Tema: await _temi.RisolviAsync(annullamento),
+            Documento: VistaPagina.LeggiDocumento(anteprima.DocumentoRenderJson));
         return Page();
     }
 }

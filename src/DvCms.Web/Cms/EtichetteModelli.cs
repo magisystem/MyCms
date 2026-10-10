@@ -13,6 +13,8 @@ public static class EtichetteModelli
         {
             "testo-semplice" => localizzatore.Traduci("Testo semplice"),
             "presentazione" => localizzatore.Traduci("Presentazione con pulsante"),
+            "pagina-libera" => localizzatore.Traduci("Pagina libera (page builder)"),
+            "pagina-con-intestazione-fissa" => localizzatore.Traduci("Pagina con intestazione fissa (page builder)"),
             _ => idModello,
         };
     }

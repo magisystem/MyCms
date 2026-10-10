@@ -485,6 +485,9 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
+                    b.Property<string>("DocumentoRenderJson")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("IdModello")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
@@ -512,6 +515,9 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
 
                     b.Property<int>("NumeroRevisione")
                         .HasColumnType("int");
+
+                    b.Property<string>("ProgettoEditorJson")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Titolo")
                         .IsRequired()

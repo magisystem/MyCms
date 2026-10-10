@@ -1,5 +1,6 @@
 using DvCms.Application.Accessi;
 using DvCms.Application.Accessi.DueFattori;
+using DvCms.Application.Builder;
 using DvCms.Application.Cms;
 using DvCms.Application.Email;
 using DvCms.Application.Localizzazione;
@@ -95,6 +96,9 @@ public static class EstensioniServizi
         AggiungiMedia(servizi, configurazione);
         servizi.TryAddScoped<IServizioPiattaforma, ServizioPiattaforma>();
         servizi.TryAddSingleton(new RegistroModelliPagina(RegistroModelliPagina.Predefiniti));
+        servizi.TryAddSingleton(new RegistroComponenti(RegistroComponenti.Predefiniti));
+        servizi.TryAddSingleton(new RegistroTemplateBuilder(RegistroTemplateBuilder.Predefiniti));
+        servizi.TryAddScoped<IServizioBuilder, ServizioBuilder>();
         servizi.TryAddScoped<IServizioPagine, ServizioPagine>();
         servizi.TryAddScoped<ServizioPaginePubbliche>();
         servizi.TryAddScoped<IServizioPaginePubbliche>(f => new ServizioPaginePubblicheConCache(f.GetRequiredService<ServizioPaginePubbliche>(), f.GetRequiredService<ICachePubblica>(), f.GetRequiredService<IContestoTenant>()));

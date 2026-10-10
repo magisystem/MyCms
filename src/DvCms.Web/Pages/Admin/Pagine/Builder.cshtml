@@ -1,0 +1,15 @@
+@page "/admin/pagine/{id:guid}/builder"
+@model DvCms.Web.Pages.Admin.Pagine.BuilderModel
+@{
+    Layout = "_LayoutBuilder";
+    ViewData["Titolo"] = _L["Page builder"];
+}
+@* La pagina non contiene script: il bundle isolato legge la sua configurazione da questi attributi. *@
+<div id="builder"
+     data-url-stato="/admin/pagine/@Model.IdPagina/builder?handler=Stato"
+     data-url-salva="/admin/pagine/@Model.IdPagina/builder?handler=Salva"
+     data-url-pagina="/admin/pagine/@Model.IdPagina"
+     data-url-anteprima="/admin/pagine/@Model.IdPagina/anteprima"
+     data-risorse="@Model.RisorseJson"
+     data-testi="@Model.TestiJson"></div>
+@Html.AntiForgeryToken()

@@ -75,7 +75,8 @@ public sealed record DettaglioPagina(
     string? TitoloSeo = null,
     string? DescrizioneSeo = null,
     bool NonIndicizzare = false,
-    IReadOnlyList<ReindirizzamentoPagina>? Reindirizzamenti = null);
+    IReadOnlyList<ReindirizzamentoPagina>? Reindirizzamenti = null,
+    bool UsaBuilder = false);
 
 /// <summary>Contenuto di una revisione per l'anteprima (la bozza più recente, oppure una revisione precisa).</summary>
 public sealed record AnteprimaPagina(
@@ -87,7 +88,8 @@ public sealed record AnteprimaPagina(
     bool UltimaBozza,
     string IdModello,
     int VersioneModello,
-    IReadOnlyDictionary<string, string> DatiModello);
+    IReadOnlyDictionary<string, string> DatiModello,
+    string? DocumentoRenderJson = null);
 
 public sealed record LinguaDisponibile(string Codice, string Nome);
 

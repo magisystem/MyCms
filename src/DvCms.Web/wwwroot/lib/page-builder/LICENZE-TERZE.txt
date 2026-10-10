@@ -1,0 +1,10 @@
+# Componenti di terze parti incluse in page-builder.js
+
+backbone@1.4.1  MIT
+backbone-undo@0.2.6  MIT
+codemirror@5.63.0  MIT
+codemirror-formatting@1.0.0  MIT
+grapesjs@0.23.6  BSD-3-Clause
+html-entities@1.4.0  MIT
+promise-polyfill@8.3.0  MIT
+underscore@1.13.8  MIT

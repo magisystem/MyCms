@@ -13,7 +13,17 @@ public sealed record ContenutoRevisione(
     IReadOnlyDictionary<string, string>? DatiModello = null,
     string? TitoloSeo = null,
     string? DescrizioneSeo = null,
-    bool NonIndicizzare = false);
+    bool NonIndicizzare = false,
+    DocumentoBuilder? Builder = null);
+
+/// <summary>
+/// Il documento del page builder di una revisione: il documento CMS canonico che il renderer disegna e il progetto per riaprire
+/// l'editor (derivato dal documento, ADR-0005). Sono JSON già validati dall'Application: il dominio non li interpreta.
+/// </summary>
+public sealed record DocumentoBuilder(string ProgettoEditorJson, string DocumentoRenderJson)
+{
+    public const int ByteMassimi = 2_000_000;
+}
 
 /// <summary>
 /// Versione immutabile del contenuto di una pagina. In M1 il contenuto è testo semplice (titolo e paragrafi);
@@ -63,6 +73,20 @@ public class RevisionePagina
 
     /// <summary>Se vero la pagina chiede di non essere indicizzata (<c>noindex</c>).</summary>
     public bool NonIndicizzare { get; set; }
+
+    /// <summary>
+    /// Progetto per riaprire il builder (GrapesJS), rigenerato dal server a partire dal documento validato; nullo per le revisioni
+    /// che non usano il builder.
+    /// </summary>
+    public string? ProgettoEditorJson { get; set; }
+
+    /// <summary>Documento CMS canonico (JSON versionato) che il renderer disegna; nullo per le revisioni che non usano il builder.</summary>
+    public string? DocumentoRenderJson { get; set; }
+
+    /// <summary>Contenuto del builder di questa revisione, se c'è.</summary>
+    public DocumentoBuilder? Builder => ProgettoEditorJson is not null && DocumentoRenderJson is not null
+        ? new DocumentoBuilder(ProgettoEditorJson, DocumentoRenderJson)
+        : null;
 
     public string? NotaRevisione { get; set; }
 
@@ -118,6 +142,12 @@ public class RevisionePagina
             throw new ArgumentException("Modello di pagina non valido.", nameof(dati));
         }
 
+        if (dati.Builder is { } builder
+            && (builder.ProgettoEditorJson.Length > DocumentoBuilder.ByteMassimi || builder.DocumentoRenderJson.Length > DocumentoBuilder.ByteMassimi))
+        {
+            throw new ArgumentException("Documento del builder troppo grande.", nameof(dati));
+        }
+
         var notaValida = nota?.Trim();
         if (notaValida is { Length: > LunghezzaMassimaNota })
         {
@@ -138,6 +168,8 @@ public class RevisionePagina
             TitoloSeo = titoloSeo,
             DescrizioneSeo = descrizioneSeo,
             NonIndicizzare = dati.NonIndicizzare,
+            ProgettoEditorJson = dati.Builder?.ProgettoEditorJson,
+            DocumentoRenderJson = dati.Builder?.DocumentoRenderJson,
             DatiModelloJson = System.Text.Json.JsonSerializer.Serialize(dati.DatiModello ?? new Dictionary<string, string>()),
             NotaRevisione = string.IsNullOrEmpty(notaValida) ? null : notaValida,
             CreatoDaIdUtenza = idAutore,

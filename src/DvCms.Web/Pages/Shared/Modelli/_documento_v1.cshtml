@@ -1,0 +1,11 @@
+@model DvCms.Web.Pubblico.VistaPagina
+@* Pagine scritte con il page builder: si disegna solo il documento CMS, tipo per tipo (allow-list in Componenti/_Nodo). *@
+<article class="dv-documento">
+    @if (Model.Documento is { } documento)
+    {
+        foreach (var nodo in documento.Nodi)
+        {
+            <partial name="Componenti/_Nodo" model="nodo" />
+        }
+    }
+</article>

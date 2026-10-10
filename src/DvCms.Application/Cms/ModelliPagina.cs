@@ -33,7 +33,8 @@ public sealed record ModelloPagina(
     int Versione,
     IReadOnlyList<CampoModello> Campi,
     PoliticaEditing Politica,
-    IReadOnlyList<IReadOnlyList<string>> CampiTuttiONessuno)
+    IReadOnlyList<IReadOnlyList<string>> CampiTuttiONessuno,
+    bool Builder = false)
 {
     /// <summary>Impronta (SHA-256 esadecimale) di tutto ciò che definisce la versione: un test la fissa per ogni versione rilasciata.</summary>
     public string Impronta
@@ -52,6 +53,12 @@ public sealed record ModelloPagina(
             foreach (var gruppo in CampiTuttiONessuno)
             {
                 testo.Append(string.Join('+', gruppo)).Append(';');
+            }
+
+            if (Builder)
+            {
+                // I modelli che usano il builder (E-004) hanno un'impronta propria; quella dei modelli a campi non cambia.
+                testo.Append("|builder");
             }
 
             return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(testo.ToString())));
@@ -106,8 +113,19 @@ public sealed class RegistroModelliPagina
         new PoliticaEditing(ContenutoLiberoAmmesso: true, LunghezzaMassimaContenuto: 20_000),
         [["EtichettaPulsante", "UrlPulsante"]]);
 
+    /// <summary>
+    /// Modelli che si scrivono con il page builder (E-004): nessun campo e nessun testo libero; il contenuto è il documento del
+    /// builder, vincolato dalla struttura e dalla policy del template omonimo (<see cref="Builder.RegistroTemplateBuilder"/>).
+    /// </summary>
+    public static ModelloPagina ModelloPaginaLibera { get; } = ModelloBuilder(Builder.RegistroTemplateBuilder.PaginaLibera);
+
+    public static ModelloPagina ModelloIntestazioneFissa { get; } = ModelloBuilder(Builder.RegistroTemplateBuilder.IntestazioneFissa);
+
     /// <summary>(Dichiarata dopo i modelli: l'ordine degli inizializzatori statici conta.) I modelli rilasciati con il prodotto.</summary>
-    public static IReadOnlyList<ModelloPagina> Predefiniti { get; } = [ModelloTestoSemplice, ModelloPresentazione];
+    public static IReadOnlyList<ModelloPagina> Predefiniti { get; } = [ModelloTestoSemplice, ModelloPresentazione, ModelloPaginaLibera, ModelloIntestazioneFissa];
+
+    private static ModelloPagina ModelloBuilder(string id) =>
+        new(id, 1, [], new PoliticaEditing(ContenutoLiberoAmmesso: false, LunghezzaMassimaContenuto: 0), [], Builder: true);
 
     /// <summary>Tutte le versioni, in ordine di id e versione.</summary>
     public IReadOnlyList<ModelloPagina> Tutti => [.. _modelli.Values.OrderBy(m => m.Id, StringComparer.Ordinal).ThenBy(m => m.Versione)];

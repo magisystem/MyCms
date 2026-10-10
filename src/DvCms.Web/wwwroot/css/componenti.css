@@ -1,0 +1,63 @@
+/*
+ * Componenti del page builder (documento CMS). Markup e classi sono indipendenti dal tema; l'aspetto dipende dalle variabili del
+ * tema (colore primario, intestazione) e da poche regole per tema. Una versione di tema già rilasciata non si modifica: questo
+ * foglio è separato proprio per questo.
+ */
+main:has(.dv-documento) {
+    max-width: none;
+    padding: 0 0 3rem;
+}
+
+.dv-documento {
+    --dv-larghezza: 46rem;
+}
+
+.dv-contenitore {
+    max-width: var(--dv-larghezza);
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+.dv-sezione.dv-spaziatura-compatta { padding: 1rem 0; }
+.dv-sezione.dv-spaziatura-normale { padding: 2rem 0; }
+.dv-sezione.dv-spaziatura-ampia { padding: 4rem 0; }
+
+.dv-sfondo-chiaro { background: #f1f5f9; color: #1f2933; }
+.dv-sfondo-scuro { background: var(--tema-colore-intestazione, #111827); color: #ffffff; }
+.dv-sfondo-scuro a:not(.pulsante) { color: #ffffff; }
+.tema-classico .dv-sfondo-scuro { background: var(--tema-colore-primario, #1f4e8c); }
+
+.dv-colonne {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: 1fr;
+}
+
+@media (min-width: 40rem) {
+    .dv-colonne-2 { grid-template-columns: repeat(2, 1fr); }
+    .dv-colonne-3 { grid-template-columns: repeat(3, 1fr); }
+}
+
+.dv-allineamento-sinistra { text-align: left; }
+.dv-allineamento-centro { text-align: center; }
+.dv-allineamento-destra { text-align: right; }
+
+.dv-titolo { margin: 0 0 1rem; }
+.dv-testo { margin: 0 0 1rem; }
+
+.dv-immagine { margin: 0 0 1rem; }
+.dv-immagine img { display: block; max-width: 100%; height: auto; }
+.dv-immagine figcaption { font-size: 0.9rem; color: #52606d; }
+
+.dv-pulsante-secondario {
+    color: var(--tema-colore-primario, #1f4e8c);
+    background: transparent;
+    border: 2px solid currentColor;
+}
+
+.tema-moderno .dv-titolo { color: var(--tema-colore-primario, #6d28d9); }
+.tema-moderno .dv-sfondo-scuro .dv-titolo { color: #ffffff; }
+
+@media (prefers-color-scheme: dark) {
+    .dv-sfondo-chiaro { background: #1f2933; color: #e4e7eb; }
+}

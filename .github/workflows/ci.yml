@@ -70,3 +70,34 @@ jobs:
 
       - name: Test
         run: dotnet test --solution DvCms.sln --configuration Release --no-build
+
+  # Il bundle del page builder (ADR-0007) è versionato perché in produzione non serve Node: qui si verifica che corrisponda
+  # ai sorgenti e al lockfile, e che le dipendenze npm non abbiano vulnerabilità note.
+  bundle-page-builder:
+    name: Bundle del page builder
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            frontend/page-builder
+            src/DvCms.Web/wwwroot/lib/page-builder
+
+      - name: Installa Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Installa le dipendenze dal lockfile
+        working-directory: frontend/page-builder
+        run: npm ci --no-audit --no-fund
+
+      - name: Verifica vulnerabilità delle dipendenze
+        working-directory: frontend/page-builder
+        run: npm audit --audit-level=high
+
+      - name: Verifica che il bundle versionato sia aggiornato
+        working-directory: frontend/page-builder
+        run: npm run verifica

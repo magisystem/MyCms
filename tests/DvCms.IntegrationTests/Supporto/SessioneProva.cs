@@ -86,6 +86,29 @@ public sealed partial class SessioneProva
         return await InviaAsync(invio);
     }
 
+    /// <summary>Invia un corpo JSON come farebbe uno script della pagina: token antiforgery nell'intestazione, letto dalla pagina indicata.</summary>
+    public async Task<HttpResponseMessage> InviaJsonAsync(string percorsoPagina, string percorsoInvio, string json, bool conToken = true)
+    {
+        string? token = null;
+        if (conToken)
+        {
+            using var pagina = await GetAsync(percorsoPagina);
+            var html = await pagina.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+            token = TokenAntiforgery().Match(html) is { Success: true } trovato ? System.Net.WebUtility.HtmlDecode(trovato.Groups[1].Value) : null;
+        }
+
+        using var invio = new HttpRequestMessage(HttpMethod.Post, percorsoInvio)
+        {
+            Content = new StringContent(json, System.Text.Encoding.UTF8, "application/json"),
+        };
+        if (token is not null)
+        {
+            invio.Headers.TryAddWithoutValidation("RequestVerificationToken", token);
+        }
+
+        return await InviaAsync(invio);
+    }
+
     public async Task<HttpResponseMessage> AccediAsync(string email, string password, string percorsoAccesso = "/admin/accesso") =>
         await InviaModuloAsync(
             percorsoAccesso,

@@ -1,3 +1,5 @@
+using DvCms.Application.Builder;
+
 namespace DvCms.Web.Pubblico;
 
 /// <summary>
@@ -10,6 +12,8 @@ public static class ModelliVista
     {
         [("testo-semplice", 1)] = "Modelli/_testo-semplice_v1",
         [("presentazione", 1)] = "Modelli/_presentazione_v1",
+        [(RegistroTemplateBuilder.PaginaLibera, 1)] = "Modelli/_documento_v1",
+        [(RegistroTemplateBuilder.IntestazioneFissa, 1)] = "Modelli/_documento_v1",
     };
 
     public static string Vista(string id, int versione) =>

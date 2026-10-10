@@ -1,0 +1,21 @@
+{
+  "name": "dvcms-page-builder",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Bundle isolato dell'editor visuale (GrapesJS) usato solo dalla pagina /admin/pagine/{id}/builder. ADR-0007.",
+  "license": "UNLICENSED",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "verifica": "node build.mjs --verifica"
+  },
+  "dependencies": {
+    "grapesjs": "0.23.6"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

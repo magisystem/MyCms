@@ -67,11 +67,18 @@
                             }
                         </div>
                     }
-                    <div class="mb-3">
-                        <label class="form-label" for="Contenuto">@_L["Contenuto"]</label>
-                        <textarea class="form-control" id="Contenuto" name="Contenuto" rows="12" maxlength="100000">@Model.Contenuto</textarea>
-                        <div class="form-hint">@_L["Testo semplice: separa i paragrafi con una riga vuota."]</div>
-                    </div>
+                    @if (Model.Modello.Builder)
+                    {
+                        <p class="text-secondary">@_L["Il contenuto di questa pagina si scrive con il page builder, dopo aver creato la bozza."]</p>
+                    }
+                    else
+                    {
+                        <div class="mb-3">
+                            <label class="form-label" for="Contenuto">@_L["Contenuto"]</label>
+                            <textarea class="form-control" id="Contenuto" name="Contenuto" rows="12" maxlength="100000">@Model.Contenuto</textarea>
+                            <div class="form-hint">@_L["Testo semplice: separa i paragrafi con una riga vuota."]</div>
+                        </div>
+                    }
                     <fieldset class="mb-3">
                         <legend class="form-label">@_L["Motori di ricerca"]</legend>
                         <div class="mb-3">

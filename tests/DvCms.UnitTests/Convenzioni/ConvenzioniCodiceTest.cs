@@ -74,7 +74,7 @@ public partial class ConvenzioniCodiceTest
     }
 
     [Fact]
-    public void SottoWwwrootLibCiSonoSoloTablerETablerIcons()
+    public void SottoWwwrootLibCiSonoSoloTablerTablerIconsEIlBundleDelPageBuilder()
     {
         var radice = TrovaRadiceRepository();
         var cartellaLib = Path.Combine(radice, "src", "DvCms.Web", "wwwroot", "lib");
@@ -85,7 +85,8 @@ public partial class ConvenzioniCodiceTest
             .ToList();
 
         // ADR-0013: tabler-emails, tabler-illustrations e tabler-avatars non vanno in wwwroot.
-        Assert.Equal(["tabler", "tabler-icons"], presenti);
+        // ADR-0007: page-builder è il bundle compilato dell'editor, caricato solo dalla sua pagina (sorgenti in frontend/page-builder).
+        Assert.Equal(["page-builder", "tabler", "tabler-icons"], presenti);
     }
 
     private static string TrovaRadiceRepository()

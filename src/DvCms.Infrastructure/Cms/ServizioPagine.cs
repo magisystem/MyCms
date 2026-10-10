@@ -1,4 +1,5 @@
 using DvCms.Application.Accessi;
+using DvCms.Application.Builder;
 using DvCms.Application.Cms;
 using DvCms.Application.Outbox;
 using DvCms.Application.Piattaforma;
@@ -19,6 +20,8 @@ public sealed class ServizioPagine : IServizioPagine
     private readonly IOutbox _outbox;
     private readonly RegistroModelliPagina _modelli;
     private readonly IInvalidazioneCache _invalidazione;
+    private readonly RegistroTemplateBuilder _template;
+    private readonly RegistroComponenti _componenti;
     private readonly TimeProvider _orologio;
 
     public ServizioPagine(
@@ -28,8 +31,12 @@ public sealed class ServizioPagine : IServizioPagine
         IOutbox outbox,
         RegistroModelliPagina modelli,
         IInvalidazioneCache invalidazione,
+        RegistroTemplateBuilder template,
+        RegistroComponenti componenti,
         TimeProvider orologio)
     {
+        _template = template;
+        _componenti = componenti;
         _invalidazione = invalidazione;
         _outbox = outbox;
         _modelli = modelli;
@@ -136,7 +143,8 @@ public sealed class ServizioPagine : IServizioPagine
             bozza.TitoloSeo,
             bozza.DescrizioneSeo,
             bozza.NonIndicizzare,
-            reindirizzamenti);
+            reindirizzamenti,
+            _modelli.Trova(bozza.IdModello, bozza.VersioneModello)?.Builder == true);
     }
 
     public Task<EsitoOperazione> CreaAsync(Guid idAttore, DatiNuovaPagina dati, CancellationToken annullamento)
@@ -208,12 +216,25 @@ public sealed class ServizioPagine : IServizioPagine
                 return new EsitoOperazione(CodiceEsito.DatiNonValidi, null, errori);
             }
 
+            // Un modello del builder nasce con la struttura iniziale del suo template (nodi bloccati e slot vuoti o di partenza).
+            DocumentoBuilder? documentoIniziale = null;
+            if (modello.Builder)
+            {
+                if (_template.Trova(modello.Id, modello.Versione) is not { } template)
+                {
+                    return new EsitoOperazione(CodiceEsito.DatiNonValidi, null, ["Modello"]);
+                }
+
+                var iniziale = _componenti.Normalizza(template.DocumentoIniziale());
+                documentoIniziale = new DocumentoBuilder(AdapterGrapesJs.AProgetto(iniziale), SerializzatoreDocumento.Scrivi(iniziale));
+            }
+
             var (pagina, revisione) = Pagina.Crea(
                 _tenant.IdTenant,
                 idSito,
                 lingua.IdLingua,
                 slug,
-                new ContenutoRevisione(titolo, contenuto, modello.Id, modello.Versione, RegistroModelliPagina.Normalizza(dati.DatiModello), titoloSeo, descrizioneSeo, dati.NonIndicizzare),
+                new ContenutoRevisione(titolo, contenuto, modello.Id, modello.Versione, RegistroModelliPagina.Normalizza(dati.DatiModello), titoloSeo, descrizioneSeo, dati.NonIndicizzare, documentoIniziale),
                 dati.PaginaIniziale,
                 attore.Id,
                 _orologio,
@@ -316,7 +337,7 @@ public sealed class ServizioPagine : IServizioPagine
                 || bozza.NonIndicizzare != dati.NonIndicizzare)
             {
                 _contesto.RevisioniPagina.Add(pagina.AggiungiRevisione(
-                    new ContenutoRevisione(titolo, contenuto, bozza.IdModello, bozza.VersioneModello, datiNormalizzati, titoloSeo, descrizioneSeo, dati.NonIndicizzare),
+                    new ContenutoRevisione(titolo, contenuto, bozza.IdModello, bozza.VersioneModello, datiNormalizzati, titoloSeo, descrizioneSeo, dati.NonIndicizzare, bozza.Builder),
                     dati.Nota,
                     attore.Id,
                     _orologio));
@@ -366,7 +387,8 @@ public sealed class ServizioPagine : IServizioPagine
             revisione.Id == pagina.IdUltimaRevisioneBozza,
             revisione.IdModello,
             revisione.VersioneModello,
-            revisione.DatiModello);
+            revisione.DatiModello,
+            revisione.DocumentoRenderJson);
     }
 
     public Task<EsitoOperazione> PubblicaAsync(Guid idAttore, Guid idPagina, string? tokenConcorrenza, CancellationToken annullamento) =>
@@ -399,7 +421,7 @@ public sealed class ServizioPagine : IServizioPagine
 
             _contesto.Entry(pagina).Property(candidata => candidata.TokenConcorrenza).OriginalValue = token;
             var nuova = pagina.AggiungiRevisione(
-                new ContenutoRevisione(origine.Titolo, origine.Contenuto, origine.IdModello, origine.VersioneModello, origine.DatiModello, origine.TitoloSeo, origine.DescrizioneSeo, origine.NonIndicizzare),
+                new ContenutoRevisione(origine.Titolo, origine.Contenuto, origine.IdModello, origine.VersioneModello, origine.DatiModello, origine.TitoloSeo, origine.DescrizioneSeo, origine.NonIndicizzare, origine.Builder),
                 $"Ripristino della revisione {origine.NumeroRevisione}",
                 attore.Id,
                 _orologio);
@@ -425,8 +447,9 @@ public sealed class ServizioPagine : IServizioPagine
             var bozza = await _contesto.RevisioniPagina.AsNoTracking().SingleAsync(revisione => revisione.Id == pagina.IdUltimaRevisioneBozza, annullamento);
             var recente = _modelli.Ultimo(bozza.IdModello);
             var attuale = _modelli.Trova(bozza.IdModello, bozza.VersioneModello);
-            if (recente is null || attuale is null || recente.Versione <= attuale.Versione)
+            if (recente is null || attuale is null || recente.Versione <= attuale.Versione || attuale.Builder)
             {
+                // Per i modelli del builder una nuova versione richiederebbe di migrare il documento: non è previsto ancora.
                 return new EsitoOperazione(CodiceEsito.NonConsentito);
             }
 
@@ -440,7 +463,7 @@ public sealed class ServizioPagine : IServizioPagine
 
             _contesto.Entry(pagina).Property(candidata => candidata.TokenConcorrenza).OriginalValue = token;
             var nuova = pagina.AggiungiRevisione(
-                new ContenutoRevisione(bozza.Titolo, bozza.Contenuto, recente.Id, recente.Versione, dati, bozza.TitoloSeo, bozza.DescrizioneSeo, bozza.NonIndicizzare),
+                new ContenutoRevisione(bozza.Titolo, bozza.Contenuto, recente.Id, recente.Versione, dati, bozza.TitoloSeo, bozza.DescrizioneSeo, bozza.NonIndicizzare, bozza.Builder),
                 $"Passaggio al modello {recente.Id} versione {recente.Versione}",
                 attore.Id,
                 _orologio);

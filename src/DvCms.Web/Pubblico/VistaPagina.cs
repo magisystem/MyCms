@@ -1,3 +1,4 @@
+using DvCms.Application.Builder;
 using DvCms.Application.Temi;
 
 namespace DvCms.Web.Pubblico;
@@ -21,7 +22,8 @@ public sealed record VistaPagina(
     string? TitoloSeo = null,
     string? DescrizioneSeo = null,
     TemaRisolto? Tema = null,
-    string PercorsoRadice = "/")
+    string PercorsoRadice = "/",
+    DocumentoCms? Documento = null)
 {
     /// <summary>Valore in vigore di un'impostazione del tema (vuoto se il tema non la prevede).</summary>
     public string ValoreTema(string nome) => Tema is not null && Tema.Valori.TryGetValue(nome, out var valore) ? valore : string.Empty;
@@ -33,6 +35,13 @@ public sealed record VistaPagina(
     public IReadOnlyList<VoceLingua> VociLingua => Lingue ?? [];
 
     public string Dato(string nome) => DatiModello is not null && DatiModello.TryGetValue(nome, out var valore) ? valore : string.Empty;
+
+    /// <summary>
+    /// Il documento del builder da disegnare, letto dal JSON salvato; nullo se la pagina non lo usa o il JSON non è leggibile
+    /// (in tal caso non si disegna nulla: un documento rovinato non deve mai produrre HTML).
+    /// </summary>
+    public static DocumentoCms? LeggiDocumento(string? json) =>
+        json is not null && SerializzatoreDocumento.TentaLeggi(json, out var documento, out _) ? documento : null;
 
     /// <summary>Divide il testo semplice in paragrafi (riga vuota) e righe: ogni riga sarà codificata da Razor.</summary>
     public static IReadOnlyList<IReadOnlyList<string>> DividiParagrafi(string contenuto)

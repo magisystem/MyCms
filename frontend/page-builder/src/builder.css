@@ -1,0 +1,44 @@
+:root { color-scheme: light; }
+html, body.dv-builder { height: 100%; margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; font-size: 14px; }
+body.dv-builder { display: flex; flex-direction: column; background: #f4f6fa; color: #1f2933; }
+#builder { display: flex; flex-direction: column; height: 100%; }
+
+.dv-barra { display: flex; align-items: center; gap: 1rem; padding: 0.5rem 1rem; background: #1f2937; color: #fff; }
+.dv-barra a { color: #cbd5e1; }
+.dv-titolo-pagina { font-weight: 600; flex: 1; }
+.dv-stato { min-width: 14rem; color: #cbd5e1; }
+.dv-stato[data-tipo="errore"] { color: #fecaca; }
+.dv-stato[data-tipo="ok"] { color: #bbf7d0; }
+.dv-stato[data-tipo="sporco"] { color: #fde68a; }
+.dv-pulsante-salva { padding: 0.4rem 1.2rem; border: 0; border-radius: 4px; background: #2563eb; color: #fff; font-weight: 600; cursor: pointer; }
+.dv-pulsante-salva:disabled { opacity: 0.6; cursor: progress; }
+
+.dv-errori { padding: 0.5rem 1rem; background: #fee2e2; color: #7f1d1d; }
+.dv-errori ul { margin: 0.25rem 0 0; padding-left: 1.25rem; }
+.dv-errore-nodo { border: 0; background: none; padding: 0; color: inherit; text-decoration: underline; cursor: pointer; font: inherit; }
+
+.dv-corpo { display: flex; flex: 1; min-height: 0; }
+.dv-colonna { width: 16rem; overflow-y: auto; background: #fff; border-color: #d9dee7; border-style: solid; border-width: 0; }
+.dv-sinistra { border-right-width: 1px; }
+.dv-destra { border-left-width: 1px; width: 18rem; }
+.dv-intestazione { margin: 0; padding: 0.6rem 0.75rem; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: #52606d; background: #eef1f6; }
+.dv-canvas { flex: 1; min-width: 0; }
+
+/* GrapesJS: i blocchi e i campi ereditano l'aspetto chiaro del pannello. */
+.dv-builder .gjs-block { width: 45%; min-height: 4rem; }
+.dv-builder .gjs-one-bg { background-color: #ffffff; }
+.dv-builder .gjs-two-color { color: #1f2933; }
+.dv-builder .gjs-trt-trait { padding: 0.4rem 0.75rem; }
+.dv-builder .gjs-trt-trait textarea { width: 100%; box-sizing: border-box; }
+
+/* Icone della barra degli strumenti del canvas (di norma Font Awesome da CDN): caratteri semplici, nessun font esterno. */
+.dv-builder .fa::before { font-family: system-ui, sans-serif; font-style: normal; font-weight: 700; }
+.dv-builder .fa-arrows::before { content: "\2725"; }
+.dv-builder .fa-arrow-up::before { content: "\2191"; }
+.dv-builder .fa-clone::before { content: "\29C9"; }
+.dv-builder .fa-trash-o::before { content: "\2715"; }
+.dv-builder .fa-square-o::before { content: "\25A1"; }
+.dv-builder .fa-eye::before { content: "\25C9"; }
+.dv-builder .fa-eye-slash::before { content: "\25CE"; }
+.dv-builder .fa-caret-right::before { content: "\25B8"; }
+.dv-builder .fa-caret-down::before { content: "\25BE"; }

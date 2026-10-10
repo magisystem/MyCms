@@ -1,0 +1,112 @@
+@using DvCms.Application.Builder
+@using DvCms.Application.Cms
+@model NodoCms
+@functions {
+    private static string Valore(IReadOnlyDictionary<string, string> valori, string nome, string predefinito) =>
+        valori.TryGetValue(nome, out var valore) && valore.Length > 0 ? valore : predefinito;
+
+    // Il valore proviene da un'enumerazione già validata, ma si ricontrolla in uscita: finisce in un nome di classe.
+    private static string Token(IReadOnlyDictionary<string, string> valori, string nome, string predefinito, params string[] ammessi)
+    {
+        var valore = Valore(valori, nome, predefinito);
+        return ammessi.Contains(valore, StringComparer.Ordinal) ? valore : predefinito;
+    }
+}
+@* Un tipo non presente nell'elenco non produce nulla: il renderer disegna solo ciò che il registro dei componenti prevede. *@
+@switch (Model.Tipo)
+{
+    case "layout.sezione":
+        <section class="dv-sezione dv-spaziatura-@Token(Model.Stili, "spaziatura", "normale", "compatta", "normale", "ampia") dv-sfondo-@Token(Model.Stili, "sfondo", "nessuno", "nessuno", "chiaro", "scuro")">
+            <div class="dv-contenitore">
+                @foreach (var figlio in Model.Figli)
+                {
+                    <partial name="Componenti/_Nodo" model="figlio" />
+                }
+            </div>
+        </section>
+        break;
+    case "layout.colonne":
+        <div class="dv-colonne dv-colonne-@Math.Clamp(Model.Figli.Count, 1, 3)">
+            @foreach (var figlio in Model.Figli)
+            {
+                <partial name="Componenti/_Nodo" model="figlio" />
+            }
+        </div>
+        break;
+    case "layout.colonna":
+        <div class="dv-colonna">
+            @foreach (var figlio in Model.Figli)
+            {
+                <partial name="Componenti/_Nodo" model="figlio" />
+            }
+        </div>
+        break;
+    case "contenuto.titolo":
+        {
+            var livello = Token(Model.Proprieta, "livello", "2", "1", "2", "3");
+            var classe = "dv-titolo dv-allineamento-" + Token(Model.Stili, "allineamento", "sinistra", "sinistra", "centro", "destra");
+            var testo = Valore(Model.Proprieta, "testo", string.Empty);
+            switch (livello)
+            {
+                case "1":
+                    <h1 class="@classe">@testo</h1>
+                    break;
+                case "3":
+                    <h3 class="@classe">@testo</h3>
+                    break;
+                default:
+                    <h2 class="@classe">@testo</h2>
+                    break;
+            }
+        }
+        break;
+    case "contenuto.testo":
+        {
+            var classe = "dv-testo dv-allineamento-" + Token(Model.Stili, "allineamento", "sinistra", "sinistra", "centro", "destra");
+            foreach (var paragrafo in Valore(Model.Proprieta, "testo", string.Empty).Split("\n\n", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            {
+                var righe = paragrafo.Split('\n', StringSplitOptions.TrimEntries);
+                <p class="@classe">
+                    @for (var i = 0; i < righe.Length; i++)
+                    {
+                        if (i > 0)
+                        {
+                            <br />
+                        }
+
+                        @righe[i]
+                    }
+                </p>
+            }
+        }
+        break;
+    case "contenuto.immagine":
+        {
+            // L'identificativo è un GUID in forma canonica (ricontrollato): non può portare altro nell'indirizzo.
+            var valida = Guid.TryParseExact(Valore(Model.Proprieta, "idRisorsa", string.Empty), "D", out var idRisorsa) && idRisorsa != Guid.Empty;
+            var decorativa = Valore(Model.Proprieta, "decorativa", "no") == "si";
+            var didascalia = Valore(Model.Proprieta, "didascalia", string.Empty);
+            if (valida)
+            {
+                <figure class="dv-immagine">
+                    <img src="/media/@idRisorsa.ToString("D")" alt="@(decorativa ? string.Empty : Valore(Model.Proprieta, "alt", string.Empty))" loading="lazy" />
+                    @if (didascalia.Length > 0)
+                    {
+                        <figcaption>@didascalia</figcaption>
+                    }
+                </figure>
+            }
+        }
+        break;
+    case "contenuto.pulsante":
+        {
+            var url = Valore(Model.Proprieta, "url", string.Empty);
+            var etichetta = Valore(Model.Proprieta, "etichetta", string.Empty);
+            // Indirizzo ricontrollato anche in uscita (percorso del sito o https), come per i modelli a campi.
+            if (etichetta.Length > 0 && RegistroModelliPagina.UrlConsentito(url))
+            {
+                <a class="pulsante dv-pulsante dv-pulsante-@Token(Model.Stili, "variante", "primario", "primario", "secondario")" href="@url">@etichetta</a>
+            }
+        }
+        break;
+}
