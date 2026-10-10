@@ -181,4 +181,18 @@ public class IsolamentoPagineTest
         Assert.Equal(CodiceEsito.NonTrovato, eliminaDaA.Codice);
         Assert.Single((await d.ComeAsync(d.B, (s, a) => s.LeggiAsync(a, d.PaginaB, Ct)))!.Reindirizzamenti!);
     }
+
+    [Fact]
+    public async Task LaSitemapEIlRobotsDiUnDominioNonContengonoNullaDiAltri()
+    {
+        await using var d = await DatiIsolamento.CreaAsync();
+
+        var sitemapA = await (await d.Web.SessioneA().GetAsync("/sitemap.xml")).Content.ReadAsStringAsync(Ct);
+        var sitemapB = await (await d.Web.SessioneB().GetAsync("/sitemap.xml")).Content.ReadAsStringAsync(Ct);
+
+        Assert.Contains($"http://{d.Web.A.Host}/contatti", sitemapA, StringComparison.Ordinal);
+        Assert.DoesNotContain(d.Web.B.Host, sitemapA, StringComparison.Ordinal);
+        Assert.Contains($"http://{d.Web.B.Host}/contatti", sitemapB, StringComparison.Ordinal);
+        Assert.DoesNotContain(d.Web.A.Host, sitemapB, StringComparison.Ordinal);
+    }
 }

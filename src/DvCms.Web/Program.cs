@@ -4,6 +4,7 @@ using DvCms.Web.Accessi;
 using DvCms.Web.Comandi;
 using DvCms.Web.Localizzazione;
 using DvCms.Web.Middleware;
+using DvCms.Web.Pubblico;
 
 var costruttore = WebApplication.CreateBuilder(args);
 
@@ -68,6 +69,7 @@ applicazione.UseAuthentication();
 applicazione.UseMiddleware<MiddlewareGuest>();
 applicazione.UseMiddleware<MiddlewareLingua>();
 applicazione.UseAuthorization();
+applicazione.MapSeo();
 applicazione.MapRazorPages();
 
 applicazione.Run();

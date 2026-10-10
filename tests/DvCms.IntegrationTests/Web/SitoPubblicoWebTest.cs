@@ -459,6 +459,131 @@ public class SitoPubblicoWebTest
         Assert.DoesNotContain("noindex", html, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public async Task LaSitemapContieneSoloPagineCanonichePubblicateEIndicizzabiliDelDominio()
+    {
+        await using var s = await Contesto.CreaAsync();
+        await s.CreaPaginaAsync(s.A, "home", "Home", "x", iniziale: true, pubblica: true);
+        var chiSiamo = await s.CreaPaginaAsync(s.A, "chi-siamo", "Chi siamo", "x", pubblica: true);
+        await s.CreaPaginaAsync(s.A, "about", "About", "x", lingua: "en", pubblica: true, traduzioneDi: chiSiamo);
+        await s.CreaPaginaAsync(s.A, "bozza", "Bozza", "x");
+        var ritirata = await s.CreaPaginaAsync(s.A, "ritirata", "Ritirata", "x", pubblica: true);
+        await s.RitiraAsync(s.A, ritirata);
+        var privata = await s.CreaPaginaAsync(s.A, "privata", "Privata", "x");
+        await s.ImpostaSeoAsync(s.A, privata, null, null, true);
+        await s.PubblicaAsync(s.A, privata);
+        var vecchia = await s.CreaPaginaAsync(s.A, "vecchio-nome", "Rinominata", "x", pubblica: true);
+        await s.RinominaAsync(s.A, vecchia, "nuovo-nome");
+        await s.CreaPaginaAsync(s.B, "di-b", "Di B", "x", pubblica: true);
+
+        using var risposta = await s.SessioneA().GetAsync("/sitemap.xml");
+        var xml = await risposta.Content.ReadAsStringAsync(Ct);
+
+        Assert.Equal(HttpStatusCode.OK, risposta.StatusCode);
+        Assert.Equal("application/xml; charset=utf-8", risposta.Content.Headers.ContentType?.ToString());
+        var documento = System.Xml.Linq.XDocument.Parse(xml);
+        System.Xml.Linq.XNamespace ns = "http://www.sitemaps.org/schemas/sitemap/0.9";
+        var indirizzi = documento.Descendants(ns + "loc").Select(e => e.Value).ToList();
+        Assert.Equal(
+            [
+                $"http://{s.A.Host}/",
+                $"http://{s.A.Host}/chi-siamo",
+                $"http://{s.A.Host}/en/about",
+                $"http://{s.A.Host}/nuovo-nome",
+            ],
+            indirizzi.Order(StringComparer.Ordinal));
+        Assert.All(documento.Descendants(ns + "lastmod"), e => Assert.Matches("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$", e.Value));
+        Assert.DoesNotContain("di-b", xml, StringComparison.Ordinal);
+        Assert.DoesNotContain("vecchio-nome", xml, StringComparison.Ordinal);
+        Assert.DoesNotContain("bozza", xml, StringComparison.Ordinal);
+        Assert.DoesNotContain("ritirata", xml, StringComparison.Ordinal);
+        Assert.DoesNotContain("privata", xml, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task LaSitemapDichiaraLeVersioniLinguisticheEXDefault()
+    {
+        await using var s = await Contesto.CreaAsync();
+        var it = await s.CreaPaginaAsync(s.A, "chi-siamo", "Chi siamo", "x", pubblica: true);
+        await s.CreaPaginaAsync(s.A, "about", "About", "x", lingua: "en", pubblica: true, traduzioneDi: it);
+        await s.CreaPaginaAsync(s.A, "solo-it", "Solo it", "x", pubblica: true);
+
+        var xml = await (await s.SessioneA().GetAsync("/sitemap.xml")).Content.ReadAsStringAsync(Ct);
+
+        var documento = System.Xml.Linq.XDocument.Parse(xml);
+        System.Xml.Linq.XNamespace ns = "http://www.sitemaps.org/schemas/sitemap/0.9";
+        System.Xml.Linq.XNamespace xhtml = "http://www.w3.org/1999/xhtml";
+        var voci = documento.Descendants(ns + "url").ToDictionary(u => u.Element(ns + "loc")!.Value, u => u.Elements(xhtml + "link").Select(l => (l.Attribute("hreflang")!.Value, l.Attribute("href")!.Value)).ToList());
+        var attese = new List<(string, string)>
+        {
+            ("en", $"http://{s.A.Host}/en/about"),
+            ("it", $"http://{s.A.Host}/chi-siamo"),
+            ("x-default", $"http://{s.A.Host}/chi-siamo"),
+        };
+        Assert.Equal(attese, voci[$"http://{s.A.Host}/chi-siamo"].Order().ToList());
+        Assert.Equal(attese, voci[$"http://{s.A.Host}/en/about"].Order().ToList());
+        Assert.Empty(voci[$"http://{s.A.Host}/solo-it"]);
+    }
+
+    [Fact]
+    public async Task LaSitemapSegueLePubblicazioniEIRitiriSenzaAttese()
+    {
+        await using var s = await Contesto.CreaAsync();
+        var id = await s.CreaPaginaAsync(s.A, "pagina", "Pagina", "x");
+        Assert.DoesNotContain("/pagina", await (await s.SessioneA().GetAsync("/sitemap.xml")).Content.ReadAsStringAsync(Ct), StringComparison.Ordinal);
+
+        await s.PubblicaAsync(s.A, id);
+        Assert.Contains("/pagina", await (await s.SessioneA().GetAsync("/sitemap.xml")).Content.ReadAsStringAsync(Ct), StringComparison.Ordinal);
+
+        await s.RitiraAsync(s.A, id);
+        Assert.DoesNotContain("/pagina", await (await s.SessioneA().GetAsync("/sitemap.xml")).Content.ReadAsStringAsync(Ct), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task UnHostSconosciutoOSospesoNonHaSitemapNeRobots()
+    {
+        await using var s = await Contesto.CreaAsync();
+        await s.CreaPaginaAsync(s.A, "pagina", "Pagina", "x", pubblica: true);
+        await s.Web.DisabilitaTenantAsync(s.A.IdTenant);
+
+        using var sconosciuto = await s.SessioneSconosciuta().GetAsync("/sitemap.xml");
+        using var robotsSconosciuto = await s.SessioneSconosciuta().GetAsync("/robots.txt");
+        using var sospeso = await s.SessioneA().GetAsync("/sitemap.xml");
+
+        Assert.Equal(HttpStatusCode.NotFound, sconosciuto.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, robotsSconosciuto.StatusCode);
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, sospeso.StatusCode);
+    }
+
+    [Fact]
+    public async Task FuoriDallaProduzioneRobotsChiedeDiNonIndicizzareNulla()
+    {
+        await using var s = await Contesto.CreaAsync();
+
+        using var risposta = await s.SessioneA().GetAsync("/robots.txt");
+
+        Assert.Equal(HttpStatusCode.OK, risposta.StatusCode);
+        Assert.StartsWith("text/plain", risposta.Content.Headers.ContentType?.ToString(), StringComparison.Ordinal);
+        var testo = await risposta.Content.ReadAsStringAsync(Ct);
+        Assert.Contains("Disallow: /\n", testo, StringComparison.Ordinal);
+        Assert.DoesNotContain("Sitemap:", testo, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task InProduzioneRobotsEscludeSoloLAdminEIndicaLaSitemapDelDominio()
+    {
+        await using var s = await Contesto.CreaAsync("Production");
+
+        var a = await (await s.SessioneA().GetAsync("/robots.txt")).Content.ReadAsStringAsync(Ct);
+        var b = await (await s.SessioneB().GetAsync("/robots.txt")).Content.ReadAsStringAsync(Ct);
+
+        Assert.Contains("Disallow: /admin/", a, StringComparison.Ordinal);
+        Assert.DoesNotContain("Disallow: /\n", a, StringComparison.Ordinal);
+        Assert.Contains($"Sitemap: https://{s.A.Host}/sitemap.xml", a, StringComparison.Ordinal);
+        Assert.Contains($"Sitemap: https://{s.B.Host}/sitemap.xml", b, StringComparison.Ordinal);
+        Assert.DoesNotContain(s.B.Host, a, StringComparison.Ordinal);
+    }
+
     private sealed class Contesto : IAsyncDisposable
     {
         private Contesto(ScenarioWeb web, Guid adminA, Guid adminB)
@@ -478,9 +603,9 @@ public class SitoPubblicoWebTest
 
         public DatiProva.TenantCreato B => Web.B;
 
-        public static async Task<Contesto> CreaAsync()
+        public static async Task<Contesto> CreaAsync(string ambiente = "Development")
         {
-            var web = await ScenarioWeb.CreaAsync();
+            var web = await ScenarioWeb.CreaAsync(ambiente);
             var adminA = await web.CreaTenantAdminAsync("anna@esempio.it");
             var adminB = await DatiProva.CreaUtenzaAsync(web.Fabbrica.Services, RuoloUtenza.TenantAdmin, web.B.IdTenant, "bruno@esempio.it", annullamento: Ct);
             return new Contesto(web, adminA, adminB);

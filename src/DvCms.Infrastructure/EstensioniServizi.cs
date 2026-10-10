@@ -73,6 +73,7 @@ public static class EstensioniServizi
         servizi.TryAddSingleton(new OpzioniInviti(TimeSpan.FromHours(LeggiIntero(configurazione, "Sicurezza:Inviti:OreValidita", (int)OpzioniInviti.Predefinite.Validita.TotalHours, 1, 720))));
         servizi.TryAddScoped<IServizioInviti, ServizioInviti>();
         servizi.TryAddScoped<ServizioPopolamento>();
+        servizi.TryAddScoped<IServizioSitemap, ServizioSitemap>();
         servizi.TryAddScoped<IServizioPiattaforma, ServizioPiattaforma>();
         servizi.TryAddSingleton(new RegistroModelliPagina(RegistroModelliPagina.Predefiniti));
         servizi.TryAddScoped<IServizioPagine, ServizioPagine>();

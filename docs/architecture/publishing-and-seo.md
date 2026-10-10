@@ -24,6 +24,13 @@ Il server genera HTML semantico completo con heading appropriati, link reali, `l
 - `robots.txt` varia per dominio e ambiente; mai bloccare accidentalmente tutto in produzione o esporre preview.
 - Sitemap non deve includere pagine di un altro tenant.
 
+**Attuazione (G-003).**
+
+- `/sitemap.xml` e `/robots.txt` sono endpoint (`EndpointSeo`) dietro la risoluzione del tenant: un host sconosciuto risponde 404, un tenant sospeso 503, e ogni dominio vede solo il proprio sito. Rispondono a GET e HEAD con `Cache-Control: public, max-age=300`.
+- La sitemap (`IServizioSitemap`) si genera a ogni richiesta dal database, quindi è sempre coerente con pubblicazioni, ritiri e cambi di slug (nessuna cache da invalidare finché non arriva G-002). Contiene una voce per pagina con stato `Pubblicata`, revisione pubblicata senza `noindex`, in una lingua ancora abilitata: percorso canonico assoluto sul dominio richiesto (la pagina iniziale è `/` o `/en`, mai il suo slug; i vecchi slug con redirect non compaiono), `lastmod` in UTC dalla data di pubblicazione. Bozze, ritirate, anteprime e altri tenant o siti non compaiono mai.
+- Per le pagine con più versioni linguistiche indicizzabili ogni voce ha i collegamenti `xhtml:link rel="alternate" hreflang` di tutte (compresa la corrente) più `x-default` verso la lingua predefinita, coerenti con l'HTML. Una traduzione `noindex` esce dall'insieme. Con più di 50.000 voci (limite di sitemaps.org) il risultato è troncato; l'indice di sitemap arriverà se servirà.
+- `robots.txt`: **in produzione** `Disallow: /admin/` e la riga `Sitemap:` con l'indirizzo assoluto del dominio; **fuori dalla produzione** (sviluppo, staging) `Disallow: /` e nessuna sitemap, così un ambiente di prova non entra nei risultati. In produzione non c'è alcun divieto globale.
+
 ## Pubblicazione atomica
 
 La revisione pubblicata è immutabile. Il publish aggiorna il puntatore live e registra un evento in una transazione; la cache si invalida dopo commit tramite outbox o meccanismo equivalente. Prevedere rollback a una revisione precedente.
@@ -41,7 +48,7 @@ La revisione pubblicata è immutabile. Il publish aggiorna il puntatore live e r
 - [ ] Canonical corretto sul dominio richiesto.
 - [ ] Title e description renderizzati.
 - [ ] HTML principale presente senza JS.
-- [ ] 404/301/robots/sitemap verificati.
+- [ ] 404/301/robots/sitemap verificati (`/robots.txt` in produzione deve indicare la sitemap del dominio e non vietare tutto).
 - [ ] Nessuna bozza o URL cross-tenant indicizzato.
 - [ ] Dati strutturati validi e basati su informazioni vere.
 - [ ] Cambio slug preserva redirect e non crea loop.
