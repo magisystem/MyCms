@@ -47,7 +47,7 @@
                                 var impostato = Model.SegretiImpostati.Contains(campo.Nome);
                                 <input type="password" class="form-control @(invalido ? "is-invalid" : null)" id="@nome" name="@nome" autocomplete="new-password"
                                        placeholder="@(impostato ? _L["Impostato: lascia vuoto per non cambiarlo"] : string.Empty)" />
-                                @if (campo.Tipo == DvCms.Application.Email.TipoCampoEmail.TestoLungo)
+                                @if (campo.Tipo is DvCms.Application.Email.TipoCampoEmail.TestoLungo or DvCms.Application.Email.TipoCampoEmail.CredenzialiGoogle)
                                 {
                                     <div class="form-hint">@_L["Incolla qui il contenuto: non verrà più mostrato."]</div>
                                 }

@@ -88,20 +88,32 @@ public class EmailTest
     }
 
     [Fact]
-    public async Task ImpostazioniIncompleteONonDisponibiliNonInviano()
+    public async Task ImpostazioniIncompleteONonValideNonInviano()
     {
         await using var s = await Scenario.CreaAsync();
         await s.ImpostaAsync(s.A, ProviderEmail.Smtp, new Dictionary<string, string> { ["Host"] = "127.0.0.1" });
         var incomplete = await Assert.ThrowsAsync<ConfigurazioneEmailNonValidaException>(() => s.InviaAsync(s.A, Messaggio()));
         Assert.Contains("Porta", incomplete.Message, StringComparison.Ordinal);
 
+        // Un valore con caratteri da indirizzo è rifiutato prima di arrivare all'adapter, e l'errore non mostra i valori.
         await s.ImpostaAsync(
             s.A,
             ProviderEmail.Graph,
-            new Dictionary<string, string> { ["TenantMicrosoft"] = "t", ["IdClient"] = "c", ["SegretoClient"] = "SEGRETO-GRAPH", ["CasellaMittente"] = "noreply@esempio.it" });
-        var nonDisponibile = await Assert.ThrowsAsync<ConfigurazioneEmailNonValidaException>(() => s.InviaAsync(s.A, Messaggio()));
-        Assert.Contains("non è ancora disponibile", nonDisponibile.Message, StringComparison.Ordinal);
-        Assert.DoesNotContain("SEGRETO-GRAPH", nonDisponibile.Message, StringComparison.Ordinal);
+            new Dictionary<string, string> { ["TenantMicrosoft"] = "t/../x", ["IdClient"] = "c", ["SegretoClient"] = "SEGRETO-GRAPH", ["CasellaMittente"] = "noreply@esempio.it" });
+        var nonValida = await Assert.ThrowsAsync<ConfigurazioneEmailNonValidaException>(() => s.InviaAsync(s.A, Messaggio()));
+        Assert.Contains("TenantMicrosoft", nonValida.Message, StringComparison.Ordinal);
+        Assert.DoesNotContain("SEGRETO-GRAPH", nonValida.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task OgniCanaleDelTenantHaIlSuoAdapterRegistrato()
+    {
+        await using var s = await Scenario.CreaAsync();
+        await using var ambito = s.Fornitore.CreateAsyncScope();
+
+        var registrati = ambito.ServiceProvider.GetServices<IAdapterEmail>().Select(adapter => adapter.Provider).Order().ToList();
+
+        Assert.Equal(Enum.GetValues<ProviderEmail>().Order(), registrati);
     }
 
     [Fact]

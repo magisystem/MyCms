@@ -102,4 +102,51 @@ public class DefinizioniProviderEmailTest
 
         Assert.DoesNotContain("segretissimo", impostazioni.ToString(), StringComparison.Ordinal);
     }
+
+    [Theory]
+    [InlineData("TenantMicrosoft", "contoso/../x")]
+    [InlineData("TenantMicrosoft", "t?x=1")]
+    [InlineData("TenantMicrosoft", "con spazio")]
+    [InlineData("IdClient", "client#1")]
+    [InlineData("IdClient", "a@b")]
+    public void GliIdentificativiDiGraphNonAccettanoCaratteriDaIndirizzo(string campo, string valore)
+    {
+        var valori = new Dictionary<string, string>
+        {
+            ["TenantMicrosoft"] = "contoso.onmicrosoft.com",
+            ["IdClient"] = "00000000-0000-0000-0000-000000000000",
+            ["SegretoClient"] = "x",
+            ["CasellaMittente"] = "noreply@esempio.it",
+        };
+        Assert.Empty(DefinizioniProviderEmail.Valida(ProviderEmail.Graph, valori));
+        valori[campo] = valore;
+
+        Assert.Equal([campo], DefinizioniProviderEmail.Valida(ProviderEmail.Graph, valori));
+    }
+
+    [Theory]
+    [InlineData("non json")]
+    [InlineData("[]")]
+    [InlineData("{\"type\":\"authorized_user\",\"client_email\":\"a@b.it\",\"private_key\":\"-----BEGIN PRIVATE KEY-----\"}")]
+    [InlineData("{\"type\":\"service_account\",\"client_email\":\"non-email\",\"private_key\":\"-----BEGIN PRIVATE KEY-----\"}")]
+    [InlineData("{\"type\":\"service_account\",\"client_email\":\"a@b.it\"}")]
+    [InlineData("{\"type\":\"service_account\",\"client_email\":\"a@b.it\",\"private_key\":\"niente\"}")]
+    public void LeCredenzialiGoogleDevonEssereUnAccountDiServizio(string json)
+    {
+        var valori = new Dictionary<string, string> { ["UtenteMittente"] = "noreply@esempio.it", ["CredenzialiJson"] = json };
+
+        Assert.Equal(["CredenzialiJson"], DefinizioniProviderEmail.Valida(ProviderEmail.Gmail, valori));
+    }
+
+    [Fact]
+    public void LeCredenzialiGoogleValideSonoAccettate()
+    {
+        var valori = new Dictionary<string, string>
+        {
+            ["UtenteMittente"] = "noreply@esempio.it",
+            ["CredenzialiJson"] = "{\"type\":\"service_account\",\"client_email\":\"a@b.iam.gserviceaccount.com\",\"private_key\":\"-----BEGIN PRIVATE KEY-----\\nabc\\n-----END PRIVATE KEY-----\\n\"}",
+        };
+
+        Assert.Empty(DefinizioniProviderEmail.Valida(ProviderEmail.Gmail, valori));
+    }
 }

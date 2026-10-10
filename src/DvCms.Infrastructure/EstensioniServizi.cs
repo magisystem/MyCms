@@ -84,6 +84,10 @@ public static class EstensioniServizi
         servizi.TryAddSingleton(new ChiaveMaestraSegreti(configurazione[ChiaveMaestraSegreti.NomeConfigurazione]));
         servizi.TryAddSingleton<IProtettoreSegreti, ProtettoreSegreti>();
         servizi.AddScoped<IAdapterEmail, AdapterSmtp>();
+        servizi.AddHttpClient(ComunicazioneEmail.NomeClientHttp, client => client.Timeout = Timeout.InfiniteTimeSpan);
+        servizi.AddScoped<IAdapterEmail, AdapterGraph>();
+        servizi.AddScoped<IAdapterEmail, AdapterGmail>();
+        servizi.AddScoped<IAdapterEmail, AdapterSendGrid>();
         servizi.TryAddScoped<IInvioEmail, InvioEmailPerTenant>();
         servizi.TryAddScoped<IAccodatoreEmail, AccodatoreEmail>();
         servizi.TryAddScoped<IServizioImpostazioniEmail, ServizioImpostazioniEmail>();

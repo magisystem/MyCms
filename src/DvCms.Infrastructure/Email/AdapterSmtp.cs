@@ -41,18 +41,6 @@ public sealed class AdapterSmtp : IAdapterEmail
     }
 
     /// <summary>Costruisce il messaggio MIME. Rifiuta intestazioni con a capo (header injection).</summary>
-    internal static MimeMessage CostruisciMessaggio(ImpostazioniEmail impostazioni, MessaggioEmail messaggio)
-    {
-        if (messaggio.Oggetto.Any(c => c is '\r' or '\n') || (messaggio.NomeDestinatario?.Any(c => c is '\r' or '\n') ?? false))
-        {
-            throw new ArgumentException("Oggetto o nome del destinatario non validi.", nameof(messaggio));
-        }
-
-        var mime = new MimeMessage();
-        mime.From.Add(new MailboxAddress(impostazioni.Valore("NomeMittente") ?? string.Empty, impostazioni.Valore("IndirizzoMittente")!));
-        mime.To.Add(new MailboxAddress(messaggio.NomeDestinatario ?? string.Empty, messaggio.Destinatario));
-        mime.Subject = messaggio.Oggetto;
-        mime.Body = new BodyBuilder { TextBody = messaggio.CorpoTesto, HtmlBody = messaggio.CorpoHtml }.ToMessageBody();
-        return mime;
-    }
+    internal static MimeMessage CostruisciMessaggio(ImpostazioniEmail impostazioni, MessaggioEmail messaggio) =>
+        ComunicazioneEmail.CostruisciMime(impostazioni.Valore("IndirizzoMittente")!, impostazioni.Valore("NomeMittente"), messaggio);
 }

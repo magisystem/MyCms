@@ -10,13 +10,19 @@ public enum TipoCampoEmail
     Email = 3,
     ModalitaTls = 4,
     TestoLungo = 5,
+
+    /// <summary>Identificativo senza spazi né simboli speciali (tenant Microsoft, client id): finisce in indirizzi, quindi si limita l'alfabeto.</summary>
+    Identificativo = 6,
+
+    /// <summary>JSON di un account di servizio Google (<c>type</c>, <c>client_email</c>, <c>private_key</c>).</summary>
+    CredenzialiGoogle = 7,
 }
 
 /// <summary>Un campo di configurazione di un canale: la UI mostra solo i campi del canale scelto.</summary>
 public sealed record CampoProviderEmail(string Nome, string Etichetta, TipoCampoEmail Tipo, bool Obbligatorio, bool Segreto);
 
 /// <summary>Campi e regole di validazione dei quattro canali (ADR-0015). Un solo posto per UI, validazione e adapter.</summary>
-public static class DefinizioniProviderEmail
+public static partial class DefinizioniProviderEmail
 {
     public const string TlsNessuna = "Nessuna";
     public const string TlsStartTls = "StartTls";
@@ -37,8 +43,8 @@ public static class DefinizioniProviderEmail
 
     private static readonly CampoProviderEmail[] _graph =
     [
-        new("TenantMicrosoft", "Tenant Microsoft", TipoCampoEmail.Testo, true, false),
-        new("IdClient", "Identificativo client", TipoCampoEmail.Testo, true, false),
+        new("TenantMicrosoft", "Tenant Microsoft", TipoCampoEmail.Identificativo, true, false),
+        new("IdClient", "Identificativo client", TipoCampoEmail.Identificativo, true, false),
         new("SegretoClient", "Segreto del client", TipoCampoEmail.Testo, true, true),
         new("CasellaMittente", "Casella del mittente", TipoCampoEmail.Email, true, false),
     ];
@@ -46,7 +52,7 @@ public static class DefinizioniProviderEmail
     private static readonly CampoProviderEmail[] _gmail =
     [
         new("UtenteMittente", "Utente mittente", TipoCampoEmail.Email, true, false),
-        new("CredenzialiJson", "Credenziali (JSON)", TipoCampoEmail.TestoLungo, true, true),
+        new("CredenzialiJson", "Credenziali (JSON)", TipoCampoEmail.CredenzialiGoogle, true, true),
     ];
 
     private static readonly CampoProviderEmail[] _sendGrid =
@@ -98,7 +104,7 @@ public static class DefinizioniProviderEmail
                 continue;
             }
 
-            if (valore.Length > 8000 || (campo.Tipo != TipoCampoEmail.TestoLungo && valore.Any(char.IsControl)) || !TipoValido(campo.Tipo, valore))
+            if (valore.Length > 8000 || (campo.Tipo is not (TipoCampoEmail.TestoLungo or TipoCampoEmail.CredenzialiGoogle) && valore.Any(char.IsControl)) || !TipoValido(campo.Tipo, valore))
             {
                 errori.Add(campo.Nome);
             }
@@ -112,6 +118,28 @@ public static class DefinizioniProviderEmail
         TipoCampoEmail.Numero => int.TryParse(valore, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out var numero) && numero is >= 1 and <= 65535,
         TipoCampoEmail.Email => NormalizzatoreEmail.TentaNormalizza(valore, out _),
         TipoCampoEmail.ModalitaTls => ModalitaTls.Contains(valore),
+        TipoCampoEmail.Identificativo => Identificativo().IsMatch(valore),
+        TipoCampoEmail.CredenzialiGoogle => CredenzialiGoogleValide(valore),
         _ => true,
     };
+
+    [System.Text.RegularExpressions.GeneratedRegex("^[A-Za-z0-9][A-Za-z0-9._-]{0,99}$", System.Text.RegularExpressions.RegexOptions.CultureInvariant)]
+    private static partial System.Text.RegularExpressions.Regex Identificativo();
+
+    private static bool CredenzialiGoogleValide(string valore)
+    {
+        try
+        {
+            using var documento = System.Text.Json.JsonDocument.Parse(valore);
+            var radice = documento.RootElement;
+            return radice.ValueKind == System.Text.Json.JsonValueKind.Object
+                && radice.TryGetProperty("type", out var tipo) && tipo.GetString() == "service_account"
+                && radice.TryGetProperty("client_email", out var email) && email.ValueKind == System.Text.Json.JsonValueKind.String && NormalizzatoreEmail.TentaNormalizza(email.GetString(), out _)
+                && radice.TryGetProperty("private_key", out var chiave) && chiave.ValueKind == System.Text.Json.JsonValueKind.String && chiave.GetString()!.Contains("BEGIN PRIVATE KEY", StringComparison.Ordinal);
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            return false;
+        }
+    }
 }

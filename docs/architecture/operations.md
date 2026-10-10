@@ -37,6 +37,15 @@ Tenant e domini sono gestiti dagli operatori; i certificati dall'hosting tramite
 
 Il canale di invio (Microsoft Graph, Gmail, SendGrid o SMTP, ADR-0015) è configurato per tenant dal `PlatformAdmin` nel menu "Platform"; i segreti sono cifrati nel database. La chiave di cifratura sta nella configurazione dell'ambiente (non nel repository) e va salvata separatamente dal database; senza di essa i segreti non sono leggibili (ADR-0015).
 
+### Attività manuali per canale (ADR-0015)
+
+Per ogni canale, oltre ai valori inseriti nella schermata del tenant, servono queste attività fuori dall'applicazione. In tutti i casi il dominio del mittente deve avere SPF, DKIM e DMARC corretti, e la prova di invio dalla schermata del tenant è il controllo finale.
+
+- **SMTP:** un server che accetti le credenziali indicate; scegliere la sicurezza della connessione (`StartTls` o `TlsImmediato`); il certificato del server deve essere valido.
+- **Microsoft Graph:** in Microsoft Entra ID registrare un'applicazione (a tenant singolo), creare un segreto client (annotare scadenza e rinnovo), aggiungere il permesso **applicativo** `Mail.Send` della Microsoft Graph API e concedere il consenso dell'amministratore. Limitare l'app alla sola casella mittente con una *Application Access Policy* di Exchange Online (altrimenti `Mail.Send` consente di inviare da qualunque casella del tenant Microsoft). Valori: tenant (nome di dominio o id), id client, segreto client, casella mittente (deve esistere con una licenza o come casella condivisa).
+- **Gmail API:** in Google Cloud creare un progetto, abilitare la *Gmail API*, creare un **account di servizio** e una chiave JSON (da incollare nel campo credenziali: è un segreto, cifrato nel database). In Google Workspace, console di amministrazione → Sicurezza → Controlli API → **Delega a livello di dominio**: autorizzare l'ID client dell'account di servizio con lo scope `https://www.googleapis.com/auth/gmail.send`. L'utente mittente è un utente reale del dominio Workspace. Senza delega l'invio fallisce con un errore di autorizzazione. Gli account Gmail personali non supportano la delega: in quel caso usare SMTP.
+- **SendGrid:** creare un account, verificare il dominio mittente (*Domain Authentication*, con i record DNS forniti) o almeno un mittente singolo, creare una chiave API con il solo permesso *Mail Send* e usarla nel campo chiave. Ruotare la chiave in caso di sospetta esposizione.
+
 ## Password del PlatformAdmin
 
 Il `PlatformAdmin` non ha recupero password e per ora non è previsto uno strumento dedicato: se serve un reset lo gestisce l'operatore a mano sul database, con una procedura che definirà in seguito (da descrivere nel runbook, annotando ogni reset).

@@ -30,6 +30,7 @@ Piano di implementazione richiesto da `docs/AI_START_HERE.md`, preparato prima d
 | C-008 Pagine in più lingue (M2) | Completata (`LingueSito`, prefisso di lingua, traduzioni collegate, 404 per lingua, canonical/hreflang, selettore, gestione lingue nel menu Platform) |
 | C-005 SEO base e redirect (M2) | Completata (titolo/descrizione SEO e `noindex` per revisione, canonical e Open Graph, cambio slug con reindirizzamento 301 senza catene né cicli, elenco ed eliminazione dei reindirizzamenti) |
 | Invito via email dei TenantAdmin (M1b) | Completata (tabella `InvitiAccount`, link monouso a 72 ore sul dominio del tenant, scelta della password, reinvio; canale email del tenant richiesto) |
+| A-006, A-007, A-008 Adapter Graph, Gmail, SendGrid (M1b) | Completate (`HttpClient` diretto senza SDK, test di contratto comune con servizio HTTP finto, runbook delle attività manuali in `operations.md`) |
 | B-010 Gestione testi statici | Completata (`/admin/platform/testi`: ricerca, filtri, modifica, cache e audit) |
 | B-007 Creazione TenantAdmin e non-escalation | Completata (password temporanea mostrata una volta; elevazione `Utente` → `TenantAdmin`) |
 

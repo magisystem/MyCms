@@ -33,7 +33,7 @@ Il piano dettagliato è in [`plan-m0-m1.md`](plan-m0-m1.md).
 - Contratto email con adapter SMTP (A-005) e configurazione email del tenant (B-009).
 - Outbox minimo (tabella e worker semplice, C-007).
 - Recupero password per `TenantAdmin` e `Utente` con codice OTP e link monouso in due email distinte (B-008); invito via email per i nuovi `TenantAdmin`.
-- Gli adapter Graph, Gmail e SendGrid (A-006, A-007, A-008) arrivano prima del primo cliente in produzione.
+- Gli adapter Graph, Gmail e SendGrid (A-006, A-007, A-008) sono completati.
 
 **Exit criteria:** recupero password completo in due email con SMTP, limiti e invalidazioni verificati da test; segreti del tenant cifrati; nessun invio dalla richiesta web.
 
