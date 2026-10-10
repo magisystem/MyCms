@@ -41,6 +41,7 @@ public class NormalizzatoreSlugTest
     [InlineData("Admin")]
     [InlineData("lib")]
     [InlineData("errore")]
+    [InlineData("media")]
     public void RifiutaGliSlugRiservati(string ingresso)
     {
         Assert.False(NormalizzatoreSlug.TentaNormalizza(ingresso, out _));

@@ -46,6 +46,12 @@ Per ogni canale, oltre ai valori inseriti nella schermata del tenant, servono qu
 - **Gmail API:** in Google Cloud creare un progetto, abilitare la *Gmail API*, creare un **account di servizio** e una chiave JSON (da incollare nel campo credenziali: è un segreto, cifrato nel database). In Google Workspace, console di amministrazione → Sicurezza → Controlli API → **Delega a livello di dominio**: autorizzare l'ID client dell'account di servizio con lo scope `https://www.googleapis.com/auth/gmail.send`. L'utente mittente è un utente reale del dominio Workspace. Senza delega l'invio fallisce con un errore di autorizzazione. Gli account Gmail personali non supportano la delega: in quel caso usare SMTP.
 - **SendGrid:** creare un account, verificare il dominio mittente (*Domain Authentication*, con i record DNS forniti) o almeno un mittente singolo, creare una chiave API con il solo permesso *Mail Send* e usarla nel campo chiave. Ruotare la chiave in caso di sospetta esposizione.
 
+## Archivio dei file (D-003)
+
+- Provider scelto con `Archivio:Provider`; oggi esiste solo `FileSystem` (un provider sconosciuto ferma l'avvio). `Archivio:Percorso` è la cartella radice; se vuota si usa `archivio` accanto all'applicazione, che in produzione **non va lasciata lì**: va su un volume persistente fuori dalla cartella del deploy. La cartella contiene i file di tutti i tenant sotto `{tenant}/{sito}/{risorsa}` e deve essere leggibile e scrivibile solo dall'utente del processo.
+- **Backup:** il database da solo non basta: metadati e file vivono in posti diversi, quindi il backup della cartella dell'archivio va fatto con la stessa cadenza del database e ripristinato insieme (un file senza riga è un orfano innocuo; una riga senza file risponde 404). I provider a oggetti (S3, Azure Blob) arriveranno come nuovi adapter di `IArchivioOggetti` senza toccare il resto.
+- Limiti di caricamento in `Media:*` (vedi `security.md`). Dietro un reverse proxy il limite di dimensione del corpo del proxy deve essere almeno quello del file più grande ammesso.
+
 ## Password del PlatformAdmin
 
 Il `PlatformAdmin` non ha recupero password e per ora non è previsto uno strumento dedicato: se serve un reset lo gestisce l'operatore a mano sul database, con una procedura che definirà in seguito (da descrivere nel runbook, annotando ogni reset).

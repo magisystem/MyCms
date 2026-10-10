@@ -1,0 +1,64 @@
+@page "/admin/media/{id:guid}"
+@model DvCms.Web.Pages.Admin.Media.DettaglioModel
+@using DvCms.Domain.Media
+@{
+    var risorsa = Model.Risorsa!;
+    var r = risorsa.Riepilogo;
+    ViewData["Titolo"] = r.NomeOriginale;
+}
+@if (Model.Messaggio is not null)
+{
+    <div class="alert alert-success" role="status">@Model.Messaggio</div>
+}
+@if (Model.ErroreDaMostrare is not null)
+{
+    <div class="alert alert-danger" role="alert">@Model.ErroreDaMostrare</div>
+}
+<div class="row row-cards">
+    <div class="col-lg-5">
+        <div class="card">
+            <div class="card-body text-center">
+                <img src="/admin/media/@r.Id?handler=File" alt="@(r.TestoAlternativoPredefinito ?? string.Empty)" class="img-fluid" />
+            </div>
+            <div class="card-footer text-secondary small">
+                <div>@r.TipoContenuto, @r.Larghezza × @r.Altezza px, @(r.Dimensione / 1024) KB</div>
+                <div>SHA-256: <code>@risorsa.HashSha256</code></div>
+                @if (r.Visibilita == VisibilitaMedia.Pubblica)
+                {
+                    <div>@_L["Indirizzo pubblico"]: <code>/media/@r.Id</code></div>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-7">
+        <div class="card mb-3">
+            <div class="card-header"><h3 class="card-title">@_L["Testo alternativo"]</h3></div>
+            <div class="card-body">
+                @foreach (var testo in risorsa.TestiAlternativi)
+                {
+                    <form method="post" asp-page-handler="Testo" asp-route-id="@r.Id" class="mb-3">
+                        <input type="hidden" name="lingua" value="@testo.CodiceLingua" />
+                        <label class="form-label" for="testo_@testo.CodiceLingua">@testo.NomeLingua</label>
+                        <div class="input-group">
+                            <input class="form-control" id="testo_@testo.CodiceLingua" name="testo" value="@testo.Testo" maxlength="500" lang="@testo.CodiceLingua" />
+                            <button type="submit" class="btn">@_L["Salva"]</button>
+                        </div>
+                    </form>
+                }
+                <div class="form-hint">@_L["Descrive l'immagine a chi non la vede. Lascia vuoto se è solo decorativa."]</div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-body">
+                <form method="post" asp-page-handler="Visibilita" asp-route-id="@r.Id" class="d-inline">
+                    <input type="hidden" name="visibilita" value="@(r.Visibilita == VisibilitaMedia.Pubblica ? VisibilitaMedia.Privata : VisibilitaMedia.Pubblica)" />
+                    <button type="submit" class="btn">@(r.Visibilita == VisibilitaMedia.Pubblica ? _L["Rendi privata"] : _L["Rendi pubblica"])</button>
+                </form>
+                <form method="post" asp-page-handler="Elimina" asp-route-id="@r.Id" class="d-inline">
+                    <button type="submit" class="btn btn-outline-danger">@_L["Elimina"]</button>
+                </form>
+                <a href="/admin/media" class="btn btn-link">@_L["Torna all'elenco"]</a>
+            </div>
+        </div>
+    </div>
+</div>

@@ -2,6 +2,7 @@ using DvCms.Application.Accessi;
 using DvCms.Application.Cms;
 using DvCms.Application.Email;
 using DvCms.Application.Localizzazione;
+using DvCms.Application.Media;
 using DvCms.Application.Outbox;
 using DvCms.Application.Piattaforma;
 using DvCms.Application.Temi;
@@ -10,6 +11,7 @@ using DvCms.Infrastructure.Accessi;
 using DvCms.Infrastructure.Cms;
 using DvCms.Infrastructure.Email;
 using DvCms.Infrastructure.Localizzazione;
+using DvCms.Infrastructure.Media;
 using DvCms.Infrastructure.Outbox;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.Infrastructure.Piattaforma;
@@ -79,6 +81,7 @@ public static class EstensioniServizi
         servizi.TryAddSingleton(new RegistroTemi(RegistroTemi.Predefiniti));
         servizi.TryAddScoped<IServizioTemi, ServizioTemi>();
         servizi.TryAddScoped<IRisolutoreTema, RisolutoreTema>();
+        AggiungiMedia(servizi, configurazione);
         servizi.TryAddScoped<IServizioPiattaforma, ServizioPiattaforma>();
         servizi.TryAddSingleton(new RegistroModelliPagina(RegistroModelliPagina.Predefiniti));
         servizi.TryAddScoped<IServizioPagine, ServizioPagine>();
@@ -122,6 +125,30 @@ public static class EstensioniServizi
         servizi.AddScoped<IGestoreOutbox, GestorePaginaRitirata>();
         servizi.AddScoped<IGestoreOutbox, GestorePaginaRinominata>();
         servizi.AddHostedService<ServizioOutbox>();
+    }
+
+    private static void AggiungiMedia(IServiceCollection servizi, IConfiguration configurazione)
+    {
+        var p = OpzioniMedia.Predefinite;
+        servizi.TryAddSingleton(new OpzioniMedia(
+            LeggiIntero(configurazione, "Media:DimensioneMassimaKb", (int)(p.DimensioneMassima / 1024), 1, 102_400) * 1024L,
+            LeggiIntero(configurazione, "Media:LatoMassimoImmagine", p.LatoMassimoImmagine, 1, 65_535),
+            LeggiIntero(configurazione, "Media:PixelMassimiMilioni", (int)(p.PixelMassimi / 1_000_000), 1, 1000) * 1_000_000L));
+
+        // Archivio degli oggetti: provider scelto da configurazione; uno sconosciuto ferma l'avvio invece di ripiegare su altro.
+        var provider = configurazione["Archivio:Provider"] ?? "FileSystem";
+        switch (provider)
+        {
+            case "FileSystem":
+                var radice = configurazione["Archivio:Percorso"];
+                servizi.TryAddSingleton<IArchivioOggetti>(_ => new ArchivioFileSystem(
+                    string.IsNullOrWhiteSpace(radice) ? Path.Combine(AppContext.BaseDirectory, "archivio") : radice));
+                break;
+            default:
+                throw new InvalidOperationException($"Provider dell'archivio '{provider}' non riconosciuto (valori ammessi: FileSystem).");
+        }
+
+        servizi.TryAddScoped<IServizioMedia, ServizioMedia>();
     }
 
     private static OpzioniRecuperoPassword LeggiOpzioniRecuperoPassword(IConfiguration configurazione)

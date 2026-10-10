@@ -70,6 +70,7 @@ applicazione.UseMiddleware<MiddlewareGuest>();
 applicazione.UseMiddleware<MiddlewareLingua>();
 applicazione.UseAuthorization();
 applicazione.MapSeo();
+applicazione.MapMedia();
 applicazione.MapRazorPages();
 
 applicazione.Run();

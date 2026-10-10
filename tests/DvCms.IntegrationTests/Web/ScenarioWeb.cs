@@ -46,7 +46,11 @@ public sealed class ScenarioWeb : IAsyncDisposable
 
     private static Dictionary<string, string?> ImpostazioniAvvio(int richiesteAlMinuto, IReadOnlyDictionary<string, string?>? aggiuntive)
     {
-        var impostazioni = new Dictionary<string, string?> { ["Sicurezza:Accesso:RichiesteAlMinuto"] = richiesteAlMinuto.ToString(System.Globalization.CultureInfo.InvariantCulture) };
+        var impostazioni = new Dictionary<string, string?>
+        {
+            ["Sicurezza:Accesso:RichiesteAlMinuto"] = richiesteAlMinuto.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            ["Archivio:Percorso"] = Path.Combine(Path.GetTempPath(), "dvcms-prova-" + Guid.NewGuid().ToString("N")),
+        };
         if (aggiuntive is not null)
         {
             foreach (var coppia in aggiuntive)
@@ -101,8 +105,13 @@ public sealed class ScenarioWeb : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
+        var archivio = Fabbrica.Services.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>()["Archivio:Percorso"];
         Fabbrica.Dispose();
         await _database.DisposeAsync();
+        if (archivio is not null && Directory.Exists(archivio))
+        {
+            Directory.Delete(archivio, recursive: true);
+        }
     }
 
     private SessioneProva Nuova(string host)

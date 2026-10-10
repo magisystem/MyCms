@@ -15,4 +15,8 @@
     <ProjectReference Include="..\..\src\DvCms.Infrastructure\DvCms.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="..\DvCms.IntegrationTests\Supporto\ImmaginiProva.cs" Link="Supporto\ImmaginiProva.cs" />
+  </ItemGroup>
+
 </Project>

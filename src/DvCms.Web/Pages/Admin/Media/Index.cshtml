@@ -1,0 +1,78 @@
+@page "/admin/media"
+@model DvCms.Web.Pages.Admin.Media.IndexModel
+@using DvCms.Domain.Media
+@{
+    ViewData["Titolo"] = _L["Media"];
+}
+@if (Model.Messaggio is not null)
+{
+    <div class="alert alert-success" role="status">@Model.Messaggio</div>
+}
+@if (Model.ErroreDaMostrare is not null)
+{
+    <div class="alert alert-danger" role="alert">@Model.ErroreDaMostrare</div>
+}
+<div class="card mb-3">
+    <div class="card-body">
+        <form method="post" asp-page-handler="Carica" enctype="multipart/form-data" class="row g-2 align-items-end">
+            <div class="col">
+                <label class="form-label" for="file">@_L["Carica un'immagine"]</label>
+                <input type="file" class="form-control" id="file" name="file" accept=".jpg,.jpeg,.png,.gif,.webp" required />
+                <div class="form-hint">@_L["JPEG, PNG, GIF o WebP."]</div>
+            </div>
+            <div class="col-auto"><button type="submit" class="btn btn-primary">@_L["Carica"]</button></div>
+        </form>
+    </div>
+</div>
+<div class="card">
+    @if (Model.Risorse.Count == 0)
+    {
+        <div class="card-body text-secondary">@_L["Nessun file caricato."]</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-vcenter card-table">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>@_L["Nome"]</th>
+                        <th>@_L["Dimensioni"]</th>
+                        <th>@_L["Visibilità"]</th>
+                        <th>@_L["Testo alternativo"]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var risorsa in Model.Risorse)
+                    {
+                        <tr>
+                            <td><img src="/admin/media/@risorsa.Id?handler=File" alt="" width="64" height="64" style="object-fit: cover" loading="lazy" /></td>
+                            <td><a href="/admin/media/@risorsa.Id">@risorsa.NomeOriginale</a></td>
+                            <td class="text-secondary">@risorsa.Larghezza × @risorsa.Altezza px, @(risorsa.Dimensione / 1024) KB</td>
+                            <td>
+                                @if (risorsa.Visibilita == VisibilitaMedia.Pubblica)
+                                {
+                                    <span class="badge bg-green-lt">@_L["Pubblica"]</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary-lt">@_L["Privata"]</span>
+                                }
+                            </td>
+                            <td>
+                                @if (string.IsNullOrEmpty(risorsa.TestoAlternativoPredefinito))
+                                {
+                                    <span class="badge bg-orange-lt">@_L["Mancante"]</span>
+                                }
+                                else
+                                {
+                                    @risorsa.TestoAlternativoPredefinito
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

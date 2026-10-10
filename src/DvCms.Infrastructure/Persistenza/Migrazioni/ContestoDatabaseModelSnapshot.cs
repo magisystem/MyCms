@@ -612,6 +612,107 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.ToTable("TestiStatici", (string)null);
                 });
 
+            modelBuilder.Entity("DvCms.Domain.Media.RisorsaMedia", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int?>("Altezza")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ChiaveOggetto")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid?>("CreatoDaIdUtenza")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatoIlUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long>("Dimensione")
+                        .HasColumnType("bigint");
+
+                    b.Property<byte[]>("HashSha256")
+                        .IsRequired()
+                        .HasColumnType("binary(32)");
+
+                    b.Property<Guid>("IdSito")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdTenant")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int?>("Larghezza")
+                        .HasColumnType("int");
+
+                    b.Property<string>("NomeOriginale")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("StatoScansione")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("TipoContenuto")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<byte[]>("TokenConcorrenza")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("Visibilita")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChiaveOggetto")
+                        .IsUnique();
+
+                    b.HasIndex("CreatoDaIdUtenza");
+
+                    b.HasIndex("IdSito", "CreatoIlUtc");
+
+                    b.ToTable("RisorseMedia", (string)null);
+                });
+
+            modelBuilder.Entity("DvCms.Domain.Media.TraduzioneRisorsaMedia", b =>
+                {
+                    b.Property<Guid>("IdRisorsa")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdLingua")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdSito")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdTenant")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("TestoAlternativo")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.HasKey("IdRisorsa", "IdLingua");
+
+                    b.HasIndex("IdLingua");
+
+                    b.HasIndex("IdTenant", "IdSito", "IdRisorsa");
+
+                    b.ToTable("TraduzioniRisorseMedia", (string)null);
+                });
+
             modelBuilder.Entity("DvCms.Domain.Outbox.MessaggioOutbox", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1079,6 +1180,37 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.HasOne("DvCms.Domain.Localizzazione.Lingua", null)
                         .WithMany()
                         .HasForeignKey("IdLingua")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DvCms.Domain.Media.RisorsaMedia", b =>
+                {
+                    b.HasOne("DvCms.Domain.Accessi.Utenza", null)
+                        .WithMany()
+                        .HasForeignKey("CreatoDaIdUtenza")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("DvCms.Domain.Tenancy.Sito", null)
+                        .WithMany()
+                        .HasForeignKey("IdTenant", "IdSito")
+                        .HasPrincipalKey("IdTenant", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DvCms.Domain.Media.TraduzioneRisorsaMedia", b =>
+                {
+                    b.HasOne("DvCms.Domain.Localizzazione.Lingua", null)
+                        .WithMany()
+                        .HasForeignKey("IdLingua")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("DvCms.Domain.Media.RisorsaMedia", null)
+                        .WithMany()
+                        .HasForeignKey("IdTenant", "IdSito", "IdRisorsa")
+                        .HasPrincipalKey("IdTenant", "IdSito", "Id")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

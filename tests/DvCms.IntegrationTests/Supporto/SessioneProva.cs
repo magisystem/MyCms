@@ -57,6 +57,32 @@ public sealed partial class SessioneProva
         return await InviaAsync(invio);
     }
 
+    /// <summary>Come <see cref="InviaModuloAsync"/> ma con un file: modulo <c>multipart/form-data</c> con il token antiforgery.</summary>
+    public async Task<HttpResponseMessage> InviaFileAsync(
+        string percorsoModulo,
+        string nomeCampo,
+        string nomeFile,
+        byte[] contenuto,
+        string tipoDichiarato,
+        string? percorsoInvio = null)
+    {
+        using var pagina = await GetAsync(percorsoModulo);
+        var html = await pagina.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        var token = TokenAntiforgery().Match(html) is { Success: true } trovato ? System.Net.WebUtility.HtmlDecode(trovato.Groups[1].Value) : null;
+
+        using var multipart = new MultipartFormDataContent();
+        if (token is not null)
+        {
+            multipart.Add(new StringContent(token), "__RequestVerificationToken");
+        }
+
+        var file = new ByteArrayContent(contenuto);
+        file.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(tipoDichiarato);
+        multipart.Add(file, nomeCampo, nomeFile);
+        using var invio = new HttpRequestMessage(HttpMethod.Post, percorsoInvio ?? percorsoModulo) { Content = multipart };
+        return await InviaAsync(invio);
+    }
+
     public async Task<HttpResponseMessage> AccediAsync(string email, string password, string percorsoAccesso = "/admin/accesso") =>
         await InviaModuloAsync(
             percorsoAccesso,

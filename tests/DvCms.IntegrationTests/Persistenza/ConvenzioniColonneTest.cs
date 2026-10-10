@@ -99,6 +99,9 @@ public class ConvenzioniColonneTest
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            // Il contesto di prova non applica le configurazioni dell'applicazione: le entità con chiave composta, senza una
+            // proprietà "Id" per convenzione, non hanno chiave e vanno escluse.
+            modelBuilder.Ignore<DvCms.Domain.Media.TraduzioneRisorsaMedia>();
             var entita = modelBuilder.Entity<ElementoProva>();
             entita.ToTable("ElementiProva");
             entita.Property(elemento => elemento.Id).ValueGeneratedNever();

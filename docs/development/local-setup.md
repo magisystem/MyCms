@@ -79,6 +79,7 @@ Senza la variabile i test sul database risultano saltati (non passati); con `CI=
    ```
 
    In produzione si usano le variabili `Seed__PlatformAdmin__Email`, `Seed__PlatformAdmin__NomeVisualizzato` e `Seed__PlatformAdmin__Password`. Se la password non è configurata e il terminale è interattivo, il comando la chiede senza mostrarla; negli altri casi, se il `PlatformAdmin` deve essere creato, fallisce. Il comando è idempotente: crea solo ciò che manca, non reimposta password né modifica dati esistenti e segnala nel log le divergenze. Si può anche eseguire all'avvio con `Seed:EseguiAllAvvio=true` (default falso). In `Development` crea inoltre l'alias `localhost` (solo sviluppo) e i tenant di prova `cms1`/`cms2.davidemartelli.dev` da `Seed:TenantSviluppo` (in `appsettings.Development.json`): la password di ciascun `TenantAdmin` è un segreto (`Seed:TenantSviluppo:0:TenantAdmin:Password`, `Seed:TenantSviluppo:1:TenantAdmin:Password`). Fuori da `Development` queste parti sono ignorate.
+   In sviluppo i file caricati dalla libreria media finiscono in `archivio` accanto all'eseguibile (`Archivio:Percorso` per cambiarla, `Media:*` per i limiti): la cartella non è versionata.
    Per configurare e inviare email serve anche la chiave dei segreti (ADR-0015): `dotnet user-secrets --project src/DvCms.Web set "Sicurezza:ChiaveSegreti" "$(openssl rand -base64 32)"`. Va conservata e salvata a parte dal database: senza di essa i segreti dei tenant (password SMTP, chiavi API) non sono più leggibili.
 6. Avviare `DvCms.Web`.
 7. Eseguire test unitari e d'integrazione.
