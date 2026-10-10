@@ -34,7 +34,7 @@ public partial class BuilderWebTest
 
     private static string Progetto(DocumentoCms documento) => AdapterGrapesJs.AProgetto(_registro.Normalizza(documento));
 
-    private static string Corpo(string progetto, string token) => JsonSerializer.Serialize(new { token, progetto });
+    private static string Corpo(string progetto, string token, bool automatico = false) => JsonSerializer.Serialize(new { token, progetto, automatico });
 
     [Fact]
     public async Task LaPaginaDelBuilderEIsolataESalvaConLeRegoleDelServer()
@@ -395,6 +395,53 @@ public partial class BuilderWebTest
     }
 
     [Fact]
+    public async Task IlSalvataggioAutomaticoSostituisceSoloLAutomaticoInCimaDelloStessoAutoreNonPubblicato()
+    {
+        await using var c = await Contesto.CreaAsync();
+        var (id, percorso) = await c.CreaPaginaAsync("pagina-libera", "auto", slug: "auto");
+        DocumentoCms Doc(string testo) => new(1, [Nodo("s", "layout.sezione", null, null, Nodo("t", "contenuto.titolo", new() { ["testo"] = testo }))]);
+        async Task<(JsonElement Risposta, string Token)> Salva(string testo, bool automatico, string token, SessioneProva? sessione = null)
+        {
+            using var risposta = await c.SalvaAsync(id, token, Progetto(Doc(testo)), automatico, sessione);
+            Assert.Equal(HttpStatusCode.OK, risposta.StatusCode);
+            var json = await Json(risposta);
+            return (json, json.GetProperty("token").GetString()!);
+        }
+
+        async Task<string> Numeri() => string.Join(",", (await c.RevisioniAsync(id)).Select(r => $"{r.NumeroRevisione}{(r.SalvataggioAutomatico ? "a" : "m")}"));
+
+        var token = (await c.StatoAsync(id)).GetProperty("token").GetString()!;
+        (_, token) = await Salva("uno", automatico: false, token);
+        Assert.Equal("1m,2m", await Numeri());
+
+        // Due automatici di fila: il secondo sostituisce il primo (la cronologia non cresce).
+        (_, token) = await Salva("due", automatico: true, token);
+        Assert.Equal("1m,2m,3a", await Numeri());
+        (_, token) = await Salva("tre", automatico: true, token);
+        Assert.Equal("1m,2m,4a", await Numeri());
+
+        // Il salvataggio manuale successivo sostituisce l'automatico in cima e resta manuale.
+        (_, token) = await Salva("quattro", automatico: false, token);
+        Assert.Equal("1m,2m,5m", await Numeri());
+
+        // Una revisione pubblicata non si tocca mai, nemmeno se era automatica.
+        (_, token) = await Salva("cinque", automatico: true, token);
+        Assert.Equal("1m,2m,5m,6a", await Numeri());
+        await c.PubblicaAsync(percorso);
+        token = (await c.StatoAsync(id)).GetProperty("token").GetString()!;
+        (_, token) = await Salva("sei", automatico: true, token);
+        Assert.Equal("1m,2m,5m,6a,7a", await Numeri());
+        using var pubblica = await c.Web.SessioneA().GetAsync("/auto");
+        Assert.Contains("cinque", await pubblica.Content.ReadAsStringAsync(Ct), StringComparison.Ordinal);
+
+        // Un altro autore non sostituisce l'automatico di un collega.
+        var collega = await c.NuovoAmministratoreAsync("carla@esempio.it");
+        (_, token) = await Salva("sette", automatico: true, token, collega);
+        Assert.Equal("1m,2m,5m,6a,7a,8a", await Numeri());
+        Assert.Equal(SerializzatoreDocumento.Scrivi(_registro.Normalizza(Doc("sette"))), (await c.RevisioniAsync(id))[^1].DocumentoRenderJson);
+    }
+
+    [Fact]
     public async Task IlBuilderNonSiApreNeSiSalvaFuoriDalProprioTenantEFuoriDalleRegole()
     {
         await using var c = await Contesto.CreaAsync();
@@ -477,6 +524,14 @@ public partial class BuilderWebTest
             return new Contesto(web, sessione, admin);
         }
 
+        public async Task<SessioneProva> NuovoAmministratoreAsync(string email)
+        {
+            await Web.CreaTenantAdminAsync(email);
+            var sessione = Web.SessioneA();
+            await sessione.AccediAsync(email, DatiProva.PasswordProva);
+            return sessione;
+        }
+
         public async Task<(Guid Id, string Percorso)> CreaPaginaAsync(string modello, string titolo, string? slug = null)
         {
             using var creazione = await Sessione.InviaModuloAsync(
@@ -500,8 +555,8 @@ public partial class BuilderWebTest
             return await Json(risposta);
         }
 
-        public Task<HttpResponseMessage> SalvaAsync(Guid id, string token, string progetto) =>
-            Sessione.InviaJsonAsync("/admin/pagine", $"/admin/pagine/{id}/builder?handler=Salva", Corpo(progetto, token));
+        public Task<HttpResponseMessage> SalvaAsync(Guid id, string token, string progetto, bool automatico = false, SessioneProva? sessione = null) =>
+            (sessione ?? Sessione).InviaJsonAsync("/admin/pagine", $"/admin/pagine/{id}/builder?handler=Salva", Corpo(progetto, token, automatico));
 
         public async Task<string> TokenModuloAsync(string percorso)
         {

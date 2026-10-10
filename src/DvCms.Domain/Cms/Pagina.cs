@@ -102,12 +102,12 @@ public class Pagina
         AggiungiRevisione(new ContenutoRevisione(titolo, contenuto), nota, idAutore, orologio);
 
     /// <summary>Aggiunge una revisione (nuova bozza) e la rende l'ultima. Le revisioni esistenti non cambiano mai.</summary>
-    public RevisionePagina AggiungiRevisione(ContenutoRevisione contenuto, string? nota, Guid idAutore, TimeProvider orologio)
+    public RevisionePagina AggiungiRevisione(ContenutoRevisione contenuto, string? nota, Guid idAutore, TimeProvider orologio, bool automatica = false)
     {
         ArgumentNullException.ThrowIfNull(orologio);
 
         var adesso = orologio.GetUtcNow().UtcDateTime;
-        var revisione = RevisionePagina.Crea(this, UltimoNumeroRevisione + 1, contenuto, nota, idAutore, adesso, orologio);
+        var revisione = RevisionePagina.Crea(this, UltimoNumeroRevisione + 1, contenuto, nota, idAutore, adesso, orologio, automatica);
         UltimoNumeroRevisione = revisione.NumeroRevisione;
         IdUltimaRevisioneBozza = revisione.Id;
         AggiornatoIlUtc = adesso;

@@ -519,6 +519,11 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.Property<string>("ProgettoEditorJson")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("SalvataggioAutomatico")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
                     b.Property<string>("Titolo")
                         .IsRequired()
                         .HasMaxLength(200)

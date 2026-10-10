@@ -42,3 +42,7 @@ body.dv-builder { display: flex; flex-direction: column; background: #f4f6fa; co
 .dv-builder .fa-eye-slash::before { content: "\25CE"; }
 .dv-builder .fa-caret-right::before { content: "\25B8"; }
 .dv-builder .fa-caret-down::before { content: "\25BE"; }
+
+.dv-dispositivi { display: flex; gap: 0.25rem; }
+.dv-dispositivo { padding: 0.25rem 0.75rem; border: 1px solid #475569; border-radius: 4px; background: transparent; color: #cbd5e1; cursor: pointer; }
+.dv-dispositivo[aria-pressed="true"] { background: #e2e8f0; color: #1f2937; }

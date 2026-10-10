@@ -88,6 +88,13 @@ public class RevisionePagina
         ? new DocumentoBuilder(ProgettoEditorJson, DocumentoRenderJson)
         : null;
 
+    /// <summary>
+    /// Vera se la revisione è un salvataggio automatico del builder. Una revisione automatica non pubblicata e ancora in cima alla
+    /// cronologia viene sostituita dal salvataggio successivo dello stesso autore (e da quello manuale): la cronologia non si riempie
+    /// di salvataggi intermedi. Le revisioni manuali e quelle pubblicate non si toccano mai.
+    /// </summary>
+    public bool SalvataggioAutomatico { get; set; }
+
     public string? NotaRevisione { get; set; }
 
     public Guid CreatoDaIdUtenza { get; set; }
@@ -124,7 +131,8 @@ public class RevisionePagina
         string? nota,
         Guid idAutore,
         DateTime adesso,
-        TimeProvider orologio)
+        TimeProvider orologio,
+        bool automatica = false)
     {
         ArgumentNullException.ThrowIfNull(dati);
         if (!TentaValidaTesto(dati.Titolo, dati.Contenuto, out var titoloValido, out var contenutoValido))
@@ -172,6 +180,7 @@ public class RevisionePagina
             DocumentoRenderJson = dati.Builder?.DocumentoRenderJson,
             DatiModelloJson = System.Text.Json.JsonSerializer.Serialize(dati.DatiModello ?? new Dictionary<string, string>()),
             NotaRevisione = string.IsNullOrEmpty(notaValida) ? null : notaValida,
+            SalvataggioAutomatico = automatica,
             CreatoDaIdUtenza = idAutore,
             CreatoIlUtc = adesso,
         };

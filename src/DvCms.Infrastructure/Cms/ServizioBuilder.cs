@@ -78,6 +78,7 @@ public sealed class ServizioBuilder : IServizioBuilder
         Guid idPagina,
         string? tokenConcorrenza,
         string? progettoEditorJson,
+        bool automatico,
         CancellationToken annullamento)
     {
         var attore = await TrovaAttoreAsync(idAttore, annullamento);
@@ -99,7 +100,7 @@ public sealed class ServizioBuilder : IServizioBuilder
             return Esito(CodiceEsito.NonTrovato);
         }
 
-        var bozza = await _contesto.RevisioniPagina.AsNoTracking().SingleAsync(revisione => revisione.Id == idBozza, annullamento);
+        var bozza = await _contesto.RevisioniPagina.SingleAsync(revisione => revisione.Id == idBozza, annullamento);
         if (TrovaTemplate(bozza) is not { } template)
         {
             // La pagina non usa il builder: non c'è nulla da salvare qui.
@@ -137,6 +138,10 @@ public sealed class ServizioBuilder : IServizioBuilder
         try
         {
             _contesto.Entry(pagina).Property(candidata => candidata.TokenConcorrenza).OriginalValue = token;
+
+            // La revisione automatica in cima, non pubblicata e dello stesso autore, è superata da questa: si toglie (mai una
+            // revisione manuale né una pubblicata). I numeri di revisione non si riusano: la cronologia può avere dei salti.
+            var daSostituire = bozza.SalvataggioAutomatico && bozza.CreatoDaIdUtenza == attore.Id && pagina.IdRevisionePubblicata != bozza.Id ? bozza : null;
             var nuova = pagina.AggiungiRevisione(
                 new ContenutoRevisione(
                     bozza.Titolo,
@@ -148,10 +153,16 @@ public sealed class ServizioBuilder : IServizioBuilder
                     bozza.DescrizioneSeo,
                     bozza.NonIndicizzare,
                     new DocumentoBuilder(progetto, json)),
-                "Modifica con il builder",
+                automatico ? "Salvataggio automatico" : "Modifica con il builder",
                 attore.Id,
-                _orologio);
+                _orologio,
+                automatico);
             _contesto.RevisioniPagina.Add(nuova);
+            if (daSostituire is not null)
+            {
+                _contesto.RevisioniPagina.Remove(daSostituire);
+            }
+
             await _contesto.SaveChangesAsync(annullamento);
             return new EsitoSalvataggioBuilder(CodiceEsito.Riuscito, [], Convert.ToBase64String(pagina.TokenConcorrenza), progetto, nuova.NumeroRevisione, NuovaRevisione: true);
         }

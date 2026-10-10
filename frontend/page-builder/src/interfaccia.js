@@ -16,6 +16,9 @@ export function creaInterfaccia(radice, config) {
   const indietro = elemento('a', 'dv-collegamento', testi.torna);
   indietro.href = config.urlPagina;
   const titolo = elemento('span', 'dv-titolo-pagina');
+  const dispositivi = elemento('div', 'dv-dispositivi');
+  dispositivi.setAttribute('role', 'group');
+  dispositivi.setAttribute('aria-label', testi.dispositivi ?? 'Dispositivi');
   const stato = elemento('span', 'dv-stato');
   stato.setAttribute('role', 'status');
   const anteprima = elemento('a', 'dv-collegamento', testi.anteprima);
@@ -24,7 +27,7 @@ export function creaInterfaccia(radice, config) {
   anteprima.rel = 'noopener';
   const salva = elemento('button', 'dv-pulsante-salva', testi.salva);
   salva.type = 'button';
-  barra.append(indietro, titolo, stato, anteprima, salva);
+  barra.append(indietro, titolo, dispositivi, stato, anteprima, salva);
 
   const errori = elemento('div', 'dv-errori');
   errori.setAttribute('role', 'alert');
@@ -49,6 +52,22 @@ export function creaInterfaccia(radice, config) {
     contenitoreProprieta: proprieta,
     contenitoreLivelli: livelli,
     pulsanteSalva: salva,
+    /** Pulsanti Desktop / Tablet / Mobile: cambiano solo la larghezza del canvas (le regole CSS responsive sono quelle del sito). */
+    creaDispositivi(etichette, alCambio) {
+      for (const [id, etichetta] of [['desktop', etichette.desktop], ['tablet', etichette.tablet], ['mobile', etichette.mobile]]) {
+        const pulsante = elemento('button', 'dv-dispositivo', etichetta ?? id);
+        pulsante.type = 'button';
+        pulsante.dataset.dispositivo = id;
+        pulsante.setAttribute('aria-pressed', id === 'desktop' ? 'true' : 'false');
+        pulsante.addEventListener('click', () => {
+          alCambio(id);
+          for (const altro of dispositivi.children) {
+            altro.setAttribute('aria-pressed', altro === pulsante ? 'true' : 'false');
+          }
+        });
+        dispositivi.append(pulsante);
+      }
+    },
     impostaTitolo(testo) {
       titolo.textContent = testo ?? '';
     },

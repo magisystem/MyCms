@@ -39,7 +39,9 @@ public interface IServizioBuilder
     /// <summary>
     /// Salva la bozza. Il token è quello letto con la pagina (o restituito dal salvataggio precedente): se la pagina è cambiata
     /// nel frattempo l'esito è <see cref="CodiceEsito.Conflitto"/> e nulla viene sovrascritto. Se il documento non cambia non si
-    /// crea alcuna revisione.
+    /// crea alcuna revisione. Un salvataggio **automatico** (<paramref name="automatico"/>) crea una revisione marcata come tale; se in
+    /// cima alla cronologia c'è già una revisione automatica dello stesso autore, non pubblicata, questa è sostituita (anche da un
+    /// salvataggio manuale): la cronologia non accumula i salvataggi intermedi. Le revisioni manuali e pubblicate non si toccano.
     /// </summary>
-    Task<EsitoSalvataggioBuilder> SalvaAsync(Guid idAttore, Guid idPagina, string? tokenConcorrenza, string? progettoEditorJson, CancellationToken annullamento);
+    Task<EsitoSalvataggioBuilder> SalvaAsync(Guid idAttore, Guid idPagina, string? tokenConcorrenza, string? progettoEditorJson, bool automatico, CancellationToken annullamento);
 }

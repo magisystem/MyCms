@@ -97,3 +97,10 @@ main:has(.dv-documento) {
 @media (prefers-reduced-motion: reduce) {
     .dv-js .dv-anim, .dv-js .dv-anim-sale, .dv-js .dv-anim-da-sinistra, .dv-js .dv-anim-da-destra { opacity: 1; transform: none; transition: none; }
 }
+
+/* Pulsanti su sfondi scuri o del colore primario: invertiti per restare leggibili con qualunque tema (specificità sopra i fogli dei temi). */
+body .dv-sfondo-scuro .dv-pulsante-primario,
+body .dv-sfondo-primario .dv-pulsante-primario {
+    color: var(--tema-colore-primario, #1f4e8c);
+    background: #ffffff;
+}

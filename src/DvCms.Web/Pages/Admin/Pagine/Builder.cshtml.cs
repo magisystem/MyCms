@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace DvCms.Web.Pages.Admin.Pagine;
 
 /// <summary>Corpo della richiesta di salvataggio: il token letto con la pagina e il progetto dell'editor.</summary>
-public sealed record RichiestaSalvataggioBuilder(string? Token, string? Progetto);
+public sealed record RichiestaSalvataggioBuilder(string? Token, string? Progetto, bool Automatico = false);
 
 /// <summary>
 /// Page builder (E-001): l'editor GrapesJS gira solo in questa pagina, come asset JavaScript isolato servito dalla stessa origine
@@ -34,7 +34,13 @@ public class BuilderModel : PaginaAdmin
     {
         ["salva"] = Localizzatore.Traduci("Salva"),
         ["salvataggio"] = Localizzatore.Traduci("Salvataggio in corso…"),
+        ["desktop"] = Localizzatore.Traduci("Desktop"),
+        ["tablet"] = Localizzatore.Traduci("Tablet"),
+        ["mobile"] = Localizzatore.Traduci("Mobile"),
+        ["dispositivi"] = Localizzatore.Traduci("Dimensione dell'anteprima"),
         ["salvato"] = Localizzatore.Traduci("Bozza salvata."),
+        ["salvatoAutomatico"] = Localizzatore.Traduci("Salvato automaticamente"),
+        ["automaticoSospeso"] = Localizzatore.Traduci("Salvataggio automatico sospeso: la pagina ha problemi da correggere."),
         ["nessunaModifica"] = Localizzatore.Traduci("Nessuna modifica da salvare."),
         ["torna"] = Localizzatore.Traduci("Torna alla pagina"),
         ["anteprima"] = Localizzatore.Traduci("Anteprima"),
@@ -135,7 +141,7 @@ public class BuilderModel : PaginaAdmin
         Response.Headers.CacheControl = "no-store";
         ArgumentNullException.ThrowIfNull(richiesta);
 
-        var esito = await _builder.SalvaAsync(IdAttore, id, richiesta.Token, richiesta.Progetto, annullamento);
+        var esito = await _builder.SalvaAsync(IdAttore, id, richiesta.Token, richiesta.Progetto, richiesta.Automatico, annullamento);
         var codiceHttp = esito.Codice switch
         {
             CodiceEsito.Riuscito => StatusCodes.Status200OK,

@@ -20,9 +20,72 @@ const TAG = {
   'contenuto.voce': 'div',
 };
 
+// Testi modificabili direttamente nel canvas (doppio clic): solo testo semplice, nessun HTML. Gli altri campi restano nel pannello.
+const TESTI_IN_LINEA = {
+  'contenuto.titolo': { attributo: 'data-p-testo', multilinea: false },
+  'contenuto.testo': { attributo: 'data-p-testo', multilinea: true },
+  'contenuto.pulsante': { attributo: 'data-p-etichetta', multilinea: false },
+};
+
 function valore(componente, attributo, predefinito) {
   const v = componente.getAttributes()[attributo];
   return v === undefined || v === '' ? predefinito : v;
+}
+
+/**
+ * Modifica del testo nel canvas. Il contenuto resta testo semplice: si legge `textContent` (mai HTML), si applica la lunghezza
+ * massima del catalogo e, nei campi a riga singola, si tolgono gli a capo. I nodi bloccati si modificano solo se la proprietà
+ * è tra quelle ammesse dal template (le stesse che mostra il pannello). Esc annulla, un clic fuori conferma.
+ */
+function collegaModificaInLinea(el, modello, impostazione, lunghezzaMassima, aspettoFn) {
+  if (el.dataset.dvModifica === '1') return;
+  el.dataset.dvModifica = '1';
+  el.addEventListener('dblclick', (evento) => {
+    if (!modello.get('traits').models.some((t) => t.get('name') === impostazione.attributo)) return;
+    evento.preventDefault();
+    evento.stopPropagation();
+    const iniziale = valore(modello, impostazione.attributo, '');
+    el.contentEditable = 'plaintext-only';
+    if (el.contentEditable !== 'plaintext-only') el.contentEditable = 'true';
+    el.focus();
+    const concludi = (conferma) => {
+      el.removeEventListener('blur', alBlur);
+      el.removeEventListener('keydown', alTasto);
+      el.removeEventListener('paste', alIncolla);
+      let testo = el.textContent ?? '';
+      el.contentEditable = 'false';
+      el.removeAttribute('contenteditable');
+      testo = testo.replace(/\r\n/g, '\n');
+      if (!impostazione.multilinea) testo = testo.replace(/\s*\n\s*/g, ' ');
+      testo = testo.trim().slice(0, lunghezzaMassima);
+      if (conferma && testo !== iniziale) {
+        modello.addAttributes({ [impostazione.attributo]: testo });
+      } else {
+        aspettoFn();
+      }
+    };
+    const alBlur = () => concludi(true);
+    const alTasto = (e) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        el.textContent = iniziale;
+        el.blur();
+      } else if (e.key === 'Enter' && !impostazione.multilinea) {
+        e.preventDefault();
+        el.blur();
+      }
+      e.stopPropagation();
+    };
+    // Incolla solo testo semplice, anche dove il browser non conosce "plaintext-only".
+    const alIncolla = (e) => {
+      e.preventDefault();
+      const testo = e.clipboardData?.getData('text/plain') ?? '';
+      el.ownerDocument.execCommand('insertText', false, testo);
+    };
+    el.addEventListener('blur', alBlur);
+    el.addEventListener('keydown', alTasto);
+    el.addEventListener('paste', alIncolla);
+  });
 }
 
 function impostaClassi(el, classi) {
@@ -169,6 +232,11 @@ export function registraComponenti(editor, catalogo, vincoli, config) {
         },
         onRender() {
           aspetto(tipo, this.el, this.model);
+          const inLinea = TESTI_IN_LINEA[tipo];
+          if (inLinea) {
+            const massima = [...definizione.proprieta, ...definizione.stili].find((d) => d.attributo === inLinea.attributo)?.lunghezzaMassima || 5000;
+            collegaModificaInLinea(this.el, this.model, inLinea, massima, () => aspetto(tipo, this.el, this.model));
+          }
         },
       },
     });

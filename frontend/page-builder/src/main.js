@@ -27,6 +27,7 @@ async function avvia() {
   config.testi.campi = JSON.parse(config.testi.campi || '{}');
 
   const ui = creaInterfaccia(radice, config);
+  ui.creaDispositivi(config.testi, (id) => window.dvEditor?.setDevice(id));
   let stato;
   try {
     const risposta = await fetch(config.urlStato, { credentials: 'same-origin', headers: { Accept: 'application/json' } });
@@ -51,7 +52,13 @@ async function avvia() {
     projectData: stato.progetto,
     avoidInlineStyle: true,
     panels: { defaults: [] },
-    deviceManager: { devices: [] },
+    deviceManager: {
+      devices: [
+        { id: 'desktop', name: config.testi.desktop ?? 'Desktop', width: '' },
+        { id: 'tablet', name: config.testi.tablet ?? 'Tablet', width: '768px', widthMedia: '992px' },
+        { id: 'mobile', name: config.testi.mobile ?? 'Mobile', width: '375px', widthMedia: '480px' },
+      ],
+    },
     styleManager: { sectors: [] },
     selectorManager: { componentFirst: true },
     blockManager: { appendTo: ui.contenitoreBlocchi },
@@ -60,6 +67,12 @@ async function avvia() {
     undoManager: { trackSelection: false },
     canvas: { styles: ['/css/pubblico.css', '/css/componenti.css', '/lib/page-builder/canvas.css'] },
   });
+
+  // Niente scorciatoie che agiscono sui componenti (eliminare, spostarsi, copiare): scrivendo nel canvas un tasto non deve mai
+  // cancellare il componente selezionato. Restano annulla/ripeti; eliminare e duplicare si fa dalla barra del componente.
+  for (const id of ['core:component-delete', 'core:component-next', 'core:component-prev', 'core:component-enter', 'core:component-exit', 'core:copy', 'core:paste']) {
+    editor.Keymaps.remove(id);
+  }
 
   registraComponenti(editor, stato.catalogo, stato.vincoli, config);
   creaBlocchi(editor, definizioni, config);

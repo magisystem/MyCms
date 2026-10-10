@@ -42,6 +42,8 @@ await Promise.all([pagina.waitForNavigation(), pagina.click('button.btn-primary'
 const id = pagina.url().split('/').pop();
 await pagina.goto(`${base}/admin/pagine/${id}/builder`);
 await pagina.waitForFunction(() => window.dvEditor, null, { timeout: 15000 });
+await pagina.frameLocator('iframe.gjs-frame').locator('#corpo-testo').waitFor();
+await pagina.waitForTimeout(500);
 passo('il bundle si monta');
 
 const albero = () => pagina.evaluate(() => {
@@ -67,7 +69,10 @@ const trascina = async (nome, selettore) => {
 
 // Vincoli dell'interfaccia: nello slot sì, una sezione nello slot e un titolo nell'intestazione bloccata no.
 const prima = await albero();
-await trascina('Testo', '#corpo-testo');
+// Il primo trascinamento dopo il caricamento può non partire (il canvas sta ancora completando il disegno): si riprova.
+for (let tentativo = 0; tentativo < 4 && (await albero()) === prima; tentativo++) {
+  await trascina('Testo', '#corpo-testo');
+}
 assert.notEqual(await albero(), prima, 'un testo si può aggiungere nello slot');
 const conTesto = await albero();
 await trascina('Sezione', '#corpo-testo');
@@ -95,6 +100,40 @@ await pagina.waitForFunction(() => window.dvEditor, null, { timeout: 15000 });
 assert.equal(await pagina.evaluate(() => JSON.stringify(window.dvEditor.getProjectData().pages[0].frames[0].component.components.map((c) => c.attributes?.id))), progettoSalvato);
 assert.equal(await pagina.evaluate(() => window.dvEditor.getWrapper().find('#intestazione-titolo')[0].getAttributes()['data-p-testo']), ostile);
 passo('salvataggio e ricarica restituiscono lo stesso contenuto');
+
+// Anteprima per dispositivo: la larghezza del canvas cambia.
+const larghezzaCanvas = () => pagina.evaluate(() => Math.round(window.dvEditor.Canvas.getFrameEl().getBoundingClientRect().width));
+const larghezzaDesktop = await larghezzaCanvas();
+await pagina.click('.dv-dispositivo[data-dispositivo="mobile"]');
+await pagina.waitForTimeout(400);
+const larghezzaMobile = await larghezzaCanvas();
+assert.ok(larghezzaMobile <= 380, `il canvas mobile è stretto (${larghezzaMobile}px)`);
+await pagina.click('.dv-dispositivo[data-dispositivo="desktop"]');
+await pagina.waitForTimeout(400);
+assert.equal(await larghezzaCanvas(), larghezzaDesktop);
+passo('anteprima per dispositivo');
+
+// Modifica del testo nel canvas: doppio clic, scrittura, conferma; il nodo bloccato accetta solo la proprietà ammessa.
+const cornice = pagina.frameLocator('iframe.gjs-frame');
+await cornice.locator('#intestazione-titolo').dblclick();
+await pagina.keyboard.press('Control+A');
+await pagina.keyboard.type('Titolo scritto nel canvas');
+await pagina.keyboard.press('Enter');
+await pagina.waitForTimeout(200);
+assert.equal(await pagina.evaluate(() => window.dvEditor.getWrapper().find('#intestazione-titolo')[0].getAttributes()['data-p-testo']), 'Titolo scritto nel canvas');
+await cornice.locator('#avviso-testo').dblclick();
+await pagina.keyboard.type('NON DEVE ENTRARE');
+await pagina.keyboard.press('Escape');
+assert.equal(await pagina.evaluate(() => window.dvEditor.getWrapper().find('#avviso-testo')[0].getAttributes()['data-p-testo']), 'Le informazioni di questa pagina sono fornite a scopo illustrativo.');
+passo('modifica del testo nel canvas (solo dove ammesso)');
+
+// Salvataggio automatico: dopo una pausa nelle modifiche il server riceve una revisione marcata come automatica.
+const attesaAuto = pagina.waitForResponse((r) => r.url().includes('handler=Salva') && r.request().postDataJSON()?.automatico === true, { timeout: 20000 });
+await pagina.evaluate(() => { window.dvEditor.getWrapper().find('#corpo')[0].append({ type: 'contenuto.testo', attributes: { 'data-p-testo': 'Aggiunto e salvato da solo' } }); });
+const automatico = await attesaAuto;
+assert.equal(automatico.status(), 200);
+assert.match(await pagina.textContent('.dv-stato'), /automaticamente/i);
+passo('salvataggio automatico dopo una pausa');
 
 // Manomissione: si toglie un nodo bloccato aggirando l'interfaccia; il server rifiuta.
 await pagina.evaluate(() => { const a = window.dvEditor.getWrapper().find('#avviso')[0]; a.set('removable', true); a.remove(); });

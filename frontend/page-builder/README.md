@@ -15,7 +15,7 @@ in `src/DvCms.Web/wwwroot/lib/page-builder/` (in produzione non serve alcuna too
 | `src/interfaccia.js` | Scheletro dell'interfaccia (solo API del DOM, nessun `innerHTML`) |
 | `src/builder.css`, `src/canvas.css` | Stili dell'interfaccia e del canvas |
 | `build.mjs` | Compilazione con esbuild; `--verifica` confronta con i file versionati |
-| `smoke/percorso-completo.mjs` | Verifica con un browser vero (manuale, non in CI) |
+| `smoke/percorso-completo.mjs` | Verifica con un browser vero (manuale, non in CI): montaggio, vincoli, proprietà, salvataggio, anteprima per dispositivo, modifica nel canvas, salvataggio automatico, manomissione, CSP |
 
 ## Comandi
 

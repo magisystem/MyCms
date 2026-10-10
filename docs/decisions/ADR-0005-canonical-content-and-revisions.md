@@ -31,3 +31,7 @@ Lo spike ha dimostrato che la conversione è affidabile per il catalogo di base 
 - **Revisioni:** nuove colonne nullable su `RevisioniPagina`; ogni salvataggio che cambia il documento crea una nuova revisione immutabile; un salvataggio senza modifiche non ne crea. Il passaggio a una nuova versione di template per le pagine del builder non è ancora previsto.
 - **Template e policy:** versioni immutabili (impronta fissata da un test), con nodi bloccati e slot; la policy è confrontata dal server a ogni salvataggio. L'id del template coincide con l'id del modello di pagina.
 
+## Salvataggi automatici (M5, 2026-10-10)
+
+Le revisioni restano immutabili: nessuna si modifica dopo la creazione. Per non riempire la cronologia con i salvataggi intermedi dell'editor, una revisione marcata `SalvataggioAutomatico` che sia **in cima alla cronologia, non pubblicata e dello stesso autore** viene *rimossa* (mai modificata) quando arriva il salvataggio successivo, automatico o manuale, che crea una nuova revisione. Non vengono mai rimosse revisioni manuali né pubblicate, né una revisione automatica non più in cima o di un altro autore. I numeri di revisione non si riusano. Questa è l'unica eccezione alla conservazione di tutte le revisioni e riguarda solo bozze effimere che nessuno ha scelto di tenere.
+

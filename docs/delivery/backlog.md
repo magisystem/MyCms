@@ -123,11 +123,11 @@ Le voci sono candidate a issue GitHub. Ogni issue deve essere piccola, verificab
 **Accettazione:** nodo bloccato non può essere modificato/eliminato tramite payload API manipolato; slot accetta solo tipi allow-list.
 
 ### E-005: Autosave e concorrenza
-**Stato:** Parzialmente completata (M4): token di concorrenza, salvataggio senza modifiche che non crea revisioni, validazione lato server; il debounce lato client (autosave) è in M5.
+**Stato:** Completata (M4, M5): token di concorrenza, salvataggio senza modifiche che non crea revisioni, validazione lato server, salvataggio automatico con debounce lato client e sostituzione delle revisioni automatiche superate.
 **Accettazione:** debounce client, validazione server, token concorrenza; nessuna sovrascrittura silenziosa.
 
 ### E-006: Componenti e animazioni
-**Stato:** Non iniziata (M5).
+**Stato:** Completata per il primo gruppo di componenti (M5): hero, invito all'azione, fisarmonica; animazioni dichiarative con `prefers-reduced-motion`. Restano griglia di caratteristiche e testimonianze.
 **Accettazione:** animazioni declarative; nessuna esecuzione di JavaScript arbitrario del tenant; prefers-reduced-motion considerato.
 
 ## EPIC F — Commerce
