@@ -36,6 +36,7 @@ Piano di implementazione richiesto da `docs/AI_START_HERE.md`, preparato prima d
 | D-003 Archivio degli oggetti, D-004 Metadati e testo alternativo (M3) | Completate (`IArchivioOggetti` con adapter su file system, libreria `/admin/media`, `/media/{id}`, firma/dimensioni/hash verificati dal server, testo alternativo per lingua, isolamento per tenant) |
 | G-001 Outbox e worker (coda consultabile) | Completata (`/admin/platform/coda` con ultimo errore, ripresa e scarto dei falliti, metriche `DvCms.Outbox`, manutenzione a lotti dei dati scaduti) |
 | G-002 Invalidazione della cache (M6) | Completata (cache in memoria per sito di pagine, lingue, tema e sitemap; registro `InvalidazioniCache` scritto nella transazione della modifica e letto da ogni istanza; durata massima di sicurezza) |
+| G-004 Backup/restore e runbook | Completata (runbook `docs/operations/backup-e-ripristino.md`, prova automatica `RipristinoTest` con backup, ripristino e confronto di tutte le tabelle, comando `verifica-archivio`; resta da registrare la prima prova su infrastruttura reale) |
 | B-010 Gestione testi statici | Completata (`/admin/platform/testi`: ricerca, filtri, modifica, cache e audit) |
 | B-007 Creazione TenantAdmin e non-escalation | Completata (password temporanea mostrata una volta; elevazione `Utente` → `TenantAdmin`) |
 

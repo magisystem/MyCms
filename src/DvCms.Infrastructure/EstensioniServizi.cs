@@ -200,6 +200,7 @@ public static class EstensioniServizi
         }
 
         servizi.TryAddScoped<IServizioMedia, ServizioMedia>();
+        servizi.TryAddScoped<VerificatoreArchivio>();
     }
 
     private static OpzioniRecuperoPassword LeggiOpzioniRecuperoPassword(IConfiguration configurazione)

@@ -33,6 +33,11 @@ if (args is [ComandoMigra.Nome])
     return await ComandoMigra.EseguiAsync(applicazione.Services);
 }
 
+if (args is [ComandoVerificaArchivio.Nome])
+{
+    return await ComandoVerificaArchivio.EseguiAsync(applicazione.Services);
+}
+
 if (args is [ComandoSeed.Nome])
 {
     return await ComandoSeed.EseguiAsync(applicazione.Services, consentiRichiestaInterattiva: true);

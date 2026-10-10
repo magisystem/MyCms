@@ -57,7 +57,7 @@ Le scelte sotto non sono definite completamente. Gli agenti devono evitare di in
 - Hosting cloud e regione/residenza dati.
 - Hosting/edition di SQL Server e relative strategie backup/restore. Il database è già definito (SQL Server, ADR-0012).
 - Object storage provider e CDN.
-- RPO/RTO, retention backup e obiettivi SLA.
+- RPO/RTO, retention backup e obiettivi SLA. Proposta in `docs/operations/backup-e-ripristino.md` (RPO 15 minuti per il database e 24 ore per i file, RTO 4 ore, retention 35 giorni): da confermare.
 
 ## UI
 

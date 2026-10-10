@@ -85,7 +85,7 @@ Ogni evento che non può essere perso (publish, ordine, pagamento, webhook) deve
 
 ## Backup e disaster recovery
 
-Definire prima della produzione RPO/RTO, retention e responsabilità operative. Testare restore di database e oggetti media; un backup mai ripristinato non è una garanzia verificata.
+Il runbook è in [`../operations/backup-e-ripristino.md`](../operations/backup-e-ripristino.md): cosa si salva (database, archivio dei file, **chiave dei segreti separata**), obiettivi proposti (RPO/RTO/retention, da confermare), procedura di ripristino con i controlli (`verifica-archivio`, `migra`, coda), limiti e registro delle prove. Un backup mai ripristinato non è una garanzia verificata: la prova di ripristino è automatica in CI (`RipristinoTest`) e va ripetuta su infrastruttura reale ogni trimestre.
 
 ## Ambienti
 

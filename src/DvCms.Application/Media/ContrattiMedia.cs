@@ -19,6 +19,9 @@ public interface IArchivioOggetti
 
     /// <summary>Elimina l'oggetto; vero se esisteva.</summary>
     Task<bool> EliminaAsync(string chiave, CancellationToken annullamento);
+
+    /// <summary>Le chiavi di tutti gli oggetti presenti (per verifiche di integrità e ripristini; non per il servizio delle richieste).</summary>
+    IAsyncEnumerable<string> ElencaChiaviAsync(CancellationToken annullamento);
 }
 
 /// <summary>Limiti dei caricamenti (configurazione <c>Media:*</c>).</summary>

@@ -23,6 +23,31 @@ public static class ServiziProva
         Action<IServiceCollection>? configura = null,
         CancellationToken annullamento = default)
     {
+        var fornitore = Costruisci(connessione, impostazioniAggiuntive, ambiente, orologio, configura);
+        await using (var ambito = fornitore.CreateAsyncScope())
+        {
+            await ambito.ServiceProvider.GetRequiredService<ContestoDatabase>().Database.MigrateAsync(annullamento);
+        }
+
+        return fornitore;
+    }
+
+    /// <summary>Come <see cref="CreaConMigrazioniAsync"/> ma senza toccare lo schema: per database già pronti (ad esempio ripristinati da un backup).</summary>
+    public static Task<ServiceProvider> CreaSenzaMigrazioniAsync(
+        string connessione,
+        IDictionary<string, string?>? impostazioniAggiuntive = null,
+        string ambiente = "Development",
+        TimeProvider? orologio = null,
+        Action<IServiceCollection>? configura = null) =>
+        Task.FromResult(Costruisci(connessione, impostazioniAggiuntive, ambiente, orologio, configura));
+
+    private static ServiceProvider Costruisci(
+        string connessione,
+        IDictionary<string, string?>? impostazioniAggiuntive,
+        string ambiente,
+        TimeProvider? orologio,
+        Action<IServiceCollection>? configura)
+    {
         var impostazioni = new Dictionary<string, string?>
         {
             ["ConnectionStrings:Predefinita"] = connessione,
@@ -50,14 +75,7 @@ public static class ServiziProva
 
         servizi.AggiungiInfrastruttura(configurazione);
         configura?.Invoke(servizi);
-
-        var fornitore = servizi.BuildServiceProvider();
-        await using (var ambito = fornitore.CreateAsyncScope())
-        {
-            await ambito.ServiceProvider.GetRequiredService<ContestoDatabase>().Database.MigrateAsync(annullamento);
-        }
-
-        return fornitore;
+        return servizi.BuildServiceProvider();
     }
 }
 

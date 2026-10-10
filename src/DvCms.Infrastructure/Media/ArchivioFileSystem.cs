@@ -73,6 +73,28 @@ public sealed partial class ArchivioFileSystem : IArchivioOggetti
         return Task.FromResult(true);
     }
 
+    public async IAsyncEnumerable<string> ElencaChiaviAsync([System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken annullamento)
+    {
+        if (!Directory.Exists(_radice))
+        {
+            yield break;
+        }
+
+        foreach (var file in Directory.EnumerateFiles(_radice, "*", SearchOption.AllDirectories))
+        {
+            annullamento.ThrowIfCancellationRequested();
+            var chiave = Path.GetRelativePath(_radice, file).Replace(Path.DirectorySeparatorChar, '/');
+
+            // I file temporanei di una scrittura interrotta non sono oggetti.
+            if (!chiave.EndsWith(".tmp", StringComparison.Ordinal) && FormatoChiave().IsMatch(chiave))
+            {
+                yield return chiave;
+            }
+        }
+
+        await Task.CompletedTask;
+    }
+
     private string Percorso(string chiave)
     {
         if (string.IsNullOrEmpty(chiave) || chiave.Length > 200 || !FormatoChiave().IsMatch(chiave))
