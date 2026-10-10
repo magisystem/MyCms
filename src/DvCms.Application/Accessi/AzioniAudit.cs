@@ -27,6 +27,8 @@ public static class AzioniAudit
     public const string ModificaTema = "ModificaTema";
     public const string CaricamentoMedia = "CaricamentoMedia";
     public const string EliminazioneMedia = "EliminazioneMedia";
+    public const string RitentativoMessaggio = "RitentativoMessaggio";
+    public const string ScartoMessaggio = "ScartoMessaggio";
     public const string InvitoInviato = "InvitoInviato";
     public const string InvitoAccettato = "InvitoAccettato";
     public const string ModificaTestoStatico = "ModificaTestoStatico";

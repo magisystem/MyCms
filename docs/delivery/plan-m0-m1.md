@@ -34,6 +34,7 @@ Piano di implementazione richiesto da `docs/AI_START_HERE.md`, preparato prima d
 | G-003 Sitemap e robots | Completata (`/sitemap.xml` e `/robots.txt` per dominio: solo pagine canoniche pubblicate e indicizzabili, hreflang, robots diverso per ambiente) |
 | D-001 Registro temi, D-002 due temi di prova (M3) | Completate (allow-list versionata e immutabile, impostazioni per sito validate, `/admin/tema`, temi `classico` e `moderno` sullo stesso contenuto) |
 | D-003 Archivio degli oggetti, D-004 Metadati e testo alternativo (M3) | Completate (`IArchivioOggetti` con adapter su file system, libreria `/admin/media`, `/media/{id}`, firma/dimensioni/hash verificati dal server, testo alternativo per lingua, isolamento per tenant) |
+| G-001 Outbox e worker (coda consultabile) | Completata (`/admin/platform/coda` con ultimo errore, ripresa e scarto dei falliti, metriche `DvCms.Outbox`, manutenzione a lotti dei dati scaduti) |
 | B-010 Gestione testi statici | Completata (`/admin/platform/testi`: ricerca, filtri, modifica, cache e audit) |
 | B-007 Creazione TenantAdmin e non-escalation | Completata (password temporanea mostrata una volta; elevazione `Utente` → `TenantAdmin`) |
 

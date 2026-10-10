@@ -11,6 +11,7 @@ using DvCms.Infrastructure.Accessi;
 using DvCms.Infrastructure.Cms;
 using DvCms.Infrastructure.Email;
 using DvCms.Infrastructure.Localizzazione;
+using DvCms.Infrastructure.Manutenzione;
 using DvCms.Infrastructure.Media;
 using DvCms.Infrastructure.Outbox;
 using DvCms.Infrastructure.Persistenza;
@@ -120,11 +121,33 @@ public static class EstensioniServizi
             predefinite.DurataPrenotazione);
         servizi.TryAddSingleton(opzioni);
         servizi.TryAddScoped<IOutbox, ScrittoreOutbox>();
+        servizi.TryAddScoped<IGestioneCodaOutbox, ServizioCodaOutbox>();
+        AggiungiManutenzione(servizi, configurazione);
         servizi.TryAddSingleton<ElaboratoreOutbox>();
         servizi.AddScoped<IGestoreOutbox, GestorePaginaPubblicata>();
         servizi.AddScoped<IGestoreOutbox, GestorePaginaRitirata>();
         servizi.AddScoped<IGestoreOutbox, GestorePaginaRinominata>();
         servizi.AddHostedService<ServizioOutbox>();
+    }
+
+    private static void AggiungiManutenzione(IServiceCollection servizi, IConfiguration configurazione)
+    {
+        var p = OpzioniManutenzione.Predefinite;
+        var abilitata = true;
+        if (!string.IsNullOrWhiteSpace(configurazione["Manutenzione:Abilitata"]) && !bool.TryParse(configurazione["Manutenzione:Abilitata"], out abilitata))
+        {
+            throw new InvalidOperationException("Valore non valido per 'Manutenzione:Abilitata': atteso true o false.");
+        }
+
+        servizi.TryAddSingleton(new OpzioniManutenzione(
+            abilitata,
+            TimeSpan.FromMinutes(LeggiIntero(configurazione, "Manutenzione:IntervalloMinuti", (int)p.Intervallo.TotalMinutes, 1, 10_080)),
+            TimeSpan.FromDays(LeggiIntero(configurazione, "Manutenzione:GiorniConservazioneCompletati", (int)p.ConservazioneCompletati.TotalDays, 1, 3650)),
+            TimeSpan.FromDays(LeggiIntero(configurazione, "Manutenzione:GiorniConservazioneFalliti", (int)p.ConservazioneFalliti.TotalDays, 1, 3650)),
+            TimeSpan.FromDays(LeggiIntero(configurazione, "Manutenzione:GiorniConservazioneAccessi", (int)p.ConservazioneAccessi.TotalDays, 1, 3650)),
+            LeggiIntero(configurazione, "Manutenzione:DimensioneLotto", p.DimensioneLotto, 1, 10_000)));
+        servizi.TryAddSingleton<ManutenzioneDati>();
+        servizi.AddHostedService<ServizioManutenzione>();
     }
 
     private static void AggiungiMedia(IServiceCollection servizi, IConfiguration configurazione)

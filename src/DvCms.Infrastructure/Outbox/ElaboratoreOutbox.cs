@@ -129,6 +129,7 @@ public sealed partial class ElaboratoreOutbox
 
         if (errore is null)
         {
+            MetricheOutbox.Elaborato(messaggio.Tipo, "riuscito");
             await query.ExecuteUpdateAsync(
                 aggiornamento => aggiornamento
                     .SetProperty(candidato => candidato.Stato, StatoMessaggioOutbox.Completato)
@@ -144,6 +145,7 @@ public sealed partial class ElaboratoreOutbox
         var tentativi = messaggio.Tentativi + 1;
         var esaurito = definitivo || tentativi >= _opzioni.TentativiMassimi;
         var prossimo = adesso + AttesaPerTentativo(tentativi);
+        MetricheOutbox.Elaborato(messaggio.Tipo, esaurito ? "fallito" : "ritentato");
         await query.ExecuteUpdateAsync(
             aggiornamento => aggiornamento
                 .SetProperty(candidato => candidato.Stato, esaurito ? StatoMessaggioOutbox.Fallito : StatoMessaggioOutbox.Pendente)

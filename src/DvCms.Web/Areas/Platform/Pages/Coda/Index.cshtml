@@ -1,0 +1,91 @@
+@page "/admin/platform/coda"
+@model DvCms.Web.Areas.Platform.Pages.Coda.IndexModel
+@using DvCms.Domain.Outbox
+@{
+    ViewData["Titolo"] = _L["Coda dei messaggi"];
+    var riepilogo = Model.Riepilogo;
+}
+@if (Model.Messaggio is not null)
+{
+    <div class="alert alert-success" role="status">@Model.Messaggio</div>
+}
+@if (Model.ErroreDaMostrare is not null)
+{
+    <div class="alert alert-danger" role="alert">@Model.ErroreDaMostrare</div>
+}
+<div class="row row-cards mb-3">
+    <div class="col-sm-4">
+        <a class="card card-link" href="?stato=Fallito">
+            <div class="card-body">
+                <div class="subheader">@_L["Falliti"]</div>
+                <div class="h1 mb-0 @(riepilogo.Falliti > 0 ? "text-danger" : null)">@riepilogo.Falliti</div>
+            </div>
+        </a>
+    </div>
+    <div class="col-sm-4">
+        <a class="card card-link" href="?stato=Pendente">
+            <div class="card-body">
+                <div class="subheader">@_L["In attesa"]</div>
+                <div class="h1 mb-0">@riepilogo.Pendenti</div>
+                @if (riepilogo.PiuVecchioPendenteIlUtc is { } piuVecchio)
+                {
+                    <div class="text-secondary small">@_L["il più vecchio dal"] @piuVecchio.ToString("yyyy-MM-dd HH:mm")</div>
+                }
+            </div>
+        </a>
+    </div>
+    <div class="col-sm-4">
+        <a class="card card-link" href="?stato=Completato">
+            <div class="card-body">
+                <div class="subheader">@_L["Completati"]</div>
+                <div class="h1 mb-0">@riepilogo.Completati</div>
+            </div>
+        </a>
+    </div>
+</div>
+<div class="card">
+    @if (Model.Messaggi.Count == 0)
+    {
+        <div class="card-body text-secondary">@_L["Nessun messaggio in questo stato."]</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table card-table table-vcenter">
+                <thead>
+                    <tr>
+                        <th>@_L["Tipo"]</th>
+                        <th>@_L["Tenant"]</th>
+                        <th>@_L["Tentativi"]</th>
+                        <th>@_L["Creato"]</th>
+                        <th>@_L["Ultimo errore"]</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var messaggio in Model.Messaggi)
+                    {
+                        <tr>
+                            <td><code>@messaggio.Tipo</code></td>
+                            <td>@messaggio.NomeTenant</td>
+                            <td>@messaggio.Tentativi</td>
+                            <td class="text-secondary">@messaggio.CreatoIlUtc.ToString("yyyy-MM-dd HH:mm")</td>
+                            <td class="text-secondary small">@messaggio.UltimoErrore</td>
+                            <td class="text-end">
+                                @if (messaggio.Stato == StatoMessaggioOutbox.Fallito)
+                                {
+                                    <form method="post" asp-page-handler="Ritenta" asp-route-id="@messaggio.Id" asp-route-stato="@Model.Stato" class="d-inline">
+                                        <button type="submit" class="btn btn-sm">@_L["Riprova"]</button>
+                                    </form>
+                                    <form method="post" asp-page-handler="Scarta" asp-route-id="@messaggio.Id" asp-route-stato="@Model.Stato" class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">@_L["Scarta"]</button>
+                                    </form>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
