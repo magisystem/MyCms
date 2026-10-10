@@ -14,6 +14,11 @@
     }
     <link rel="stylesheet" href="~/css/pubblico.css" />
     <link rel="stylesheet" href="~/css/componenti.css" asp-append-version="true" />
+    @if (vista?.Documento is not null)
+    {
+        @* Animazioni dichiarative: file fidato del sito, piccolo e senza dipendenze; va in testa per marcare la pagina prima del primo disegno. *@
+        <script src="~/js/animazioni.js" asp-append-version="true"></script>
+    }
     @if (vista is not null)
     {
         <link rel="stylesheet" href="@DvCms.Web.Pubblico.TemiVista.Foglio(vista.Tema)" asp-append-version="true" />

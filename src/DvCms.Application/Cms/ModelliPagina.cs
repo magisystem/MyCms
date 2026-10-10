@@ -117,15 +117,17 @@ public sealed class RegistroModelliPagina
     /// Modelli che si scrivono con il page builder (E-004): nessun campo e nessun testo libero; il contenuto è il documento del
     /// builder, vincolato dalla struttura e dalla policy del template omonimo (<see cref="Builder.RegistroTemplateBuilder"/>).
     /// </summary>
-    public static ModelloPagina ModelloPaginaLibera { get; } = ModelloBuilder(Builder.RegistroTemplateBuilder.PaginaLibera);
+    public static ModelloPagina ModelloPaginaLibera { get; } = ModelloBuilder(Builder.RegistroTemplateBuilder.PaginaLibera, 1);
 
-    public static ModelloPagina ModelloIntestazioneFissa { get; } = ModelloBuilder(Builder.RegistroTemplateBuilder.IntestazioneFissa);
+    public static ModelloPagina ModelloIntestazioneFissa { get; } = ModelloBuilder(Builder.RegistroTemplateBuilder.IntestazioneFissa, 1);
+
+    public static ModelloPagina ModelloIntestazioneFissaV2 { get; } = ModelloBuilder(Builder.RegistroTemplateBuilder.IntestazioneFissa, 2);
 
     /// <summary>(Dichiarata dopo i modelli: l'ordine degli inizializzatori statici conta.) I modelli rilasciati con il prodotto.</summary>
-    public static IReadOnlyList<ModelloPagina> Predefiniti { get; } = [ModelloTestoSemplice, ModelloPresentazione, ModelloPaginaLibera, ModelloIntestazioneFissa];
+    public static IReadOnlyList<ModelloPagina> Predefiniti { get; } = [ModelloTestoSemplice, ModelloPresentazione, ModelloPaginaLibera, ModelloIntestazioneFissa, ModelloIntestazioneFissaV2];
 
-    private static ModelloPagina ModelloBuilder(string id) =>
-        new(id, 1, [], new PoliticaEditing(ContenutoLiberoAmmesso: false, LunghezzaMassimaContenuto: 0), [], Builder: true);
+    private static ModelloPagina ModelloBuilder(string id, int versione = 1) =>
+        new(id, versione, [], new PoliticaEditing(ContenutoLiberoAmmesso: false, LunghezzaMassimaContenuto: 0), [], Builder: true);
 
     /// <summary>Tutte le versioni, in ordine di id e versione.</summary>
     public IReadOnlyList<ModelloPagina> Tutti => [.. _modelli.Values.OrderBy(m => m.Id, StringComparer.Ordinal).ThenBy(m => m.Versione)];

@@ -12,11 +12,26 @@
         return ammessi.Contains(valore, StringComparer.Ordinal) ? valore : predefinito;
     }
 }
+@functions {
+    private static string Animazione(IReadOnlyDictionary<string, string> stili)
+    {
+        var effetto = Token(stili, "animazione", "nessuna", "nessuna", "dissolvenza", "sale", "da-sinistra", "da-destra");
+        if (effetto == "nessuna")
+        {
+            return string.Empty;
+        }
+
+        return $" dv-anim dv-anim-{effetto} dv-ritardo-{Token(stili, "ritardoAnimazione", "0", "0", "150", "300", "600")}";
+    }
+
+    private static string Allineamento(IReadOnlyDictionary<string, string> stili) =>
+        "dv-allineamento-" + Token(stili, "allineamento", "sinistra", "sinistra", "centro", "destra");
+}
 @* Un tipo non presente nell'elenco non produce nulla: il renderer disegna solo ciò che il registro dei componenti prevede. *@
 @switch (Model.Tipo)
 {
     case "layout.sezione":
-        <section class="dv-sezione dv-spaziatura-@Token(Model.Stili, "spaziatura", "normale", "compatta", "normale", "ampia") dv-sfondo-@Token(Model.Stili, "sfondo", "nessuno", "nessuno", "chiaro", "scuro")">
+        <section class="dv-sezione dv-spaziatura-@Token(Model.Stili, "spaziatura", "normale", "compatta", "normale", "ampia") dv-sfondo-@Token(Model.Stili, "sfondo", "nessuno", "nessuno", "chiaro", "scuro")@Animazione(Model.Stili)">
             <div class="dv-contenitore">
                 @foreach (var figlio in Model.Figli)
                 {
@@ -26,7 +41,7 @@
         </section>
         break;
     case "layout.colonne":
-        <div class="dv-colonne dv-colonne-@Math.Clamp(Model.Figli.Count, 1, 3)">
+        <div class="dv-colonne dv-colonne-@Math.Clamp(Model.Figli.Count, 1, 3)@Animazione(Model.Stili)">
             @foreach (var figlio in Model.Figli)
             {
                 <partial name="Componenti/_Nodo" model="figlio" />
@@ -44,7 +59,7 @@
     case "contenuto.titolo":
         {
             var livello = Token(Model.Proprieta, "livello", "2", "1", "2", "3");
-            var classe = "dv-titolo dv-allineamento-" + Token(Model.Stili, "allineamento", "sinistra", "sinistra", "centro", "destra");
+            var classe = "dv-titolo " + Allineamento(Model.Stili) + Animazione(Model.Stili);
             var testo = Valore(Model.Proprieta, "testo", string.Empty);
             switch (livello)
             {
@@ -62,7 +77,7 @@
         break;
     case "contenuto.testo":
         {
-            var classe = "dv-testo dv-allineamento-" + Token(Model.Stili, "allineamento", "sinistra", "sinistra", "centro", "destra");
+            var classe = "dv-testo " + Allineamento(Model.Stili) + Animazione(Model.Stili);
             foreach (var paragrafo in Valore(Model.Proprieta, "testo", string.Empty).Split("\n\n", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
             {
                 var righe = paragrafo.Split('\n', StringSplitOptions.TrimEntries);
@@ -88,7 +103,7 @@
             var didascalia = Valore(Model.Proprieta, "didascalia", string.Empty);
             if (valida)
             {
-                <figure class="dv-immagine">
+                <figure class="@("dv-immagine" + Animazione(Model.Stili))">
                     <img src="/media/@idRisorsa.ToString("D")" alt="@(decorativa ? string.Empty : Valore(Model.Proprieta, "alt", string.Empty))" loading="lazy" />
                     @if (didascalia.Length > 0)
                     {
@@ -105,8 +120,75 @@
             // Indirizzo ricontrollato anche in uscita (percorso del sito o https), come per i modelli a campi.
             if (etichetta.Length > 0 && RegistroModelliPagina.UrlConsentito(url))
             {
-                <a class="pulsante dv-pulsante dv-pulsante-@Token(Model.Stili, "variante", "primario", "primario", "secondario")" href="@url">@etichetta</a>
+                <a class="pulsante dv-pulsante dv-pulsante-@Token(Model.Stili, "variante", "primario", "primario", "secondario")@Animazione(Model.Stili)" href="@url">@etichetta</a>
             }
+        }
+        break;
+    case "contenuto.hero":
+        {
+            var etichetta = Valore(Model.Proprieta, "etichettaPulsante", string.Empty);
+            var url = Valore(Model.Proprieta, "urlPulsante", string.Empty);
+            var sottotitolo = Valore(Model.Proprieta, "sottotitolo", string.Empty);
+            var haImmagine = Guid.TryParseExact(Valore(Model.Proprieta, "idRisorsa", string.Empty), "D", out var idSfondo) && idSfondo != Guid.Empty;
+            <section class="dv-hero dv-altezza-@Token(Model.Stili, "altezza", "normale", "compatta", "normale", "alta") dv-sfondo-@Token(Model.Stili, "sfondo", "scuro", "chiaro", "scuro") @Allineamento(Model.Stili)@Animazione(Model.Stili)">
+                @if (haImmagine)
+                {
+                    <img class="dv-hero-immagine" src="/media/@idSfondo.ToString("D")" alt="" loading="lazy" />
+                }
+                <div class="dv-contenitore dv-hero-contenuto">
+                    <h1 class="dv-hero-titolo">@Valore(Model.Proprieta, "titolo", string.Empty)</h1>
+                    @if (sottotitolo.Length > 0)
+                    {
+                        <p class="dv-hero-sottotitolo">@sottotitolo</p>
+                    }
+                    @if (etichetta.Length > 0 && RegistroModelliPagina.UrlConsentito(url))
+                    {
+                        <a class="pulsante dv-pulsante dv-pulsante-primario" href="@url">@etichetta</a>
+                    }
+                </div>
+            </section>
+        }
+        break;
+    case "contenuto.cta":
+        {
+            var url = Valore(Model.Proprieta, "url", string.Empty);
+            var etichetta = Valore(Model.Proprieta, "etichetta", string.Empty);
+            var testo = Valore(Model.Proprieta, "testo", string.Empty);
+            <section class="dv-cta dv-sfondo-@Token(Model.Stili, "sfondo", "chiaro", "chiaro", "scuro", "primario") @Allineamento(Model.Stili)@Animazione(Model.Stili)">
+                <div class="dv-contenitore">
+                    <h2 class="dv-cta-titolo">@Valore(Model.Proprieta, "titolo", string.Empty)</h2>
+                    @if (testo.Length > 0)
+                    {
+                        <p>@testo</p>
+                    }
+                    @if (etichetta.Length > 0 && RegistroModelliPagina.UrlConsentito(url))
+                    {
+                        <a class="pulsante dv-pulsante dv-pulsante-primario" href="@url">@etichetta</a>
+                    }
+                </div>
+            </section>
+        }
+        break;
+    case "contenuto.fisarmonica":
+        <div class="@("dv-fisarmonica" + Animazione(Model.Stili))">
+            @foreach (var figlio in Model.Figli)
+            {
+                <partial name="Componenti/_Nodo" model="figlio" />
+            }
+        </div>
+        break;
+    case "contenuto.voce":
+        {
+            // Pannelli apribili con <details>: nessuno script, accessibili da tastiera per costruzione.
+            <details class="dv-voce">
+                <summary>@Valore(Model.Proprieta, "domanda", string.Empty)</summary>
+                <div class="dv-voce-risposta">
+                    @foreach (var paragrafo in Valore(Model.Proprieta, "risposta", string.Empty).Split("\n\n", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                    {
+                        <p>@paragrafo</p>
+                    }
+                </div>
+            </details>
         }
         break;
 }

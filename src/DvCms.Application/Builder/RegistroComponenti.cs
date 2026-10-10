@@ -56,6 +56,13 @@ public sealed partial class RegistroComponenti
 
     private static readonly string[] _contenutoBase = ["contenuto.titolo", "contenuto.testo", "contenuto.immagine", "contenuto.pulsante"];
 
+    /// <summary>Effetto e ritardo di comparsa: valori da elenco, applicati con classi CSS e uno script fidato (rispetta <c>prefers-reduced-motion</c>).</summary>
+    private static readonly IReadOnlyList<DefinizioneProprieta> _animazione =
+    [
+        new("animazione", TipoProprieta.Enumerazione, Valori: ["nessuna", "dissolvenza", "sale", "da-sinistra", "da-destra"], Predefinito: "nessuna"),
+        new("ritardoAnimazione", TipoProprieta.Enumerazione, Valori: ["0", "150", "300", "600"], Predefinito: "0"),
+    ];
+
     private static readonly IReadOnlyList<DefinizioneProprieta> _allineamento =
     [
         new("allineamento", TipoProprieta.Enumerazione, Valori: ["sinistra", "centro", "destra"], Predefinito: "sinistra"),
@@ -82,41 +89,80 @@ public sealed partial class RegistroComponenti
         }
     }
 
-    /// <summary>I componenti rilasciati con il prodotto (catalogo del proof of concept: layout e contenuti di base).</summary>
+    /// <summary>
+    /// I componenti rilasciati con il prodotto: layout e contenuti di base (M4) e componenti avanzati e animazioni dichiarative (M5).
+    /// Le animazioni sono due scelte da elenco (effetto e ritardo): la logica è in un file JavaScript fidato del sito, mai nel documento.
+    /// </summary>
     public static IReadOnlyList<DefinizioneComponente> Predefiniti { get; } =
     [
-        new("layout.sezione", 1, [],
+        new("layout.sezione", 2, [],
             [
                 new("spaziatura", TipoProprieta.Enumerazione, Valori: ["compatta", "normale", "ampia"], Predefinito: "normale"),
                 new("sfondo", TipoProprieta.Enumerazione, Valori: ["nessuno", "chiaro", "scuro"], Predefinito: "nessuno"),
+                .. _animazione,
             ],
-            ["layout.colonne", .. _contenutoBase], FigliMassimi: 50),
-        new("layout.colonne", 1, [], [], ["layout.colonna"], FigliMinimi: 2, FigliMassimi: 3),
-        new("layout.colonna", 1, [], [], _contenutoBase, FigliMassimi: 20),
-        new("contenuto.titolo", 1,
+            ["layout.colonne", .. _contenutoBase, "contenuto.hero", "contenuto.cta", "contenuto.fisarmonica"], FigliMassimi: 50),
+        new("layout.colonne", 2, [], [.. _animazione], ["layout.colonna"], FigliMinimi: 2, FigliMassimi: 3),
+        new("layout.colonna", 1, [], [], [.. _contenutoBase, "contenuto.fisarmonica"], FigliMassimi: 20),
+        new("contenuto.titolo", 2,
             [
                 new("testo", TipoProprieta.TestoBreve, Obbligatoria: true, LunghezzaMassima: 200),
                 new("livello", TipoProprieta.Enumerazione, Valori: ["1", "2", "3"], Predefinito: "2"),
             ],
-            _allineamento, []),
-        new("contenuto.testo", 1,
+            [.. _allineamento, .. _animazione], []),
+        new("contenuto.testo", 2,
             [new("testo", TipoProprieta.TestoLungo, Obbligatoria: true, LunghezzaMassima: 5000)],
-            _allineamento, []),
-        new("contenuto.immagine", 1,
+            [.. _allineamento, .. _animazione], []),
+        new("contenuto.immagine", 2,
             [
                 new("idRisorsa", TipoProprieta.IdRisorsa, Obbligatoria: true),
                 new("alt", TipoProprieta.TestoBreve, LunghezzaMassima: 200),
                 new("decorativa", TipoProprieta.Booleano, Predefinito: "no"),
                 new("didascalia", TipoProprieta.TestoBreve, LunghezzaMassima: 200),
             ],
-            [], []),
-        new("contenuto.pulsante", 1,
+            [.. _animazione], []),
+        new("contenuto.pulsante", 2,
             [
                 new("etichetta", TipoProprieta.TestoBreve, Obbligatoria: true, LunghezzaMassima: 40),
                 new("url", TipoProprieta.Url, Obbligatoria: true, LunghezzaMassima: RegistroModelliPagina.LunghezzaMassimaUrl),
             ],
-            [new("variante", TipoProprieta.Enumerazione, Valori: ["primario", "secondario"], Predefinito: "primario")],
+            [new("variante", TipoProprieta.Enumerazione, Valori: ["primario", "secondario"], Predefinito: "primario"), .. _animazione],
             []),
+        new("contenuto.hero", 1,
+            [
+                new("titolo", TipoProprieta.TestoBreve, Obbligatoria: true, LunghezzaMassima: 200),
+                new("sottotitolo", TipoProprieta.TestoBreve, LunghezzaMassima: 300),
+                new("etichettaPulsante", TipoProprieta.TestoBreve, LunghezzaMassima: 40),
+                new("urlPulsante", TipoProprieta.Url, LunghezzaMassima: RegistroModelliPagina.LunghezzaMassimaUrl),
+                new("idRisorsa", TipoProprieta.IdRisorsa),
+            ],
+            [
+                .. _allineamento,
+                new("altezza", TipoProprieta.Enumerazione, Valori: ["compatta", "normale", "alta"], Predefinito: "normale"),
+                new("sfondo", TipoProprieta.Enumerazione, Valori: ["chiaro", "scuro"], Predefinito: "scuro"),
+                .. _animazione,
+            ],
+            []),
+        new("contenuto.cta", 1,
+            [
+                new("titolo", TipoProprieta.TestoBreve, Obbligatoria: true, LunghezzaMassima: 200),
+                new("testo", TipoProprieta.TestoLungo, LunghezzaMassima: 500),
+                new("etichetta", TipoProprieta.TestoBreve, Obbligatoria: true, LunghezzaMassima: 40),
+                new("url", TipoProprieta.Url, Obbligatoria: true, LunghezzaMassima: RegistroModelliPagina.LunghezzaMassimaUrl),
+            ],
+            [
+                .. _allineamento,
+                new("sfondo", TipoProprieta.Enumerazione, Valori: ["chiaro", "scuro", "primario"], Predefinito: "chiaro"),
+                .. _animazione,
+            ],
+            []),
+        new("contenuto.fisarmonica", 1, [], [.. _animazione], ["contenuto.voce"], FigliMinimi: 1, FigliMassimi: 20),
+        new("contenuto.voce", 1,
+            [
+                new("domanda", TipoProprieta.TestoBreve, Obbligatoria: true, LunghezzaMassima: 200),
+                new("risposta", TipoProprieta.TestoLungo, Obbligatoria: true, LunghezzaMassima: 2000),
+            ],
+            [], []),
     ];
 
     public IReadOnlyList<DefinizioneComponente> Tutti => [.. _componenti.Values.OrderBy(c => c.Tipo, StringComparer.Ordinal)];
@@ -250,6 +296,11 @@ public sealed partial class RegistroComponenti
                 errori.Add(new ErroreBuilder("AltMancante", nodo.Id, "alt"));
             }
 
+            if (definizione.Tipo == "contenuto.hero" && !PulsanteCompleto(nodo))
+            {
+                errori.Add(new ErroreBuilder("PulsanteIncompleto", nodo.Id, "etichettaPulsante"));
+            }
+
             if (nodo.Figli.Count > 0 && !definizione.Contenitore)
             {
                 errori.Add(new ErroreBuilder("FigliNonAmmessi", nodo.Id));
@@ -298,6 +349,11 @@ public sealed partial class RegistroComponenti
             }
         }
     }
+
+    /// <summary>Il pulsante dell'hero o c'è per intero (etichetta e indirizzo) o non c'è.</summary>
+    private static bool PulsanteCompleto(NodoCms nodo) =>
+        nodo.Proprieta.GetValueOrDefault("etichettaPulsante", string.Empty).Length == 0
+        == (nodo.Proprieta.GetValueOrDefault("urlPulsante", string.Empty).Length == 0);
 
     private static bool AltValido(NodoCms nodo)
     {

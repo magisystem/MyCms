@@ -57,6 +57,10 @@ public class BuilderModel : PaginaAdmin
             ["contenuto.testo"] = Localizzatore.Traduci("Testo"),
             ["contenuto.immagine"] = Localizzatore.Traduci("Immagine"),
             ["contenuto.pulsante"] = Localizzatore.Traduci("Pulsante"),
+            ["contenuto.hero"] = Localizzatore.Traduci("Hero"),
+            ["contenuto.cta"] = Localizzatore.Traduci("Invito all'azione"),
+            ["contenuto.fisarmonica"] = Localizzatore.Traduci("Fisarmonica"),
+            ["contenuto.voce"] = Localizzatore.Traduci("Voce"),
         }),
         ["campi"] = JsonSerializer.Serialize(new Dictionary<string, string>
         {
@@ -72,6 +76,15 @@ public class BuilderModel : PaginaAdmin
             ["spaziatura"] = Localizzatore.Traduci("Spaziatura"),
             ["sfondo"] = Localizzatore.Traduci("Sfondo"),
             ["variante"] = Localizzatore.Traduci("Variante"),
+            ["titolo"] = Localizzatore.Traduci("Titolo"),
+            ["sottotitolo"] = Localizzatore.Traduci("Sottotitolo"),
+            ["etichettaPulsante"] = Localizzatore.Traduci("Testo del pulsante"),
+            ["urlPulsante"] = Localizzatore.Traduci("Indirizzo del pulsante"),
+            ["domanda"] = Localizzatore.Traduci("Domanda"),
+            ["risposta"] = Localizzatore.Traduci("Risposta"),
+            ["altezza"] = Localizzatore.Traduci("Altezza"),
+            ["animazione"] = Localizzatore.Traduci("Animazione"),
+            ["ritardoAnimazione"] = Localizzatore.Traduci("Ritardo (ms)"),
         }),
     });
 

@@ -32,11 +32,29 @@ public sealed class TemplateEAdapterTest
     {
         Assert.Equal("7311A05FA8822C268A01034509A4FB38F4A713DC6E3F7A7DC12F931B3DC445E2", RegistroTemplateBuilder.TemplatePaginaLibera.Impronta);
         Assert.Equal("25C07D3EB1BF71104F6D410014450418F8B1B14C84EABCB3154AF10BE83E3738", RegistroTemplateBuilder.TemplateIntestazioneFissa.Impronta);
+        Assert.Equal("9BB90F19375FF34AF5456E7FF1CC92E0BCD285BB2ADC1E14C0FA37A70C1A0C78", RegistroTemplateBuilder.TemplateIntestazioneFissaV2.Impronta);
     }
 
     [Fact]
     public void IlRegistroRifiutaTemplateDuplicati() =>
         Assert.Throws<ArgumentException>(() => new RegistroTemplateBuilder([RegistroTemplateBuilder.TemplatePaginaLibera, RegistroTemplateBuilder.TemplatePaginaLibera]));
+
+    [Fact]
+    public void LaVersione2AmmetteIComponentiAvanzatiNelCorpoELaVersione1No()
+    {
+        var v1 = RegistroTemplateBuilder.TemplateIntestazioneFissa;
+        var v2 = RegistroTemplateBuilder.TemplateIntestazioneFissaV2;
+        var conHero = Sostituisci(Iniziale(), "corpo", corpo => Con(corpo, figli: [Nodo("h", "contenuto.hero", new() { ["titolo"] = "x" })]));
+        var conFisarmonica = Sostituisci(Iniziale(), "corpo", corpo => Con(corpo, figli: [Nodo("f", "contenuto.fisarmonica", null, null, Nodo("v", "contenuto.voce", new() { ["domanda"] = "d", ["risposta"] = "r" }))]));
+
+        Assert.Contains(ValidatoreTemplate.Valida(v1, conHero), e => e.Codice == "TipoNonAmmessoNelloSlot");
+        Assert.Empty(ValidatoreTemplate.Valida(v2, conHero));
+        Assert.Empty(ValidatoreTemplate.Valida(v2, conFisarmonica));
+        Assert.Empty(_registro.Valida(conFisarmonica));
+        // Un documento valido per la v1 lo è anche per la v2 (presupposto del passaggio di versione).
+        Assert.Empty(ValidatoreTemplate.Valida(v2, Iniziale()));
+        Assert.Same(v2, _template.Ultimo(RegistroTemplateBuilder.IntestazioneFissa));
+    }
 
     [Theory]
     [InlineData(RegistroTemplateBuilder.PaginaLibera)]

@@ -447,10 +447,14 @@ public sealed class ServizioPagine : IServizioPagine
             var bozza = await _contesto.RevisioniPagina.AsNoTracking().SingleAsync(revisione => revisione.Id == pagina.IdUltimaRevisioneBozza, annullamento);
             var recente = _modelli.Ultimo(bozza.IdModello);
             var attuale = _modelli.Trova(bozza.IdModello, bozza.VersioneModello);
-            if (recente is null || attuale is null || recente.Versione <= attuale.Versione || attuale.Builder)
+            if (recente is null || attuale is null || recente.Versione <= attuale.Versione)
             {
-                // Per i modelli del builder una nuova versione richiederebbe di migrare il documento: non è previsto ancora.
                 return new EsitoOperazione(CodiceEsito.NonConsentito);
+            }
+
+            if (attuale.Builder)
+            {
+                return await AggiornaModelloBuilderAsync(pagina, bozza, recente, token, attore, annullamento);
             }
 
             // Si portano i valori dei campi che esistono ancora; gli altri si scartano.
@@ -471,6 +475,36 @@ public sealed class ServizioPagine : IServizioPagine
             await _contesto.SaveChangesAsync(annullamento);
             return new EsitoOperazione(CodiceEsito.Riuscito, nuova.Id);
         });
+
+    /// <summary>
+    /// Passaggio di una pagina del builder all'ultima versione del suo template: il documento esistente deve essere valido per il
+    /// nuovo template (oltre che per il registro dei componenti), altrimenti nulla cambia. Non si trasforma mai il documento.
+    /// </summary>
+    private async Task<EsitoOperazione> AggiornaModelloBuilderAsync(Pagina pagina, RevisionePagina bozza, ModelloPagina recente, byte[] token, Utenza attore, CancellationToken annullamento)
+    {
+        if (_template.Trova(recente.Id, recente.Versione) is not { } template
+            || bozza.DocumentoRenderJson is null
+            || !SerializzatoreDocumento.TentaLeggi(bozza.DocumentoRenderJson, out var documento, out _))
+        {
+            return new EsitoOperazione(CodiceEsito.DatiNonValidi, null, ["Modello"]);
+        }
+
+        var normalizzato = _componenti.Normalizza(documento);
+        if (_componenti.Valida(normalizzato).Count > 0 || ValidatoreTemplate.Valida(template, normalizzato).Count > 0)
+        {
+            return new EsitoOperazione(CodiceEsito.DatiNonValidi, null, ["Modello"]);
+        }
+
+        _contesto.Entry(pagina).Property(candidata => candidata.TokenConcorrenza).OriginalValue = token;
+        var nuova = pagina.AggiungiRevisione(
+            new ContenutoRevisione(bozza.Titolo, bozza.Contenuto, recente.Id, recente.Versione, bozza.DatiModello, bozza.TitoloSeo, bozza.DescrizioneSeo, bozza.NonIndicizzare, bozza.Builder),
+            $"Passaggio al modello {recente.Id} versione {recente.Versione}",
+            attore.Id,
+            _orologio);
+        _contesto.RevisioniPagina.Add(nuova);
+        await _contesto.SaveChangesAsync(annullamento);
+        return new EsitoOperazione(CodiceEsito.Riuscito, nuova.Id);
+    }
 
     public Task<EsitoOperazione> EliminaReindirizzamentoAsync(Guid idAttore, Guid idPagina, Guid idReindirizzamento, CancellationToken annullamento) =>
         EseguiAsync(idAttore, "EliminazioneReindirizzamento", async _ =>

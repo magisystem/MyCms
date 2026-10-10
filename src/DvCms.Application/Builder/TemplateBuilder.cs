@@ -115,9 +115,21 @@ public sealed class RegistroTemplateBuilder
     /// Pagina con intestazione fissa: l'intestazione (di cui si cambia solo il testo del titolo) e l'avviso in fondo sono bloccati;
     /// il corpo è uno slot che accetta contenuti di base e colonne.
     /// </summary>
-    public static TemplateBuilder TemplateIntestazioneFissa { get; } = new(
-        IntestazioneFissa,
+    public static TemplateBuilder TemplateIntestazioneFissa { get; } = CreaIntestazioneFissa(
         1,
+        ["layout.colonne", "contenuto.titolo", "contenuto.testo", "contenuto.immagine", "contenuto.pulsante"]);
+
+    /// <summary>
+    /// Versione 2 (M5): stessa struttura, ma il corpo accetta anche i componenti avanzati (hero, invito all'azione, fisarmonica).
+    /// Un documento della versione 1 è valido anche per la 2, quindi il passaggio è possibile.
+    /// </summary>
+    public static TemplateBuilder TemplateIntestazioneFissaV2 { get; } = CreaIntestazioneFissa(
+        2,
+        ["layout.colonne", "contenuto.titolo", "contenuto.testo", "contenuto.immagine", "contenuto.pulsante", "contenuto.hero", "contenuto.cta", "contenuto.fisarmonica"]);
+
+    private static TemplateBuilder CreaIntestazioneFissa(int versione, IReadOnlyList<string> tipiNelCorpo) => new(
+        IntestazioneFissa,
+        versione,
         [
             new NodoTemplate(
                 "intestazione",
@@ -139,7 +151,7 @@ public sealed class RegistroTemplateBuilder
                 [
                     new NodoTemplate("corpo-testo", "contenuto.testo", Proprieta: new Dictionary<string, string> { ["testo"] = "Scrivi qui il contenuto della pagina." }),
                 ],
-                Slot: new SlotTemplate(["layout.colonne", "contenuto.titolo", "contenuto.testo", "contenuto.immagine", "contenuto.pulsante"], 30)),
+                Slot: new SlotTemplate(tipiNelCorpo, 30)),
             new NodoTemplate(
                 "avviso",
                 "layout.sezione",
@@ -150,9 +162,13 @@ public sealed class RegistroTemplateBuilder
                 ]),
         ]);
 
-    public static IReadOnlyList<TemplateBuilder> Predefiniti { get; } = [TemplatePaginaLibera, TemplateIntestazioneFissa];
+    public static IReadOnlyList<TemplateBuilder> Predefiniti { get; } = [TemplatePaginaLibera, TemplateIntestazioneFissa, TemplateIntestazioneFissaV2];
 
     public IReadOnlyList<TemplateBuilder> Tutti => [.. _template.Values.OrderBy(t => t.Id, StringComparer.Ordinal).ThenBy(t => t.Versione)];
+
+    /// <summary>L'ultima versione rilasciata di un template.</summary>
+    public TemplateBuilder? Ultimo(string? id) =>
+        id is null ? null : _template.Values.Where(t => t.Id == id).MaxBy(t => t.Versione);
 
     public TemplateBuilder? Trova(string? id, int versione) =>
         id is not null && _template.TryGetValue((id, versione), out var t) ? t : null;

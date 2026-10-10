@@ -58,7 +58,8 @@ public partial class BuilderWebTest
         Assert.True(System.Text.Json.Nodes.JsonNode.DeepEquals(
             System.Text.Json.Nodes.JsonNode.Parse(stato.GetProperty("progetto").GetRawText()),
             System.Text.Json.Nodes.JsonNode.Parse(Progetto(Iniziale()))));
-        Assert.Equal(7, stato.GetProperty("catalogo").GetArrayLength());
+        Assert.Equal(11, stato.GetProperty("catalogo").GetArrayLength());
+        Assert.Equal(2, stato.GetProperty("versioneTemplate").GetInt32());
         Assert.True(stato.GetProperty("vincoli").GetProperty("nodi").GetProperty("avviso").GetProperty("bloccato").GetBoolean());
         Assert.Equal(30, stato.GetProperty("vincoli").GetProperty("nodi").GetProperty("corpo").GetProperty("slot").GetProperty("figliMassimi").GetInt32());
 
@@ -251,6 +252,91 @@ public partial class BuilderWebTest
     }
 
     [Fact]
+    public async Task IComponentiAvanzatiEdIlAnimazioniSiDisegnanoConSoloClassiDaElenco()
+    {
+        await using var c = await Contesto.CreaAsync();
+        var (id, percorso) = await c.CreaPaginaAsync("pagina-con-intestazione-fissa", "avanzata", slug: "avanzata");
+        var stato = await c.StatoAsync(id);
+        var documento = ConCorpo(
+            Iniziale(),
+            Nodo("h", "contenuto.hero", new() { ["titolo"] = "Benvenuti <b>qui</b>", ["sottotitolo"] = "Sotto", ["etichettaPulsante"] = "Vai", ["urlPulsante"] = "/prodotti" }, new() { ["altezza"] = "alta", ["animazione"] = "sale", ["ritardoAnimazione"] = "300" }),
+            Nodo("c", "contenuto.cta", new() { ["titolo"] = "Scrivici", ["testo"] = "Rispondiamo presto.", ["etichetta"] = "Contatti", ["url"] = "https://esempio.it/contatti" }, new() { ["sfondo"] = "primario" }),
+            Nodo("f", "contenuto.fisarmonica", null, new() { ["animazione"] = "dissolvenza" },
+                Nodo("v1", "contenuto.voce", new() { ["domanda"] = "Come funziona?", ["risposta"] = "Primo.\n\n<script>alert(1)</script>" }),
+                Nodo("v2", "contenuto.voce", new() { ["domanda"] = "Quanto costa?", ["risposta"] = "Poco." })));
+        using var salvato = await c.SalvaAsync(id, stato.GetProperty("token").GetString()!, Progetto(documento));
+        Assert.Equal(HttpStatusCode.OK, salvato.StatusCode);
+        await c.PubblicaAsync(percorso);
+
+        using var pubblica = await c.Web.SessioneA().GetAsync("/avanzata");
+        var html = await pubblica.Content.ReadAsStringAsync(Ct);
+
+        Assert.Contains("<section class=\"dv-hero dv-altezza-alta dv-sfondo-scuro dv-allineamento-sinistra dv-anim dv-anim-sale dv-ritardo-300\">", html, StringComparison.Ordinal);
+        Assert.Contains("<h1 class=\"dv-hero-titolo\">Benvenuti &lt;b&gt;qui&lt;/b&gt;</h1>", html, StringComparison.Ordinal);
+        Assert.Contains("href=\"/prodotti\">Vai</a>", html, StringComparison.Ordinal);
+        Assert.Contains("dv-cta dv-sfondo-primario", html, StringComparison.Ordinal);
+        Assert.Contains("<div class=\"dv-fisarmonica dv-anim dv-anim-dissolvenza dv-ritardo-0\">", html, StringComparison.Ordinal);
+
+        Assert.Contains("<summary>Come funziona?</summary>", html, StringComparison.Ordinal);
+        Assert.Contains("&lt;script&gt;alert(1)&lt;/script&gt;", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("<script>alert", html, StringComparison.Ordinal);
+        // Lo script delle animazioni è l'unico, è del sito e sta in testa; le pagine senza builder non lo caricano.
+        Assert.Single(Regex.Matches(html, "<script"));
+        Assert.Contains("src=\"/js/animazioni.js", html, StringComparison.Ordinal);
+        using var script = await c.Web.SessioneA().GetAsync("/js/animazioni.js");
+        Assert.Equal(HttpStatusCode.OK, script.StatusCode);
+    }
+
+    [Fact]
+    public async Task UnaPaginaDellaVersione1PassaAllaVersione2SoloSeIlDocumentoEValido()
+    {
+        await using var c = await Contesto.CreaAsync();
+        var (id, percorso) = await c.CreaPaginaAsync("pagina-con-intestazione-fissa", "vecchia");
+        await c.ImpostaVersioneModelloAsync(id, 1);
+        var documentoV1 = ConCorpo(Iniziale(), Nodo("t", "contenuto.testo", new() { ["testo"] = "Scritto con la versione 1" }));
+        var stato = await c.StatoAsync(id);
+        Assert.Equal(1, stato.GetProperty("versioneTemplate").GetInt32());
+        using var salvato = await c.SalvaAsync(id, stato.GetProperty("token").GetString()!, Progetto(documentoV1));
+        Assert.Equal(HttpStatusCode.OK, salvato.StatusCode);
+
+        // Con la versione 1 il corpo non accetta un hero.
+        var token = (await Json(salvato)).GetProperty("token").GetString()!;
+        using var rifiutato = await c.SalvaAsync(id, token, Progetto(ConCorpo(Iniziale(), Nodo("h", "contenuto.hero", new() { ["titolo"] = "x" }))));
+        Assert.Contains((await Json(rifiutato)).GetProperty("errori").EnumerateArray(), e => e.GetProperty("codice").GetString() == "TipoNonAmmessoNelloSlot");
+
+        using var modifica = await c.Sessione.GetAsync(percorso);
+        Assert.Contains("Passa all&#x27;ultima versione del modello", await modifica.Content.ReadAsStringAsync(Ct), StringComparison.Ordinal);
+        var tokenModulo = await c.TokenModuloAsync(percorso);
+        using var passaggio = await c.Sessione.InviaModuloAsync(percorso, [new("TokenConcorrenza", tokenModulo)], $"{percorso}?handler=AggiornaModello");
+        Assert.True(SessioneProva.EReindirizzamento(passaggio));
+
+        var revisioni = await c.RevisioniAsync(id);
+        Assert.Equal(2, revisioni[^1].VersioneModello);
+        Assert.Equal(revisioni[^2].DocumentoRenderJson, revisioni[^1].DocumentoRenderJson);
+        var dopo = await c.StatoAsync(id);
+        Assert.Equal(2, dopo.GetProperty("versioneTemplate").GetInt32());
+        using var oraAccettato = await c.SalvaAsync(id, dopo.GetProperty("token").GetString()!, Progetto(ConCorpo(Iniziale(), Nodo("h", "contenuto.hero", new() { ["titolo"] = "x" }))));
+        Assert.Equal(HttpStatusCode.OK, oraAccettato.StatusCode);
+    }
+
+    [Fact]
+    public async Task IlPassaggioDiVersioneEIlRifiutatoSeIlDocumentoNonEConformeAlNuovoTemplate()
+    {
+        await using var c = await Contesto.CreaAsync();
+        var (id, percorso) = await c.CreaPaginaAsync("pagina-con-intestazione-fissa", "danneggiata");
+        await c.ImpostaVersioneModelloAsync(id, 1);
+        await c.ScriviDocumentoDirettoAsync(id, SerializzatoreDocumento.Scrivi(Iniziale() with { Nodi = [.. Iniziale().Nodi.Where(n => n.Id != "avviso")] }));
+        var tokenModulo = await c.TokenModuloAsync(percorso);
+
+        using var passaggio = await c.Sessione.InviaModuloAsync(percorso, [new("TokenConcorrenza", tokenModulo)], $"{percorso}?handler=AggiornaModello");
+        using var pagina = await c.Sessione.GetAsync(percorso);
+
+        Assert.True(SessioneProva.EReindirizzamento(passaggio));
+        Assert.Single(await c.RevisioniAsync(id));
+        Assert.Equal(1, (await c.RevisioniAsync(id))[0].VersioneModello);
+    }
+
+    [Fact]
     public async Task UnDocumentoRovinatoNelDatabaseNonProduceMaHtmlDelCostruttore()
     {
         await using var c = await Contesto.CreaAsync();
@@ -435,6 +521,13 @@ public partial class BuilderWebTest
             await using var ambito = Web.Fabbrica.Services.CreateAsyncScope();
             return await ambito.ServiceProvider.GetRequiredService<ContestoDatabase>().RevisioniPagina.IgnoreQueryFilters().AsNoTracking()
                 .Where(r => r.IdPagina == idPagina).OrderBy(r => r.NumeroRevisione).ToListAsync(Ct);
+        }
+
+        public async Task ImpostaVersioneModelloAsync(Guid idPagina, int versione)
+        {
+            await using var ambito = Web.Fabbrica.Services.CreateAsyncScope();
+            await ambito.ServiceProvider.GetRequiredService<ContestoDatabase>().RevisioniPagina.IgnoreQueryFilters().Where(r => r.IdPagina == idPagina)
+                .ExecuteUpdateAsync(r => r.SetProperty(x => x.VersioneModello, versione), Ct);
         }
 
         public async Task ScriviDocumentoDirettoAsync(Guid idPagina, string json)

@@ -27,7 +27,7 @@ public sealed class DocumentoCmsTest
 
     [Fact]
     public void LeDefinizioniDeiComponentiHannoUnImprontaFissata() =>
-        Assert.Equal("20F084E5A3CABC53A0F16A8F9C5D765AF8B4C2979C24AF65606A7DB18CCA5107", _registro.Impronta);
+        Assert.Equal("46743FEB489A50E3F727665DB1AF13F73A73A971E10864976EE795E6DFD84B59", _registro.Impronta);
 
     [Fact]
     public void IlRegistroRifiutaDefinizioniDuplicateOFigliSconosciuti()
@@ -184,4 +184,42 @@ public sealed class DocumentoCmsTest
 
         Assert.Empty(_registro.Valida(documento));
     }
+
+    [Fact]
+    public void IComponentiAvanzatiEdIlAnimazioniSonoValidi()
+    {
+        var documento = new DocumentoCms(1,
+        [
+            Nodo("s", "layout.sezione", null, new() { ["animazione"] = "sale", ["ritardoAnimazione"] = "300" },
+                Nodo("h", "contenuto.hero", new() { ["titolo"] = "Benvenuti", ["sottotitolo"] = "Sotto", ["etichettaPulsante"] = "Vai", ["urlPulsante"] = "/x", ["idRisorsa"] = _risorsa }, new() { ["altezza"] = "alta", ["animazione"] = "dissolvenza" }),
+                Nodo("c", "contenuto.cta", new() { ["titolo"] = "Contattaci", ["etichetta"] = "Scrivici", ["url"] = "https://esempio.it/contatti" }, new() { ["sfondo"] = "primario" }),
+                Nodo("f", "contenuto.fisarmonica", null, null,
+                    Nodo("v1", "contenuto.voce", new() { ["domanda"] = "Come?", ["risposta"] = "Così.\n\nOppure così." }),
+                    Nodo("v2", "contenuto.voce", new() { ["domanda"] = "Quando?", ["risposta"] = "Presto." }))),
+        ]);
+
+        Assert.Empty(_registro.Valida(documento));
+    }
+
+    public static TheoryData<string, Func<DocumentoCms>> AvanzatiNonValidi() => new()
+    {
+        { "StileNonValida", () => new(1, [Nodo("t", "contenuto.titolo", new() { ["testo"] = "x" }, new() { ["animazione"] = "rotazione" })]) },
+        { "StileNonValida", () => new(1, [Nodo("t", "contenuto.titolo", new() { ["testo"] = "x" }, new() { ["ritardoAnimazione"] = "-1" })]) },
+        { "StileNonValida", () => new(1, [Nodo("t", "contenuto.titolo", new() { ["testo"] = "x" }, new() { ["animazione"] = "sale\" onload=\"x" })]) },
+        { "StileSconosciuta", () => new(1, [Nodo("c", "layout.colonna", null, new() { ["animazione"] = "sale" })]) },
+        { "PulsanteIncompleto", () => new(1, [Nodo("h", "contenuto.hero", new() { ["titolo"] = "x", ["etichettaPulsante"] = "Vai" })]) },
+        { "PulsanteIncompleto", () => new(1, [Nodo("h", "contenuto.hero", new() { ["titolo"] = "x", ["urlPulsante"] = "/x" })]) },
+        { "ProprietaNonValida", () => new(1, [Nodo("h", "contenuto.hero", new() { ["titolo"] = "x", ["etichettaPulsante"] = "Vai", ["urlPulsante"] = "javascript:alert(1)" })]) },
+        { "ProprietaMancante", () => new(1, [Nodo("c", "contenuto.cta", new() { ["titolo"] = "x", ["etichetta"] = "Vai" })]) },
+        { "FigliInsufficienti", () => new(1, [Nodo("f", "contenuto.fisarmonica")]) },
+        { "FiglioNonAmmesso", () => new(1, [Nodo("f", "contenuto.fisarmonica", null, null, Nodo("t", "contenuto.testo", new() { ["testo"] = "x" }))]) },
+        { "FiglioNonAmmesso", () => new(1, [Nodo("s", "layout.sezione", null, null, Nodo("v", "contenuto.voce", new() { ["domanda"] = "d", ["risposta"] = "r" }))]) },
+        { "TroppiFigli", () => new(1, [Nodo("f", "contenuto.fisarmonica", null, null, [.. Enumerable.Range(0, 21).Select(i => Nodo($"v{i}", "contenuto.voce", new() { ["domanda"] = "d", ["risposta"] = "r" }))])]) },
+        { "FiglioNonAmmesso", () => new(1, [Nodo("s", "layout.sezione", null, null, Nodo("c", "layout.colonne", null, null, Nodo("c1", "layout.colonna", null, null, Nodo("h", "contenuto.hero", new() { ["titolo"] = "x" })), Nodo("c2", "layout.colonna")))]) },
+    };
+
+    [Theory]
+    [MemberData(nameof(AvanzatiNonValidi))]
+    public void UnComponenteAvanzatoManomessoEDichiaratoNonValido(string codiceAtteso, Func<DocumentoCms> crea) =>
+        Assert.Contains(_registro.Valida(crea()), e => e.Codice == codiceAtteso);
 }

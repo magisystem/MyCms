@@ -61,3 +61,39 @@ main:has(.dv-documento) {
 @media (prefers-color-scheme: dark) {
     .dv-sfondo-chiaro { background: #1f2933; color: #e4e7eb; }
 }
+
+/* Hero, invito all'azione e fisarmonica (M5). */
+.dv-hero { position: relative; display: flex; align-items: center; overflow: hidden; }
+.dv-hero.dv-altezza-compatta { min-height: 14rem; }
+.dv-hero.dv-altezza-normale { min-height: 22rem; }
+.dv-hero.dv-altezza-alta { min-height: 32rem; }
+.dv-hero-immagine { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.45; }
+.dv-hero-contenuto { position: relative; width: 100%; padding-top: 2rem; padding-bottom: 2rem; }
+.dv-hero-titolo { margin: 0 0 0.5rem; font-size: clamp(2rem, 5vw, 3.2rem); }
+.dv-hero-sottotitolo { margin: 0 0 1.5rem; font-size: 1.25rem; }
+.dv-cta { padding: 3rem 0; }
+.dv-cta-titolo { margin: 0 0 0.75rem; }
+.dv-sfondo-primario { background: var(--tema-colore-primario, #1f4e8c); color: #ffffff; }
+.dv-sfondo-primario .pulsante { color: var(--tema-colore-primario, #1f4e8c); background: #ffffff; }
+.dv-fisarmonica { margin: 0 0 1rem; border-top: 1px solid #cbd2d9; }
+.dv-voce { border-bottom: 1px solid #cbd2d9; }
+.dv-voce summary { padding: 0.9rem 0.25rem; font-weight: 600; cursor: pointer; }
+.dv-voce summary:focus-visible { outline: 2px solid var(--tema-colore-primario, #1f4e8c); outline-offset: 2px; }
+.dv-voce-risposta { padding: 0 0.25rem 0.5rem; }
+
+/*
+ * Animazioni dichiarative di comparsa (E-006). Lo stato nascosto vale solo se lo script del sito ha marcato la pagina (.dv-js):
+ * senza JavaScript il contenuto resta visibile. Con prefers-reduced-motion nessuna animazione.
+ */
+.dv-js .dv-anim { opacity: 0; transition: opacity 0.6s ease, transform 0.6s ease; }
+.dv-js .dv-anim-sale { transform: translateY(1.5rem); }
+.dv-js .dv-anim-da-sinistra { transform: translateX(-2rem); }
+.dv-js .dv-anim-da-destra { transform: translateX(2rem); }
+.dv-js .dv-anim.dv-visibile { opacity: 1; transform: none; }
+.dv-js .dv-ritardo-150 { transition-delay: 150ms; }
+.dv-js .dv-ritardo-300 { transition-delay: 300ms; }
+.dv-js .dv-ritardo-600 { transition-delay: 600ms; }
+
+@media (prefers-reduced-motion: reduce) {
+    .dv-js .dv-anim, .dv-js .dv-anim-sale, .dv-js .dv-anim-da-sinistra, .dv-js .dv-anim-da-destra { opacity: 1; transform: none; transition: none; }
+}

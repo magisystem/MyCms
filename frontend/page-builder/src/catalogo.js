@@ -4,7 +4,7 @@
 // quindi non entra nel progetto salvato.
 import { consentito } from './vincoli.js';
 
-const FOGLIE = new Set(['contenuto.titolo', 'contenuto.testo', 'contenuto.immagine', 'contenuto.pulsante']);
+const FOGLIE = new Set(['contenuto.titolo', 'contenuto.testo', 'contenuto.immagine', 'contenuto.pulsante', 'contenuto.hero', 'contenuto.cta', 'contenuto.voce']);
 
 const TAG = {
   'layout.sezione': 'section',
@@ -14,6 +14,10 @@ const TAG = {
   'contenuto.testo': 'p',
   'contenuto.immagine': 'img',
   'contenuto.pulsante': 'a',
+  'contenuto.hero': 'section',
+  'contenuto.cta': 'section',
+  'contenuto.fisarmonica': 'div',
+  'contenuto.voce': 'div',
 };
 
 function valore(componente, attributo, predefinito) {
@@ -60,9 +64,37 @@ function aspetto(tipo, el, modello) {
       impostaClassi(el, ['pulsante', 'dv-pulsante', `dv-pulsante-${p('data-s-variante', 'primario')}`]);
       el.textContent = p('data-p-etichetta');
       break;
+    case 'contenuto.hero':
+      impostaClassi(el, ['dv-hero', `dv-altezza-${p('data-s-altezza', 'normale')}`, `dv-sfondo-${p('data-s-sfondo', 'scuro')}`, `dv-allineamento-${p('data-s-allineamento', 'sinistra')}`]);
+      riempi(el, [['h1', 'dv-hero-titolo', p('data-p-titolo')], ['p', 'dv-hero-sottotitolo', p('data-p-sottotitolo')], ['span', 'pulsante dv-pulsante dv-pulsante-primario', p('data-p-etichetta-pulsante')]]);
+      break;
+    case 'contenuto.cta':
+      impostaClassi(el, ['dv-cta', `dv-sfondo-${p('data-s-sfondo', 'chiaro')}`, `dv-allineamento-${p('data-s-allineamento', 'sinistra')}`]);
+      riempi(el, [['h2', 'dv-cta-titolo', p('data-p-titolo')], ['p', '', p('data-p-testo')], ['span', 'pulsante dv-pulsante dv-pulsante-primario', p('data-p-etichetta')]]);
+      break;
+    case 'contenuto.fisarmonica':
+      impostaClassi(el, ['dv-fisarmonica']);
+      break;
+    case 'contenuto.voce':
+      impostaClassi(el, ['dv-voce']);
+      riempi(el, [['strong', 'dv-voce-domanda', p('data-p-domanda')], ['div', 'dv-voce-risposta', p('data-p-risposta')]]);
+      break;
     default:
       break;
   }
+}
+
+function riempi(el, voci) {
+  el.replaceChildren(
+    ...voci
+      .filter(([, , testo]) => testo)
+      .map(([tag, classe, testo]) => {
+        const figlio = document.createElement(tag);
+        figlio.className = classe;
+        figlio.textContent = testo;
+        return figlio;
+      }),
+  );
 }
 
 function creaTrait(definizione, config) {
@@ -157,6 +189,12 @@ function contenutoBlocco(tipo, config) {
       return { type: tipo, attributes: { 'data-p-id-risorsa': config.risorse[0]?.id ?? '', 'data-p-alt': config.risorse[0]?.alt ?? '' } };
     case 'contenuto.pulsante':
       return { type: tipo, attributes: { 'data-p-etichetta': config.testi.componenti[tipo] ?? 'Pulsante', 'data-p-url': '/' } };
+    case 'contenuto.hero':
+      return { type: tipo, attributes: { 'data-p-titolo': config.testi.componenti[tipo] ?? 'Titolo' } };
+    case 'contenuto.cta':
+      return { type: tipo, attributes: { 'data-p-titolo': config.testi.componenti[tipo] ?? 'Titolo', 'data-p-etichetta': 'Scopri', 'data-p-url': '/' } };
+    case 'contenuto.fisarmonica':
+      return { type: tipo, components: [{ type: 'contenuto.voce', attributes: { 'data-p-domanda': 'Domanda', 'data-p-risposta': 'Risposta' } }] };
     default:
       return { type: tipo };
   }
@@ -164,8 +202,8 @@ function contenutoBlocco(tipo, config) {
 
 export function creaBlocchi(editor, definizioni, config) {
   for (const [tipo] of definizioni) {
-    // Una colonna da sola non ha senso: nasce dentro "Colonne"; un'immagine richiede almeno una risorsa nella libreria.
-    if (tipo === 'layout.colonna') continue;
+    // Una colonna o una voce da sole non hanno senso: nascono dentro "Colonne" e "Fisarmonica"; un'immagine richiede almeno una risorsa nella libreria.
+    if (tipo === 'layout.colonna' || tipo === 'contenuto.voce') continue;
     if (tipo === 'contenuto.immagine' && config.risorse.length === 0) continue;
     editor.BlockManager.add(`dv-${tipo}`, {
       label: config.testi.componenti[tipo] ?? tipo,
