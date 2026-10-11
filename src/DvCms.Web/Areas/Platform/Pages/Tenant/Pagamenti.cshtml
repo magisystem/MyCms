@@ -1,0 +1,51 @@
+@page "/admin/platform/tenant/{id:guid}/pagamenti"
+@model DvCms.Web.Areas.Platform.Pages.Tenant.PagamentiModel
+@using DvCms.Domain.Negozio
+@{
+    ViewData["Titolo"] = _L["Pagamenti del sito"];
+}
+@if (Model.Messaggio is not null)
+{
+    <div class="alert alert-success" role="status">@Model.Messaggio</div>
+}
+@if (Model.ErroreDaMostrare is not null)
+{
+    <div class="alert alert-danger" role="alert">@Model.ErroreDaMostrare</div>
+}
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">@Model.Scheda!.NomeSito — PayPal</h3>
+        <div class="card-actions"><a href="/admin/platform/tenant/@Model.IdTenant" class="btn btn-link">@_L["Torna al tenant"]</a></div>
+    </div>
+    <div class="card-body">
+        <p class="text-secondary">@_L["Ogni tenant usa il proprio conto commerciante PayPal. Il segreto del client e l'identificativo del webhook si cifrano e non vengono più mostrati."]</p>
+        <p>@_L["Indirizzo del webhook da registrare su PayPal"]: <code>https://&lt;dominio del sito&gt;/webhooks/paypal</code></p>
+        <form method="post" asp-page-handler="Salva" asp-route-id="@Model.IdTenant" asp-route-idSito="@Model.IdSito" autocomplete="off" novalidate>
+            <input type="hidden" name="tokenConcorrenza" value="@Model.Scheda.TokenConcorrenza" />
+            <div class="mb-3">
+                <label class="form-label" for="ambiente">@_L["Ambiente"]</label>
+                <select class="form-select @(Model.CampiNonValidi.Contains("Ambiente") ? "is-invalid" : null)" id="ambiente" name="ambiente">
+                    @foreach (var ambiente in Enum.GetValues<AmbientePagamento>())
+                    {
+                        <option value="@ambiente" selected="@(ambiente == Model.Ambiente)">@Model.NomeAmbiente(ambiente)</option>
+                    }
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label required" for="idClient">@_L["Identificativo client"]</label>
+                <input class="form-control @(Model.CampiNonValidi.Contains("IdClient") ? "is-invalid" : null)" id="idClient" name="idClient" value="@Model.IdClient" maxlength="@ImpostazioniPagamentoSito.LunghezzaMassimaIdClient" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label required" for="segretoClient">@_L["Segreto del client"]</label>
+                <input type="password" class="form-control @(Model.CampiNonValidi.Contains("SegretoClient") ? "is-invalid" : null)" id="segretoClient" name="segretoClient" autocomplete="new-password"
+                       placeholder="@(Model.Scheda.SegretoImpostato ? _L["Impostato: lascia vuoto per non cambiarlo"] : string.Empty)" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label required" for="idWebhook">@_L["Identificativo del webhook"]</label>
+                <input type="password" class="form-control @(Model.CampiNonValidi.Contains("IdWebhook") ? "is-invalid" : null)" id="idWebhook" name="idWebhook" autocomplete="new-password"
+                       placeholder="@(Model.Scheda.WebhookImpostato ? _L["Impostato: lascia vuoto per non cambiarlo"] : string.Empty)" />
+            </div>
+            <button type="submit" class="btn btn-primary">@_L["Salva"]</button>
+        </form>
+    </div>
+</div>

@@ -19,6 +19,7 @@ using DvCms.Infrastructure.Manutenzione;
 using DvCms.Infrastructure.Media;
 using DvCms.Infrastructure.Negozio;
 using DvCms.Infrastructure.Outbox;
+using DvCms.Infrastructure.Pagamenti;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.Infrastructure.Piattaforma;
 using DvCms.Infrastructure.Popolamento;
@@ -220,6 +221,11 @@ public static class EstensioniServizi
         servizi.TryAddScoped<IServizioCarrello, ServizioCarrello>();
         servizi.TryAddScoped<IServizioOrdini, ServizioOrdini>();
         servizi.TryAddScoped<IServizioGiacenze, ServizioGiacenze>();
+        servizi.AddHttpClient(ClientePayPal.NomeClientHttp, client => client.Timeout = Timeout.InfiniteTimeSpan);
+        servizi.TryAddScoped<IProviderPagamento, ClientePayPal>();
+        servizi.TryAddScoped<ServizioImpostazioniPagamento>();
+        servizi.TryAddScoped<IServizioImpostazioniPagamento>(f => f.GetRequiredService<ServizioImpostazioniPagamento>());
+        servizi.TryAddScoped<IArchivioCredenzialiPagamento>(f => f.GetRequiredService<ServizioImpostazioniPagamento>());
         servizi.TryAddScoped<VerificatoreArchivio>();
     }
 

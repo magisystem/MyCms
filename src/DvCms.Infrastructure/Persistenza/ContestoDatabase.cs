@@ -104,6 +104,8 @@ public class ContestoDatabase : DbContext
 
     public DbSet<RigaOrdine> RigheOrdine => Set<RigaOrdine>();
 
+    public DbSet<ImpostazioniPagamentoSito> ImpostazioniPagamentoSiti => Set<ImpostazioniPagamentoSito>();
+
     public DbSet<GiacenzaVariante> GiacenzeVarianti => Set<GiacenzaVariante>();
 
     public DbSet<PrenotazioneGiacenza> PrenotazioniGiacenza => Set<PrenotazioneGiacenza>();
@@ -144,6 +146,7 @@ public class ContestoDatabase : DbContext
         modelBuilder.Entity<RigaCarrello>().HasQueryFilter(riga => riga.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<Ordine>().HasQueryFilter(ordine => ordine.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<RigaOrdine>().HasQueryFilter(riga => riga.IdTenant == IdTenantCorrente);
+        modelBuilder.Entity<ImpostazioniPagamentoSito>().HasQueryFilter(impostazioni => impostazioni.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<GiacenzaVariante>().HasQueryFilter(giacenza => giacenza.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<PrenotazioneGiacenza>().HasQueryFilter(prenotazione => prenotazione.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<MovimentoGiacenza>().HasQueryFilter(movimento => movimento.IdTenant == IdTenantCorrente);

@@ -288,3 +288,24 @@ internal sealed class ConfigurazioneMovimentoGiacenza : IEntityTypeConfiguration
         entita.HasIndex(movimento => new { movimento.IdVariante, movimento.CreatoIlUtc });
     }
 }
+
+internal sealed class ConfigurazioneImpostazioniPagamentoSito : IEntityTypeConfiguration<ImpostazioniPagamentoSito>
+{
+    public void Configure(EntityTypeBuilder<ImpostazioniPagamentoSito> entita)
+    {
+        entita.ToTable("ImpostazioniPagamentoSiti");
+        entita.HasKey(impostazioni => impostazioni.Id);
+        entita.Property(impostazioni => impostazioni.Id).ValueGeneratedNever();
+        entita.Property(impostazioni => impostazioni.Ambiente).HasConversion<string>().HasMaxLength(20).IsRequired();
+        entita.Property(impostazioni => impostazioni.IdClient).HasMaxLength(ImpostazioniPagamentoSito.LunghezzaMassimaIdClient).IsRequired();
+        entita.Property(impostazioni => impostazioni.TokenConcorrenza).IsRowVersion();
+
+        entita.HasOne<Sito>()
+            .WithMany()
+            .HasForeignKey(impostazioni => new { impostazioni.IdTenant, impostazioni.IdSito })
+            .HasPrincipalKey(sito => new { sito.IdTenant, sito.Id })
+            .OnDelete(DeleteBehavior.Restrict);
+        entita.HasOne<DvCms.Domain.Accessi.Utenza>().WithMany().HasForeignKey(impostazioni => impostazioni.AggiornatoDaIdUtenza).OnDelete(DeleteBehavior.Restrict);
+        entita.HasIndex(impostazioni => impostazioni.IdSito).IsUnique();
+    }
+}

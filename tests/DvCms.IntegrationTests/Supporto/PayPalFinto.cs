@@ -1,0 +1,281 @@
+using System.Collections.Concurrent;
+using System.Globalization;
+using System.Net;
+using System.Text;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+
+namespace DvCms.IntegrationTests.Supporto;
+
+/// <summary>Richiesta registrata dal PayPal finto.</summary>
+public sealed record RichiestaPayPal(HttpMethod Metodo, string Percorso, string? Autorizzazione, string? IdRichiesta, string Corpo);
+
+/// <summary>
+/// PayPal finto per i test (ADR-0020): riproduce, con stato, le risposte che il negozio si aspetta da Orders v2 — token, creazione
+/// con idempotenza su <c>PayPal-Request-Id</c>, approvazione del cliente, cattura, lettura e verifica della firma del webhook.
+/// Nessuna richiesta esce dal processo e nessuna credenziale è vera.
+/// </summary>
+public sealed class PayPalFinto : HttpMessageHandler
+{
+    public const string FirmaValida = "firma-valida";
+
+    private readonly object _blocco = new();
+    private readonly Dictionary<string, OrdineFinto> _ordini = [];
+    private readonly Dictionary<string, string> _perRichiesta = [];
+    private int _contatore;
+
+    public ConcurrentQueue<RichiestaPayPal> Richieste { get; } = new();
+
+    public string IdClient { get; init; } = "client-di-prova";
+
+    public string SegretoClient { get; init; } = "segreto-di-prova";
+
+    /// <summary>Come finisce la prossima cattura: <c>COMPLETED</c> (predefinito), <c>DECLINED</c>, <c>PENDING</c>.</summary>
+    public string EsitoCattura { get; set; } = "COMPLETED";
+
+    /// <summary>Se valorizzato, la cattura risponde con questo importo invece di quello dell'ordine (prova di manomissione).</summary>
+    public string? ImportoCatturato { get; set; }
+
+    /// <summary>Se impostata, ogni richiesta fallisce con questa eccezione (servizio non raggiungibile).</summary>
+    public Exception? Eccezione { get; set; }
+
+    public int Conta(HttpMethod metodo, string percorsoInizia) =>
+        Richieste.Count(r => r.Metodo == metodo && r.Percorso.StartsWith(percorsoInizia, StringComparison.Ordinal));
+
+    public IReadOnlyList<string> IdOrdini
+    {
+        get
+        {
+            lock (_blocco)
+            {
+                return [.. _ordini.Keys];
+            }
+        }
+    }
+
+    public string ImportoOrdine(string id)
+    {
+        lock (_blocco)
+        {
+            return _ordini[id].Importo;
+        }
+    }
+
+    /// <summary>Il cliente approva il pagamento sulla pagina di PayPal.</summary>
+    public void Approva(string id)
+    {
+        lock (_blocco)
+        {
+            _ordini[id].Approvato = true;
+        }
+    }
+
+    protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+    {
+        var corpo = request.Content is null ? string.Empty : await request.Content.ReadAsStringAsync(cancellationToken);
+        var idRichiesta = request.Headers.TryGetValues("PayPal-Request-Id", out var valori) ? valori.FirstOrDefault() : null;
+        Richieste.Enqueue(new RichiestaPayPal(request.Method, request.RequestUri!.AbsolutePath, request.Headers.Authorization?.ToString(), idRichiesta, corpo));
+        if (Eccezione is not null)
+        {
+            throw Eccezione;
+        }
+
+        var percorso = request.RequestUri.AbsolutePath;
+        if (percorso == "/v1/oauth2/token")
+        {
+            return Token(request);
+        }
+
+        if (request.Headers.Authorization?.ToString() != "Bearer TOKEN-FINTO")
+        {
+            return Risposta(HttpStatusCode.Unauthorized, new JsonObject { ["name"] = "AUTHENTICATION_FAILURE" });
+        }
+
+        if (percorso == "/v2/checkout/orders" && request.Method == HttpMethod.Post)
+        {
+            return Crea(corpo, idRichiesta);
+        }
+
+        if (percorso == "/v1/notifications/verify-webhook-signature")
+        {
+            var richiesta = JsonNode.Parse(corpo)!;
+            var valida = richiesta["transmission_sig"]?.GetValue<string>() == FirmaValida && !string.IsNullOrEmpty(richiesta["webhook_id"]?.GetValue<string>());
+            return Risposta(HttpStatusCode.OK, new JsonObject { ["verification_status"] = valida ? "SUCCESS" : "FAILURE" });
+        }
+
+        const string prefisso = "/v2/checkout/orders/";
+        if (percorso.StartsWith(prefisso, StringComparison.Ordinal))
+        {
+            var resto = percorso[prefisso.Length..];
+            if (resto.EndsWith("/capture", StringComparison.Ordinal) && request.Method == HttpMethod.Post)
+            {
+                return Cattura(resto[..^"/capture".Length], idRichiesta);
+            }
+
+            if (request.Method == HttpMethod.Get)
+            {
+                lock (_blocco)
+                {
+                    return _ordini.TryGetValue(resto, out var ordine)
+                        ? Risposta(HttpStatusCode.OK, Descrivi(resto, ordine))
+                        : Risposta(HttpStatusCode.NotFound, new JsonObject { ["name"] = "RESOURCE_NOT_FOUND" });
+                }
+            }
+        }
+
+        return Risposta(HttpStatusCode.NotFound, new JsonObject { ["name"] = "RESOURCE_NOT_FOUND" });
+    }
+
+    private HttpResponseMessage Token(HttpRequestMessage richiesta)
+    {
+        var atteso = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{IdClient}:{SegretoClient}"));
+        return richiesta.Headers.Authorization?.ToString() == $"Basic {atteso}"
+            ? Risposta(HttpStatusCode.OK, new JsonObject { ["access_token"] = "TOKEN-FINTO", ["expires_in"] = 3600 })
+            : Risposta(HttpStatusCode.Unauthorized, new JsonObject { ["error"] = "invalid_client" });
+    }
+
+    private HttpResponseMessage Crea(string corpo, string? idRichiesta)
+    {
+        lock (_blocco)
+        {
+            if (idRichiesta is not null && _perRichiesta.TryGetValue(idRichiesta, out var esistente))
+            {
+                return Risposta(HttpStatusCode.OK, Creato(esistente));
+            }
+
+            var unita = JsonNode.Parse(corpo)!["purchase_units"]![0]!;
+            var id = $"ORD-{Interlocked.Increment(ref _contatore):D4}";
+            _ordini[id] = new OrdineFinto(
+                unita["amount"]!["value"]!.GetValue<string>(),
+                unita["amount"]!["currency_code"]!.GetValue<string>(),
+                unita["custom_id"]?.GetValue<string>());
+            if (idRichiesta is not null)
+            {
+                _perRichiesta[idRichiesta] = id;
+            }
+
+            return Risposta(HttpStatusCode.Created, Creato(id));
+        }
+    }
+
+    private static JsonObject Creato(string id) => new()
+    {
+        ["id"] = id,
+        ["status"] = "PAYER_ACTION_REQUIRED",
+        ["links"] = new JsonArray
+        {
+            new JsonObject { ["href"] = $"https://api-m.sandbox.paypal.com/v2/checkout/orders/{id}", ["rel"] = "self", ["method"] = "GET" },
+            new JsonObject { ["href"] = $"https://www.sandbox.paypal.com/checkoutnow?token={id}", ["rel"] = "payer-action", ["method"] = "GET" },
+        },
+    };
+
+    private HttpResponseMessage Cattura(string id, string? idRichiesta)
+    {
+        lock (_blocco)
+        {
+            if (!_ordini.TryGetValue(id, out var ordine))
+            {
+                return Risposta(HttpStatusCode.NotFound, new JsonObject { ["name"] = "RESOURCE_NOT_FOUND" });
+            }
+
+            if (ordine.Catturato)
+            {
+                // Stessa richiesta ripetuta: stessa risposta. Una richiesta diversa su un ordine già incassato è un errore.
+                return idRichiesta is not null && idRichiesta == ordine.IdRichiestaCattura
+                    ? Risposta(HttpStatusCode.Created, Descrivi(id, ordine))
+                    : Errore422("ORDER_ALREADY_CAPTURED");
+            }
+
+            if (!ordine.Approvato)
+            {
+                return Errore422("ORDER_NOT_APPROVED");
+            }
+
+            ordine.Catturato = true;
+            ordine.StatoCattura = EsitoCattura;
+            ordine.ImportoCatturato = ImportoCatturato ?? ordine.Importo;
+            ordine.IdRichiestaCattura = idRichiesta;
+            return Risposta(HttpStatusCode.Created, Descrivi(id, ordine));
+        }
+    }
+
+    private static HttpResponseMessage Errore422(string problema) => Risposta(
+        HttpStatusCode.UnprocessableEntity,
+        new JsonObject { ["name"] = "UNPROCESSABLE_ENTITY", ["details"] = new JsonArray { new JsonObject { ["issue"] = problema } } });
+
+    private static JsonObject Descrivi(string id, OrdineFinto ordine)
+    {
+        var json = new JsonObject
+        {
+            ["id"] = id,
+            ["status"] = ordine.Catturato ? (ordine.StatoCattura == "COMPLETED" ? "COMPLETED" : "APPROVED") : (ordine.Approvato ? "APPROVED" : "PAYER_ACTION_REQUIRED"),
+        };
+        if (ordine.Catturato)
+        {
+            json["purchase_units"] = new JsonArray
+            {
+                new JsonObject
+                {
+                    ["payments"] = new JsonObject
+                    {
+                        ["captures"] = new JsonArray
+                        {
+                            new JsonObject
+                            {
+                                ["id"] = $"CAP-{id}",
+                                ["status"] = ordine.StatoCattura,
+                                ["amount"] = new JsonObject { ["currency_code"] = ordine.Valuta, ["value"] = ordine.ImportoCatturato },
+                            },
+                        },
+                    },
+                },
+            };
+        }
+
+        return json;
+    }
+
+    private static HttpResponseMessage Risposta(HttpStatusCode codice, JsonObject corpo) => new(codice)
+    {
+        Content = new StringContent(corpo.ToJsonString(), Encoding.UTF8, "application/json"),
+    };
+
+    private sealed class OrdineFinto
+    {
+        public OrdineFinto(string importo, string valuta, string? riferimento)
+        {
+            Importo = importo;
+            Valuta = valuta;
+            Riferimento = riferimento;
+        }
+
+        public string Importo { get; }
+
+        public string Valuta { get; }
+
+        public string? Riferimento { get; }
+
+        public bool Approvato { get; set; }
+
+        public bool Catturato { get; set; }
+
+        public string StatoCattura { get; set; } = "COMPLETED";
+
+        public string ImportoCatturato { get; set; } = string.Empty;
+
+        public string? IdRichiestaCattura { get; set; }
+    }
+}
+
+/// <summary>Fabbrica di client HTTP che serve sempre lo stesso gestore finto.</summary>
+public sealed class FabbricaHttpPayPalFinta : IHttpClientFactory
+{
+    private readonly HttpMessageHandler _gestore;
+
+    public FabbricaHttpPayPalFinta(HttpMessageHandler gestore)
+    {
+        _gestore = gestore;
+    }
+
+    public HttpClient CreateClient(string name) => new(_gestore, disposeHandler: false);
+}

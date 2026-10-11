@@ -115,6 +115,7 @@
                                 <input type="hidden" name="abilitata" value="@((!sito.RegistrazioneAcquirentiAbilitata).ToString().ToLowerInvariant())" />
                                 <button type="submit" class="btn btn-sm @(sito.RegistrazioneAcquirentiAbilitata ? "btn-outline-danger" : "btn-outline-primary")">@(sito.RegistrazioneAcquirentiAbilitata ? _L["Disabilita la registrazione"] : _L["Abilita la registrazione"])</button>
                             </form>
+                            <div class="mt-2"><a class="btn btn-sm" href="/admin/platform/tenant/@tenant.Id/pagamenti?idSito=@sito.Id"><i class="ti ti-credit-card"></i> @_L["Pagamenti (PayPal)"]</a></div>
                         }
 
                         <table class="table table-sm mt-3 mb-2">
