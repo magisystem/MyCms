@@ -60,6 +60,7 @@ public sealed class ServizioCarrello : IServizioCarrello
         var nomi = await _contesto.TraduzioniProdotto.AsNoTracking().Where(t => idProdotti.Contains(t.IdProdotto)).ToListAsync(annullamento);
         var etichette = await _contesto.TraduzioniVarianteProdotto.AsNoTracking().Where(t => idVarianti.Contains(t.IdVariante)).ToListAsync(annullamento);
 
+        var giacenze = await _contesto.GiacenzeVarianti.AsNoTracking().Where(g => g.IdSito == idSito && idVarianti.Contains(g.IdVariante)).ToDictionaryAsync(g => g.IdVariante, annullamento);
         var viste = new List<RigaCarrelloVista>();
         var calcolate = new List<RigaCalcolata>();
         var nonDisponibili = new List<Guid>();
@@ -84,7 +85,8 @@ public sealed class ServizioCarrello : IServizioCarrello
                 calcolata.Aliquota,
                 calcolata.Lordo,
                 calcolata.Imponibile,
-                calcolata.Iva));
+                calcolata.Iva,
+                giacenze.TryGetValue(d.Variante.Id, out var giacenza) ? Math.Clamp(giacenza.Disponibile - giacenza.Riservata, 0, RigaCarrello.QuantitaMassima) : RigaCarrello.QuantitaMassima));
         }
 
         var totali = CalcolatoreTotali.Somma(calcolate);

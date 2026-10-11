@@ -4,6 +4,8 @@ using DvCms.Application.Piattaforma;
 using DvCms.Domain.Negozio;
 using DvCms.IntegrationTests.Negozio;
 using DvCms.IntegrationTests.Supporto;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace DvCms.IntegrationTests.Pagamenti;
@@ -375,5 +377,82 @@ public class ServizioPagamentiTest
         Assert.True(evaso.Riuscito);
         Assert.Equal(CodiceEsito.NonConsentito, ancora.Codice);
         Assert.Equal(StatoOrdine.Ritirato, await c.StatoOrdineAsync(ordine));
+    }
+
+    private static async Task<(ContestoNegozio C, PayPalFinto Finto, Guid Ordine)> PreparaConEmailAsync(string lingua = "it")
+    {
+        var finto = new PayPalFinto();
+        var c = await ContestoNegozio.CreaAsync(payPal: finto, conEmail: true);
+        var varianti = await c.CreaProdottoAsync(c.A, "Libro <raro>", 4m, ("LIB-1", 10.00m, null));
+        var indirizzo = await c.CreaMetodoAsync(c.A, "Corriere", 5m, AreaSpedizione.Italia);
+        await c.ConfiguraPagamentoAsync(c.A);
+        await c.AggiungiAsync(c.Cliente, varianti[0], 2);
+        var esito = await c.ComeAsync(c.A, s => s.CreaDaCarrelloAsync(c.Cliente, lingua, new DatiOrdine(indirizzo, "Mario Rossi", "Via Roma 1", "Scala B", "20100", "Milano", "IT", 25m), Ct));
+        Assert.True(esito.Riuscito, $"{esito.Codice} {string.Join(',', esito.CampiNonValidi ?? [])}");
+        return (c, finto, esito.Id!.Value);
+    }
+
+    [Fact]
+    public async Task IlPagamentoRiuscitoAccodaUnaSolaConfermaAlClienteCifrataEConIDatiDellOrdine()
+    {
+        var (c, finto, ordine) = await PreparaConEmailAsync();
+        await using var _ = c;
+        Assert.Equal(0, await c.ContaMessaggiAsync());
+        var idProvider = await AvviaEApprovaAsync(c, finto, ordine);
+
+        await c.ComePagamentiAsync(c.A, s => s.CompletaAsync(c.Cliente, ordine, idProvider, Ct));
+        await c.ComePagamentiAsync(c.A, s => s.CompletaAsync(c.Cliente, ordine, idProvider, Ct));
+        await c.ComePagamentiAsync(c.A, s => s.ElaboraWebhookAsync(Firma(), Evento("WH-1", "CHECKOUT.ORDER.APPROVED", idProvider), Ct));
+        var email = Assert.Single(await c.ElaboraEmailAsync());
+
+        Assert.Equal(["cliente@esempio.it"], email.Destinatari.Select(d => d.Trim('<', '>')));
+        Assert.Contains("Ordine n. 1 confermato", email.Oggetto, StringComparison.Ordinal);
+        Assert.Contains("Libro <raro>", email.Testo, StringComparison.Ordinal);
+        Assert.Contains("LIB-1", email.Testo, StringComparison.Ordinal);
+        Assert.Contains("× 2", email.Testo, StringComparison.Ordinal);
+        Assert.Contains("Totale (IVA inclusa): 25,00 EUR", email.Testo, StringComparison.Ordinal);
+        Assert.Contains("Mario Rossi", email.Testo, StringComparison.Ordinal);
+        Assert.Contains("20100 Milano (IT)", email.Testo, StringComparison.Ordinal);
+        Assert.Contains($"https://a.esempio.it/account/ordini/{ordine:D}", email.Testo, StringComparison.Ordinal);
+        Assert.Equal(1, await c.ContaMessaggiAsync());
+    }
+
+    [Fact]
+    public async Task UnPagamentoNonRiuscitoNonInviaConfermeESenzaCanaleEmailNonSiAccodaNulla()
+    {
+        var (c, finto, ordine) = await PreparaConEmailAsync();
+        await using var _ = c;
+        finto.EsitoCattura = "DECLINED";
+        var idProvider = await AvviaEApprovaAsync(c, finto, ordine);
+
+        await c.ComePagamentiAsync(c.A, s => s.CompletaAsync(c.Cliente, ordine, idProvider, Ct));
+
+        Assert.Equal(0, await c.ContaMessaggiAsync());
+        Assert.Empty(await c.ElaboraEmailAsync());
+
+        // Tenant senza canale email: il pagamento riesce lo stesso e non si accoda nulla.
+        var (senza, fintoSenza, _, ordineSenza) = await PreparaAsync();
+        await using var _2 = senza;
+        var idSenza = await AvviaEApprovaAsync(senza, fintoSenza, ordineSenza);
+        var pagato = await senza.ComePagamentiAsync(senza.A, s => s.CompletaAsync(senza.Cliente, ordineSenza, idSenza, Ct));
+        Assert.Equal(RisultatoPagamento.Pagato, pagato);
+        Assert.Equal(0, await senza.ContaMessaggiAsync());
+    }
+
+    [Fact]
+    public async Task LaLinguaDelCompratoreSiSalvaSullOrdineSoloSeEAbilitata()
+    {
+        var (c, _, ordineEn) = await PreparaConEmailAsync("en");
+        await using var _ = c;
+        var (altro, _, ordineIgnota) = await PreparaConEmailAsync("xx");
+        await using var _2 = altro;
+
+        await using var ambito = c.Web.Fabbrica.Services.CreateAsyncScope();
+        var lingua = await ambito.ServiceProvider.GetRequiredService<DvCms.Infrastructure.Persistenza.ContestoDatabase>().Ordini.IgnoreQueryFilters().Where(o => o.Id == ordineEn).Select(o => o.CodiceLingua).SingleAsync(Ct);
+        await using var ambito2 = altro.Web.Fabbrica.Services.CreateAsyncScope();
+        var ignota = await ambito2.ServiceProvider.GetRequiredService<DvCms.Infrastructure.Persistenza.ContestoDatabase>().Ordini.IgnoreQueryFilters().Where(o => o.Id == ordineIgnota).Select(o => o.CodiceLingua).SingleAsync(Ct);
+
+        Assert.Equal("en", lingua);
+        Assert.Equal("it", ignota);
     }
 }

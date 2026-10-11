@@ -20,6 +20,16 @@ public class RichiestaModel : PageModel
     [BindProperty]
     public string? Email { get; set; }
 
+    /// <summary>Provenienza del recupero: <c>account</c> per un acquirente (torna all'accesso dell'area cliente); ogni altro valore è l'amministrazione.</summary>
+    [BindProperty(SupportsGet = true)]
+    public string? Da { get; set; }
+
+    public bool PerAccount => string.Equals(Da, "account", StringComparison.Ordinal);
+
+    public string PercorsoAccesso => PerAccount ? "/account/accesso" : "/admin/accesso";
+
+    public string Suffisso => PerAccount ? "?da=account" : string.Empty;
+
     public IActionResult OnGet() =>
         User.Identity?.IsAuthenticated == true ? LocalRedirect(ConfigurazioneAccessiWeb.PercorsoAdmin) : Page();
 
@@ -27,6 +37,6 @@ public class RichiestaModel : PageModel
     {
         var riferimento = await _recupero.RichiediAsync(Email, ChiaveIndirizzoIp.Calcola(HttpContext.Connection.RemoteIpAddress), annullamento);
         CookieRecupero.Imposta(HttpContext, riferimento);
-        return LocalRedirect(CookieRecupero.PercorsoCodice);
+        return LocalRedirect(CookieRecupero.PercorsoCodice + Suffisso);
     }
 }

@@ -26,6 +26,7 @@ public sealed partial class ServizioPagamenti : IServizioPagamenti
     private readonly IArchivioCredenzialiPagamento _credenziali;
     private readonly IServizioGiacenze _giacenze;
     private readonly IServizioAudit _audit;
+    private readonly NotificheOrdine _notifiche;
     private readonly OpzioniNegozio _opzioni;
     private readonly TimeProvider _orologio;
     private readonly ILogger<ServizioPagamenti> _logger;
@@ -37,6 +38,7 @@ public sealed partial class ServizioPagamenti : IServizioPagamenti
         IArchivioCredenzialiPagamento credenziali,
         IServizioGiacenze giacenze,
         IServizioAudit audit,
+        NotificheOrdine notifiche,
         OpzioniNegozio opzioni,
         TimeProvider orologio,
         ILogger<ServizioPagamenti> logger)
@@ -47,6 +49,7 @@ public sealed partial class ServizioPagamenti : IServizioPagamenti
         _credenziali = credenziali;
         _giacenze = giacenze;
         _audit = audit;
+        _notifiche = notifiche;
         _opzioni = opzioni;
         _orologio = orologio;
         _logger = logger;
@@ -420,6 +423,8 @@ public sealed partial class ServizioPagamenti : IServizioPagamenti
             return RisultatoPagamento.DaRimborsare;
         }
 
+        // La conferma al cliente nasce nella stessa transazione del pagamento: o ci sono entrambi o nessuno dei due.
+        await _notifiche.AccodaConfermaPagamentoAsync(ordine, annullamento);
         await _contesto.SaveChangesAsync(annullamento);
         await tx.CommitAsync(annullamento);
         await _audit.RegistraAsync(AzioniAudit.PagamentoOrdine, $"Ordine:{ordine.Id}", RegistroAudit.EsitoRiuscito, idTenant, null, $"ordine {ordine.Numero}, incasso {esito.IdCattura}", annullamento);

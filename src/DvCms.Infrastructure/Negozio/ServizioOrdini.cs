@@ -6,6 +6,7 @@ using DvCms.Application.Tenancy;
 using DvCms.Domain;
 using DvCms.Domain.Accessi;
 using DvCms.Domain.Negozio;
+using DvCms.Infrastructure.Cms;
 using DvCms.Infrastructure.Persistenza;
 using Microsoft.EntityFrameworkCore;
 
@@ -91,6 +92,7 @@ public sealed partial class ServizioOrdini : IServizioOrdini
             return new EsitoOperazione(CodiceEsito.Conflitto, null, ["Totale"]);
         }
 
+        var lingueSito = await LingueDelSito.ElencaAsync(_contesto, idSito, annullamento);
         var adesso = _orologio.GetUtcNow().UtcDateTime;
         var ordine = new Ordine
         {
@@ -99,6 +101,9 @@ public sealed partial class ServizioOrdini : IServizioOrdini
             IdSito = idSito,
             IdUtenza = account.Id,
             Stato = StatoOrdine.InAttesaDiPagamento,
+            CodiceLingua = lingueSito.FirstOrDefault(l => string.Equals(l.Codice, codiceLingua, StringComparison.OrdinalIgnoreCase))?.Codice
+                ?? lingueSito.FirstOrDefault(l => l.Predefinita)?.Codice
+                ?? "it",
             Valuta = vista.Valuta,
             TotaleLordo = totali.Lordo,
             TotaleImponibile = totali.Imponibile,

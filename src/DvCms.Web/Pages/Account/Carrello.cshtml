@@ -29,7 +29,13 @@ else
             @foreach (var riga in Model.Vista.Righe)
             {
                 <tr>
-                    <td>@riga.NomeProdotto@(riga.EtichettaVariante is { Length: > 0 } etichetta ? " — " + etichetta : null) <small>(@riga.Sku)</small></td>
+                    <td>
+                        @riga.NomeProdotto@(riga.EtichettaVariante is { Length: > 0 } etichetta ? " — " + etichetta : null) <small>(@riga.Sku)</small>
+                        @if (riga.Quantita > riga.Massimo)
+                        {
+                            <br /><strong role="alert">@(riga.Massimo == 0 ? _L["Esaurito: toglilo dal carrello per procedere."] : _L["Disponibili solo {0}: riduci la quantità per procedere.", riga.Massimo])</strong>
+                        }
+                    </td>
                     <td>@Importo(riga.PrezzoUnitarioLordo)</td>
                     <td>
                         <form method="post" asp-page-handler="Quantita">
@@ -67,7 +73,7 @@ else
             <tr><td colspan="3"><strong>@_L["Totale (IVA inclusa)"]</strong></td><td colspan="2"><strong>@Importo(Model.Vista.TotaleLordo)</strong></td></tr>
         </tfoot>
     </table>
-    @if (Model.Vista.Righe.Count > 0 && Model.Vista.NonDisponibili.Count == 0)
+    @if (Model.Vista.Righe.Count > 0 && Model.Vista.NonDisponibili.Count == 0 && Model.Vista.Righe.All(r => r.Quantita <= r.Massimo))
     {
         <p><a href="/account/checkout">@_L["Procedi alla cassa"]</a></p>
     }

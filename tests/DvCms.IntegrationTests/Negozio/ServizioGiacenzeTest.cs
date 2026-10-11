@@ -298,4 +298,21 @@ public class ServizioGiacenzeTest
         Assert.Equal(StatoOrdine.Annullato, await c.StatoOrdineAsync(ordine));
         Assert.Equal(0, (await c.GiacenzaAsync(varianti[0])).Riservata);
     }
+
+    [Fact]
+    public async Task IlCarrelloDiceQuantaMerceEDisponibileEdAvvisaSeNonBasta()
+    {
+        await using var c = await ContestoNegozio.CreaAsync();
+        var varianti = await c.CreaProdottoAsync(c.A, "Libro", 4m, ("LIB-1", 10.00m, "Base"), ("LIB-2", 5.00m, "Libera"));
+        var ritiro = await c.CreaRitiroAsync(c.A);
+        await c.ImpostaGiacenzaAsync(c.A, varianti[0], 5);
+        await OrdinaAsync(c, c.AltroCliente, varianti[0], 3, ritiro, 30m);
+        await c.AggiungiAsync(c.Cliente, varianti[0], 4);
+        await c.AggiungiAsync(c.Cliente, varianti[1], 4);
+
+        var vista = await c.ComeCarrelloAsync(c.A, s => s.LeggiAsync(c.Cliente, "it", Ct));
+
+        Assert.Equal([2, 99], vista.Righe.Select(r => r.Massimo));
+        Assert.Equal([4, 4], vista.Righe.Select(r => r.Quantita));
+    }
 }

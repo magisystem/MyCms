@@ -27,6 +27,16 @@ public class ReimpostaModel : PageModel
     [BindProperty]
     public string? Token { get; set; }
 
+    /// <summary>Provenienza del recupero: <c>account</c> per un acquirente (torna all'accesso dell'area cliente); ogni altro valore è l'amministrazione.</summary>
+    [BindProperty(SupportsGet = true)]
+    public string? Da { get; set; }
+
+    public bool PerAccount => string.Equals(Da, "account", StringComparison.Ordinal);
+
+    public string PercorsoAccesso => PerAccount ? "/account/accesso" : "/admin/accesso";
+
+    public string Suffisso => PerAccount ? "?da=account" : string.Empty;
+
     [BindProperty]
     public string? NuovaPassword { get; set; }
 

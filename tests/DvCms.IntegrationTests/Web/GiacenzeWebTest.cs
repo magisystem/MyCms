@@ -106,4 +106,27 @@ public class GiacenzeWebTest
         Assert.Contains("LIB-1", testo, StringComparison.Ordinal);
         Assert.Equal(0, await c.ContaOrdiniAsync());
     }
+
+    [Fact]
+    public async Task IlCarrelloAvvisaEImpedisceLaCassaSeLaMerceNonBasta()
+    {
+        await using var c = await ContestoNegozio.CreaAsync();
+        var varianti = await c.CreaProdottoAsync(c.A, "Libro", 4m, ("LIB-1", 10.00m, null));
+        await c.ImpostaGiacenzaAsync(c.A, varianti[0], 2);
+        var cliente = c.Web.SessioneSu(c.A.Host);
+        using var accesso = await cliente.InviaModuloAsync("/account/accesso", [new("Email", "cliente@esempio.it"), new("Password", DatiProva.PasswordProva)]);
+        Assert.True(SessioneProva.EReindirizzamento(accesso));
+        await c.AggiungiAsync(c.Cliente, varianti[0], 1);
+        using var abbastanza = await cliente.GetAsync("/account/carrello");
+        await c.AggiungiAsync(c.Cliente, varianti[0], 4);
+
+        using var troppo = await cliente.GetAsync("/account/carrello");
+
+        var bene = WebUtility.HtmlDecode(await abbastanza.Content.ReadAsStringAsync(Ct));
+        var male = WebUtility.HtmlDecode(await troppo.Content.ReadAsStringAsync(Ct));
+        Assert.Contains("/account/checkout", bene, StringComparison.Ordinal);
+        Assert.DoesNotContain("Disponibili solo", bene, StringComparison.Ordinal);
+        Assert.Contains("Disponibili solo", male, StringComparison.Ordinal);
+        Assert.DoesNotContain("/account/checkout", male, StringComparison.Ordinal);
+    }
 }

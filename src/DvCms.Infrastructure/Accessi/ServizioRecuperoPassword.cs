@@ -187,7 +187,7 @@ public sealed partial class ServizioRecuperoPassword : IServizioRecuperoPassword
         richiesta.ScadenzaTokenIlUtc = adesso + _opzioni.ValiditaLink;
 
         var lingua = await CodiceLinguaAsync(utenza, annullamento);
-        var link = $"{urlBase.TrimEnd('/')}/admin/recupero/reimposta?token={token}";
+        var link = $"{urlBase.TrimEnd('/')}/admin/recupero/reimposta?token={token}{(utenza.Ruolo == RuoloUtenza.Utente ? "&da=account" : string.Empty)}";
         _email.Accoda(
             idTenant,
             new MessaggioEmail(

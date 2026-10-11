@@ -172,6 +172,7 @@ internal sealed class ConfigurazioneOrdine : IEntityTypeConfiguration<Ordine>
         entita.Property(ordine => ordine.Id).ValueGeneratedNever();
         entita.Property(ordine => ordine.TokenConcorrenza).IsRowVersion();
         entita.Property(ordine => ordine.Stato).HasConversion<string>().HasMaxLength(30).IsRequired();
+        entita.Property(ordine => ordine.CodiceLingua).HasMaxLength(10).IsRequired();
         entita.Property(ordine => ordine.Valuta).HasMaxLength(3).IsFixedLength().IsRequired();
         entita.Property(ordine => ordine.TotaleLordo).HasPrecision(18, 2);
         entita.Property(ordine => ordine.TotaleImponibile).HasPrecision(18, 2);

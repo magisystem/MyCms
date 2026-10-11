@@ -225,6 +225,7 @@ public static class EstensioniServizi
         servizi.AddHttpClient(ClientePayPal.NomeClientHttp, client => client.Timeout = Timeout.InfiniteTimeSpan);
         servizi.TryAddScoped<IProviderPagamento, ClientePayPal>();
         servizi.TryAddSingleton(new OpzioniNegozio(configurazione.GetValue<bool>("Negozio:CheckoutProduzione")));
+        servizi.TryAddScoped<NotificheOrdine>();
         servizi.TryAddScoped<IServizioPagamenti, ServizioPagamenti>();
         servizi.TryAddScoped<ServizioImpostazioniPagamento>();
         servizi.TryAddScoped<IServizioImpostazioniPagamento>(f => f.GetRequiredService<ServizioImpostazioniPagamento>());

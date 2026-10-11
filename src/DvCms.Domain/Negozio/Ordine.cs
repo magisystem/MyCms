@@ -82,6 +82,9 @@ public class Ordine
 
     public StatoOrdine Stato { get; set; } = StatoOrdine.InAttesaDiPagamento;
 
+    /// <summary>Lingua in cui il cliente ha acquistato (di una lingua abilitata del sito): è quella dei nomi nello snapshot e delle email sull'ordine.</summary>
+    public string CodiceLingua { get; set; } = "it";
+
     public string Valuta { get; set; } = VarianteProdotto.ValutaPredefinita;
 
     public decimal TotaleLordo { get; set; }

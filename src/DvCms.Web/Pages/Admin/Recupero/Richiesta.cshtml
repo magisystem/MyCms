@@ -9,6 +9,7 @@
         <h2 class="h2 text-center mb-2">@_L["Hai dimenticato la password?"]</h2>
         <p class="text-secondary text-center mb-4">@_L["Scrivi la tua email: se è registrata ti invieremo un codice di verifica."]</p>
         <form method="post" autocomplete="off" novalidate>
+            <input type="hidden" name="Da" value="@(Model.PerAccount ? "account" : null)" />
             <div class="mb-3">
                 <label class="form-label" for="Email">@_L["Email"]</label>
                 <input type="email" class="form-control" id="Email" name="Email" autocomplete="username" maxlength="254" required />
@@ -19,4 +20,4 @@
         </form>
     </div>
 </div>
-<div class="text-center text-secondary mt-3"><a href="/admin/accesso">@_L["Torna all'accesso"]</a></div>
+<div class="text-center text-secondary mt-3"><a href="@Model.PercorsoAccesso">@_L["Torna all'accesso"]</a></div>

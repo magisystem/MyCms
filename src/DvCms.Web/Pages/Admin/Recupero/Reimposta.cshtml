@@ -10,13 +10,13 @@
         {
             <h2 class="h2 text-center mb-2">@_L["Password cambiata"]</h2>
             <p class="text-secondary text-center mb-3">@_L["Ora puoi accedere con la nuova password."]</p>
-            <a href="/admin/accesso" class="btn btn-primary w-100">@_L["Vai all'accesso"]</a>
+            <a href="@Model.PercorsoAccesso" class="btn btn-primary w-100">@_L["Vai all'accesso"]</a>
         }
         else if (!Model.LinkValido)
         {
             <h2 class="h2 text-center mb-2">@_L["Link non valido"]</h2>
             <p class="text-secondary text-center mb-3">@_L["Il link è scaduto, è già stato usato oppure non è corretto. Puoi richiederne uno nuovo."]</p>
-            <a href="/admin/recupero" class="btn btn-primary w-100">@_L["Ricomincia il recupero"]</a>
+            <a href="/admin/recupero@(Model.Suffisso)" class="btn btn-primary w-100">@_L["Ricomincia il recupero"]</a>
         }
         else
         {
@@ -27,6 +27,7 @@
             }
             <form method="post" autocomplete="off" novalidate>
                 <input type="hidden" name="Token" value="@Model.Token" />
+                <input type="hidden" name="Da" value="@(Model.PerAccount ? "account" : null)" />
                 <div class="mb-3">
                     <label class="form-label" for="NuovaPassword">@_L["Nuova password"]</label>
                     <input type="password" class="form-control" id="NuovaPassword" name="NuovaPassword" autocomplete="new-password" required />

@@ -1106,6 +1106,11 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<string>("CodiceLingua")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
                     b.Property<DateTime>("CreatoIlUtc")
                         .HasColumnType("datetime2");
 

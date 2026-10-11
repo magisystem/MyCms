@@ -25,6 +25,8 @@ internal sealed class ContestoNegozio : IAsyncDisposable
 
     public DatiProva.TenantCreato B => Web.B;
 
+    public ServerSmtpFinto? Server { get; private set; }
+
     public Guid Platform { get; private set; }
 
     public Guid AdminA { get; private set; }
@@ -37,7 +39,7 @@ internal sealed class ContestoNegozio : IAsyncDisposable
 
     public Guid ClienteDiB { get; private set; }
 
-    public static async Task<ContestoNegozio> CreaAsync(PayPalFinto? payPal = null, bool produzioneAbilitata = false)
+    public static async Task<ContestoNegozio> CreaAsync(PayPalFinto? payPal = null, bool produzioneAbilitata = false, bool conEmail = false)
     {
         var impostazioni = new Dictionary<string, string?>
         {
@@ -45,6 +47,13 @@ internal sealed class ContestoNegozio : IAsyncDisposable
             ["Negozio:CheckoutProduzione"] = produzioneAbilitata ? "true" : "false",
         };
         var c = new ContestoNegozio(await ScenarioWeb.CreaAsync(impostazioni: impostazioni, payPal: payPal));
+        if (conEmail)
+        {
+            // Il canale email del tenant A punta a un server SMTP finto in locale: nessuna email reale parte dai test.
+            c.Server = new ServerSmtpFinto();
+            await DatiProva.ConfiguraSmtpAsync(c.Web.Fabbrica.Services, c.A.IdTenant, c.Server.Porta, Ct);
+        }
+
         c.Platform = await c.Web.CreaPlatformAdminAsync("root@esempio.it");
         c.AdminA = await c.Web.CreaTenantAdminAsync("anna@esempio.it");
         c.AdminB = await DatiProva.CreaUtenzaAsync(c.Web.Fabbrica.Services, RuoloUtenza.TenantAdmin, c.B.IdTenant, "bruno@esempio.it", annullamento: Ct);
@@ -256,5 +265,29 @@ internal sealed class ContestoNegozio : IAsyncDisposable
 
     public static DatiLinkInvito Link => new("https", null);
 
-    public ValueTask DisposeAsync() => Web.DisposeAsync();
+    /// <summary>Invia le email in coda e restituisce quelle nuove arrivate al server SMTP finto.</summary>
+    public async Task<IReadOnlyList<EmailRicevuta>> ElaboraEmailAsync()
+    {
+        var prima = Server!.Ricevute.Count;
+        while (await Web.Fabbrica.Services.GetRequiredService<DvCms.Infrastructure.Outbox.ElaboratoreOutbox>().ElaboraLottoAsync(Ct) > 0)
+        {
+        }
+
+        return [.. Server.Ricevute.Skip(prima)];
+    }
+
+    public async Task<int> ContaMessaggiAsync()
+    {
+        await using var ambito = Web.Fabbrica.Services.CreateAsyncScope();
+        return await ambito.ServiceProvider.GetRequiredService<ContestoDatabase>().MessaggiOutbox.IgnoreQueryFilters().CountAsync(Ct);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await Web.DisposeAsync();
+        if (Server is not null)
+        {
+            await Server.DisposeAsync();
+        }
+    }
 }
