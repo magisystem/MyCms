@@ -202,4 +202,48 @@
             </details>
         }
         break;
+    case "contenuto.caratteristiche":
+        <div class="@("dv-caratteristiche dv-colonne dv-colonne-" + Token(Model.Stili, "colonne", "3", "2", "3") + Animazione(Model.Stili))">
+            @foreach (var figlio in Model.Figli)
+            {
+                <partial name="Componenti/_Nodo" model="figlio" />
+            }
+        </div>
+        break;
+    case "contenuto.caratteristica":
+        {
+            var descrizione = Valore(Model.Proprieta, "descrizione", string.Empty);
+            <div class="dv-caratteristica">
+                <h3 class="dv-caratteristica-titolo">@Valore(Model.Proprieta, "titolo", string.Empty)</h3>
+                @if (descrizione.Length > 0)
+                {
+                    <p>@descrizione</p>
+                }
+            </div>
+        }
+        break;
+    case "contenuto.testimonianze":
+        <div class="@("dv-testimonianze" + Animazione(Model.Stili))">
+            @foreach (var figlio in Model.Figli)
+            {
+                <partial name="Componenti/_Nodo" model="figlio" />
+            }
+        </div>
+        break;
+    case "contenuto.testimonianza":
+        {
+            var ruolo = Valore(Model.Proprieta, "ruolo", string.Empty);
+            <figure class="dv-testimonianza">
+                <blockquote class="dv-testimonianza-citazione">
+                    @foreach (var paragrafo in Valore(Model.Proprieta, "citazione", string.Empty).Split("\n\n", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                    {
+                        <p>@paragrafo</p>
+                    }
+                </blockquote>
+                <figcaption class="dv-testimonianza-autore">
+                    <strong>@Valore(Model.Proprieta, "autore", string.Empty)</strong>@(ruolo.Length > 0 ? ", " + ruolo : string.Empty)
+                </figcaption>
+            </figure>
+        }
+        break;
 }

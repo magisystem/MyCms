@@ -132,6 +132,11 @@ public sealed class RegistroTemplateBuilder
         3,
         ["layout.colonne", "contenuto.titolo", "contenuto.testo", "contenuto.testo-ricco", "contenuto.immagine", "contenuto.pulsante", "contenuto.hero", "contenuto.cta", "contenuto.fisarmonica"]);
 
+    /// <summary>Versione 4 (M5): il corpo ammette anche griglia di caratteristiche e testimonianze. Le versioni precedenti restano valide.</summary>
+    public static TemplateBuilder TemplateIntestazioneFissaV4 { get; } = CreaIntestazioneFissa(
+        4,
+        ["layout.colonne", "contenuto.titolo", "contenuto.testo", "contenuto.testo-ricco", "contenuto.immagine", "contenuto.pulsante", "contenuto.hero", "contenuto.cta", "contenuto.fisarmonica", "contenuto.caratteristiche", "contenuto.testimonianze"]);
+
     private static TemplateBuilder CreaIntestazioneFissa(int versione, IReadOnlyList<string> tipiNelCorpo) => new(
         IntestazioneFissa,
         versione,
@@ -167,7 +172,7 @@ public sealed class RegistroTemplateBuilder
                 ]),
         ]);
 
-    public static IReadOnlyList<TemplateBuilder> Predefiniti { get; } = [TemplatePaginaLibera, TemplateIntestazioneFissa, TemplateIntestazioneFissaV2, TemplateIntestazioneFissaV3];
+    public static IReadOnlyList<TemplateBuilder> Predefiniti { get; } = [TemplatePaginaLibera, TemplateIntestazioneFissa, TemplateIntestazioneFissaV2, TemplateIntestazioneFissaV3, TemplateIntestazioneFissaV4];
 
     public IReadOnlyList<TemplateBuilder> Tutti => [.. _template.Values.OrderBy(t => t.Id, StringComparer.Ordinal).ThenBy(t => t.Versione)];
 

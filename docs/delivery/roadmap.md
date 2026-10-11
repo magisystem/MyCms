@@ -80,7 +80,7 @@ Il piano dettagliato è in [`plan-m0-m1.md`](plan-m0-m1.md).
 
 **Exit criteria:** user journey template guidato e pagina libera completati, validati e renderizzati server-side.
 
-**Stato (2026-10-10):** in corso. Fatti: anteprima per dispositivo, modifica del testo nel canvas, salvataggio automatico controllato, componenti avanzati (hero, invito all'azione, fisarmonica) e animazioni dichiarative, template v2 con passaggio sicuro. Fatto anche il testo formattato (markup a grammatica chiusa, senza sanitizzazione HTML) e il contratto componenti-temi (token `--dv-*` e skin per tema, [`componenti-e-temi.md`](../architecture/componenti-e-temi.md)). Da fare: pannello proprietà avanzato, componenti ulteriori (griglia di caratteristiche, testimonianze), user journey completo da validare. Dettagli in `docs/architecture/page-builder.md`.
+**Stato (2026-10-10):** in corso. Fatti: anteprima per dispositivo, modifica del testo nel canvas, salvataggio automatico controllato, componenti avanzati (hero, invito all'azione, fisarmonica) e animazioni dichiarative, template v2 con passaggio sicuro. Fatto anche il testo formattato (markup a grammatica chiusa, senza sanitizzazione HTML) e il contratto componenti-temi (token `--dv-*` e skin per tema, [`componenti-e-temi.md`](../architecture/componenti-e-temi.md)). Fatti anche l'uso dell'editor da tastiera (struttura ad albero, blocchi inseribili, azioni, annunci; verificato con un percorso da sola tastiera) e griglia di caratteristiche e testimonianze. Da fare: pannello proprietà avanzato, user journey completo da validare. Dettagli in `docs/architecture/page-builder.md`.
 
 ## M6 — SEO e operatività production-ready
 

@@ -27,7 +27,7 @@ public sealed class DocumentoCmsTest
 
     [Fact]
     public void LeDefinizioniDeiComponentiHannoUnImprontaFissata() =>
-        Assert.Equal("411D850BA96AF59B03FB5B349F03A58E49AF7A587D45B4D7665E27E9856A4630", _registro.Impronta);
+        Assert.Equal("201F7AC6BA7A0103786D462A4F07D36CDF854E0A32770018FD7685758C7162E7", _registro.Impronta);
 
     [Fact]
     public void IlRegistroRifiutaDefinizioniDuplicateOFigliSconosciuti()
@@ -201,8 +201,34 @@ public sealed class DocumentoCmsTest
         Assert.Empty(_registro.Valida(documento));
     }
 
+    [Fact]
+    public void LaGrigliaDiCaratteristicheELeTestimonianzeSonoValide()
+    {
+        var documento = new DocumentoCms(1,
+        [
+            Nodo("s", "layout.sezione", null, null,
+                Nodo("g", "contenuto.caratteristiche", null, new() { ["colonne"] = "2", ["animazione"] = "sale" },
+                    Nodo("c1", "contenuto.caratteristica", new() { ["titolo"] = "Veloce", ["descrizione"] = "Parte subito." }),
+                    Nodo("c2", "contenuto.caratteristica", new() { ["titolo"] = "Sicuro" })),
+                Nodo("t", "contenuto.testimonianze", null, null,
+                    Nodo("q", "contenuto.testimonianza", new() { ["citazione"] = "Ottimo lavoro.\n\nLo consiglio.", ["autore"] = "Ada", ["ruolo"] = "CTO" }))),
+        ]);
+
+        Assert.Empty(_registro.Valida(documento));
+    }
+
     public static TheoryData<string, Func<DocumentoCms>> AvanzatiNonValidi() => new()
     {
+        { "FigliInsufficienti", () => new(1, [Nodo("g", "contenuto.caratteristiche")]) },
+        { "FigliInsufficienti", () => new(1, [Nodo("t", "contenuto.testimonianze")]) },
+        { "TroppiFigli", () => new(1, [Nodo("g", "contenuto.caratteristiche", null, null, [.. Enumerable.Range(0, 13).Select(i => Nodo($"c{i}", "contenuto.caratteristica", new() { ["titolo"] = "x" }))])]) },
+        { "TroppiFigli", () => new(1, [Nodo("t", "contenuto.testimonianze", null, null, [.. Enumerable.Range(0, 7).Select(i => Nodo($"q{i}", "contenuto.testimonianza", new() { ["citazione"] = "c", ["autore"] = "a" }))])]) },
+        { "StileNonValida", () => new(1, [Nodo("g", "contenuto.caratteristiche", null, new() { ["colonne"] = "9" }, Nodo("c", "contenuto.caratteristica", new() { ["titolo"] = "x" }))]) },
+        { "ProprietaMancante", () => new(1, [Nodo("t", "contenuto.testimonianze", null, null, Nodo("q", "contenuto.testimonianza", new() { ["citazione"] = "c" }))]) },
+        { "ProprietaMancante", () => new(1, [Nodo("g", "contenuto.caratteristiche", null, null, Nodo("c", "contenuto.caratteristica"))]) },
+        { "FiglioNonAmmesso", () => new(1, [Nodo("g", "contenuto.caratteristiche", null, null, Nodo("q", "contenuto.testimonianza", new() { ["citazione"] = "c", ["autore"] = "a" }))]) },
+        { "FiglioNonAmmesso", () => new(1, [Nodo("s", "layout.sezione", null, null, Nodo("c", "contenuto.caratteristica", new() { ["titolo"] = "x" }))]) },
+        { "FiglioNonAmmesso", () => new(1, [Nodo("s", "layout.sezione", null, null, Nodo("k", "layout.colonne", null, null, Nodo("c1", "layout.colonna", null, null, Nodo("g", "contenuto.caratteristiche", null, null, Nodo("c", "contenuto.caratteristica", new() { ["titolo"] = "x" }))), Nodo("c2", "layout.colonna")))]) },
         { "StileNonValida", () => new(1, [Nodo("t", "contenuto.titolo", new() { ["testo"] = "x" }, new() { ["animazione"] = "rotazione" })]) },
         { "StileNonValida", () => new(1, [Nodo("t", "contenuto.titolo", new() { ["testo"] = "x" }, new() { ["ritardoAnimazione"] = "-1" })]) },
         { "StileNonValida", () => new(1, [Nodo("t", "contenuto.titolo", new() { ["testo"] = "x" }, new() { ["animazione"] = "sale\" onload=\"x" })]) },

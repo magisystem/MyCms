@@ -34,6 +34,7 @@ public sealed class TemplateEAdapterTest
         Assert.Equal("25C07D3EB1BF71104F6D410014450418F8B1B14C84EABCB3154AF10BE83E3738", RegistroTemplateBuilder.TemplateIntestazioneFissa.Impronta);
         Assert.Equal("9BB90F19375FF34AF5456E7FF1CC92E0BCD285BB2ADC1E14C0FA37A70C1A0C78", RegistroTemplateBuilder.TemplateIntestazioneFissaV2.Impronta);
         Assert.Equal("78557BFD3AFDA3B795763D472917AFAB165FEC0666F0868BBE417B6B6AA49841", RegistroTemplateBuilder.TemplateIntestazioneFissaV3.Impronta);
+        Assert.Equal("97ACBC0D4A3A3EA943C8FE56CA2C8D8C5F30447AA8A4CAE178AF323BF1F35D27", RegistroTemplateBuilder.TemplateIntestazioneFissaV4.Impronta);
     }
 
     [Fact]
@@ -66,7 +67,24 @@ public sealed class TemplateEAdapterTest
         Assert.Empty(ValidatoreTemplate.Valida(RegistroTemplateBuilder.TemplateIntestazioneFissaV3, conTestoRicco));
         Assert.Empty(_registro.Valida(conTestoRicco));
         Assert.Empty(ValidatoreTemplate.Valida(RegistroTemplateBuilder.TemplateIntestazioneFissaV3, Iniziale()));
-        Assert.Same(RegistroTemplateBuilder.TemplateIntestazioneFissaV3, _template.Ultimo(RegistroTemplateBuilder.IntestazioneFissa));
+        Assert.Same(RegistroTemplateBuilder.TemplateIntestazioneFissaV4, _template.Ultimo(RegistroTemplateBuilder.IntestazioneFissa));
+    }
+
+    [Fact]
+    public void LaVersione4AmmetteGrigliaETestimonianzeELeVersioniPrecedentiNo()
+    {
+        var caratteristiche = Nodo("g", "contenuto.caratteristiche", new(), null, Nodo("c", "contenuto.caratteristica", new() { ["titolo"] = "Veloce" }));
+        var testimonianze = Nodo("t", "contenuto.testimonianze", new(), null, Nodo("q", "contenuto.testimonianza", new() { ["citazione"] = "Ottimo", ["autore"] = "Ada" }));
+        var documento = Sostituisci(Iniziale(), "corpo", corpo => Con(corpo, figli: [caratteristiche, testimonianze]));
+
+        foreach (var precedente in new[] { RegistroTemplateBuilder.TemplateIntestazioneFissa, RegistroTemplateBuilder.TemplateIntestazioneFissaV2, RegistroTemplateBuilder.TemplateIntestazioneFissaV3 })
+        {
+            Assert.Contains(ValidatoreTemplate.Valida(precedente, documento), e => e.Codice == "TipoNonAmmessoNelloSlot");
+        }
+
+        Assert.Empty(ValidatoreTemplate.Valida(RegistroTemplateBuilder.TemplateIntestazioneFissaV4, documento));
+        Assert.Empty(_registro.Valida(documento));
+        Assert.Empty(ValidatoreTemplate.Valida(RegistroTemplateBuilder.TemplateIntestazioneFissaV4, Iniziale()));
     }
 
     [Theory]

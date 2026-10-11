@@ -104,7 +104,7 @@ public sealed partial class RegistroComponenti
                 new("sfondo", TipoProprieta.Enumerazione, Valori: ["nessuno", "chiaro", "scuro"], Predefinito: "nessuno"),
                 .. _animazione,
             ],
-            ["layout.colonne", .. _contenutoBase, "contenuto.hero", "contenuto.cta", "contenuto.fisarmonica"], FigliMassimi: 50),
+            ["layout.colonne", .. _contenutoBase, "contenuto.hero", "contenuto.cta", "contenuto.fisarmonica", "contenuto.caratteristiche", "contenuto.testimonianze"], FigliMassimi: 50),
         new("layout.colonne", 2, [], [.. _animazione], ["layout.colonna"], FigliMinimi: 2, FigliMassimi: 3),
         new("layout.colonna", 2, [], [], [.. _contenutoBase, "contenuto.fisarmonica"], FigliMassimi: 20),
         new("contenuto.titolo", 2,
@@ -167,6 +167,24 @@ public sealed partial class RegistroComponenti
             [
                 new("domanda", TipoProprieta.TestoBreve, Obbligatoria: true, LunghezzaMassima: 200),
                 new("risposta", TipoProprieta.TestoLungo, Obbligatoria: true, LunghezzaMassima: 2000),
+            ],
+            [], []),
+        // Griglia di caratteristiche e testimonianze (M5): contenitori con elementi figli, nessun markup libero.
+        new("contenuto.caratteristiche", 1, [],
+            [new("colonne", TipoProprieta.Enumerazione, Valori: ["2", "3"], Predefinito: "3"), .. _animazione],
+            ["contenuto.caratteristica"], FigliMinimi: 1, FigliMassimi: 12),
+        new("contenuto.caratteristica", 1,
+            [
+                new("titolo", TipoProprieta.TestoBreve, Obbligatoria: true, LunghezzaMassima: 100),
+                new("descrizione", TipoProprieta.TestoLungo, LunghezzaMassima: 500),
+            ],
+            [], []),
+        new("contenuto.testimonianze", 1, [], [.. _animazione], ["contenuto.testimonianza"], FigliMinimi: 1, FigliMassimi: 6),
+        new("contenuto.testimonianza", 1,
+            [
+                new("citazione", TipoProprieta.TestoLungo, Obbligatoria: true, LunghezzaMassima: 600),
+                new("autore", TipoProprieta.TestoBreve, Obbligatoria: true, LunghezzaMassima: 100),
+                new("ruolo", TipoProprieta.TestoBreve, LunghezzaMassima: 100),
             ],
             [], []),
     ];

@@ -64,8 +64,8 @@ public partial class BuilderWebTest
         Assert.True(System.Text.Json.Nodes.JsonNode.DeepEquals(
             System.Text.Json.Nodes.JsonNode.Parse(stato.GetProperty("progetto").GetRawText()),
             System.Text.Json.Nodes.JsonNode.Parse(Progetto(Iniziale()))));
-        Assert.Equal(12, stato.GetProperty("catalogo").GetArrayLength());
-        Assert.Equal(3, stato.GetProperty("versioneTemplate").GetInt32());
+        Assert.Equal(16, stato.GetProperty("catalogo").GetArrayLength());
+        Assert.Equal(4, stato.GetProperty("versioneTemplate").GetInt32());
         Assert.True(stato.GetProperty("vincoli").GetProperty("nodi").GetProperty("avviso").GetProperty("bloccato").GetBoolean());
         Assert.Equal(30, stato.GetProperty("vincoli").GetProperty("nodi").GetProperty("corpo").GetProperty("slot").GetProperty("figliMassimi").GetInt32());
 
@@ -297,6 +297,38 @@ public partial class BuilderWebTest
     }
 
     [Fact]
+    public async Task CaratteristicheETestimonianzeSiDisegnanoConTestoCodificatoESoloClassiDaElenco()
+    {
+        await using var c = await Contesto.CreaAsync();
+        var (id, percorso) = await c.CreaPaginaAsync("pagina-con-intestazione-fissa", "vetrina-due", slug: "vetrina-due");
+        var stato = await c.StatoAsync(id);
+        var documento = ConCorpo(
+            Iniziale(),
+            Nodo("g", "contenuto.caratteristiche", null, new() { ["colonne"] = "2" },
+                Nodo("c1", "contenuto.caratteristica", new() { ["titolo"] = "Veloce <i>sempre</i>", ["descrizione"] = "Parte subito." }),
+                Nodo("c2", "contenuto.caratteristica", new() { ["titolo"] = "Sicuro" })),
+            Nodo("t", "contenuto.testimonianze", null, new() { ["animazione"] = "sale" },
+                Nodo("q", "contenuto.testimonianza", new() { ["citazione"] = "Ottimo.\n\n<script>alert(1)</script>", ["autore"] = "Ada", ["ruolo"] = "CTO" }),
+                Nodo("q2", "contenuto.testimonianza", new() { ["citazione"] = "Bene", ["autore"] = "Bruno" })));
+        using var salvato = await c.SalvaAsync(id, stato.GetProperty("token").GetString()!, Progetto(documento));
+        Assert.Equal(HttpStatusCode.OK, salvato.StatusCode);
+        await c.PubblicaAsync(percorso);
+
+        using var pubblica = await c.Web.SessioneA().GetAsync("/vetrina-due");
+        var html = await pubblica.Content.ReadAsStringAsync(Ct);
+
+        Assert.Contains("<div class=\"dv-caratteristiche dv-colonne dv-colonne-2\">", html, StringComparison.Ordinal);
+        Assert.Contains("<h3 class=\"dv-caratteristica-titolo\">Veloce &lt;i&gt;sempre&lt;/i&gt;</h3>", html, StringComparison.Ordinal);
+        Assert.Contains("<p>Parte subito.</p>", html, StringComparison.Ordinal);
+        Assert.Contains("<div class=\"dv-testimonianze dv-anim dv-anim-sale dv-ritardo-0\">", html, StringComparison.Ordinal);
+        Assert.Contains("<figure class=\"dv-testimonianza\">", html, StringComparison.Ordinal);
+        Assert.Contains("&lt;script&gt;alert(1)&lt;/script&gt;", html, StringComparison.Ordinal);
+        Assert.Contains("<strong>Ada</strong>, CTO", Regex.Replace(html, "\\s+", " "), StringComparison.Ordinal);
+        Assert.DoesNotContain("<script>alert", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("<i>sempre", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task UnaPaginaDellaVersione1PassaAllUltimaVersioneSoloSeIlDocumentoEValido()
     {
         await using var c = await Contesto.CreaAsync();
@@ -320,10 +352,10 @@ public partial class BuilderWebTest
         Assert.True(SessioneProva.EReindirizzamento(passaggio));
 
         var revisioni = await c.RevisioniAsync(id);
-        Assert.Equal(3, revisioni[^1].VersioneModello);
+        Assert.Equal(4, revisioni[^1].VersioneModello);
         Assert.Equal(revisioni[^2].DocumentoRenderJson, revisioni[^1].DocumentoRenderJson);
         var dopo = await c.StatoAsync(id);
-        Assert.Equal(3, dopo.GetProperty("versioneTemplate").GetInt32());
+        Assert.Equal(4, dopo.GetProperty("versioneTemplate").GetInt32());
         using var oraAccettato = await c.SalvaAsync(id, dopo.GetProperty("token").GetString()!, Progetto(ConCorpo(Iniziale(), Nodo("h", "contenuto.hero", new() { ["titolo"] = "x" }))));
         Assert.Equal(HttpStatusCode.OK, oraAccettato.StatusCode);
     }

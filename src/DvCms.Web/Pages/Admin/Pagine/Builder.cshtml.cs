@@ -99,6 +99,10 @@ public class BuilderModel : PaginaAdmin
             ["contenuto.cta"] = Localizzatore.Traduci("Invito all'azione"),
             ["contenuto.fisarmonica"] = Localizzatore.Traduci("Fisarmonica"),
             ["contenuto.voce"] = Localizzatore.Traduci("Voce"),
+            ["contenuto.caratteristiche"] = Localizzatore.Traduci("Caratteristiche"),
+            ["contenuto.caratteristica"] = Localizzatore.Traduci("Caratteristica"),
+            ["contenuto.testimonianze"] = Localizzatore.Traduci("Testimonianze"),
+            ["contenuto.testimonianza"] = Localizzatore.Traduci("Testimonianza"),
         }),
         ["campi"] = JsonSerializer.Serialize(new Dictionary<string, string>
         {
@@ -120,6 +124,11 @@ public class BuilderModel : PaginaAdmin
             ["urlPulsante"] = Localizzatore.Traduci("Indirizzo del pulsante"),
             ["domanda"] = Localizzatore.Traduci("Domanda"),
             ["risposta"] = Localizzatore.Traduci("Risposta"),
+            ["descrizione"] = Localizzatore.Traduci("Descrizione"),
+            ["citazione"] = Localizzatore.Traduci("Citazione"),
+            ["autore"] = Localizzatore.Traduci("Autore"),
+            ["ruolo"] = Localizzatore.Traduci("Ruolo"),
+            ["colonne"] = Localizzatore.Traduci("Colonne"),
             ["altezza"] = Localizzatore.Traduci("Altezza"),
             ["animazione"] = Localizzatore.Traduci("Animazione"),
             ["ritardoAnimazione"] = Localizzatore.Traduci("Ritardo (ms)"),

@@ -5,7 +5,7 @@
 import { consentito } from './vincoli.js';
 import { analizza, costruisci, urlConsentito } from './testoRicco.js';
 
-const FOGLIE = new Set(['contenuto.titolo', 'contenuto.testo', 'contenuto.testo-ricco', 'contenuto.immagine', 'contenuto.pulsante', 'contenuto.hero', 'contenuto.cta', 'contenuto.voce']);
+const FOGLIE = new Set(['contenuto.titolo', 'contenuto.testo', 'contenuto.testo-ricco', 'contenuto.immagine', 'contenuto.pulsante', 'contenuto.hero', 'contenuto.cta', 'contenuto.voce', 'contenuto.caratteristica', 'contenuto.testimonianza']);
 
 const TAG = {
   'layout.sezione': 'section',
@@ -20,6 +20,10 @@ const TAG = {
   'contenuto.cta': 'section',
   'contenuto.fisarmonica': 'div',
   'contenuto.voce': 'div',
+  'contenuto.caratteristiche': 'div',
+  'contenuto.caratteristica': 'div',
+  'contenuto.testimonianze': 'div',
+  'contenuto.testimonianza': 'figure',
 };
 
 // Testi modificabili direttamente nel canvas (doppio clic): solo testo semplice, nessun HTML. Gli altri campi restano nel pannello.
@@ -151,6 +155,20 @@ function aspetto(tipo, el, modello) {
     case 'contenuto.voce':
       impostaClassi(el, ['dv-voce']);
       riempi(el, [['strong', 'dv-voce-domanda', p('data-p-domanda')], ['div', 'dv-voce-risposta', p('data-p-risposta')]]);
+      break;
+    case 'contenuto.caratteristiche':
+      impostaClassi(el, ['dv-caratteristiche', 'dv-colonne', `dv-colonne-${p('data-s-colonne', '3')}`]);
+      break;
+    case 'contenuto.caratteristica':
+      impostaClassi(el, ['dv-caratteristica']);
+      riempi(el, [['h3', 'dv-caratteristica-titolo', p('data-p-titolo')], ['p', '', p('data-p-descrizione')]]);
+      break;
+    case 'contenuto.testimonianze':
+      impostaClassi(el, ['dv-testimonianze']);
+      break;
+    case 'contenuto.testimonianza':
+      impostaClassi(el, ['dv-testimonianza']);
+      riempi(el, [['blockquote', 'dv-testimonianza-citazione', p('data-p-citazione')], ['figcaption', 'dv-testimonianza-autore', [p('data-p-autore'), p('data-p-ruolo')].filter(Boolean).join(', ')]]);
       break;
     default:
       break;
@@ -349,6 +367,10 @@ function contenutoBlocco(tipo, config) {
       return { type: tipo, attributes: { 'data-p-testo': 'Testo con **grassetto**, *corsivo* e [collegamenti](/pagina).\n\n- primo punto\n- secondo punto' } };
     case 'contenuto.fisarmonica':
       return { type: tipo, components: [{ type: 'contenuto.voce', attributes: { 'data-p-domanda': 'Domanda', 'data-p-risposta': 'Risposta' } }] };
+    case 'contenuto.caratteristiche':
+      return { type: tipo, components: [{ type: 'contenuto.caratteristica', attributes: { 'data-p-titolo': 'Caratteristica', 'data-p-descrizione': 'Descrizione' } }] };
+    case 'contenuto.testimonianze':
+      return { type: tipo, components: [{ type: 'contenuto.testimonianza', attributes: { 'data-p-citazione': 'Citazione', 'data-p-autore': 'Autore' } }] };
     default:
       return { type: tipo };
   }
@@ -356,8 +378,8 @@ function contenutoBlocco(tipo, config) {
 
 export function creaBlocchi(editor, definizioni, config) {
   for (const [tipo] of definizioni) {
-    // Una colonna o una voce da sole non hanno senso: nascono dentro "Colonne" e "Fisarmonica"; un'immagine richiede almeno una risorsa nella libreria.
-    if (tipo === 'layout.colonna' || tipo === 'contenuto.voce') continue;
+    // Una colonna o una voce da sole non hanno senso: nascono dentro "Colonne", "Fisarmonica", "Caratteristiche" e "Testimonianze"; un'immagine richiede almeno una risorsa nella libreria.
+    if (['layout.colonna', 'contenuto.voce', 'contenuto.caratteristica', 'contenuto.testimonianza'].includes(tipo)) continue;
     if (tipo === 'contenuto.immagine' && config.risorse.length === 0) continue;
     editor.BlockManager.add(`dv-${tipo}`, {
       label: config.testi.componenti[tipo] ?? tipo,

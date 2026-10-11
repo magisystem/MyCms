@@ -84,6 +84,28 @@ assert.deepEqual(await voceAlbero(), ['1:Sezione', '2:Titolo', '2:Testo*']);
 assert.match(await pagina.locator('[role=status][aria-live=polite]').textContent(), /Selezionato: Testo/);
 passo('inserimento dei blocchi con Invio');
 
+// Griglia di caratteristiche e testimonianze: nascono con un elemento figlio; gli elementi da soli non sono blocchi.
+await premiSuBlocco('Sezione');
+await premiSuBlocco('Caratteristiche');
+await pagina.locator('.dv-struttura [role=treeitem][aria-selected=true]').focus();
+await pagina.keyboard.press('ArrowUp');
+await premiSuBlocco('Testimonianze');
+assert.match(await albero(), /sezione\[caratteristiche\[caratteristica\],testimonianze\[testimonianza\]\]/);
+assert.equal(await pagina.locator('.gjs-block[aria-label="Inserisci Caratteristica"]').count(), 0, 'la caratteristica da sola non è un blocco');
+const nelCanvas = await pagina.evaluate(() => {
+  const d = window.dvEditor.Canvas.getDocument();
+  return [d.querySelector('.dv-caratteristica-titolo')?.textContent, d.querySelector('.dv-testimonianza-autore')?.textContent, d.querySelector('.dv-caratteristiche')?.className];
+});
+assert.deepEqual(nelCanvas, ['Caratteristica', 'Autore', 'dv-caratteristiche dv-colonne dv-colonne-3']);
+passo('caratteristiche e testimonianze nel canvas');
+// Si riparte da una pagina pulita per il resto del percorso.
+await crea('pagina-libera');
+await pagina.keyboard.press('Tab');
+await pagina.keyboard.press('Enter');
+await premiSuBlocco('Sezione');
+await premiSuBlocco('Titolo');
+await premiSuBlocco('Testo');
+
 // 2. Albero: frecce, selezione che segue il focus, riduci/espandi.
 await pagina.locator('.dv-struttura [role=treeitem][aria-selected=true]').focus();
 await pagina.keyboard.press('ArrowUp');

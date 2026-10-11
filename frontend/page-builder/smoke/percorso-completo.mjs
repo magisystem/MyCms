@@ -77,7 +77,8 @@ const trascina = async (nome, selettore) => {
 // Vincoli dell'interfaccia: nello slot sì, una sezione nello slot e un titolo nell'intestazione bloccata no.
 const prima = await albero();
 // Il primo trascinamento dopo il caricamento può non partire (il canvas sta ancora completando il disegno): si riprova.
-for (let tentativo = 0; tentativo < 4 && (await albero()) === prima; tentativo++) {
+for (let tentativo = 0; tentativo < 6 && (await albero()) === prima; tentativo++) {
+  await pagina.waitForTimeout(tentativo * 700); // un server appena avviato è lento: il trascinamento nativo ha bisogno del canvas già disegnato
   await trascina('Testo', '#corpo-testo');
 }
 assert.notEqual(await albero(), prima, 'un testo si può aggiungere nello slot');

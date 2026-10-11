@@ -23,16 +23,16 @@ I temi rilasciati sono immutabili (D-001): una versione di tema non si modifica.
 | `--dv-spazio-compatta` | Spazio verticale di una sezione con spaziatura compatta. | `1rem` |
 | `--dv-spazio-normale` | Spazio verticale di una sezione con spaziatura normale. | `2rem` |
 | `--dv-spazio-ampia` | Spazio verticale di una sezione con spaziatura ampia. | `4rem` |
-| `--dv-colore-primario` | Colore di accento: sfondo «primario», pulsanti, bordo del pulsante secondario, evidenziazione del focus. | `var(--tema-colore-primario, #1f4e8c)` |
+| `--dv-colore-primario` | Colore di accento: sfondo «primario», pulsanti, bordo del pulsante secondario, filetto delle testimonianze, evidenziazione del focus. | `var(--tema-colore-primario, #1f4e8c)` |
 | `--dv-colore-sfondo-scuro` | Sfondo delle sezioni, degli hero e degli inviti all'azione «scuri». | `var(--tema-colore-intestazione, #111827)` |
 | `--dv-colore-testo-su-scuro` | Colore del testo sugli sfondi scuri e primari. | `#ffffff` |
 | `--dv-colore-sfondo-chiaro` | Sfondo delle sezioni «chiare». | `#f1f5f9` |
 | `--dv-colore-testo-su-chiaro` | Colore del testo sugli sfondi chiari. | `#1f2933` |
 | `--dv-colore-sfondo-chiaro-notte` | Sfondo delle sezioni «chiare» con preferenza per la modalità scura del sistema. | `#1f2933` |
 | `--dv-colore-testo-su-chiaro-notte` | Testo sugli sfondi chiari con preferenza per la modalità scura. | `#e4e7eb` |
-| `--dv-colore-titoli` | Colore dei titoli fuori dagli sfondi scuri. | `inherit` |
-| `--dv-colore-bordo` | Colore dei filetti (fisarmonica). | `#cbd2d9` |
-| `--dv-colore-didascalia` | Colore delle didascalie delle immagini. | `#52606d` |
+| `--dv-colore-titoli` | Colore dei titoli (anche delle caratteristiche) fuori dagli sfondi scuri. | `inherit` |
+| `--dv-colore-bordo` | Colore dei filetti (fisarmonica, schede delle caratteristiche). | `#cbd2d9` |
+| `--dv-colore-didascalia` | Colore delle didascalie delle immagini e dell'autore delle testimonianze. | `#52606d` |
 | `--dv-raggio-pulsante` | Raggio degli angoli dei pulsanti. | `0.4rem` |
 | `--dv-durata-animazione` | Durata delle animazioni di comparsa. | `0.6s` |
 
