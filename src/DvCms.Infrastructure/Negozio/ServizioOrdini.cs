@@ -19,14 +19,16 @@ public sealed partial class ServizioOrdini : IServizioOrdini
     private readonly ContestoDatabase _contesto;
     private readonly IContestoTenant _tenant;
     private readonly IServizioCarrello _carrello;
+    private readonly IServizioGiacenze _giacenze;
     private readonly IServizioAudit _audit;
     private readonly TimeProvider _orologio;
 
-    public ServizioOrdini(ContestoDatabase contesto, IContestoTenant tenant, IServizioCarrello carrello, IServizioAudit audit, TimeProvider orologio)
+    public ServizioOrdini(ContestoDatabase contesto, IContestoTenant tenant, IServizioCarrello carrello, IServizioGiacenze giacenze, IServizioAudit audit, TimeProvider orologio)
     {
         _contesto = contesto;
         _tenant = tenant;
         _carrello = carrello;
+        _giacenze = giacenze;
         _audit = audit;
         _orologio = orologio;
     }
@@ -59,6 +61,9 @@ public sealed partial class ServizioOrdini : IServizioOrdini
         {
             return new EsitoOperazione(CodiceEsito.DatiNonValidi, null, campiNonValidi);
         }
+
+        // Le prenotazioni scadute non devono togliere merce a chi compra adesso.
+        await _giacenze.RilasciaScaduteAsync(annullamento);
 
         // Prezzi, aliquote e disponibilità vengono sempre dal catalogo attuale, mai dal cliente.
         var vista = await _carrello.LeggiAsync(idAccount, codiceLingua, annullamento);
@@ -126,6 +131,25 @@ public sealed partial class ServizioOrdini : IServizioOrdini
         await _contesto.Siti.Where(s => s.Id == idSito).ExecuteUpdateAsync(s => s.SetProperty(x => x.UltimoNumeroOrdine, x => x.UltimoNumeroOrdine + 1), annullamento);
         ordine.Numero = await _contesto.Siti.AsNoTracking().Where(s => s.Id == idSito).Select(s => s.UltimoNumeroOrdine).SingleAsync(annullamento);
 
+        // Prenotazione atomica della giacenza gestita (15 minuti). Se manca anche una sola quantità non nasce nessun ordine.
+        var scade = adesso.AddMinutes(PrenotazioneGiacenza.DurataMinuti);
+        var prenotazione = await OperazioniGiacenza.PrenotaAsync(
+            _contesto,
+            ordine,
+            vista.Righe.Select(r => (r.IdVariante, r.Quantita)),
+            adesso,
+            scade,
+            () => Identificativi.Nuovo(_orologio),
+            annullamento);
+        if (prenotazione.Insufficienti.Count > 0)
+        {
+            await transazione.RollbackAsync(annullamento);
+            _contesto.ChangeTracker.Clear();
+            var mancanti = vista.Righe.Where(r => prenotazione.Insufficienti.Contains(r.IdVariante)).Select(r => $"Giacenza:{r.Sku}");
+            return new EsitoOperazione(CodiceEsito.Conflitto, null, [.. mancanti]);
+        }
+
+        ordine.PrenotazioneScadeIlUtc = prenotazione.Prenotate > 0 ? scade : null;
         _contesto.Ordini.Add(ordine);
         var posizione = 0;
         foreach (var (vistaRiga, calcolata) in vista.Righe.Zip(totali.Righe))
@@ -208,11 +232,15 @@ public sealed partial class ServizioOrdini : IServizioOrdini
         }
 
         var precedente = ordine.Stato;
+        var adesso = _orologio.GetUtcNow().UtcDateTime;
         ordine.Stato = StatoOrdine.Annullato;
-        ordine.AggiornatoIlUtc = _orologio.GetUtcNow().UtcDateTime;
+        ordine.AggiornatoIlUtc = adesso;
+        await using var transazione = await _contesto.Database.BeginTransactionAsync(annullamento);
         try
         {
             await _contesto.SaveChangesAsync(annullamento);
+            await OperazioniGiacenza.RilasciaAsync(_contesto, _tenant.IdTenant, ordine.Id, adesso, annullamento);
+            await transazione.CommitAsync(annullamento);
         }
         catch (DbUpdateConcurrencyException)
         {
@@ -276,6 +304,7 @@ public sealed partial class ServizioOrdini : IServizioOrdini
             o.Paese,
             o.CreatoIlUtc,
             o.AggiornatoIlUtc,
+            o.PrenotazioneScadeIlUtc,
             [.. righe.Select(r => new RigaOrdineVista(r.Posizione, r.Sku, r.NomeProdotto, r.EtichettaVariante, r.Quantita, r.PrezzoUnitarioLordo, r.AliquotaIva, r.Lordo, r.Imponibile, r.Iva))]);
     }
 

@@ -250,6 +250,14 @@ public sealed class ServizioCatalogo : IServizioCatalogo
         if (vecchie.Count > 0)
         {
             var idVecchie = vecchie.Select(v => v.Id).ToList();
+            // Una variante con quantità trattenute da un ordine in corso non si elimina; senza prenotazioni la sua giacenza se ne va con lei.
+            var giacenze = await _contesto.GiacenzeVarianti.Where(g => idVecchie.Contains(g.IdVariante)).ToListAsync(annullamento);
+            if (giacenze.Any(g => g.Riservata > 0))
+            {
+                return new EsitoOperazione(CodiceEsito.NonConsentito, null, ["Varianti"]);
+            }
+
+            _contesto.GiacenzeVarianti.RemoveRange(giacenze);
             _contesto.TraduzioniVarianteProdotto.RemoveRange(await _contesto.TraduzioniVarianteProdotto.Where(t => idVecchie.Contains(t.IdVariante)).ToListAsync(annullamento));
             // Le righe dei carrelli (temporanee) che puntano a una variante tolta si tolgono con lei; gli ordini, quando ci saranno,
             // conservano i loro snapshot e una variante già ordinata si disattiva soltanto.

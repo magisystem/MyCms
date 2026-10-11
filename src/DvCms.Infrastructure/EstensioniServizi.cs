@@ -219,6 +219,7 @@ public static class EstensioniServizi
         servizi.TryAddScoped<IServizioSpedizioni, ServizioSpedizioni>();
         servizi.TryAddScoped<IServizioCarrello, ServizioCarrello>();
         servizi.TryAddScoped<IServizioOrdini, ServizioOrdini>();
+        servizi.TryAddScoped<IServizioGiacenze, ServizioGiacenze>();
         servizi.TryAddScoped<VerificatoreArchivio>();
     }
 

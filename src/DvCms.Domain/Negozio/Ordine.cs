@@ -122,6 +122,9 @@ public class Ordine
     /// <summary>Codice ISO 3166-1 a due lettere maiuscole.</summary>
     public string? Paese { get; set; }
 
+    /// <summary>Fino a quando la giacenza è trattenuta per questo ordine; nulla se nessun articolo ha giacenza gestita.</summary>
+    public DateTime? PrenotazioneScadeIlUtc { get; set; }
+
     public DateTime CreatoIlUtc { get; set; }
 
     public DateTime AggiornatoIlUtc { get; set; }

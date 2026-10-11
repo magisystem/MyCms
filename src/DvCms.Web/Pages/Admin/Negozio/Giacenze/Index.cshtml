@@ -1,0 +1,64 @@
+@page "/admin/negozio/giacenze"
+@model DvCms.Web.Pages.Admin.Negozio.Giacenze.IndexModel
+@{
+    ViewData["Titolo"] = _L["Giacenze"];
+}
+@if (Model.Messaggio is not null)
+{
+    <div class="alert alert-success" role="status">@Model.Messaggio</div>
+}
+@if (Model.ErroreDaMostrare is not null)
+{
+    <div class="alert alert-danger" role="alert">@Model.ErroreDaMostrare</div>
+}
+<p class="text-secondary">@_L["La giacenza è facoltativa: una variante senza giacenza gestita si vende senza limite. Gli ordini trattengono la merce per 15 minuti in attesa del pagamento."]</p>
+<div class="card">
+    @if (Model.Varianti.Count == 0)
+    {
+        <div class="card-body text-secondary">@_L["Nessuna variante."]</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-vcenter card-table">
+                <thead>
+                    <tr>
+                        <th>@_L["Codice"]</th>
+                        <th>@_L["Prodotto"]</th>
+                        <th>@_L["Riservata"]</th>
+                        <th>@_L["Disponibile"]</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var variante in Model.Varianti)
+                    {
+                        var valore = Model.VarianteErrata == variante.IdVariante ? Model.TestoErrato : (variante.Gestita ? variante.Disponibile.ToString(System.Globalization.CultureInfo.InvariantCulture) : string.Empty);
+                        <tr>
+                            <td>@variante.Sku</td>
+                            <td>@variante.NomeProdotto@(variante.EtichettaVariante is { Length: > 0 } etichetta ? " — " + etichetta : null)</td>
+                            <td>@(variante.Gestita ? variante.Riservata.ToString() : "—")</td>
+                            <td>
+                                <form method="post" asp-page-handler="Imposta" class="d-flex gap-2">
+                                    <input type="hidden" name="idVariante" value="@variante.IdVariante" />
+                                    <label class="visually-hidden" for="disp-@variante.IdVariante">@_L["Disponibile"]</label>
+                                    <input class="form-control" id="disp-@variante.IdVariante" name="disponibile" inputmode="numeric" value="@valore" placeholder="@_L["Senza limite"]" />
+                                    <button type="submit" class="btn btn-primary">@_L["Salva"]</button>
+                                </form>
+                            </td>
+                            <td>
+                                @if (variante.Gestita)
+                                {
+                                    <form method="post" asp-page-handler="NonGestire">
+                                        <input type="hidden" name="idVariante" value="@variante.IdVariante" />
+                                        <button type="submit" class="btn btn-outline-secondary">@_L["Non gestire"]</button>
+                                    </form>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

@@ -56,6 +56,7 @@ public sealed record OrdineVista(
     string? Paese,
     DateTime CreatoIlUtc,
     DateTime AggiornatoIlUtc,
+    DateTime? PrenotazioneScadeIlUtc,
     IReadOnlyList<RigaOrdineVista> Righe);
 
 /// <summary>
@@ -69,7 +70,7 @@ public interface IServizioOrdini
     /// <summary>
     /// Crea l'ordine dal carrello dell'account e lo svuota, nella stessa transazione. Esiti: <c>NonConsentito</c> (negozio non attivo),
     /// <c>DatiNonValidi</c> (con i campi: carrello vuoto, metodo, indirizzo non coerente con l'area), <c>Conflitto</c> (articoli non
-    /// più disponibili o totale diverso da quello atteso), <c>NonTrovato</c> (metodo di spedizione inesistente o disattivato).
+    /// più disponibili, giacenza insufficiente — campi <c>Giacenza:CODICE</c> — o totale diverso da quello atteso), <c>NonTrovato</c> (metodo di spedizione inesistente o disattivato).
     /// </summary>
     Task<EsitoOperazione> CreaDaCarrelloAsync(Guid idAccount, string codiceLingua, DatiOrdine dati, CancellationToken annullamento);
 

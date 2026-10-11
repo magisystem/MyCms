@@ -868,6 +868,42 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.ToTable("Carrelli", (string)null);
                 });
 
+            modelBuilder.Entity("DvCms.Domain.Negozio.GiacenzaVariante", b =>
+                {
+                    b.Property<Guid>("IdVariante")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("AggiornataIlUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Disponibile")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("IdSito")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdTenant")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Riservata")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("TokenConcorrenza")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.HasKey("IdVariante");
+
+                    b.HasIndex("IdTenant", "IdSito", "IdVariante");
+
+                    b.ToTable("GiacenzeVarianti", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_GiacenzeVarianti_Quantita", "[Disponibile] >= 0 AND [Riservata] >= 0 AND [Riservata] <= [Disponibile] AND [Disponibile] <= 1000000");
+                        });
+                });
+
             modelBuilder.Entity("DvCms.Domain.Negozio.MetodoSpedizione", b =>
                 {
                     b.Property<Guid>("Id")
@@ -913,6 +949,49 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                         {
                             t.HasCheckConstraint("CK_MetodiSpedizione_TipoEArea", "([Tipo] = 'Ritiro' AND [Area] IS NULL AND [TariffaLorda] = 0) OR ([Tipo] = 'Zona' AND [Area] IS NOT NULL AND [TariffaLorda] >= 0)");
                         });
+                });
+
+            modelBuilder.Entity("DvCms.Domain.Negozio.MovimentoGiacenza", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatoIlUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("DisponibileDopo")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("IdAttore")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("IdOrdine")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdSito")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdTenant")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdVariante")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Motivo")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int>("Variazione")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdTenant", "IdSito");
+
+                    b.HasIndex("IdVariante", "CreatoIlUtc");
+
+                    b.ToTable("MovimentiGiacenza", (string)null);
                 });
 
             modelBuilder.Entity("DvCms.Domain.Negozio.Ordine", b =>
@@ -982,6 +1061,9 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                         .HasColumnType("nchar(2)")
                         .IsFixedLength();
 
+                    b.Property<DateTime?>("PrenotazioneScadeIlUtc")
+                        .HasColumnType("datetime2");
+
                     b.Property<decimal>("SpedizioneImponibile")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
@@ -1042,6 +1124,53 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                             t.HasCheckConstraint("CK_Ordini_Consegna", "([TipoSpedizione] = 'Ritiro' AND [Paese] IS NULL AND [AreaSpedizione] IS NULL AND [SpedizioneLorda] = 0) OR ([TipoSpedizione] = 'Zona' AND [Paese] IS NOT NULL AND [AreaSpedizione] IS NOT NULL)");
 
                             t.HasCheckConstraint("CK_Ordini_Totali", "[TotaleLordo] = [TotaleImponibile] + [TotaleIva] AND [SpedizioneLorda] = [SpedizioneImponibile] + [SpedizioneIva] AND [TotaleLordo] >= [SpedizioneLorda]");
+                        });
+                });
+
+            modelBuilder.Entity("DvCms.Domain.Negozio.PrenotazioneGiacenza", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("AggiornataIlUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("IdOrdine")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdSito")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdTenant")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdVariante")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Quantita")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("ScadeIlUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Stato")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ScadeIlUtc")
+                        .HasFilter("[Stato] = 'Attiva'");
+
+                    b.HasIndex("IdOrdine", "IdVariante")
+                        .IsUnique();
+
+                    b.HasIndex("IdTenant", "IdSito", "IdOrdine");
+
+                    b.ToTable("PrenotazioniGiacenza", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_PrenotazioniGiacenza_Quantita", "[Quantita] BETWEEN 1 AND 99");
                         });
                 });
 
@@ -1855,7 +1984,27 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("DvCms.Domain.Negozio.GiacenzaVariante", b =>
+                {
+                    b.HasOne("DvCms.Domain.Negozio.VarianteProdotto", null)
+                        .WithMany()
+                        .HasForeignKey("IdTenant", "IdSito", "IdVariante")
+                        .HasPrincipalKey("IdTenant", "IdSito", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("DvCms.Domain.Negozio.MetodoSpedizione", b =>
+                {
+                    b.HasOne("DvCms.Domain.Tenancy.Sito", null)
+                        .WithMany()
+                        .HasForeignKey("IdTenant", "IdSito")
+                        .HasPrincipalKey("IdTenant", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DvCms.Domain.Negozio.MovimentoGiacenza", b =>
                 {
                     b.HasOne("DvCms.Domain.Tenancy.Sito", null)
                         .WithMany()
@@ -1877,6 +2026,16 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                         .WithMany()
                         .HasForeignKey("IdTenant", "IdSito")
                         .HasPrincipalKey("IdTenant", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DvCms.Domain.Negozio.PrenotazioneGiacenza", b =>
+                {
+                    b.HasOne("DvCms.Domain.Negozio.Ordine", null)
+                        .WithMany()
+                        .HasForeignKey("IdTenant", "IdSito", "IdOrdine")
+                        .HasPrincipalKey("IdTenant", "IdSito", "Id")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

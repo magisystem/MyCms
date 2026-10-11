@@ -60,6 +60,9 @@ public class CheckoutModel : PageModel
 
     public IReadOnlyList<string> CampiNonValidi { get; private set; } = [];
 
+    /// <summary>Codici degli articoli di cui non c'è abbastanza giacenza.</summary>
+    public IReadOnlyList<string> Mancanti { get; private set; } = [];
+
     public CarrelloVista Vista { get; private set; } = new([], [], 0m, 0m, 0m, "EUR");
 
     public IReadOnlyList<OpzioneConsegna> Opzioni { get; private set; } = [];
@@ -103,8 +106,10 @@ public class CheckoutModel : PageModel
 
         await CaricaAsync(annullamento);
         CampiNonValidi = esito.CampiNonValidi ?? [];
+        Mancanti = [.. CampiNonValidi.Where(c => c.StartsWith("Giacenza:", StringComparison.Ordinal)).Select(c => c["Giacenza:".Length..])];
         Errore = esito.Codice switch
         {
+            CodiceEsito.Conflitto when Mancanti.Count > 0 => _localizzatore.Traduci("Alcuni articoli non sono disponibili nella quantità richiesta: riduci la quantità o toglili dal carrello."),
             CodiceEsito.Conflitto => _localizzatore.Traduci("Il carrello, i prezzi o le tariffe sono cambiati: controlla il riepilogo e conferma di nuovo."),
             CodiceEsito.NonTrovato => _localizzatore.Traduci("Il metodo di consegna scelto non è più disponibile."),
             CodiceEsito.DatiNonValidi => _localizzatore.Traduci("Controlla i dati inseriti."),
@@ -116,6 +121,7 @@ public class CheckoutModel : PageModel
 
     public string NomeCampo(string campo) => campo switch
     {
+        _ when campo.StartsWith("Giacenza:", StringComparison.Ordinal) => campo["Giacenza:".Length..],
         "IdMetodo" => _localizzatore.Traduci("Metodo di consegna"),
         "Destinatario" => _localizzatore.Traduci("Destinatario"),
         "IndirizzoRiga1" => _localizzatore.Traduci("Indirizzo"),

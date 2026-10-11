@@ -1,4 +1,5 @@
 using DvCms.Application.Accessi;
+using DvCms.Application.Negozio;
 using DvCms.Domain.Accessi;
 using DvCms.Domain.Outbox;
 using DvCms.Infrastructure.Outbox;
@@ -110,6 +111,9 @@ public sealed partial class ManutenzioneDati
                 .Take(lotto)
                 .ExecuteDeleteAsync(annullamento),
             annullamento);
+
+        // Prenotazioni di giacenza scadute: liberano la merce e annullano gli ordini che non sono stati pagati.
+        totale += await ambito.ServiceProvider.GetRequiredService<IServizioGiacenze>().RilasciaScaduteAsync(annullamento);
 
         if (totale > 0)
         {

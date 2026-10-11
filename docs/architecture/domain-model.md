@@ -69,7 +69,7 @@ I template non devono sovrascrivere contenuti già creati quando viene pubblicat
 
 - `Prodotto`, `VarianteProdotto`, `CategoriaProdotto`, `CollezioneProdotto`
 - `Prezzo` o prezzo per variante con valuta esplicita
-- `ArticoloMagazzino` e `MovimentoMagazzino` (non trattare solo una quantità modificabile senza storico se serve audit)
+- `GiacenzaVariante`, `PrenotazioneGiacenza` e `MovimentoGiacenza` (M7.6: quantità fisica e riservata con vincolo nel database, prenotazione per riga d'ordine con scadenza, storico dei movimenti; vedi `ecommerce.md`)
 - `Carrello`, `RigaCarrello`
 - `Ordine`, `RigaOrdine` con snapshot di nome, SKU, prezzo, imposte/valori applicati e valuta
 - `Ordine`/`RigaOrdine` (M7.5: snapshot senza chiavi verso varianti o metodi, numero progressivo per sito, stati in `TransizioniOrdine`; vedi `ecommerce.md`)

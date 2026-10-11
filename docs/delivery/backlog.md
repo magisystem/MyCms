@@ -156,6 +156,7 @@ Le voci sono candidate a issue GitHub. Ogni issue deve essere piccola, verificab
 **Accettazione:** provider deciso, signature verification, deduplica/idempotenza, test di evento duplicato e fallito.
 
 ### F-005: Inventario concorrente
+**Stato:** completata in M7.6 (`docs/architecture/ecommerce.md`); la conferma all'incasso e il nuovo tentativo di pagamento arrivano con M7.7.
 **Accettazione:** due checkout concorrenti non vendono più unità di quelle disponibili secondo policy approvata.
 
 ## EPIC G — Production readiness

@@ -190,6 +190,7 @@ internal sealed class ConfigurazioneOrdine : IEntityTypeConfiguration<Ordine>
         entita.Property(ordine => ordine.Cap).HasMaxLength(Ordine.LunghezzaMassimaCap);
         entita.Property(ordine => ordine.Citta).HasMaxLength(Ordine.LunghezzaMassimaCitta);
         entita.Property(ordine => ordine.Paese).HasMaxLength(2).IsFixedLength();
+        entita.Property(ordine => ordine.PrenotazioneScadeIlUtc);
 
         entita.HasOne<Sito>()
             .WithMany()
@@ -230,5 +231,60 @@ internal sealed class ConfigurazioneRigaOrdine : IEntityTypeConfiguration<RigaOr
             .HasPrincipalKey(ordine => new { ordine.IdTenant, ordine.IdSito, ordine.Id })
             .OnDelete(DeleteBehavior.Restrict);
         entita.HasIndex(riga => new { riga.IdOrdine, riga.Posizione }).IsUnique();
+    }
+}
+
+internal sealed class ConfigurazioneGiacenzaVariante : IEntityTypeConfiguration<GiacenzaVariante>
+{
+    public void Configure(EntityTypeBuilder<GiacenzaVariante> entita)
+    {
+        entita.ToTable("GiacenzeVarianti", tabella => tabella.HasCheckConstraint("CK_GiacenzeVarianti_Quantita", "[Disponibile] >= 0 AND [Riservata] >= 0 AND [Riservata] <= [Disponibile] AND [Disponibile] <= 1000000"));
+        entita.HasKey(giacenza => giacenza.IdVariante);
+        entita.Property(giacenza => giacenza.IdVariante).ValueGeneratedNever();
+        entita.Property(giacenza => giacenza.TokenConcorrenza).IsRowVersion();
+
+        entita.HasOne<VarianteProdotto>()
+            .WithMany()
+            .HasForeignKey(giacenza => new { giacenza.IdTenant, giacenza.IdSito, giacenza.IdVariante })
+            .HasPrincipalKey(variante => new { variante.IdTenant, variante.IdSito, variante.Id })
+            .OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
+internal sealed class ConfigurazionePrenotazioneGiacenza : IEntityTypeConfiguration<PrenotazioneGiacenza>
+{
+    public void Configure(EntityTypeBuilder<PrenotazioneGiacenza> entita)
+    {
+        entita.ToTable("PrenotazioniGiacenza", tabella => tabella.HasCheckConstraint("CK_PrenotazioniGiacenza_Quantita", "[Quantita] BETWEEN 1 AND 99"));
+        entita.HasKey(prenotazione => prenotazione.Id);
+        entita.Property(prenotazione => prenotazione.Id).ValueGeneratedNever();
+        entita.Property(prenotazione => prenotazione.Stato).HasConversion<string>().HasMaxLength(20).IsRequired();
+
+        entita.HasOne<Ordine>()
+            .WithMany()
+            .HasForeignKey(prenotazione => new { prenotazione.IdTenant, prenotazione.IdSito, prenotazione.IdOrdine })
+            .HasPrincipalKey(ordine => new { ordine.IdTenant, ordine.IdSito, ordine.Id })
+            .OnDelete(DeleteBehavior.Restrict);
+        entita.HasIndex(prenotazione => new { prenotazione.IdOrdine, prenotazione.IdVariante }).IsUnique();
+        // Cerca le prenotazioni da far scadere senza scorrere quelle concluse.
+        entita.HasIndex(prenotazione => prenotazione.ScadeIlUtc).HasFilter("[Stato] = 'Attiva'");
+    }
+}
+
+internal sealed class ConfigurazioneMovimentoGiacenza : IEntityTypeConfiguration<MovimentoGiacenza>
+{
+    public void Configure(EntityTypeBuilder<MovimentoGiacenza> entita)
+    {
+        entita.ToTable("MovimentiGiacenza");
+        entita.HasKey(movimento => movimento.Id);
+        entita.Property(movimento => movimento.Id).ValueGeneratedNever();
+        entita.Property(movimento => movimento.Motivo).HasConversion<string>().HasMaxLength(20).IsRequired();
+
+        entita.HasOne<Sito>()
+            .WithMany()
+            .HasForeignKey(movimento => new { movimento.IdTenant, movimento.IdSito })
+            .HasPrincipalKey(sito => new { sito.IdTenant, sito.Id })
+            .OnDelete(DeleteBehavior.Restrict);
+        entita.HasIndex(movimento => new { movimento.IdVariante, movimento.CreatoIlUtc });
     }
 }

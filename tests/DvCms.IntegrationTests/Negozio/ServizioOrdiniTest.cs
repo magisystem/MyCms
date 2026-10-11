@@ -23,7 +23,7 @@ public class ServizioOrdiniTest
     [Fact]
     public async Task OrdineCopiaRigheImportiSpedizioneEIndirizzoESvuotaIlCarrello()
     {
-        await using var c = await Contesto.CreaAsync();
+        await using var c = await ContestoNegozio.CreaAsync();
         var maglietta = await c.CreaProdottoAsync(c.A, "Maglietta", 22m, ("TS-M", 19.90m, "Taglia M"));
         var libro = await c.CreaProdottoAsync(c.A, "Libro", 4m, ("LIB-1", 12.00m, null));
         var corriere = await c.CreaMetodoAsync(c.A, "Corriere Italia", 6.90m, AreaSpedizione.Italia);
@@ -50,7 +50,7 @@ public class ServizioOrdiniTest
     [Fact]
     public async Task LoSnapshotNonCambiaSeCatalogoESpedizioneCambianoOSpariscono()
     {
-        await using var c = await Contesto.CreaAsync();
+        await using var c = await ContestoNegozio.CreaAsync();
         var varianti = await c.CreaProdottoAsync(c.A, "Maglietta", 22m, ("TS-M", 19.90m, null));
         var metodo = await c.CreaMetodoAsync(c.A, "Corriere", 5m, AreaSpedizione.Italia);
         await c.AggiungiAsync(c.Cliente, varianti[0], 1);
@@ -69,7 +69,7 @@ public class ServizioOrdiniTest
     [Fact]
     public async Task IlRitiroNonHaIndirizzoNeCostoEUnIndirizzoInviatoSiScarta()
     {
-        await using var c = await Contesto.CreaAsync();
+        await using var c = await ContestoNegozio.CreaAsync();
         var varianti = await c.CreaProdottoAsync(c.A, "Libro", 4m, ("LIB-1", 12.00m, null));
         var ritiro = await c.CreaRitiroAsync(c.A);
         await c.AggiungiAsync(c.Cliente, varianti[0], 2);
@@ -92,7 +92,7 @@ public class ServizioOrdiniTest
     [InlineData("IT", "<script>", "Cap")]
     public async Task LIndirizzoDeveStareNellAreaDelMetodo(string paese, string cap, string? campo)
     {
-        await using var c = await Contesto.CreaAsync();
+        await using var c = await ContestoNegozio.CreaAsync();
         var varianti = await c.CreaProdottoAsync(c.A, "Libro", 4m, ("LIB-1", 10.00m, null));
         var metodo = await c.CreaMetodoAsync(c.A, "Corriere Italia", 5m, AreaSpedizione.Italia);
         await c.AggiungiAsync(c.Cliente, varianti[0], 1);
@@ -115,7 +115,7 @@ public class ServizioOrdiniTest
     [Fact]
     public async Task UnMetodoDellUnioneEuropeaAccettaSoloPaesiDelLUnioneEIlTotaleAtteso()
     {
-        await using var c = await Contesto.CreaAsync();
+        await using var c = await ContestoNegozio.CreaAsync();
         var varianti = await c.CreaProdottoAsync(c.A, "Libro", 4m, ("LIB-1", 10.00m, null));
         var europa = await c.CreaMetodoAsync(c.A, "Corriere UE", 14.50m, AreaSpedizione.UnioneEuropea);
         await c.AggiungiAsync(c.Cliente, varianti[0], 1);
@@ -135,7 +135,7 @@ public class ServizioOrdiniTest
     [InlineData(1)]
     public async Task UnTotaleDiversoDaQuelloVistoNonCreaLOrdine(double atteso)
     {
-        await using var c = await Contesto.CreaAsync();
+        await using var c = await ContestoNegozio.CreaAsync();
         var varianti = await c.CreaProdottoAsync(c.A, "Libro", 4m, ("LIB-1", 10.00m, null));
         var metodo = await c.CreaMetodoAsync(c.A, "Corriere", 5m, AreaSpedizione.Italia);
         await c.AggiungiAsync(c.Cliente, varianti[0], 1);
@@ -150,7 +150,7 @@ public class ServizioOrdiniTest
         Assert.Single((await c.ComeCarrelloAsync(c.A, s => s.LeggiAsync(c.Cliente, "it", Ct))).Righe);
     }
 
-    private static async Task<EsitoOperazione> RincaraEProvaAsync(Contesto c, Guid metodo)
+    private static async Task<EsitoOperazione> RincaraEProvaAsync(ContestoNegozio c, Guid metodo)
     {
         await c.CambiaPrezzoAsync(c.A, "LIB-1", 11.00m);
         return await c.ComeAsync(c.A, s => s.CreaDaCarrelloAsync(c.Cliente, "it", Consegna(metodo, 15m), Ct));
@@ -159,7 +159,7 @@ public class ServizioOrdiniTest
     [Fact]
     public async Task CarrelloVuotoMetodoInesistenteDisattivatoOAltruiEArticoliNonPiuDisponibiliSonoRifiutati()
     {
-        await using var c = await Contesto.CreaAsync();
+        await using var c = await ContestoNegozio.CreaAsync();
         var varianti = await c.CreaProdottoAsync(c.A, "Libro", 4m, ("LIB-1", 10.00m, "Base"));
         var metodo = await c.CreaMetodoAsync(c.A, "Corriere", 5m, AreaSpedizione.Italia);
         var spento = await c.CreaMetodoAsync(c.A, "Spento", 5m, AreaSpedizione.Italia, attivo: false);
@@ -184,7 +184,7 @@ public class ServizioOrdiniTest
     [Fact]
     public async Task INumeriDOrdineSonoProgressiviPerSitoEDueInviiDellaStessaCassaCreanoUnSoloOrdine()
     {
-        await using var c = await Contesto.CreaAsync();
+        await using var c = await ContestoNegozio.CreaAsync();
         var variantiA = await c.CreaProdottoAsync(c.A, "Libro", 4m, ("LIB-1", 10.00m, null));
         var variantiB = await c.CreaProdottoAsync(c.B, "Libro", 4m, ("LIB-1", 10.00m, null));
         var metodoA = await c.CreaMetodoAsync(c.A, "Corriere", 5m, AreaSpedizione.Italia);
@@ -213,7 +213,7 @@ public class ServizioOrdiniTest
     [Fact]
     public async Task OgniClienteVedeEAnnullaSoloIPropriOrdini()
     {
-        await using var c = await Contesto.CreaAsync();
+        await using var c = await ContestoNegozio.CreaAsync();
         var varianti = await c.CreaProdottoAsync(c.A, "Libro", 4m, ("LIB-1", 10.00m, null));
         var metodo = await c.CreaMetodoAsync(c.A, "Corriere", 5m, AreaSpedizione.Italia);
         await c.AggiungiAsync(c.Cliente, varianti[0], 1);
@@ -231,7 +231,7 @@ public class ServizioOrdiniTest
     [Fact]
     public async Task IlClienteAnnullaUnOrdineNonPagatoMaNonDueVolteENonUnOrdinePagato()
     {
-        await using var c = await Contesto.CreaAsync();
+        await using var c = await ContestoNegozio.CreaAsync();
         var varianti = await c.CreaProdottoAsync(c.A, "Libro", 4m, ("LIB-1", 10.00m, null));
         var metodo = await c.CreaMetodoAsync(c.A, "Corriere", 5m, AreaSpedizione.Italia);
         await c.AggiungiAsync(c.Cliente, varianti[0], 1);
@@ -254,7 +254,7 @@ public class ServizioOrdiniTest
     [Fact]
     public async Task SenzaNegozioAttivoOAccountNonValidoNonSiOrdina()
     {
-        await using var c = await Contesto.CreaAsync();
+        await using var c = await ContestoNegozio.CreaAsync();
         var varianti = await c.CreaProdottoAsync(c.A, "Libro", 4m, ("LIB-1", 10.00m, null));
         var metodo = await c.CreaMetodoAsync(c.A, "Corriere", 5m, AreaSpedizione.Italia);
         await c.AggiungiAsync(c.Cliente, varianti[0], 1);
@@ -277,7 +277,7 @@ public class ServizioOrdiniTest
     [Fact]
     public async Task LAmministrazioneVedeTuttiGliOrdiniDelSitoMaNonQuelliDiUnAltroTenantNeIClienti()
     {
-        await using var c = await Contesto.CreaAsync();
+        await using var c = await ContestoNegozio.CreaAsync();
         var variantiA = await c.CreaProdottoAsync(c.A, "Libro", 4m, ("LIB-1", 10.00m, null));
         var variantiB = await c.CreaProdottoAsync(c.B, "Libro", 4m, ("LIB-1", 10.00m, null));
         var metodoA = await c.CreaMetodoAsync(c.A, "Corriere", 5m, AreaSpedizione.Italia);
@@ -329,146 +329,5 @@ public class ServizioOrdiniTest
 
         Assert.All([StatoOrdine.Spedito, StatoOrdine.Ritirato, StatoOrdine.Annullato], s => Assert.True(TransizioniOrdine.EFinale(s)));
         Assert.All([StatoOrdine.InAttesaDiPagamento, StatoOrdine.PagamentoFallito, StatoOrdine.Pagato], s => Assert.False(TransizioniOrdine.EFinale(s)));
-    }
-
-    private sealed class Contesto : IAsyncDisposable
-    {
-        private Contesto(ScenarioWeb web) => Web = web;
-
-        public ScenarioWeb Web { get; }
-
-        public DatiProva.TenantCreato A => Web.A;
-
-        public DatiProva.TenantCreato B => Web.B;
-
-        public Guid Platform { get; private set; }
-
-        public Guid AdminA { get; private set; }
-
-        public Guid AdminB { get; private set; }
-
-        public Guid Cliente { get; private set; }
-
-        public Guid AltroCliente { get; private set; }
-
-        public Guid ClienteDiB { get; private set; }
-
-        public static async Task<Contesto> CreaAsync()
-        {
-            var c = new Contesto(await ScenarioWeb.CreaAsync());
-            c.Platform = await c.Web.CreaPlatformAdminAsync("root@esempio.it");
-            c.AdminA = await c.Web.CreaTenantAdminAsync("anna@esempio.it");
-            c.AdminB = await DatiProva.CreaUtenzaAsync(c.Web.Fabbrica.Services, RuoloUtenza.TenantAdmin, c.B.IdTenant, "bruno@esempio.it", annullamento: Ct);
-            c.Cliente = await DatiProva.CreaUtenzaAsync(c.Web.Fabbrica.Services, RuoloUtenza.Utente, c.A.IdTenant, "cliente@esempio.it", annullamento: Ct);
-            c.AltroCliente = await DatiProva.CreaUtenzaAsync(c.Web.Fabbrica.Services, RuoloUtenza.Utente, c.A.IdTenant, "altro@esempio.it", annullamento: Ct);
-            c.ClienteDiB = await DatiProva.CreaUtenzaAsync(c.Web.Fabbrica.Services, RuoloUtenza.Utente, c.B.IdTenant, "cliente@esempio.it", annullamento: Ct);
-            foreach (var tenant in new[] { c.A, c.B })
-            {
-                await using var ambito = c.Web.Fabbrica.Services.CreateAsyncScope();
-                var esito = await ambito.ServiceProvider.GetRequiredService<IServizioPiattaforma>().ImpostaCommercioAsync(c.Platform, tenant.IdTenant, tenant.IdSito, true, Ct);
-                Assert.True(esito.Riuscito, esito.Codice.ToString());
-            }
-
-            return c;
-        }
-
-        public Task<T> ComeAsync<T>(DatiProva.TenantCreato tenant, Func<IServizioOrdini, Task<T>> operazione) => InAsync(tenant, operazione);
-
-        public Task<T> ComeCarrelloAsync<T>(DatiProva.TenantCreato tenant, Func<IServizioCarrello, Task<T>> operazione) => InAsync(tenant, operazione);
-
-        private async Task<T> InAsync<TServizio, T>(DatiProva.TenantCreato tenant, Func<TServizio, Task<T>> operazione)
-            where TServizio : notnull
-        {
-            await using var ambito = Web.Fabbrica.Services.CreateAsyncScope();
-            ambito.ServiceProvider.GetRequiredService<ContestoTenant>().Imposta(new DatiTenantRisolto(tenant.IdTenant, tenant.IdSito, tenant.IdDominio, tenant.Host, false));
-            return await operazione(ambito.ServiceProvider.GetRequiredService<TServizio>());
-        }
-
-        private Task<T> InAsync<T>(DatiProva.TenantCreato tenant, Func<IServizioOrdini, Task<T>> operazione) => InAsync<IServizioOrdini, T>(tenant, operazione);
-
-        private Guid Attore(DatiProva.TenantCreato tenant) => tenant.IdTenant == A.IdTenant ? AdminA : AdminB;
-
-        public async Task AggiungiAsync(Guid cliente, Guid idVariante, int quantita, DatiProva.TenantCreato? tenant = null)
-        {
-            var esito = await InAsync<IServizioCarrello, EsitoOperazione>(tenant ?? A, s => s.AggiungiAsync(cliente, idVariante, quantita, Ct));
-            Assert.True(esito.Riuscito, esito.Codice.ToString());
-        }
-
-        public async Task<IReadOnlyList<Guid>> CreaProdottoAsync(DatiProva.TenantCreato tenant, string nome, decimal iva, params (string Sku, decimal Prezzo, string? Etichetta)[] varianti)
-        {
-            var dati = new DatiProdotto(null, null, StatoProdotto.Pubblicato, iva, [new TraduzioneProdottoDati("it", nome, null)],
-                [.. varianti.Select(v => new VarianteDati(null, v.Sku, v.Prezzo, null, true, v.Etichetta is null ? null : new Dictionary<string, string> { ["it"] = v.Etichetta }))]);
-            var esito = await InAsync<IServizioCatalogo, EsitoOperazione>(tenant, s => s.SalvaAsync(Attore(tenant), dati, Ct));
-            Assert.True(esito.Riuscito, $"{esito.Codice} {string.Join(',', esito.CampiNonValidi ?? [])}");
-            var dettaglio = (await InAsync<IServizioCatalogo, DettaglioProdotto?>(tenant, s => s.LeggiAsync(Attore(tenant), esito.Id!.Value, Ct)))!;
-            return [.. dettaglio.Varianti.Select(v => v.Id)];
-        }
-
-        public async Task<Guid> CreaMetodoAsync(DatiProva.TenantCreato tenant, string nome, decimal tariffa, AreaSpedizione area, bool attivo = true)
-        {
-            var esito = await InAsync<IServizioSpedizioni, EsitoOperazione>(tenant, s => s.SalvaAsync(Attore(tenant), new(null, TipoMetodoSpedizione.Zona, area, nome, tariffa, attivo), Ct));
-            Assert.True(esito.Riuscito, esito.Codice.ToString());
-            return esito.Id!.Value;
-        }
-
-        public async Task<Guid> CreaRitiroAsync(DatiProva.TenantCreato tenant)
-        {
-            var esito = await InAsync<IServizioSpedizioni, EsitoOperazione>(tenant, s => s.SalvaAsync(Attore(tenant), new(null, TipoMetodoSpedizione.Ritiro, null, "Ritiro in negozio", 0m, true), Ct));
-            Assert.True(esito.Riuscito, esito.Codice.ToString());
-            return esito.Id!.Value;
-        }
-
-        public async Task EliminaMetodoAsync(DatiProva.TenantCreato tenant, Guid id) =>
-            Assert.True((await InAsync<IServizioSpedizioni, EsitoOperazione>(tenant, s => s.EliminaAsync(Attore(tenant), id, Ct))).Riuscito);
-
-        public Task CambiaPrezzoAsync(DatiProva.TenantCreato tenant, string sku, decimal prezzo) =>
-            ModificaAsync(tenant, sku, d => d with { Varianti = [.. d.Varianti.Select(x => x with { PrezzoLordo = x.Sku == sku ? prezzo : x.PrezzoLordo })] });
-
-        public Task DisattivaVarianteAsync(DatiProva.TenantCreato tenant, string sku) =>
-            ModificaAsync(tenant, sku, d => d with { Varianti = [.. d.Varianti.Select(x => x with { Attiva = x.Sku != sku && x.Attiva }), new VarianteDati(null, "ALTRA", 1m, null, true, new Dictionary<string, string> { ["it"] = "Altra" })] });
-
-        public Task TogliVarianteAsync(DatiProva.TenantCreato tenant, string sku) =>
-            ModificaAsync(tenant, sku, d => d with { Varianti = [.. d.Varianti.Where(x => x.Sku != sku), new VarianteDati(null, "ALTRA", 1m, null, true, new Dictionary<string, string> { ["it"] = "Altra" })] });
-
-        private async Task ModificaAsync(DatiProva.TenantCreato tenant, string sku, Func<DatiProdotto, DatiProdotto> trasforma)
-        {
-            await using var ambito = Web.Fabbrica.Services.CreateAsyncScope();
-            var idProdotto = await ambito.ServiceProvider.GetRequiredService<ContestoDatabase>().VariantiProdotto.IgnoreQueryFilters()
-                .Where(v => v.IdSito == tenant.IdSito && v.Sku == sku).Select(v => v.IdProdotto).SingleAsync(Ct);
-            var dettaglio = (await InAsync<IServizioCatalogo, DettaglioProdotto?>(tenant, s => s.LeggiAsync(Attore(tenant), idProdotto, Ct)))!;
-            var dati = new DatiProdotto(dettaglio.Id, dettaglio.TokenConcorrenza, dettaglio.Stato, dettaglio.AliquotaIva, dettaglio.Traduzioni,
-                [.. dettaglio.Varianti.Select(v => new VarianteDati(v.Id, v.Sku, v.PrezzoLordo, v.Valuta, v.Attiva, v.Etichette))]);
-            var modificati = trasforma(dati);
-            var esito = await InAsync<IServizioCatalogo, EsitoOperazione>(tenant, s => s.SalvaAsync(Attore(tenant), modificati, Ct));
-            Assert.True(esito.Riuscito, $"{esito.Codice} {string.Join(',', esito.CampiNonValidi ?? [])}");
-        }
-
-        public async Task ImpostaStatoAsync(Guid idOrdine, StatoOrdine stato)
-        {
-            await using var ambito = Web.Fabbrica.Services.CreateAsyncScope();
-            await ambito.ServiceProvider.GetRequiredService<ContestoDatabase>().Ordini.IgnoreQueryFilters().Where(o => o.Id == idOrdine)
-                .ExecuteUpdateAsync(x => x.SetProperty(o => o.Stato, stato), Ct);
-        }
-
-        public async Task DisabilitaAsync(Guid idAccount)
-        {
-            await using var ambito = Web.Fabbrica.Services.CreateAsyncScope();
-            await ambito.ServiceProvider.GetRequiredService<ContestoDatabase>().Utenze.IgnoreQueryFilters().Where(u => u.Id == idAccount)
-                .ExecuteUpdateAsync(x => x.SetProperty(u => u.Stato, StatoUtenza.Disabilitata), Ct);
-        }
-
-        public async Task SpegniNegozioAsync(DatiProva.TenantCreato tenant)
-        {
-            await using var ambito = Web.Fabbrica.Services.CreateAsyncScope();
-            Assert.True((await ambito.ServiceProvider.GetRequiredService<IServizioPiattaforma>().ImpostaCommercioAsync(Platform, tenant.IdTenant, tenant.IdSito, false, Ct)).Riuscito);
-        }
-
-        public async Task<int> ContaOrdiniAsync()
-        {
-            await using var ambito = Web.Fabbrica.Services.CreateAsyncScope();
-            return await ambito.ServiceProvider.GetRequiredService<ContestoDatabase>().Ordini.IgnoreQueryFilters().CountAsync(Ct);
-        }
-
-        public ValueTask DisposeAsync() => Web.DisposeAsync();
     }
 }

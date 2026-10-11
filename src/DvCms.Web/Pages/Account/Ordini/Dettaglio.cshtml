@@ -57,6 +57,10 @@ else
         @o.Cap @o.Citta (@o.Paese)
     </address>
 }
+@if (o.PrenotazioneScadeIlUtc is { } scade && o.Stato == StatoOrdine.InAttesaDiPagamento)
+{
+    <p>@_L["La merce è riservata per te fino alle"] @scade.ToString("HH:mm") UTC.</p>
+}
 @if (Model.PuoAnnullare)
 {
     <form method="post" asp-page-handler="Annulla" asp-route-id="@o.Id">

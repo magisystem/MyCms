@@ -104,6 +104,12 @@ public class ContestoDatabase : DbContext
 
     public DbSet<RigaOrdine> RigheOrdine => Set<RigaOrdine>();
 
+    public DbSet<GiacenzaVariante> GiacenzeVarianti => Set<GiacenzaVariante>();
+
+    public DbSet<PrenotazioneGiacenza> PrenotazioniGiacenza => Set<PrenotazioneGiacenza>();
+
+    public DbSet<MovimentoGiacenza> MovimentiGiacenza => Set<MovimentoGiacenza>();
+
     public DbSet<MetodoSpedizione> MetodiSpedizione => Set<MetodoSpedizione>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -138,6 +144,9 @@ public class ContestoDatabase : DbContext
         modelBuilder.Entity<RigaCarrello>().HasQueryFilter(riga => riga.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<Ordine>().HasQueryFilter(ordine => ordine.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<RigaOrdine>().HasQueryFilter(riga => riga.IdTenant == IdTenantCorrente);
+        modelBuilder.Entity<GiacenzaVariante>().HasQueryFilter(giacenza => giacenza.IdTenant == IdTenantCorrente);
+        modelBuilder.Entity<PrenotazioneGiacenza>().HasQueryFilter(prenotazione => prenotazione.IdTenant == IdTenantCorrente);
+        modelBuilder.Entity<MovimentoGiacenza>().HasQueryFilter(movimento => movimento.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<MetodoSpedizione>().HasQueryFilter(metodo => metodo.IdTenant == IdTenantCorrente);
     }
 
