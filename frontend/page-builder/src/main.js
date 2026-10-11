@@ -9,6 +9,7 @@ import { registraComponenti, creaBlocchi } from './catalogo.js';
 import { applicaVincoli, regolaRadice } from './vincoli.js';
 import { creaInterfaccia } from './interfaccia.js';
 import { Salvataggio } from './salvataggio.js';
+import { creaAzioni, creaStruttura, nomeComponente, nomiCampiProprieta, rendiBlocchiAccessibili } from './tastiera.js';
 
 async function avvia() {
   const radice = document.getElementById('builder');
@@ -62,8 +63,11 @@ async function avvia() {
     },
     styleManager: { sectors: [] },
     selectorManager: { componentFirst: true },
-    blockManager: { appendTo: ui.contenitoreBlocchi },
-    layerManager: { appendTo: ui.contenitoreLivelli },
+    // appendOnClick: un clic (o Invio/Spazio sul blocco) inserisce il blocco dove i vincoli lo consentono: è l'alternativa al trascinamento.
+    blockManager: { appendTo: ui.contenitoreBlocchi, appendOnClick: true },
+    // Il trascinamento dei blocchi di GrapesJS richiede il Layer Manager disegnato: resta montato fuori dalla pagina; l'albero
+    // accessibile "Struttura" (tastiera.js) è quello che si usa e si vede.
+    layerManager: { appendTo: document.createElement('div') },
     traitManager: { appendTo: ui.contenitoreProprieta },
     undoManager: { trackSelection: false },
     // Stessi fogli e stesso ordine della pagina pubblica (tema e skin dei componenti indicati dal server), poi gli stili solo-editor.
@@ -78,6 +82,29 @@ async function avvia() {
 
   registraComponenti(editor, stato.catalogo, stato.vincoli, config);
   creaBlocchi(editor, definizioni, config);
+
+  // Uso da tastiera e con lo screen reader (alternative al mouse, fuori dal canvas).
+  const contestoTastiera = { testi: config.testi, definizioni, vincoli: stato.vincoli, annuncia: ui.annuncia, vaiAProprieta: ui.vaiAProprieta };
+  rendiBlocchiAccessibili(ui.contenitoreBlocchi, config.testi);
+  nomiCampiProprieta(ui.contenitoreProprieta);
+  creaStruttura(editor, ui.contenitoreStruttura, contestoTastiera);
+  creaAzioni(editor, ui.contenitoreAzioni, contestoTastiera);
+  ui.pulsanteAnnulla.addEventListener('click', () => editor.UndoManager.undo());
+  ui.pulsanteRipeti.addEventListener('click', () => editor.UndoManager.redo());
+  const aggiornaStorico = () => {
+    ui.pulsanteAnnulla.disabled = !editor.UndoManager.hasUndo();
+    ui.pulsanteRipeti.disabled = !editor.UndoManager.hasRedo();
+  };
+  editor.on('update undo redo load', aggiornaStorico);
+  aggiornaStorico();
+  editor.on('component:selected', (componente) => {
+    if (definizioni.has(componente.get('type'))) ui.annuncia((config.testi.selezionato ?? '{0}').split('{0}').join(nomeComponente(componente)));
+  });
+  editor.on('canvas:frame:load:body', () => {
+    // Il canvas non si usa da tastiera: il titolo dell'iframe dice dove andare.
+    const cornice = ui.contenitoreCanvas.querySelector('iframe');
+    if (cornice) cornice.title = config.testi.anteprimaPagina ?? '';
+  });
 
   const salvataggio = new Salvataggio(editor, config, ui, stato.token);
   // Classe e variabili del tema vanno sul corpo del canvas (non sul progetto: non diventano contenuto della pagina). Si riapplicano

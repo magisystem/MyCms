@@ -235,6 +235,7 @@ export function registraComponenti(editor, catalogo, vincoli, config) {
         b.type = 'button';
         b.textContent = etichetta;
         b.title = titolo;
+        b.setAttribute('aria-label', titolo);
         b.addEventListener('click', azione);
         barra.append(b);
       };

@@ -37,7 +37,7 @@ Sette componenti di base (`layout.sezione`, `layout.colonne`, `layout.colonna`, 
 
 ## Limiti del PoC e rischi per M5
 
-- **Accessibilità dell'editor.** GrapesJS è pensato per il mouse: la riorganizzazione da tastiera è limitata. Rischio da valutare in M5 (requisiti WCAG per l'admin); l'alternativa accessibile resta la modalità guidata a form.
+- **Accessibilità dell'editor.** Risolta in M5 per l'uso da tastiera (blocchi, struttura ad albero, azioni, proprietà, annunci); restano da fare la prova con screen reader reali e un audit WCAG automatico (vedi `docs/architecture/page-builder.md`).
 - **Rich text e sanitizzazione.** Il PoC ha solo testo semplice. Il rich text richiede una libreria di sanitizzazione (nuova dipendenza, da valutare con la regola 11) e una policy testata prima di entrare nel catalogo.
 - **Modifica del testo direttamente nel canvas, anteprime per dispositivo, autosave con debounce, pannello proprietà avanzato, animazioni (E-006):** non fanno parte del PoC. Il server è pronto per l'autosave (token, salvataggi senza modifica che non creano revisioni).
 - **Contratto tra componenti e temi.** Risolto in M5: token `--dv-*` e skin per tema (vedi `docs/architecture/componenti-e-temi.md`).

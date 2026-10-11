@@ -35,6 +35,7 @@ globale, `PLAYWRIGHT_MODULE` ne indica il percorso):
 
 ```bash
 DVCMS_PASSWORD='…' CHROMIUM_PATH=/percorso/chromium node smoke/percorso-completo.mjs
+DVCMS_PASSWORD='…' CHROMIUM_PATH=/percorso/chromium node smoke/tastiera.mjs   # stesso, ma solo da tastiera
 ```
 
 ## Dipendenze e licenze (regola 11 di `AGENTS.md`)
