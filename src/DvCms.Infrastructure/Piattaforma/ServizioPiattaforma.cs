@@ -119,7 +119,8 @@ public sealed class ServizioPiattaforma : IServizioPiattaforma
                     dominio.VerificatoIlUtc,
                     dominio.VerificatoDaIdUtenza is { } id && verificatori.TryGetValue(id, out var email) ? email : null))],
                 [.. lingueSito.Where(l => l.IdSito == sito.Id).Select(l => l.Lingua)],
-                sito.CommercioAttivo))],
+                sito.CommercioAttivo,
+                sito.RegistrazioneAcquirentiAbilitata))],
             [.. account.Select(utenza => new DettaglioAccount(
                 utenza.Id,
                 utenza.Email,
@@ -267,6 +268,26 @@ public sealed class ServizioPiattaforma : IServizioPiattaforma
             sito.AggiornatoIlUtc = Adesso();
             _invalidazione.Registra(idTenant, sito.Id);
             return Esito.Ok(sito.Id, idTenant, $"negozio {(attivo ? "attivo" : "non attivo")}");
+        }, annullamento);
+
+    public Task<EsitoOperazione> ImpostaRegistrazioneAcquirentiAsync(Guid idAttore, Guid idTenant, Guid idSito, bool abilitata, CancellationToken annullamento) =>
+        EseguiAsync(idAttore, AzioniAudit.ImpostazioneRegistrazioneAcquirenti, "Sito", idTenant, async _ =>
+        {
+            var sito = await _contesto.Siti.IgnoreQueryFilters().SingleOrDefaultAsync(candidato => candidato.Id == idSito && candidato.IdTenant == idTenant, annullamento);
+            if (sito is null)
+            {
+                return Esito.Non(CodiceEsito.NonTrovato);
+            }
+
+            if (abilitata && !sito.CommercioAttivo)
+            {
+                return Esito.Non(CodiceEsito.NonConsentito);
+            }
+
+            sito.RegistrazioneAcquirentiAbilitata = abilitata;
+            sito.AggiornatoIlUtc = Adesso();
+            _invalidazione.Registra(idTenant, sito.Id);
+            return Esito.Ok(sito.Id, idTenant, $"registrazione acquirenti {(abilitata ? "abilitata" : "disabilitata")}");
         }, annullamento);
 
     public Task<EsitoOperazione> AbilitaLinguaAsync(Guid idAttore, Guid idTenant, Guid idSito, string? codiceLingua, CancellationToken annullamento) =>
@@ -668,6 +689,12 @@ public sealed class ServizioPiattaforma : IServizioPiattaforma
             if (utenza is null)
             {
                 return Esito.Non(CodiceEsito.NonTrovato);
+            }
+
+            // Un acquirente che non ha ancora confermato l'email non si attiva a mano (avrebbe una password che nessuno conosce).
+            if (utenza.Stato == StatoUtenza.InAttesaDiConferma)
+            {
+                return Esito.Non(CodiceEsito.NonConsentito);
             }
 
             utenza.Stato = attiva ? StatoUtenza.Attiva : StatoUtenza.Disabilitata;

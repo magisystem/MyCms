@@ -1,0 +1,23 @@
+@inject DvCms.Application.Temi.IRisolutoreTema Temi
+@inject DvCms.Application.Localizzazione.IContestoLingua ContestoLingua
+@{
+    var tema = await Temi.RisolviAsync(Context.RequestAborted);
+}
+<!DOCTYPE html>
+<html lang="@ContestoLingua.CodiceLingua">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="referrer" content="no-referrer" />
+    <title>@(ViewData["Titolo"] is string titolo ? titolo + " - " : string.Empty)@tema.NomeSito</title>
+    <link rel="stylesheet" href="~/css/pubblico.css" asp-append-version="true" />
+    <link rel="stylesheet" href="@DvCms.Web.Pubblico.TemiVista.Foglio(tema)" asp-append-version="true" />
+</head>
+<body class="@DvCms.Web.Pubblico.TemiVista.Classe(tema)" style="@tema.VariabiliCss">
+    <main class="dv-account">
+        <p class="dv-account-sito">@tema.NomeSito</p>
+        @RenderBody()
+    </main>
+</body>
+</html>

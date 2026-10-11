@@ -26,6 +26,8 @@ public sealed partial class SessioneProva
 
     public string? CookieAdmin => _cookie.GetValueOrDefault(".DvCms.Admin");
 
+    public string? CookieCliente => _cookie.GetValueOrDefault(".DvCms.Cliente");
+
     public async Task<HttpResponseMessage> GetAsync(string percorso)
     {
         using var richiesta = new HttpRequestMessage(HttpMethod.Get, percorso);

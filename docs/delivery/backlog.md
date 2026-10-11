@@ -133,6 +133,7 @@ Le voci sono candidate a issue GitHub. Ogni issue deve essere piccola, verificab
 ## EPIC F — Commerce
 
 ### F-000: Registrazione e login acquirenti
+**Stato:** completata in M7.2 (`docs/architecture/ecommerce.md`): registrazione con conferma email e password scelta dal link, accesso con cookie separato, interruttore per sito; restano il recupero password con interfaccia cliente e l'accesso degli amministratori come acquirenti.
 **Accettazione:** registrazione possibile solo se il sito ha e-commerce attivo (`RegistrazioneAcquirentiAbilitata`), altrimenti 404; crea sempre un `Utente` del tenant, senza possibilità di scegliere il ruolo; conferma email e rate limiting; un `Utente` non accede all'admin; account separati per tenant; test cross-tenant.
 
 ### F-006: Traduzioni del catalogo

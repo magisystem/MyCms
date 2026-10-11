@@ -1,0 +1,11 @@
+@page "/account"
+@model DvCms.Web.Pages.Account.IndexModel
+@{
+    ViewData["Titolo"] = _L["Il mio account"];
+}
+<h1>@_L["Il mio account"]</h1>
+<p>@_L["Ciao"] <strong>@User.Identity?.Name</strong>.</p>
+<p>@_L["Gli ordini compariranno qui."]</p>
+<form method="post" asp-page="/Account/Esci">
+    <button type="submit">@_L["Esci"]</button>
+</form>

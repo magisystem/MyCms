@@ -11,6 +11,9 @@ namespace DvCms.Web.Accessi;
 public static class ConfigurazioneAccessiWeb
 {
     public const string NomeCookieAdmin = ".DvCms.Admin";
+    public const string NomeCookieCliente = ".DvCms.Cliente";
+    public const string PercorsoCliente = "/account";
+    public const string PercorsoAccessoCliente = "/account/accesso";
     public const string PercorsoAdmin = "/admin";
     public const string PercorsoAccesso = "/admin/accesso";
     public const int RichiesteAccessoAlMinutoPredefinite = 10;
@@ -56,6 +59,27 @@ public static class ConfigurazioneAccessiWeb
                     contesto.Response.StatusCode = StatusCodes.Status403Forbidden;
                     return Task.CompletedTask;
                 };
+            })
+            .AddCookie(Schemi.Cliente, opzioni =>
+            {
+                // Cookie dell'area cliente: distinto da quello admin (nome diverso, percorso "/" perché le pagine del sito sono ovunque),
+                // legato all'host, senza dominio; vale solo per gli account Utente (il validatore scarta ogni altro ruolo).
+                opzioni.Cookie.Name = NomeCookieCliente;
+                opzioni.Cookie.Path = "/";
+                opzioni.Cookie.HttpOnly = true;
+                opzioni.Cookie.SameSite = SameSiteMode.Lax;
+                opzioni.Cookie.SecurePolicy = politicaSicurezza;
+                opzioni.Cookie.IsEssential = true;
+                opzioni.ExpireTimeSpan = TimeSpan.FromHours(8);
+                opzioni.SlidingExpiration = true;
+                opzioni.LoginPath = PercorsoAccessoCliente;
+                opzioni.ReturnUrlParameter = "ReturnUrl";
+                opzioni.Events.OnValidatePrincipal = ValidatoreSessioneCliente.ConvalidaAsync;
+                opzioni.Events.OnRedirectToAccessDenied = contesto =>
+                {
+                    contesto.Response.StatusCode = StatusCodes.Status403Forbidden;
+                    return Task.CompletedTask;
+                };
             });
 
         servizi.AddAuthorizationBuilder()
@@ -63,6 +87,10 @@ public static class ConfigurazioneAccessiWeb
                 .AddAuthenticationSchemes(Schemi.Admin)
                 .RequireAuthenticatedUser()
                 .RequireRole("TenantAdmin", "PlatformAdmin"))
+            .AddPolicy(Politiche.Acquirente, politica => politica
+                .AddAuthenticationSchemes(Schemi.Cliente)
+                .RequireAuthenticatedUser()
+                .RequireRole("Utente"))
             .AddPolicy(Politiche.AmministratorePiattaforma, politica => politica
                 .AddAuthenticationSchemes(Schemi.Admin)
                 .RequireAuthenticatedUser()

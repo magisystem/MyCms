@@ -23,3 +23,21 @@ internal sealed class ConfigurazioneInvitoAccount : IEntityTypeConfiguration<Inv
         entita.HasIndex(invito => new { invito.IdUtenza, invito.Stato });
     }
 }
+
+internal sealed class ConfigurazioneConfermaEmailUtenza : IEntityTypeConfiguration<ConfermaEmailUtenza>
+{
+    public void Configure(EntityTypeBuilder<ConfermaEmailUtenza> entita)
+    {
+        entita.ToTable("ConfermeEmailUtenza");
+        entita.HasKey(conferma => conferma.Id);
+        entita.Property(conferma => conferma.Id).ValueGeneratedNever();
+        entita.Property(conferma => conferma.HashToken).HasColumnType("binary(32)").IsRequired();
+        entita.Property(conferma => conferma.Stato).HasConversion<string>().HasMaxLength(20).IsRequired();
+
+        entita.HasOne<Tenant>().WithMany().HasForeignKey(conferma => conferma.IdTenant).OnDelete(DeleteBehavior.Restrict);
+        entita.HasOne<Utenza>().WithMany().HasForeignKey(conferma => conferma.IdUtenza).OnDelete(DeleteBehavior.Cascade);
+
+        entita.HasIndex(conferma => conferma.HashToken).IsUnique();
+        entita.HasIndex(conferma => new { conferma.IdUtenza, conferma.CreatoIlUtc });
+    }
+}

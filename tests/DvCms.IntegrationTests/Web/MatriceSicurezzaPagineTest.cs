@@ -27,6 +27,9 @@ public class MatriceSicurezzaPagineTest
         "/Pages/Admin/Recupero/Codice.cshtml",
         "/Pages/Admin/Recupero/Reimposta.cshtml",
         "/Pages/Admin/Invito/Index.cshtml",
+        "/Pages/Account/Registrazione.cshtml",
+        "/Pages/Account/Conferma.cshtml",
+        "/Pages/Account/Accesso.cshtml",
     ];
 
     [Fact]

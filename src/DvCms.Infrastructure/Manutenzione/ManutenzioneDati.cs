@@ -1,3 +1,4 @@
+using DvCms.Application.Accessi;
 using DvCms.Domain.Accessi;
 using DvCms.Domain.Outbox;
 using DvCms.Infrastructure.Outbox;
@@ -30,13 +31,15 @@ public sealed partial class ManutenzioneDati
 {
     private readonly IServiceScopeFactory _fabbricaAmbiti;
     private readonly OpzioniManutenzione _opzioni;
+    private readonly OpzioniAcquirenti _opzioniAcquirenti;
     private readonly TimeProvider _orologio;
     private readonly ILogger<ManutenzioneDati> _logger;
 
-    public ManutenzioneDati(IServiceScopeFactory fabbricaAmbiti, OpzioniManutenzione opzioni, TimeProvider orologio, ILogger<ManutenzioneDati> logger)
+    public ManutenzioneDati(IServiceScopeFactory fabbricaAmbiti, OpzioniManutenzione opzioni, OpzioniAcquirenti opzioniAcquirenti, TimeProvider orologio, ILogger<ManutenzioneDati> logger)
     {
         _fabbricaAmbiti = fabbricaAmbiti;
         _opzioni = opzioni;
+        _opzioniAcquirenti = opzioniAcquirenti;
         _orologio = orologio;
         _logger = logger;
     }
@@ -76,6 +79,24 @@ public sealed partial class ManutenzioneDati
             "InvitiAccount",
             () => contesto.InvitiAccount.IgnoreQueryFilters()
                 .Where(i => (i.Stato != StatoInvito.Inviato && i.CreatoIlUtc < accessi) || i.ScadeIlUtc < accessi)
+                .Take(lotto)
+                .ExecuteDeleteAsync(annullamento),
+            annullamento);
+
+        // Registrazioni di acquirenti mai confermate: l'account in attesa (e, a cascata, i suoi link) si toglie dopo qualche giorno,
+        // così l'indirizzo torna libero; le conferme concluse o scadute si tengono come gli inviti.
+        var nonConfermati = adesso - _opzioniAcquirenti.ConservazioneNonConfermati;
+        totale += await RipulisciAsync(
+            "UtenzeNonConfermate",
+            () => contesto.Utenze.IgnoreQueryFilters()
+                .Where(u => u.Ruolo == RuoloUtenza.Utente && u.Stato == StatoUtenza.InAttesaDiConferma && u.CreatoIlUtc < nonConfermati)
+                .Take(lotto)
+                .ExecuteDeleteAsync(annullamento),
+            annullamento);
+        totale += await RipulisciAsync(
+            "ConfermeEmailUtenza",
+            () => contesto.ConfermeEmailUtenza.IgnoreQueryFilters()
+                .Where(c => (c.Stato != StatoConfermaEmail.Inviata && c.CreatoIlUtc < accessi) || c.ScadeIlUtc < accessi)
                 .Take(lotto)
                 .ExecuteDeleteAsync(annullamento),
             annullamento);

@@ -76,7 +76,8 @@ public sealed record DettaglioSito(
     StatoSito Stato,
     IReadOnlyList<DettaglioDominio> Domini,
     IReadOnlyList<LinguaDelSito> Lingue,
-    bool CommercioAttivo = false);
+    bool CommercioAttivo = false,
+    bool RegistrazioneAcquirentiAbilitata = false);
 
 public sealed record DettaglioAccount(
     Guid Id,
@@ -133,6 +134,12 @@ public interface IServizioPiattaforma
     /// negozio attivo). I dati del catalogo non si toccano.
     /// </summary>
     Task<EsitoOperazione> ImpostaCommercioAsync(Guid idAttore, Guid idTenant, Guid idSito, bool attivo, CancellationToken annullamento);
+
+    /// <summary>
+    /// Abilita o disabilita la registrazione degli acquirenti del sito. Abilitarla richiede il negozio attivo (altrimenti
+    /// <c>NonConsentito</c>); gli account già registrati restano.
+    /// </summary>
+    Task<EsitoOperazione> ImpostaRegistrazioneAcquirentiAsync(Guid idAttore, Guid idTenant, Guid idSito, bool abilitata, CancellationToken annullamento);
 
     Task<EsitoOperazione> AggiungiDominioAsync(
         Guid idAttore,

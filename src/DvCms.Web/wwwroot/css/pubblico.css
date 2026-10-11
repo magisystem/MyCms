@@ -53,3 +53,13 @@ h1 {
     display: flex;
     gap: 1rem;
 }
+
+/* Area cliente (registrazione, accesso, account). */
+.dv-account { max-width: 26rem; }
+.dv-account-sito { margin: 0 0 1rem; font-weight: 700; }
+.dv-account label { display: block; margin: 0.75rem 0 0.25rem; font-weight: 600; }
+.dv-account input[type="text"], .dv-account input[type="email"], .dv-account input[type="password"] { width: 100%; box-sizing: border-box; padding: 0.5rem; font: inherit; }
+.dv-account button { margin-top: 1rem; padding: 0.6rem 1.2rem; font: inherit; font-weight: 600; cursor: pointer; }
+.dv-account .errore { padding: 0.5rem 0.75rem; color: #7f1d1d; background: #fee2e2; }
+.dv-account .avviso { padding: 0.5rem 0.75rem; color: #14532d; background: #dcfce7; }
+.dv-account nav { margin-top: 1.5rem; }

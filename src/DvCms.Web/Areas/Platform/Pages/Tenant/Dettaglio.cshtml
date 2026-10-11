@@ -107,6 +107,15 @@
                             <input type="hidden" name="attivo" value="@((!sito.CommercioAttivo).ToString().ToLowerInvariant())" />
                             <button type="submit" class="btn btn-sm @(sito.CommercioAttivo ? "btn-outline-danger" : "btn-outline-primary")">@(sito.CommercioAttivo ? _L["Disattiva il negozio"] : _L["Attiva il negozio"])</button>
                         </form>
+                        @if (sito.CommercioAttivo)
+                        {
+                            <form method="post" asp-page-handler="RegistrazioneAcquirenti" asp-route-id="@tenant.Id" class="d-flex align-items-center gap-3 mt-2">
+                                <input type="hidden" name="idSito" value="@sito.Id" />
+                                <span>@_L["Registrazione degli acquirenti"]: <strong>@(sito.RegistrazioneAcquirentiAbilitata ? _L["abilitata"] : _L["non abilitata"])</strong></span>
+                                <input type="hidden" name="abilitata" value="@((!sito.RegistrazioneAcquirentiAbilitata).ToString().ToLowerInvariant())" />
+                                <button type="submit" class="btn btn-sm @(sito.RegistrazioneAcquirentiAbilitata ? "btn-outline-danger" : "btn-outline-primary")">@(sito.RegistrazioneAcquirentiAbilitata ? _L["Disabilita la registrazione"] : _L["Abilita la registrazione"])</button>
+                            </form>
+                        }
 
                         <table class="table table-sm mt-3 mb-2">
                             <thead>
@@ -305,11 +314,18 @@
                                             <button type="submit" class="btn btn-sm" title="@_L["Dispositivo perso: verifica prima l'identità della persona. Dovrà configurare di nuovo la 2FA."]">@_L["Reimposta 2FA"]</button>
                                         </form>
                                     }
-                                    <form method="post" asp-page-handler="AccountAttivo" asp-route-id="@tenant.Id" class="d-inline">
-                                        <input type="hidden" name="idUtenza" value="@account.Id" />
-                                        <input type="hidden" name="attiva" value="@((account.Stato != StatoUtenza.Attiva).ToString().ToLowerInvariant())" />
-                                        <button type="submit" class="btn btn-sm">@(account.Stato == StatoUtenza.Attiva ? _L["Disabilita"] : _L["Riabilita"])</button>
-                                    </form>
+                                    @if (account.Stato == StatoUtenza.InAttesaDiConferma)
+                                    {
+                                        <span class="badge bg-yellow-lt">@_L["In attesa di conferma"]</span>
+                                    }
+                                    else
+                                    {
+                                        <form method="post" asp-page-handler="AccountAttivo" asp-route-id="@tenant.Id" class="d-inline">
+                                            <input type="hidden" name="idUtenza" value="@account.Id" />
+                                            <input type="hidden" name="attiva" value="@((account.Stato != StatoUtenza.Attiva).ToString().ToLowerInvariant())" />
+                                            <button type="submit" class="btn btn-sm">@(account.Stato == StatoUtenza.Attiva ? _L["Disabilita"] : _L["Riabilita"])</button>
+                                        </form>
+                                    }
                                 </td>
                             </tr>
                         }

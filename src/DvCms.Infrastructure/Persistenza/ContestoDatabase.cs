@@ -84,6 +84,8 @@ public class ContestoDatabase : DbContext
 
     public DbSet<CodiceRecuperoUtenza> CodiciRecuperoUtenza => Set<CodiceRecuperoUtenza>();
 
+    public DbSet<ConfermaEmailUtenza> ConfermeEmailUtenza => Set<ConfermaEmailUtenza>();
+
     public DbSet<RegistroAudit> RegistroAudit => Set<RegistroAudit>();
 
     public DbSet<Prodotto> Prodotti => Set<Prodotto>();
@@ -114,6 +116,7 @@ public class ContestoDatabase : DbContext
         modelBuilder.Entity<TraduzioneRisorsaMedia>().HasQueryFilter(traduzione => traduzione.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<ImpostazioniTemaSito>().HasQueryFilter(impostazioni => impostazioni.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<InvitoAccount>().HasQueryFilter(invito => invito.IdTenant == IdTenantCorrente);
+        modelBuilder.Entity<ConfermaEmailUtenza>().HasQueryFilter(conferma => conferma.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<MessaggioOutbox>().HasQueryFilter(messaggio => messaggio.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<Utenza>().HasQueryFilter(utenza => utenza.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<RegistroAudit>().HasQueryFilter(voce => voce.IdTenant == IdTenantCorrente);

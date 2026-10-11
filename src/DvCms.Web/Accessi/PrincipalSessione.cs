@@ -7,7 +7,10 @@ namespace DvCms.Web.Accessi;
 public static class PrincipalSessione
 {
     /// <summary>Crea il principal della sessione admin per l'identità indicata, sull'host del tenant indicato.</summary>
-    public static ClaimsPrincipal Crea(IdentitaUtenza identita, Guid idTenantHost)
+    public static ClaimsPrincipal Crea(IdentitaUtenza identita, Guid idTenantHost) => Crea(identita, idTenantHost, Schemi.Admin);
+
+    /// <summary>Come <see cref="Crea(IdentitaUtenza, Guid)"/> ma per lo schema indicato (area admin o area cliente).</summary>
+    public static ClaimsPrincipal Crea(IdentitaUtenza identita, Guid idTenantHost, string schema)
     {
         ArgumentNullException.ThrowIfNull(identita);
 
@@ -24,7 +27,7 @@ public static class PrincipalSessione
             new(TipiClaim.DeveAttivareDueFattori, identita.DeveAttivareDueFattori.ToString(CultureInfo.InvariantCulture)),
         };
 
-        return new ClaimsPrincipal(new ClaimsIdentity(claim, Schemi.Admin, ClaimTypes.Name, ClaimTypes.Role));
+        return new ClaimsPrincipal(new ClaimsIdentity(claim, schema, ClaimTypes.Name, ClaimTypes.Role));
     }
 
     public static bool TentaLeggiSessione(ClaimsPrincipal principal, out Guid idUtenza, out Guid timbro)

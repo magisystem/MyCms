@@ -48,7 +48,13 @@ public sealed partial class ServizioAccesso : IServizioAccesso
         _logger = logger;
     }
 
-    public async Task<RisultatoAccesso> AccediAsync(string? email, string? password, CancellationToken annullamento)
+    public Task<RisultatoAccesso> AccediAsync(string? email, string? password, CancellationToken annullamento) =>
+        AccediInternoAsync(email, password, soloAcquirenti: false, annullamento);
+
+    public Task<RisultatoAccesso> AccediComeAcquirenteAsync(string? email, string? password, CancellationToken annullamento) =>
+        AccediInternoAsync(email, password, soloAcquirenti: true, annullamento);
+
+    private async Task<RisultatoAccesso> AccediInternoAsync(string? email, string? password, bool soloAcquirenti, CancellationToken annullamento)
     {
         var adesso = _orologio.GetUtcNow().UtcDateTime;
 
@@ -64,7 +70,9 @@ public sealed partial class ServizioAccesso : IServizioAccesso
         var idTenant = _tenant.IdTenant;
         var candidati = await _contesto.Utenze.IgnoreQueryFilters()
             .Where(utenza => utenza.EmailNormalizzata == normalizzata
-                && (utenza.IdTenant == idTenant || utenza.Ruolo == RuoloUtenza.PlatformAdmin))
+                && (soloAcquirenti
+                    ? utenza.IdTenant == idTenant && utenza.Ruolo == RuoloUtenza.Utente
+                    : utenza.IdTenant == idTenant || utenza.Ruolo == RuoloUtenza.PlatformAdmin))
             .ToListAsync(annullamento);
 
         if (candidati.Count != 1)

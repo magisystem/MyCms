@@ -59,6 +59,9 @@ public class DettaglioModel : PaginaPiattaforma
     public Task<IActionResult> OnPostCommercioAsync(Guid id, Guid idSito, bool attivo, CancellationToken annullamento) =>
         EseguiAsync(id, () => _piattaforma.ImpostaCommercioAsync(IdAttore, id, idSito, attivo, annullamento), Localizzatore.Traduci("Negozio aggiornato."));
 
+    public Task<IActionResult> OnPostRegistrazioneAcquirentiAsync(Guid id, Guid idSito, bool abilitata, CancellationToken annullamento) =>
+        EseguiAsync(id, () => _piattaforma.ImpostaRegistrazioneAcquirentiAsync(IdAttore, id, idSito, abilitata, annullamento), Localizzatore.Traduci("Registrazione degli acquirenti aggiornata."));
+
     public Task<IActionResult> OnPostAbilitaLinguaAsync(Guid id, Guid idSito, string? lingua, CancellationToken annullamento) =>
         EseguiAsync(id, () => _piattaforma.AbilitaLinguaAsync(IdAttore, id, idSito, lingua, annullamento), Localizzatore.Traduci("Lingua abilitata."));
 

@@ -19,4 +19,7 @@ public enum StatoUtenza
 {
     Attiva = 1,
     Disabilitata = 2,
+
+    /// <summary>Acquirente registrato che non ha ancora confermato l'email e scelto la password: non può accedere.</summary>
+    InAttesaDiConferma = 3,
 }

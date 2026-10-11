@@ -20,6 +20,9 @@ public static class Schemi
 {
     /// <summary>Schema di autenticazione (e nome logico del cookie) dell'area di amministrazione.</summary>
     public const string Admin = "DvCmsAdmin";
+
+    /// <summary>Schema (cookie distinto da quello admin) dell'area cliente: solo account <c>Utente</c> (acquirenti).</summary>
+    public const string Cliente = "DvCmsCliente";
 }
 
 public static class Politiche
@@ -28,6 +31,9 @@ public static class Politiche
     public const string AmministratoreTenant = "AmministratoreTenant";
 
     public const string AmministratorePiattaforma = "AmministratorePiattaforma";
+
+    /// <summary>Acquirente registrato (<c>Utente</c>) autenticato con il cookie dell'area cliente.</summary>
+    public const string Acquirente = "Acquirente";
 
     public const string LimiteAccesso = "accesso";
 }

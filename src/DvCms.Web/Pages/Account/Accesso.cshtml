@@ -1,0 +1,19 @@
+@page "/account/accesso"
+@model DvCms.Web.Pages.Account.AccessoModel
+@{
+    ViewData["Titolo"] = _L["Accesso"];
+}
+<h1>@_L["Accedi al tuo account"]</h1>
+@if (Model.Errore)
+{
+    <p class="errore" role="alert">@_L["Credenziali non valide."]</p>
+}
+<form method="post" autocomplete="off" novalidate>
+    <input type="hidden" name="ReturnUrl" value="@Model.ReturnUrl" />
+    <label for="Email">@_L["Email"]</label>
+    <input type="email" id="Email" name="Email" value="@Model.Email" autocomplete="username" required />
+    <label for="Password">@_L["Password"]</label>
+    <input type="password" id="Password" name="Password" autocomplete="current-password" required />
+    <button type="submit">@_L["Accedi"]</button>
+</form>
+<nav><a href="/account/registrazione">@_L["Non hai un account? Registrati"]</a></nav>

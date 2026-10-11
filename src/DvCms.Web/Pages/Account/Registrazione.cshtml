@@ -1,0 +1,29 @@
+@page "/account/registrazione"
+@model DvCms.Web.Pages.Account.RegistrazioneModel
+@{
+    ViewData["Titolo"] = _L["Registrazione"];
+}
+<h1>@_L["Crea il tuo account"]</h1>
+@if (!Model.Disponibile)
+{
+    <p class="errore" role="alert">@_L["La registrazione non è al momento disponibile."]</p>
+}
+else if (Model.Inviata)
+{
+    <p class="avviso" role="status">@_L["Se l'indirizzo è valido ti abbiamo inviato un'email con il link per completare la registrazione e scegliere la password."]</p>
+}
+else
+{
+    @if (Model.Errore is not null)
+    {
+        <p class="errore" role="alert">@Model.Errore</p>
+    }
+    <form method="post" novalidate>
+        <label for="Nome">@_L["Nome"]</label>
+        <input type="text" id="Nome" name="Nome" value="@Model.Nome" maxlength="100" autocomplete="name" required />
+        <label for="Email">@_L["Email"]</label>
+        <input type="email" id="Email" name="Email" value="@Model.Email" autocomplete="email" required />
+        <button type="submit">@_L["Registrati"]</button>
+    </form>
+}
+<nav><a href="/account/accesso">@_L["Hai già un account? Accedi"]</a></nav>

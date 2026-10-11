@@ -88,6 +88,11 @@ public static class EstensioniServizi
         servizi.TryAddScoped<IServizioRecuperoPassword, ServizioRecuperoPassword>();
         servizi.TryAddSingleton(new OpzioniInviti(TimeSpan.FromHours(LeggiIntero(configurazione, "Sicurezza:Inviti:OreValidita", (int)OpzioniInviti.Predefinite.Validita.TotalHours, 1, 720))));
         servizi.TryAddScoped<IServizioInviti, ServizioInviti>();
+        servizi.TryAddSingleton(new OpzioniAcquirenti(
+            TimeSpan.FromHours(LeggiIntero(configurazione, "Sicurezza:Acquirenti:OreValiditaConferma", (int)OpzioniAcquirenti.Predefinite.ValiditaConferma.TotalHours, 1, 168)),
+            LeggiIntero(configurazione, "Sicurezza:Acquirenti:RichiesteOrarieMassimeConferma", OpzioniAcquirenti.Predefinite.RichiesteOrarieMassimeConferma, 1, 20),
+            TimeSpan.FromDays(LeggiIntero(configurazione, "Sicurezza:Acquirenti:GiorniConservazioneNonConfermati", (int)OpzioniAcquirenti.Predefinite.ConservazioneNonConfermati.TotalDays, 1, 90))));
+        servizi.TryAddScoped<IServizioAcquirenti, ServizioAcquirenti>();
         servizi.TryAddScoped<ServizioPopolamento>();
         servizi.TryAddScoped<ServizioSitemap>();
         servizi.TryAddScoped<IServizioSitemap>(f => new ServizioSitemapConCache(f.GetRequiredService<ServizioSitemap>(), f.GetRequiredService<ICachePubblica>(), f.GetRequiredService<IContestoTenant>()));

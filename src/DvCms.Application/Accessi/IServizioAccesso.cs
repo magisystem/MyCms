@@ -46,6 +46,13 @@ public interface IServizioAccesso
     Task<RisultatoAccesso> AccediAsync(string? email, string? password, CancellationToken annullamento);
 
     /// <summary>
+    /// Accesso dell'area cliente: solo un account <c>Utente</c> (acquirente) del tenant dell'host. Gli account amministrativi non
+    /// entrano da qui e non sono nemmeno cercati (nessun effetto sui loro contatori di tentativi, nessun audit di piattaforma).
+    /// Stessi tempi, blocco e riservatezza dell'accesso amministrativo.
+    /// </summary>
+    Task<RisultatoAccesso> AccediComeAcquirenteAsync(string? email, string? password, CancellationToken annullamento);
+
+    /// <summary>
     /// Verifica a ogni richiesta che la sessione sia ancora valida: account attivo, <c>TimbroSicurezza</c> invariato
     /// e account ammesso sul tenant dell'host. Restituisce l'identità aggiornata, oppure nulla se non valida.
     /// </summary>

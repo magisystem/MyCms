@@ -17,6 +17,11 @@ costruttore.Services.AddRazorPages(opzioni =>
     opzioni.Conventions.AllowAnonymousToPage("/Admin/Verifica");
     opzioni.Conventions.AllowAnonymousToFolder("/Admin/Recupero");
     opzioni.Conventions.AllowAnonymousToFolder("/Admin/Invito");
+    // Area cliente (F-000): solo l'acquirente autenticato con il suo cookie; registrazione, conferma e accesso sono pubblici; l'uscita richiede la sessione (il token antiforgery è legato all'utente).
+    opzioni.Conventions.AuthorizeFolder("/Account", Politiche.Acquirente);
+    opzioni.Conventions.AllowAnonymousToPage("/Account/Registrazione");
+    opzioni.Conventions.AllowAnonymousToPage("/Account/Conferma");
+    opzioni.Conventions.AllowAnonymousToPage("/Account/Accesso");
     // Il menu "Platform" è un'area dedicata: solo il PlatformAdmin, verificato lato server a ogni richiesta.
     opzioni.Conventions.AuthorizeAreaFolder("Platform", "/", Politiche.AmministratorePiattaforma);
     opzioni.Conventions.ConfigureFilter(new FiltroCambioPasswordObbligatorio());

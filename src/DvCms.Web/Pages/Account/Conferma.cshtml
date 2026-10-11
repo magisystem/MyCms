@@ -1,0 +1,32 @@
+@page "/account/conferma"
+@model DvCms.Web.Pages.Account.ConfermaModel
+@{
+    ViewData["Titolo"] = _L["Conferma della registrazione"];
+}
+<h1>@_L["Conferma la registrazione"]</h1>
+@if (Model.Completato)
+{
+    <p class="avviso" role="status">@_L["Account attivato. Ora puoi accedere con la password che hai scelto."]</p>
+    <nav><a href="/account/accesso">@_L["Accedi"]</a></nav>
+}
+else if (!Model.LinkValido)
+{
+    <p class="errore" role="alert">@_L["Il link non è valido o è scaduto. Puoi registrarti di nuovo per riceverne uno nuovo."]</p>
+    <nav><a href="/account/registrazione">@_L["Registrati"]</a></nav>
+}
+else
+{
+    @if (Model.Messaggio is not null)
+    {
+        <p class="errore" role="alert">@Model.Messaggio</p>
+    }
+    <p>@_L["Scegli la password del tuo account (da 12 a 128 caratteri)."]</p>
+    <form method="post" autocomplete="off" novalidate>
+        <input type="hidden" name="Token" value="@Model.Token" />
+        <label for="Password">@_L["Password"]</label>
+        <input type="password" id="Password" name="Password" autocomplete="new-password" required />
+        <label for="ConfermaPassword">@_L["Ripeti la password"]</label>
+        <input type="password" id="ConfermaPassword" name="ConfermaPassword" autocomplete="new-password" required />
+        <button type="submit">@_L["Attiva l'account"]</button>
+    </form>
+}
