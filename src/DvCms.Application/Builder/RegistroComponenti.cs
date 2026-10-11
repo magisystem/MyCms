@@ -104,7 +104,7 @@ public sealed partial class RegistroComponenti
                 new("sfondo", TipoProprieta.Enumerazione, Valori: ["nessuno", "chiaro", "scuro"], Predefinito: "nessuno"),
                 .. _animazione,
             ],
-            ["layout.colonne", .. _contenutoBase, "contenuto.hero", "contenuto.cta", "contenuto.fisarmonica", "contenuto.caratteristiche", "contenuto.testimonianze"], FigliMassimi: 50),
+            ["layout.colonne", .. _contenutoBase, "contenuto.hero", "contenuto.cta", "contenuto.fisarmonica", "contenuto.caratteristiche", "contenuto.testimonianze", "negozio.griglia-prodotti"], FigliMassimi: 50),
         new("layout.colonne", 2, [], [.. _animazione], ["layout.colonna"], FigliMinimi: 2, FigliMassimi: 3),
         new("layout.colonna", 2, [], [], [.. _contenutoBase, "contenuto.fisarmonica"], FigliMassimi: 20),
         new("contenuto.titolo", 2,
@@ -187,6 +187,11 @@ public sealed partial class RegistroComponenti
                 new("ruolo", TipoProprieta.TestoBreve, LunghezzaMassima: 100),
             ],
             [], []),
+        // Negozio (M7): referenzia il catalogo, non lo copia. Il renderer legge i prodotti pubblicati al momento della visita; nel documento
+        // restano solo quanti mostrarne e in quante colonne. Nessun identificativo di prodotto, nessun prezzo.
+        new("negozio.griglia-prodotti", 1,
+            [new("quanti", TipoProprieta.Enumerazione, Valori: ["3", "6", "9", "12"], Predefinito: "6")],
+            [new("colonne", TipoProprieta.Enumerazione, Valori: ["2", "3"], Predefinito: "3"), .. _animazione], []),
     ];
 
     public IReadOnlyList<DefinizioneComponente> Tutti => [.. _componenti.Values.OrderBy(c => c.Tipo, StringComparer.Ordinal)];

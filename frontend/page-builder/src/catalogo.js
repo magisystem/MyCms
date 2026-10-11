@@ -6,7 +6,7 @@ import { consentito } from './vincoli.js';
 import { gruppoDi } from './proprieta.js';
 import { analizza, costruisci, urlConsentito } from './testoRicco.js';
 
-const FOGLIE = new Set(['contenuto.titolo', 'contenuto.testo', 'contenuto.testo-ricco', 'contenuto.immagine', 'contenuto.pulsante', 'contenuto.hero', 'contenuto.cta', 'contenuto.voce', 'contenuto.caratteristica', 'contenuto.testimonianza']);
+const FOGLIE = new Set(['contenuto.titolo', 'contenuto.testo', 'contenuto.testo-ricco', 'contenuto.immagine', 'contenuto.pulsante', 'contenuto.hero', 'contenuto.cta', 'contenuto.voce', 'contenuto.caratteristica', 'contenuto.testimonianza', 'negozio.griglia-prodotti']);
 
 const TAG = {
   'layout.sezione': 'section',
@@ -25,6 +25,7 @@ const TAG = {
   'contenuto.caratteristica': 'div',
   'contenuto.testimonianze': 'div',
   'contenuto.testimonianza': 'figure',
+  'negozio.griglia-prodotti': 'div',
 };
 
 // Testi modificabili direttamente nel canvas (doppio clic): solo testo semplice, nessun HTML. Gli altri campi restano nel pannello.
@@ -170,6 +171,11 @@ function aspetto(tipo, el, modello) {
     case 'contenuto.testimonianza':
       impostaClassi(el, ['dv-testimonianza']);
       riempi(el, [['blockquote', 'dv-testimonianza-citazione', p('data-p-citazione')], ['figcaption', 'dv-testimonianza-autore', [p('data-p-autore'), p('data-p-ruolo')].filter(Boolean).join(', ')]]);
+      break;
+    case 'negozio.griglia-prodotti':
+      // Segnaposto: i prodotti veri si leggono dal catalogo alla visita; qui si vede solo che il blocco c'è.
+      impostaClassi(el, ['dv-griglia-prodotti', 'dv-griglia-prodotti-anteprima']);
+      riempi(el, [['p', '', `${modello.get('name') ?? tipo} · ${p('data-p-quanti', '6')}`]]);
       break;
     default:
       break;

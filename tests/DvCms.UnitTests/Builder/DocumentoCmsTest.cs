@@ -27,7 +27,7 @@ public sealed class DocumentoCmsTest
 
     [Fact]
     public void LeDefinizioniDeiComponentiHannoUnImprontaFissata() =>
-        Assert.Equal("201F7AC6BA7A0103786D462A4F07D36CDF854E0A32770018FD7685758C7162E7", _registro.Impronta);
+        Assert.Equal("2074EDFC1D56CA310223540D85F868B17F1E1FB39A192D6D575D276D49B01086", _registro.Impronta);
 
     [Fact]
     public void IlRegistroRifiutaDefinizioniDuplicateOFigliSconosciuti()
@@ -217,8 +217,25 @@ public sealed class DocumentoCmsTest
         Assert.Empty(_registro.Valida(documento));
     }
 
+    [Fact]
+    public void LaGrigliaDiProdottiDelNegozioEValidaNellaSezioneEFoglia()
+    {
+        var documento = new DocumentoCms(1,
+        [
+            Nodo("s", "layout.sezione", null, null,
+                Nodo("p", "negozio.griglia-prodotti", new() { ["quanti"] = "9" }, new() { ["colonne"] = "2", ["animazione"] = "sale" })),
+            Nodo("s2", "layout.sezione", null, null, Nodo("p2", "negozio.griglia-prodotti")),
+        ]);
+
+        Assert.Empty(_registro.Valida(documento));
+    }
+
     public static TheoryData<string, Func<DocumentoCms>> AvanzatiNonValidi() => new()
     {
+        { "ProprietaNonValida", () => new(1, [Nodo("s", "layout.sezione", null, null, Nodo("p", "negozio.griglia-prodotti", new() { ["quanti"] = "100" }))]) },
+        { "StileNonValida", () => new(1, [Nodo("s", "layout.sezione", null, null, Nodo("p", "negozio.griglia-prodotti", null, new() { ["colonne"] = "7" }))]) },
+        { "FiglioNonAmmesso", () => new(1, [Nodo("s", "layout.sezione", null, null, Nodo("k", "layout.colonne", null, null, Nodo("c1", "layout.colonna", null, null, Nodo("p", "negozio.griglia-prodotti")), Nodo("c2", "layout.colonna")))]) },
+        { "FigliNonAmmessi", () => new(1, [Nodo("s", "layout.sezione", null, null, Nodo("p", "negozio.griglia-prodotti", null, null, Nodo("t", "contenuto.titolo", new() { ["testo"] = "x" })))]) },
         { "FigliInsufficienti", () => new(1, [Nodo("g", "contenuto.caratteristiche")]) },
         { "FigliInsufficienti", () => new(1, [Nodo("t", "contenuto.testimonianze")]) },
         { "TroppiFigli", () => new(1, [Nodo("g", "contenuto.caratteristiche", null, null, [.. Enumerable.Range(0, 13).Select(i => Nodo($"c{i}", "contenuto.caratteristica", new() { ["titolo"] = "x" }))])]) },

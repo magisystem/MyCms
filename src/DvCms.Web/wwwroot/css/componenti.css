@@ -97,6 +97,16 @@ body .dv-sfondo-primario .dv-pulsante-primario {
 .dv-testimonianza-citazione p { margin: 0 0 0.5rem; }
 .dv-testimonianza-autore { font-size: 0.9rem; color: var(--dv-colore-didascalia, #52606d); }
 
+/* Griglia di prodotti del negozio (M7): solo token del contratto componenti-temi. */
+.dv-griglia-prodotti { display: grid; gap: 1rem; list-style: none; margin: 0 0 1.5rem; padding: 0; }
+.dv-griglia-prodotti-colonne-2 { grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr)); }
+.dv-griglia-prodotti-colonne-3 { grid-template-columns: repeat(auto-fill, minmax(min(100%, 12rem), 1fr)); }
+.dv-griglia-prodotto { padding: 1rem; border: 1px solid var(--dv-colore-bordo, #cbd2d9); border-radius: 0.5rem; }
+.dv-griglia-prodotto a { font-weight: 700; color: var(--dv-colore-titoli, inherit); }
+.dv-griglia-prodotto p { margin: 0.4rem 0 0; }
+.dv-griglia-prodotto.dv-esaurito { opacity: 0.7; }
+.dv-griglia-prodotti-anteprima { padding: 1rem; border: 2px dashed var(--dv-colore-bordo, #cbd2d9); border-radius: 0.5rem; text-align: center; }
+
 /*
  * Animazioni dichiarative di comparsa (E-006). Lo stato nascosto vale solo se lo script del sito ha marcato la pagina (.dv-js):
  * senza JavaScript il contenuto resta visibile. Con prefers-reduced-motion nessuna animazione.

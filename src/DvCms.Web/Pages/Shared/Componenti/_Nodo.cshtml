@@ -1,6 +1,8 @@
 @using DvCms.Application.Builder
 @using DvCms.Application.Cms
 @model NodoCms
+@inject DvCms.Application.Negozio.IServizioVetrina Vetrina
+@inject DvCms.Application.Localizzazione.IContestoLingua ContestoLinguaNodo
 @functions {
     private static string Valore(IReadOnlyDictionary<string, string> valori, string nome, string predefinito) =>
         valori.TryGetValue(nome, out var valore) && valore.Length > 0 ? valore : predefinito;
@@ -244,6 +246,31 @@
                     <strong>@Valore(Model.Proprieta, "autore", string.Empty)</strong>@(ruolo.Length > 0 ? ", " + ruolo : string.Empty)
                 </figcaption>
             </figure>
+        }
+        break;
+    case "negozio.griglia-prodotti":
+        {
+            // Legge i prodotti pubblicati al momento della visita (il documento non copia il catalogo): se il negozio non è attivo
+            // o non c'è nulla da mostrare il componente non produce niente.
+            var quanti = int.Parse(Token(Model.Proprieta, "quanti", "6", "3", "6", "9", "12"), System.Globalization.CultureInfo.InvariantCulture);
+            var prodotti = (await Vetrina.ElencaAsync(ContestoLinguaNodo.CodiceLingua, Context.RequestAborted)).Take(quanti).ToList();
+            if (prodotti.Count > 0)
+            {
+                var cultura = System.Globalization.CultureInfo.GetCultureInfo("it-IT");
+                <ul class="@("dv-griglia-prodotti dv-griglia-prodotti-colonne-" + Token(Model.Stili, "colonne", "3", "2", "3") + Animazione(Model.Stili))">
+                    @foreach (var prodotto in prodotti)
+                    {
+                        <li class="dv-griglia-prodotto@(prodotto.Disponibile ? string.Empty : " dv-esaurito")">
+                            <a href="/negozio/@prodotto.Id.ToString("D")">@(prodotto.Nome.Length > 0 ? prodotto.Nome : "—")</a>
+                            <p>@_L["da"] @prodotto.PrezzoDa.ToString("N2", cultura) @prodotto.Valuta</p>
+                            @if (!prodotto.Disponibile)
+                            {
+                                <p>@_L["Esaurito"]</p>
+                            }
+                        </li>
+                    }
+                </ul>
+            }
         }
         break;
 }

@@ -103,6 +103,7 @@ public class BuilderModel : PaginaAdmin
             ["contenuto.caratteristica"] = Localizzatore.Traduci("Caratteristica"),
             ["contenuto.testimonianze"] = Localizzatore.Traduci("Testimonianze"),
             ["contenuto.testimonianza"] = Localizzatore.Traduci("Testimonianza"),
+            ["negozio.griglia-prodotti"] = Localizzatore.Traduci("Griglia di prodotti"),
         }),
         ["campoObbligatorio"] = Localizzatore.Traduci("Campo obbligatorio"),
         ["gruppi"] = JsonSerializer.Serialize(new Dictionary<string, string>
@@ -136,6 +137,7 @@ public class BuilderModel : PaginaAdmin
             ["autore"] = Localizzatore.Traduci("Autore"),
             ["ruolo"] = Localizzatore.Traduci("Ruolo"),
             ["colonne"] = Localizzatore.Traduci("Colonne"),
+            ["quanti"] = Localizzatore.Traduci("Quanti prodotti"),
             ["altezza"] = Localizzatore.Traduci("Altezza"),
             ["animazione"] = Localizzatore.Traduci("Animazione"),
             ["ritardoAnimazione"] = Localizzatore.Traduci("Ritardo (ms)"),
