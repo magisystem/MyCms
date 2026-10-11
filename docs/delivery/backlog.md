@@ -153,6 +153,7 @@ Le voci sono candidate a issue GitHub. Ogni issue deve essere piccola, verificab
 **Accettazione:** ordine conserva i dati commerciali essenziali al momento dell'acquisto; le modifiche prodotto non cambiano storico ordine.
 
 ### F-004: Provider e webhook
+**Stato:** completata in sandbox in M7.7 (`docs/architecture/ecommerce.md`); la produzione resta spenta finché non si approvano A5 e A7.
 **Accettazione:** provider deciso, signature verification, deduplica/idempotenza, test di evento duplicato e fallito.
 
 ### F-005: Inventario concorrente

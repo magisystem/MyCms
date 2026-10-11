@@ -61,6 +61,16 @@ else
 {
     <p>@_L["La merce è riservata per te fino alle"] @scade.ToString("HH:mm") UTC.</p>
 }
+@if (Model.UrlPayPal is not null)
+{
+    <p role="status"><a href="@Model.UrlPayPal.AbsoluteUri" rel="noopener">@_L["Continua su PayPal per completare il pagamento"]</a></p>
+}
+else if (Model.PuoPagare)
+{
+    <form method="post" asp-page-handler="Paga" asp-route-id="@o.Id">
+        <button type="submit">@(o.Stato == StatoOrdine.PagamentoFallito ? _L["Riprova a pagare con PayPal"] : _L["Paga con PayPal"])</button>
+    </form>
+}
 @if (Model.PuoAnnullare)
 {
     <form method="post" asp-page-handler="Annulla" asp-route-id="@o.Id">

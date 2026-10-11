@@ -4,6 +4,7 @@ using DvCms.Web.Accessi;
 using DvCms.Web.Comandi;
 using DvCms.Web.Localizzazione;
 using DvCms.Web.Middleware;
+using DvCms.Web.Pagamenti;
 using DvCms.Web.Pubblico;
 using DvCms.Web.Salute;
 
@@ -131,6 +132,7 @@ applicazione.UseMiddleware<MiddlewareLingua>();
 applicazione.UseAuthorization();
 applicazione.MapSeo();
 applicazione.MapMedia();
+applicazione.MapWebhookPayPal();
 applicazione.MapRazorPages();
 
 applicazione.Run();

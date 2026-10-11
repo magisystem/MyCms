@@ -61,6 +61,15 @@ public sealed class PayPalFinto : HttpMessageHandler
         }
     }
 
+    /// <summary>Un incasso in sospeso si conclude (PayPal finisce i suoi controlli).</summary>
+    public void ConcludiSospeso(string id)
+    {
+        lock (_blocco)
+        {
+            _ordini[id].StatoCattura = "COMPLETED";
+        }
+    }
+
     /// <summary>Il cliente approva il pagamento sulla pagina di PayPal.</summary>
     public void Approva(string id)
     {

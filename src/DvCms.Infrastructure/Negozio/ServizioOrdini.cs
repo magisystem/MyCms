@@ -33,9 +33,15 @@ public sealed partial class ServizioOrdini : IServizioOrdini
         _orologio = orologio;
     }
 
-    public async Task<EsitoOperazione> CreaDaCarrelloAsync(Guid idAccount, string codiceLingua, DatiOrdine dati, CancellationToken annullamento)
+    public Task<EsitoOperazione> CreaDaCarrelloAsync(Guid idAccount, string codiceLingua, DatiOrdine dati, CancellationToken annullamento)
     {
         ArgumentNullException.ThrowIfNull(dati);
+        // Un deadlock fra ordini concorrenti annulla l'intera transazione (carrello, numero, prenotazioni): si riprova da capo.
+        return RiprovaSuDeadlock.EseguiAsync(_contesto, () => CreaDaCarrelloUnaVoltaAsync(idAccount, codiceLingua, dati, annullamento));
+    }
+
+    private async Task<EsitoOperazione> CreaDaCarrelloUnaVoltaAsync(Guid idAccount, string codiceLingua, DatiOrdine dati, CancellationToken annullamento)
+    {
 
         var account = await TrovaAccountAsync(idAccount, annullamento);
         if (account is null)
@@ -272,6 +278,45 @@ public sealed partial class ServizioOrdini : IServizioOrdini
         var idSito = _tenant.IdSito;
         var ordine = await _contesto.Ordini.AsNoTracking().SingleOrDefaultAsync(o => o.Id == idOrdine && o.IdSito == idSito, annullamento);
         return ordine is null ? null : await VistaAsync(ordine, annullamento);
+    }
+
+    public async Task<EsitoOperazione> SegnaEvasoAsync(Guid idAttore, Guid idOrdine, CancellationToken annullamento)
+    {
+        var idTenant = _tenant.IdTenant;
+        var attore = await _contesto.Utenze.IgnoreQueryFilters().AsNoTracking().SingleOrDefaultAsync(
+            candidata => candidata.Id == idAttore
+                && candidata.Stato == StatoUtenza.Attiva
+                && (candidata.Ruolo == RuoloUtenza.PlatformAdmin || (candidata.Ruolo == RuoloUtenza.TenantAdmin && candidata.IdTenant == idTenant)),
+            annullamento);
+        if (attore is null)
+        {
+            return new EsitoOperazione(CodiceEsito.NonAutorizzato);
+        }
+
+        var idSito = _tenant.IdSito;
+        var ordine = await _contesto.Ordini.AsNoTracking().SingleOrDefaultAsync(o => o.Id == idOrdine && o.IdSito == idSito, annullamento);
+        if (ordine is null)
+        {
+            return new EsitoOperazione(CodiceEsito.NonTrovato);
+        }
+
+        var destinazione = ordine.TipoSpedizione == TipoMetodoSpedizione.Zona ? StatoOrdine.Spedito : StatoOrdine.Ritirato;
+        if (!TransizioniOrdine.Consentita(ordine.Stato, destinazione, ordine.TipoSpedizione))
+        {
+            return new EsitoOperazione(CodiceEsito.NonConsentito);
+        }
+
+        var adesso = _orologio.GetUtcNow().UtcDateTime;
+        var cambiati = await _contesto.Ordini
+            .Where(o => o.Id == idOrdine && o.Stato == StatoOrdine.Pagato)
+            .ExecuteUpdateAsync(s => s.SetProperty(o => o.Stato, destinazione).SetProperty(o => o.AggiornatoIlUtc, adesso), annullamento);
+        if (cambiati == 0)
+        {
+            return new EsitoOperazione(CodiceEsito.Conflitto);
+        }
+
+        await _audit.RegistraAsync(AzioniAudit.EvasioneOrdine, $"Ordine:{idOrdine}", RegistroAudit.EsitoRiuscito, idTenant, attore.Id, $"numero {ordine.Numero}: {destinazione}", annullamento);
+        return new EsitoOperazione(CodiceEsito.Riuscito, idOrdine);
     }
 
     private static IQueryable<RiepilogoOrdine> Riepiloghi(IQueryable<Ordine> ordini) =>

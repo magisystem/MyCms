@@ -104,6 +104,10 @@ public class ContestoDatabase : DbContext
 
     public DbSet<RigaOrdine> RigheOrdine => Set<RigaOrdine>();
 
+    public DbSet<TentativoPagamento> TentativiPagamento => Set<TentativoPagamento>();
+
+    public DbSet<EventoWebhook> EventiWebhook => Set<EventoWebhook>();
+
     public DbSet<ImpostazioniPagamentoSito> ImpostazioniPagamentoSiti => Set<ImpostazioniPagamentoSito>();
 
     public DbSet<GiacenzaVariante> GiacenzeVarianti => Set<GiacenzaVariante>();
@@ -146,6 +150,8 @@ public class ContestoDatabase : DbContext
         modelBuilder.Entity<RigaCarrello>().HasQueryFilter(riga => riga.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<Ordine>().HasQueryFilter(ordine => ordine.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<RigaOrdine>().HasQueryFilter(riga => riga.IdTenant == IdTenantCorrente);
+        modelBuilder.Entity<TentativoPagamento>().HasQueryFilter(tentativo => tentativo.IdTenant == IdTenantCorrente);
+        modelBuilder.Entity<EventoWebhook>().HasQueryFilter(evento => evento.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<ImpostazioniPagamentoSito>().HasQueryFilter(impostazioni => impostazioni.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<GiacenzaVariante>().HasQueryFilter(giacenza => giacenza.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<PrenotazioneGiacenza>().HasQueryFilter(prenotazione => prenotazione.IdTenant == IdTenantCorrente);

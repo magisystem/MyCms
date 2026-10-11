@@ -37,9 +37,14 @@ internal sealed class ContestoNegozio : IAsyncDisposable
 
     public Guid ClienteDiB { get; private set; }
 
-    public static async Task<ContestoNegozio> CreaAsync()
+    public static async Task<ContestoNegozio> CreaAsync(PayPalFinto? payPal = null, bool produzioneAbilitata = false)
     {
-        var c = new ContestoNegozio(await ScenarioWeb.CreaAsync());
+        var impostazioni = new Dictionary<string, string?>
+        {
+            ["Sicurezza:ChiaveSegreti"] = Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32)),
+            ["Negozio:CheckoutProduzione"] = produzioneAbilitata ? "true" : "false",
+        };
+        var c = new ContestoNegozio(await ScenarioWeb.CreaAsync(impostazioni: impostazioni, payPal: payPal));
         c.Platform = await c.Web.CreaPlatformAdminAsync("root@esempio.it");
         c.AdminA = await c.Web.CreaTenantAdminAsync("anna@esempio.it");
         c.AdminB = await DatiProva.CreaUtenzaAsync(c.Web.Fabbrica.Services, RuoloUtenza.TenantAdmin, c.B.IdTenant, "bruno@esempio.it", annullamento: Ct);
@@ -206,6 +211,31 @@ internal sealed class ContestoNegozio : IAsyncDisposable
         await using var ambito = Web.Fabbrica.Services.CreateAsyncScope();
         return await ambito.ServiceProvider.GetRequiredService<ContestoDatabase>().Ordini.IgnoreQueryFilters().AsNoTracking().Where(o => o.Id == idOrdine).Select(o => o.Stato).SingleAsync(Ct);
     }
+
+    public Task<T> ComePagamentiAsync<T>(DatiProva.TenantCreato tenant, Func<IServizioPagamenti, Task<T>> operazione) => InAsync<IServizioPagamenti, T>(tenant, operazione);
+
+    /// <summary>Configura le credenziali PayPal del sito come le avrebbe inserite il PlatformAdmin (devono coincidere con quelle del PayPal finto).</summary>
+    public async Task ConfiguraPagamentoAsync(DatiProva.TenantCreato tenant, AmbientePagamento ambiente = AmbientePagamento.Sandbox)
+    {
+        await using var ambito = Web.Fabbrica.Services.CreateAsyncScope();
+        var esito = await ambito.ServiceProvider.GetRequiredService<IServizioImpostazioniPagamento>()
+            .SalvaAsync(Platform, tenant.IdTenant, tenant.IdSito, ambiente, "client-di-prova", "segreto-di-prova", "webhook-di-prova", null, Ct);
+        Assert.True(esito.Riuscito, $"{esito.Codice} {string.Join(',', esito.CampiNonValidi ?? [])}");
+    }
+
+    public async Task<List<TentativoPagamento>> TentativiAsync(Guid idOrdine)
+    {
+        await using var ambito = Web.Fabbrica.Services.CreateAsyncScope();
+        return await ambito.ServiceProvider.GetRequiredService<ContestoDatabase>().TentativiPagamento.IgnoreQueryFilters().AsNoTracking().Where(t => t.IdOrdine == idOrdine).OrderBy(t => t.CreatoIlUtc).ToListAsync(Ct);
+    }
+
+    public async Task<List<EventoWebhook>> EventiAsync()
+    {
+        await using var ambito = Web.Fabbrica.Services.CreateAsyncScope();
+        return await ambito.ServiceProvider.GetRequiredService<ContestoDatabase>().EventiWebhook.IgnoreQueryFilters().AsNoTracking().ToListAsync(Ct);
+    }
+
+    public static DatiLinkInvito Link => new("https", null);
 
     public ValueTask DisposeAsync() => Web.DisposeAsync();
 }

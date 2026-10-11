@@ -179,16 +179,19 @@ public sealed class FabbricaApplicazioneSenzaDatabase : FabbricaApplicazione
 public sealed class FabbricaApplicazioneConConnessione : FabbricaApplicazione
 {
     private readonly bool _registraRisoluzioni;
+    private readonly PayPalFinto? _payPal;
 
     public FabbricaApplicazioneConConnessione(
         string connessione,
         string ambiente = "Development",
         IReadOnlyDictionary<string, string?>? impostazioni = null,
         IPAddress? indirizzoRemoto = null,
-        bool registraRisoluzioni = false)
+        bool registraRisoluzioni = false,
+        PayPalFinto? payPal = null)
         : base(connessione, ambiente, impostazioni, indirizzoRemoto)
     {
         _registraRisoluzioni = registraRisoluzioni;
+        _payPal = payPal;
     }
 
     protected override void ConfiguraServizi(IServiceCollection servizi)
@@ -196,6 +199,12 @@ public sealed class FabbricaApplicazioneConConnessione : FabbricaApplicazione
         if (_registraRisoluzioni)
         {
             RegistraRisoluzioni(servizi);
+        }
+
+        if (_payPal is not null)
+        {
+            // Il client PayPal vero parla con il PayPal finto: nessuna richiesta esce dal processo.
+            servizi.AddHttpClient(DvCms.Infrastructure.Pagamenti.ClientePayPal.NomeClientHttp).ConfigurePrimaryHttpMessageHandler(() => _payPal);
         }
     }
 }

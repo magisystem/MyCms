@@ -309,3 +309,49 @@ internal sealed class ConfigurazioneImpostazioniPagamentoSito : IEntityTypeConfi
         entita.HasIndex(impostazioni => impostazioni.IdSito).IsUnique();
     }
 }
+
+internal sealed class ConfigurazioneTentativoPagamento : IEntityTypeConfiguration<TentativoPagamento>
+{
+    public void Configure(EntityTypeBuilder<TentativoPagamento> entita)
+    {
+        entita.ToTable("TentativiPagamento", tabella => tabella.HasCheckConstraint("CK_TentativiPagamento_Importo", "[Importo] > 0"));
+        entita.HasKey(tentativo => tentativo.Id);
+        entita.Property(tentativo => tentativo.Id).ValueGeneratedNever();
+        entita.Property(tentativo => tentativo.Provider).HasMaxLength(20).IsRequired();
+        entita.Property(tentativo => tentativo.IdProvider).HasMaxLength(64).IsRequired();
+        entita.Property(tentativo => tentativo.IdCattura).HasMaxLength(64);
+        entita.Property(tentativo => tentativo.Importo).HasPrecision(18, 2);
+        entita.Property(tentativo => tentativo.Valuta).HasMaxLength(3).IsFixedLength().IsRequired();
+        entita.Property(tentativo => tentativo.Stato).HasConversion<string>().HasMaxLength(20).IsRequired();
+
+        entita.HasOne<Ordine>()
+            .WithMany()
+            .HasForeignKey(tentativo => new { tentativo.IdTenant, tentativo.IdSito, tentativo.IdOrdine })
+            .HasPrincipalKey(ordine => new { ordine.IdTenant, ordine.IdSito, ordine.Id })
+            .OnDelete(DeleteBehavior.Restrict);
+        entita.HasIndex(tentativo => new { tentativo.IdSito, tentativo.Provider, tentativo.IdProvider }).IsUnique();
+        entita.HasIndex(tentativo => tentativo.IdOrdine);
+    }
+}
+
+internal sealed class ConfigurazioneEventoWebhook : IEntityTypeConfiguration<EventoWebhook>
+{
+    public void Configure(EntityTypeBuilder<EventoWebhook> entita)
+    {
+        entita.ToTable("EventiWebhook");
+        entita.HasKey(evento => evento.Id);
+        entita.Property(evento => evento.Id).ValueGeneratedNever();
+        entita.Property(evento => evento.Provider).HasMaxLength(20).IsRequired();
+        entita.Property(evento => evento.IdEvento).HasMaxLength(100).IsRequired();
+        entita.Property(evento => evento.Tipo).HasMaxLength(100).IsRequired();
+        entita.Property(evento => evento.Esito).HasMaxLength(20).IsRequired();
+
+        entita.HasOne<Sito>()
+            .WithMany()
+            .HasForeignKey(evento => new { evento.IdTenant, evento.IdSito })
+            .HasPrincipalKey(sito => new { sito.IdTenant, sito.Id })
+            .OnDelete(DeleteBehavior.Restrict);
+        // La deduplica: lo stesso evento dello stesso provider non si registra due volte nello stesso sito.
+        entita.HasIndex(evento => new { evento.IdSito, evento.Provider, evento.IdEvento }).IsUnique();
+    }
+}

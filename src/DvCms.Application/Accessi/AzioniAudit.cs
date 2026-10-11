@@ -47,6 +47,11 @@ public static class AzioniAudit
     public const string AnnullamentoOrdine = "AnnullamentoOrdine";
     public const string ScadenzaOrdine = "ScadenzaOrdine";
     public const string ModificaImpostazioniPagamento = "ModificaImpostazioniPagamento";
+    public const string AvvioPagamento = "AvvioPagamento";
+    public const string PagamentoOrdine = "PagamentoOrdine";
+    public const string PagamentoRifiutato = "PagamentoRifiutato";
+    public const string PagamentoDaRimborsare = "PagamentoDaRimborsare";
+    public const string EvasioneOrdine = "EvasioneOrdine";
     public const string ImpostazioneGiacenza = "ImpostazioneGiacenza";
     public const string ImpostazioneCommercio = "ImpostazioneCommercio";
     public const string CreazioneProdotto = "CreazioneProdotto";

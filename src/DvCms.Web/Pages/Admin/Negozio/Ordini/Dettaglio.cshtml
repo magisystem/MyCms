@@ -6,6 +6,18 @@
     ViewData["Titolo"] = _L["Ordine"] + " #" + o.Numero;
     string Importo(decimal valore) => $"{valore.ToString("N2", Model.Cultura)} {o.Valuta}";
 }
+@if (Model.Messaggio is not null)
+{
+    <div class="alert alert-success" role="status">@Model.Messaggio</div>
+}
+@if (Model.ErroreDaMostrare is not null)
+{
+    <div class="alert alert-danger" role="alert">@Model.ErroreDaMostrare</div>
+}
+@if (Model.DaRimborsare)
+{
+    <div class="alert alert-warning" role="alert">@_L["Il provider ha incassato questo ordine ma l'ordine non si può completare: rimborsa il cliente dal conto PayPal del negozio."]</div>
+}
 <div class="row g-3">
     <div class="col-lg-8">
         <div class="card">
@@ -65,6 +77,27 @@
                 }
             </div>
         </div>
+        @if (o.Stato == StatoOrdine.Pagato)
+        {
+            <form method="post" asp-page-handler="Evaso" asp-route-id="@o.Id" class="mt-3">
+                <button type="submit" class="btn btn-primary">@(o.TipoSpedizione == TipoMetodoSpedizione.Ritiro ? _L["Segna come ritirato"] : _L["Segna come spedito"])</button>
+            </form>
+        }
+        @if (Model.Tentativi.Count > 0)
+        {
+            <div class="card mt-3">
+                <div class="card-header"><h3 class="card-title">@_L["Pagamenti"]</h3></div>
+                <ul class="list-group list-group-flush">
+                    @foreach (var tentativo in Model.Tentativi)
+                    {
+                        <li class="list-group-item">
+                            @Model.StatoTentativo(tentativo.Stato)<br />
+                            <small class="text-secondary">@tentativo.IdProvider · @tentativo.CreatoIlUtc.ToString("yyyy-MM-dd HH:mm")</small>
+                        </li>
+                    }
+                </ul>
+            </div>
+        }
     </div>
 </div>
 <p class="mt-3"><a href="/admin/negozio/ordini">@_L["Torna agli ordini"]</a></p>

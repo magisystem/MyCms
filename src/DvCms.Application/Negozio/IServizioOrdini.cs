@@ -86,4 +86,10 @@ public interface IServizioOrdini
     Task<IReadOnlyList<RiepilogoOrdine>> ElencaAsync(Guid idAttore, CancellationToken annullamento);
 
     Task<OrdineVista?> LeggiAsync(Guid idAttore, Guid idOrdine, CancellationToken annullamento);
+
+    /// <summary>
+    /// Amministrazione: segna un ordine pagato come spedito (consegna) o ritirato (ritiro in sede). <c>NonTrovato</c>, <c>NonConsentito</c>
+    /// se l'ordine non è pagato; il passaggio è condizionale, quindi non si ripete.
+    /// </summary>
+    Task<EsitoOperazione> SegnaEvasoAsync(Guid idAttore, Guid idOrdine, CancellationToken annullamento);
 }

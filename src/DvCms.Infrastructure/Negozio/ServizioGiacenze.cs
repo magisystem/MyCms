@@ -163,7 +163,10 @@ public sealed class ServizioGiacenze : IServizioGiacenze
         return new EsitoOperazione(CodiceEsito.Riuscito, idVariante);
     }
 
-    public async Task<int> RilasciaScaduteAsync(CancellationToken annullamento)
+    public Task<int> RilasciaScaduteAsync(CancellationToken annullamento) =>
+        RiprovaSuDeadlock.EseguiAsync(_contesto, () => RilasciaScaduteUnaVoltaAsync(annullamento));
+
+    private async Task<int> RilasciaScaduteUnaVoltaAsync(CancellationToken annullamento)
     {
         var adesso = _orologio.GetUtcNow().UtcDateTime;
         var scadute = await _contesto.PrenotazioniGiacenza.IgnoreQueryFilters().AsNoTracking()
