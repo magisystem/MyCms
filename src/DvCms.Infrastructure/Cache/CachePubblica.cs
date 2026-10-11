@@ -36,6 +36,7 @@ public sealed class CachePubblica : ICachePubblica
         ArgumentNullException.ThrowIfNull(carica);
         if (!_opzioni.Abilitata)
         {
+            MetricheCache.Accesso("disabilitata");
             return await carica();
         }
 
@@ -46,8 +47,11 @@ public sealed class CachePubblica : ICachePubblica
         var adesso = _orologio.GetUtcNow();
         if (_voci.TryGetValue(chiaveCompleta, out var voce) && voce.Scade > adesso && voce.Valore is T trovato)
         {
+            MetricheCache.Accesso("trovato");
             return trovato;
         }
+
+        MetricheCache.Accesso("mancato");
 
         var caricato = await carica();
         if (caricato is not null)
@@ -58,7 +62,11 @@ public sealed class CachePubblica : ICachePubblica
         return caricato;
     }
 
-    public void Invalida(Guid idSito) => _generazioni.AddOrUpdate(idSito, 1, (_, attuale) => attuale + 1);
+    public void Invalida(Guid idSito)
+    {
+        _generazioni.AddOrUpdate(idSito, 1, (_, attuale) => attuale + 1);
+        MetricheCache.Invalidazione();
+    }
 
     private void Memorizza(string chiave, object valore, DateTimeOffset scade)
     {

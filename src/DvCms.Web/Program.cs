@@ -5,6 +5,7 @@ using DvCms.Web.Comandi;
 using DvCms.Web.Localizzazione;
 using DvCms.Web.Middleware;
 using DvCms.Web.Pubblico;
+using DvCms.Web.Salute;
 
 var costruttore = WebApplication.CreateBuilder(args);
 
@@ -24,6 +25,7 @@ costruttore.Services.AddRazorPages(opzioni =>
 ConfigurazioneAccessiWeb.Aggiungi(costruttore.Services, costruttore.Configuration, costruttore.Environment);
 costruttore.Services.AggiungiInfrastruttura(costruttore.Configuration);
 costruttore.Services.AddHttpContextAccessor();
+costruttore.Services.AggiungiSalute();
 var usaProxyAttendibili = ConfigurazioneProxy.Aggiungi(costruttore.Services, costruttore.Configuration);
 costruttore.Services.AddScoped<IContestoLingua, ContestoLinguaRichiesta>();
 
@@ -104,6 +106,9 @@ if (!applicazione.Environment.IsDevelopment())
 }
 
 applicazione.UseMiddleware<MiddlewareIdCorrelazione>();
+applicazione.UseMiddleware<MiddlewareMetriche>();
+// Sonde di salute: prima della risoluzione del tenant (usano l'indirizzo dell'istanza, non il dominio di un sito).
+applicazione.UsaSalute();
 applicazione.UseMiddleware<MiddlewareTenant>();
 
 if (!applicazione.Environment.IsDevelopment())

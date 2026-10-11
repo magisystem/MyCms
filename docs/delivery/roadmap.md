@@ -89,6 +89,8 @@ Il piano dettagliato è in [`plan-m0-m1.md`](plan-m0-m1.md).
 - Audit, metrics, health checks, backup e restore.
 - Test sicurezza, performance baseline e runbook.
 
+**Stato (2026-10-11):** sitemap e robots, cache e invalidazione, audit, backup e ripristino con prova, revisione di sicurezza, 2FA, sonde di salute, metriche e baseline di prestazioni sono fatti. Restano decisioni di esercizio: backend delle metriche e degli alert, RPO/RTO approvati, prima prova di ripristino su un ambiente reale, soglie di prestazioni concordate (da rivedere in pre-produzione prima del pilot).
+
 ## M7 — E-commerce MVP
 
 - Catalogo e varianti, con traduzioni per lingua (F-006).

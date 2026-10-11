@@ -93,7 +93,7 @@ Ogni evento che non può essere perso (publish, ordine, pagamento, webhook) deve
 
 - Log strutturati con correlation ID, tenant/site ID dove appropriato e senza payload sensibili.
 - Metriche per errori HTTP, latenza, query, cache, coda worker, publish e checkout.
-- Health checks per DB, storage e dipendenze essenziali.
+- Health checks per DB, storage e dipendenze essenziali: attuati (`/health/live`, `/health/ready`), vedi [`docs/operations/osservabilita.md`](../operations/osservabilita.md), che elenca anche metriche e alert; baseline in [`docs/operations/prestazioni.md`](../operations/prestazioni.md).
 - Alert per fallimenti ripetuti, queue lag, esaurimento storage e backup falliti.
 
 ## Backup e disaster recovery

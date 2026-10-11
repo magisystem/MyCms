@@ -1,3 +1,4 @@
+using System.Diagnostics.Metrics;
 using DvCms.Infrastructure.Cache;
 using Xunit;
 
@@ -10,6 +11,59 @@ public class CachePubblicaTest
 
     private static CachePubblica Crea(OrologioFinto? orologio = null, int voci = 100, bool abilitata = true) =>
         new(new OpzioniCache(abilitata, TimeSpan.FromMinutes(5), voci, TimeSpan.FromSeconds(2)), orologio ?? new OrologioFinto());
+
+    [Fact]
+    public async Task LeMetricheContanoAccessiTrovatiMancatiEInvalidazioniSenzaDatiDelSito()
+    {
+        // La chiave è unica: gli altri test possono contare sullo stesso meter in parallelo, quindi si guardano solo i tag di questo giro.
+        var accessi = new Dictionary<string, long>();
+        var invalidazioni = 0L;
+        var tagVisti = new HashSet<string>();
+        using var ascoltatore = new MeterListener();
+        ascoltatore.InstrumentPublished = (strumento, listener) =>
+        {
+            if (strumento.Meter.Name == MetricheCache.NomeMeter)
+            {
+                listener.EnableMeasurementEvents(strumento);
+            }
+        };
+        ascoltatore.SetMeasurementEventCallback<long>((strumento, valore, tag, _) =>
+        {
+            lock (accessi)
+            {
+                foreach (var coppia in tag)
+                {
+                    tagVisti.Add(coppia.Key);
+                    if (strumento.Name == "dvcms.cache.accessi")
+                    {
+                        accessi[(string)coppia.Value!] = accessi.GetValueOrDefault((string)coppia.Value!) + valore;
+                    }
+                }
+
+                if (strumento.Name == "dvcms.cache.invalidazioni")
+                {
+                    invalidazioni += valore;
+                }
+            }
+        });
+        ascoltatore.Start();
+
+        var cache = Crea();
+        await cache.OttieniAsync(_sitoA, "metriche", () => Task.FromResult<string?>("x"));
+        await cache.OttieniAsync(_sitoA, "metriche", () => Task.FromResult<string?>("x"));
+        cache.Invalida(_sitoA);
+        await Crea(abilitata: false).OttieniAsync(_sitoA, "metriche", () => Task.FromResult<string?>("x"));
+        ascoltatore.Dispose();
+
+        lock (accessi)
+        {
+            Assert.True(accessi.GetValueOrDefault("mancato") >= 1);
+            Assert.True(accessi.GetValueOrDefault("trovato") >= 1);
+            Assert.True(accessi.GetValueOrDefault("disabilitata") >= 1);
+            Assert.True(invalidazioni >= 1);
+            Assert.Equal(["esito"], tagVisti.ToArray());
+        }
+    }
 
     [Fact]
     public async Task IlSecondoAccessoNonRicarica()
