@@ -915,6 +915,136 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                         });
                 });
 
+            modelBuilder.Entity("DvCms.Domain.Negozio.Ordine", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("AggiornatoIlUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("AreaSpedizione")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Cap")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("Citta")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("CreatoIlUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Destinatario")
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<string>("EmailAcquirente")
+                        .IsRequired()
+                        .HasMaxLength(320)
+                        .HasColumnType("nvarchar(320)");
+
+                    b.Property<Guid>("IdSito")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdTenant")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdUtenza")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("IndirizzoRiga1")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("IndirizzoRiga2")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("NomeAcquirente")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("NomeSpedizione")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("Numero")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Paese")
+                        .HasMaxLength(2)
+                        .HasColumnType("nchar(2)")
+                        .IsFixedLength();
+
+                    b.Property<decimal>("SpedizioneImponibile")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("SpedizioneIva")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("SpedizioneLorda")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Stato")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<string>("TipoSpedizione")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<byte[]>("TokenConcorrenza")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<decimal>("TotaleImponibile")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("TotaleIva")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("TotaleLordo")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Valuta")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("nchar(3)")
+                        .IsFixedLength();
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdUtenza");
+
+                    b.HasIndex("IdSito", "Numero")
+                        .IsUnique();
+
+                    b.HasIndex("IdSito", "IdUtenza", "CreatoIlUtc");
+
+                    b.ToTable("Ordini", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Ordini_Consegna", "([TipoSpedizione] = 'Ritiro' AND [Paese] IS NULL AND [AreaSpedizione] IS NULL AND [SpedizioneLorda] = 0) OR ([TipoSpedizione] = 'Zona' AND [Paese] IS NOT NULL AND [AreaSpedizione] IS NOT NULL)");
+
+                            t.HasCheckConstraint("CK_Ordini_Totali", "[TotaleLordo] = [TotaleImponibile] + [TotaleIva] AND [SpedizioneLorda] = [SpedizioneImponibile] + [SpedizioneIva] AND [TotaleLordo] >= [SpedizioneLorda]");
+                        });
+                });
+
             modelBuilder.Entity("DvCms.Domain.Negozio.Prodotto", b =>
                 {
                     b.Property<Guid>("Id")
@@ -986,6 +1116,78 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.ToTable("RigheCarrello", null, t =>
                         {
                             t.HasCheckConstraint("CK_RigheCarrello_Quantita", "[Quantita] BETWEEN 1 AND 99");
+                        });
+                });
+
+            modelBuilder.Entity("DvCms.Domain.Negozio.RigaOrdine", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("AliquotaIva")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<string>("EtichettaVariante")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<Guid>("IdOrdine")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdSito")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdTenant")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdVariante")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("Imponibile")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("Iva")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("Lordo")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("NomeProdotto")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("Posizione")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("PrezzoUnitarioLordo")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("Quantita")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Sku")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdOrdine", "Posizione")
+                        .IsUnique();
+
+                    b.HasIndex("IdTenant", "IdSito", "IdOrdine");
+
+                    b.ToTable("RigheOrdine", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_RigheOrdine_Importi", "[Lordo] = [Imponibile] + [Iva] AND [Lordo] = [PrezzoUnitarioLordo] * [Quantita]");
+
+                            t.HasCheckConstraint("CK_RigheOrdine_Quantita", "[Quantita] BETWEEN 1 AND 99");
                         });
                 });
 
@@ -1361,6 +1563,9 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
+                    b.Property<int>("UltimoNumeroOrdine")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.ToTable("Siti", null, t =>
@@ -1660,6 +1865,22 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("DvCms.Domain.Negozio.Ordine", b =>
+                {
+                    b.HasOne("DvCms.Domain.Accessi.Utenza", null)
+                        .WithMany()
+                        .HasForeignKey("IdUtenza")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("DvCms.Domain.Tenancy.Sito", null)
+                        .WithMany()
+                        .HasForeignKey("IdTenant", "IdSito")
+                        .HasPrincipalKey("IdTenant", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("DvCms.Domain.Negozio.Prodotto", b =>
                 {
                     b.HasOne("DvCms.Domain.Tenancy.Sito", null)
@@ -1682,6 +1903,16 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.HasOne("DvCms.Domain.Negozio.VarianteProdotto", null)
                         .WithMany()
                         .HasForeignKey("IdTenant", "IdSito", "IdVariante")
+                        .HasPrincipalKey("IdTenant", "IdSito", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DvCms.Domain.Negozio.RigaOrdine", b =>
+                {
+                    b.HasOne("DvCms.Domain.Negozio.Ordine", null)
+                        .WithMany()
+                        .HasForeignKey("IdTenant", "IdSito", "IdOrdine")
                         .HasPrincipalKey("IdTenant", "IdSito", "Id")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();

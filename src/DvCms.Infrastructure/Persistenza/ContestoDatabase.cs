@@ -100,6 +100,10 @@ public class ContestoDatabase : DbContext
 
     public DbSet<RigaCarrello> RigheCarrello => Set<RigaCarrello>();
 
+    public DbSet<Ordine> Ordini => Set<Ordine>();
+
+    public DbSet<RigaOrdine> RigheOrdine => Set<RigaOrdine>();
+
     public DbSet<MetodoSpedizione> MetodiSpedizione => Set<MetodoSpedizione>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -132,6 +136,8 @@ public class ContestoDatabase : DbContext
         modelBuilder.Entity<TraduzioneVarianteProdotto>().HasQueryFilter(traduzione => traduzione.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<Carrello>().HasQueryFilter(carrello => carrello.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<RigaCarrello>().HasQueryFilter(riga => riga.IdTenant == IdTenantCorrente);
+        modelBuilder.Entity<Ordine>().HasQueryFilter(ordine => ordine.IdTenant == IdTenantCorrente);
+        modelBuilder.Entity<RigaOrdine>().HasQueryFilter(riga => riga.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<MetodoSpedizione>().HasQueryFilter(metodo => metodo.IdTenant == IdTenantCorrente);
     }
 

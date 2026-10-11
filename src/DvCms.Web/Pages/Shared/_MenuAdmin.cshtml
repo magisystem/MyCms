@@ -42,6 +42,12 @@
                 <span class="nav-link-title">@_L["Spedizioni"]</span>
             </a>
         </li>
+        <li class="nav-item">
+            <a class="nav-link" href="/admin/negozio/ordini">
+                <span class="nav-link-icon"><i class="ti ti-receipt"></i></span>
+                <span class="nav-link-title">@_L["Ordini"]</span>
+            </a>
+        </li>
     }
     @* La visibilità è solo comodità: ogni pagina dell'area Platform è protetta lato server dalla politica del PlatformAdmin. *@
     @if (User.IsInRole("PlatformAdmin"))

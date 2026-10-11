@@ -17,6 +17,9 @@ public class Sito
     /// <summary>Il sito ha il negozio (catalogo, carrello, ordini). Lo imposta il <c>PlatformAdmin</c>; default falso.</summary>
     public bool CommercioAttivo { get; set; }
 
+    /// <summary>Ultimo numero d'ordine assegnato nel sito: si incrementa nella stessa transazione che crea l'ordine, quindi senza buchi né duplicati.</summary>
+    public int UltimoNumeroOrdine { get; set; }
+
     /// <summary>Abilita la registrazione degli acquirenti; vero solo se l'e-commerce è attivo (default falso).</summary>
     public bool RegistrazioneAcquirentiAbilitata { get; set; }
 

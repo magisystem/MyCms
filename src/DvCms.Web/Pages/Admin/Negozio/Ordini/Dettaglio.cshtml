@@ -1,0 +1,70 @@
+@page "/admin/negozio/ordini/{id:guid}"
+@model DvCms.Web.Pages.Admin.Negozio.Ordini.DettaglioModel
+@using DvCms.Domain.Negozio
+@{
+    var o = Model.Ordine;
+    ViewData["Titolo"] = _L["Ordine"] + " #" + o.Numero;
+    string Importo(decimal valore) => $"{valore.ToString("N2", Model.Cultura)} {o.Valuta}";
+}
+<div class="row g-3">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="table-responsive">
+                <table class="table table-vcenter card-table">
+                    <thead>
+                        <tr><th>@_L["Articolo"]</th><th>@_L["Prezzo"]</th><th>@_L["Quantità"]</th><th>IVA</th><th>@_L["Totale"]</th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var riga in o.Righe)
+                        {
+                            <tr>
+                                <td>@riga.NomeProdotto@(riga.EtichettaVariante is { Length: > 0 } etichetta ? " — " + etichetta : null) <small class="text-secondary">(@riga.Sku)</small></td>
+                                <td>@Importo(riga.PrezzoUnitarioLordo)</td>
+                                <td>@riga.Quantita</td>
+                                <td>@riga.AliquotaIva.ToString("0.##", Model.Cultura)%</td>
+                                <td>@Importo(riga.Lordo)</td>
+                            </tr>
+                        }
+                        <tr>
+                            <td colspan="3">@o.NomeSpedizione</td>
+                            <td>22%</td>
+                            <td>@Importo(o.SpedizioneLorda)</td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr><td colspan="4">@_L["Imponibile"]</td><td>@Importo(o.TotaleImponibile)</td></tr>
+                        <tr><td colspan="4">IVA</td><td>@Importo(o.TotaleIva)</td></tr>
+                        <tr><td colspan="4"><strong>@_L["Totale (IVA inclusa)"]</strong></td><td><strong>@Importo(o.TotaleLordo)</strong></td></tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-body">
+                <p><strong>@_L["Stato"]</strong><br />@Model.Stato(o.Stato)</p>
+                <p><strong>@_L["Cliente"]</strong><br />@o.NomeAcquirente<br />@o.EmailAcquirente</p>
+                <p><strong>@_L["Data"]</strong><br />@o.CreatoIlUtc.ToString("yyyy-MM-dd HH:mm") UTC</p>
+                @if (o.TipoSpedizione == TipoMetodoSpedizione.Ritiro)
+                {
+                    <p><strong>@_L["Consegna"]</strong><br />@_L["Ritiro in sede."]</p>
+                }
+                else
+                {
+                    <address>
+                        <strong>@_L["Consegna"]</strong><br />
+                        @o.Destinatario<br />
+                        @o.IndirizzoRiga1<br />
+                        @if (!string.IsNullOrEmpty(o.IndirizzoRiga2))
+                        {
+                            @o.IndirizzoRiga2<br />
+                        }
+                        @o.Cap @o.Citta (@o.Paese)
+                    </address>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+<p class="mt-3"><a href="/admin/negozio/ordini">@_L["Torna agli ordini"]</a></p>

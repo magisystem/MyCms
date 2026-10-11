@@ -67,6 +67,10 @@ else
             <tr><td colspan="3"><strong>@_L["Totale (IVA inclusa)"]</strong></td><td colspan="2"><strong>@Importo(Model.Vista.TotaleLordo)</strong></td></tr>
         </tfoot>
     </table>
+    @if (Model.Vista.Righe.Count > 0 && Model.Vista.NonDisponibili.Count == 0)
+    {
+        <p><a href="/account/checkout">@_L["Procedi alla cassa"]</a></p>
+    }
     <form method="post" asp-page-handler="Svuota">
         <button type="submit">@_L["Svuota il carrello"]</button>
     </form>

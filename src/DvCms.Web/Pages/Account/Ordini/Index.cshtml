@@ -1,0 +1,30 @@
+@page "/account/ordini"
+@model DvCms.Web.Pages.Account.Ordini.IndexModel
+@{
+    ViewData["Titolo"] = _L["I miei ordini"];
+}
+<h1>@_L["I miei ordini"]</h1>
+@if (Model.Ordini.Count == 0)
+{
+    <p>@_L["Non hai ancora fatto ordini."]</p>
+}
+else
+{
+    <table>
+        <thead>
+            <tr><th>@_L["Ordine"]</th><th>@_L["Data"]</th><th>@_L["Stato"]</th><th>@_L["Totale"]</th></tr>
+        </thead>
+        <tbody>
+            @foreach (var ordine in Model.Ordini)
+            {
+                <tr>
+                    <td><a href="/account/ordini/@ordine.Id">#@ordine.Numero</a></td>
+                    <td>@ordine.CreatoIlUtc.ToString("yyyy-MM-dd HH:mm") UTC</td>
+                    <td>@DvCms.Web.EtichetteOrdine.Stato(Model.Localizzatore, ordine.Stato)</td>
+                    <td>@ordine.TotaleLordo.ToString("N2", Model.Cultura) @ordine.Valuta</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+<nav><a href="/account">@_L["Il mio account"]</a></nav>

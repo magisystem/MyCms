@@ -158,3 +158,77 @@ internal sealed class ConfigurazioneMetodoSpedizione : IEntityTypeConfiguration<
         entita.HasIndex(metodo => new { metodo.IdSito, metodo.Posizione });
     }
 }
+
+internal sealed class ConfigurazioneOrdine : IEntityTypeConfiguration<Ordine>
+{
+    public void Configure(EntityTypeBuilder<Ordine> entita)
+    {
+        entita.ToTable("Ordini", tabella =>
+        {
+            tabella.HasCheckConstraint("CK_Ordini_Totali", "[TotaleLordo] = [TotaleImponibile] + [TotaleIva] AND [SpedizioneLorda] = [SpedizioneImponibile] + [SpedizioneIva] AND [TotaleLordo] >= [SpedizioneLorda]");
+            tabella.HasCheckConstraint("CK_Ordini_Consegna", "([TipoSpedizione] = 'Ritiro' AND [Paese] IS NULL AND [AreaSpedizione] IS NULL AND [SpedizioneLorda] = 0) OR ([TipoSpedizione] = 'Zona' AND [Paese] IS NOT NULL AND [AreaSpedizione] IS NOT NULL)");
+        });
+        entita.HasKey(ordine => ordine.Id);
+        entita.Property(ordine => ordine.Id).ValueGeneratedNever();
+        entita.Property(ordine => ordine.TokenConcorrenza).IsRowVersion();
+        entita.Property(ordine => ordine.Stato).HasConversion<string>().HasMaxLength(30).IsRequired();
+        entita.Property(ordine => ordine.Valuta).HasMaxLength(3).IsFixedLength().IsRequired();
+        entita.Property(ordine => ordine.TotaleLordo).HasPrecision(18, 2);
+        entita.Property(ordine => ordine.TotaleImponibile).HasPrecision(18, 2);
+        entita.Property(ordine => ordine.TotaleIva).HasPrecision(18, 2);
+        entita.Property(ordine => ordine.TipoSpedizione).HasConversion<string>().HasMaxLength(20).IsRequired();
+        entita.Property(ordine => ordine.AreaSpedizione).HasConversion<string>().HasMaxLength(20);
+        entita.Property(ordine => ordine.NomeSpedizione).HasMaxLength(MetodoSpedizione.LunghezzaMassimaNome).IsRequired();
+        entita.Property(ordine => ordine.SpedizioneLorda).HasPrecision(18, 2);
+        entita.Property(ordine => ordine.SpedizioneImponibile).HasPrecision(18, 2);
+        entita.Property(ordine => ordine.SpedizioneIva).HasPrecision(18, 2);
+        entita.Property(ordine => ordine.EmailAcquirente).HasMaxLength(320).IsRequired();
+        entita.Property(ordine => ordine.NomeAcquirente).HasMaxLength(200).IsRequired();
+        entita.Property(ordine => ordine.Destinatario).HasMaxLength(Ordine.LunghezzaMassimaDestinatario);
+        entita.Property(ordine => ordine.IndirizzoRiga1).HasMaxLength(Ordine.LunghezzaMassimaIndirizzo);
+        entita.Property(ordine => ordine.IndirizzoRiga2).HasMaxLength(Ordine.LunghezzaMassimaIndirizzo);
+        entita.Property(ordine => ordine.Cap).HasMaxLength(Ordine.LunghezzaMassimaCap);
+        entita.Property(ordine => ordine.Citta).HasMaxLength(Ordine.LunghezzaMassimaCitta);
+        entita.Property(ordine => ordine.Paese).HasMaxLength(2).IsFixedLength();
+
+        entita.HasOne<Sito>()
+            .WithMany()
+            .HasForeignKey(ordine => new { ordine.IdTenant, ordine.IdSito })
+            .HasPrincipalKey(sito => new { sito.IdTenant, sito.Id })
+            .OnDelete(DeleteBehavior.Restrict);
+        entita.HasOne<DvCms.Domain.Accessi.Utenza>().WithMany().HasForeignKey(ordine => ordine.IdUtenza).OnDelete(DeleteBehavior.Restrict);
+
+        entita.HasAlternateKey(ordine => new { ordine.IdTenant, ordine.IdSito, ordine.Id });
+        entita.HasIndex(ordine => new { ordine.IdSito, ordine.Numero }).IsUnique();
+        entita.HasIndex(ordine => new { ordine.IdSito, ordine.IdUtenza, ordine.CreatoIlUtc });
+    }
+}
+
+internal sealed class ConfigurazioneRigaOrdine : IEntityTypeConfiguration<RigaOrdine>
+{
+    public void Configure(EntityTypeBuilder<RigaOrdine> entita)
+    {
+        entita.ToTable("RigheOrdine", tabella =>
+        {
+            tabella.HasCheckConstraint("CK_RigheOrdine_Quantita", "[Quantita] BETWEEN 1 AND 99");
+            tabella.HasCheckConstraint("CK_RigheOrdine_Importi", "[Lordo] = [Imponibile] + [Iva] AND [Lordo] = [PrezzoUnitarioLordo] * [Quantita]");
+        });
+        entita.HasKey(riga => riga.Id);
+        entita.Property(riga => riga.Id).ValueGeneratedNever();
+        entita.Property(riga => riga.Sku).HasMaxLength(50).IsRequired();
+        entita.Property(riga => riga.NomeProdotto).HasMaxLength(200).IsRequired();
+        entita.Property(riga => riga.EtichettaVariante).HasMaxLength(200);
+        entita.Property(riga => riga.PrezzoUnitarioLordo).HasPrecision(18, 2);
+        entita.Property(riga => riga.AliquotaIva).HasPrecision(5, 2);
+        entita.Property(riga => riga.Lordo).HasPrecision(18, 2);
+        entita.Property(riga => riga.Imponibile).HasPrecision(18, 2);
+        entita.Property(riga => riga.Iva).HasPrecision(18, 2);
+
+        entita.HasOne<Ordine>()
+            .WithMany()
+            .HasForeignKey(riga => new { riga.IdTenant, riga.IdSito, riga.IdOrdine })
+            .HasPrincipalKey(ordine => new { ordine.IdTenant, ordine.IdSito, ordine.Id })
+            .OnDelete(DeleteBehavior.Restrict);
+        entita.HasIndex(riga => new { riga.IdOrdine, riga.Posizione }).IsUnique();
+    }
+}

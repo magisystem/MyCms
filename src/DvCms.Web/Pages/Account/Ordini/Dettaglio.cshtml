@@ -1,0 +1,66 @@
+@page "/account/ordini/{id:guid}"
+@model DvCms.Web.Pages.Account.Ordini.DettaglioModel
+@using DvCms.Domain.Negozio
+@{
+    ViewData["Titolo"] = _L["Ordine"] + " #" + Model.Ordine.Numero;
+    string Importo(decimal valore) => $"{valore.ToString("N2", Model.Cultura)} {Model.Ordine.Valuta}";
+    var o = Model.Ordine;
+}
+<h1>@_L["Ordine"] #@o.Numero</h1>
+@if (Model.Messaggio is not null)
+{
+    <p role="status">@Model.Messaggio</p>
+}
+@if (Model.Errore is not null)
+{
+    <p class="errore" role="alert">@Model.Errore</p>
+}
+<p>@_L["Stato"]: <strong>@DvCms.Web.EtichetteOrdine.Stato(Model.Localizzatore, o.Stato)</strong> — @o.CreatoIlUtc.ToString("yyyy-MM-dd HH:mm") UTC</p>
+<table>
+    <thead>
+        <tr><th>@_L["Articolo"]</th><th>@_L["Prezzo"]</th><th>@_L["Quantità"]</th><th>@_L["Totale"]</th></tr>
+    </thead>
+    <tbody>
+        @foreach (var riga in o.Righe)
+        {
+            <tr>
+                <td>@riga.NomeProdotto@(riga.EtichettaVariante is { Length: > 0 } etichetta ? " — " + etichetta : null) <small>(@riga.Sku)</small></td>
+                <td>@Importo(riga.PrezzoUnitarioLordo)</td>
+                <td>@riga.Quantita</td>
+                <td>@Importo(riga.Lordo)</td>
+            </tr>
+        }
+        <tr>
+            <td colspan="3">@o.NomeSpedizione</td>
+            <td>@Importo(o.SpedizioneLorda)</td>
+        </tr>
+    </tbody>
+    <tfoot>
+        <tr><td colspan="3">@_L["Imponibile"]</td><td>@Importo(o.TotaleImponibile)</td></tr>
+        <tr><td colspan="3">@_L["IVA"]</td><td>@Importo(o.TotaleIva)</td></tr>
+        <tr><td colspan="3"><strong>@_L["Totale (IVA inclusa)"]</strong></td><td><strong>@Importo(o.TotaleLordo)</strong></td></tr>
+    </tfoot>
+</table>
+@if (o.TipoSpedizione == TipoMetodoSpedizione.Ritiro)
+{
+    <p>@_L["Ritiro in sede."]</p>
+}
+else
+{
+    <address>
+        @o.Destinatario<br />
+        @o.IndirizzoRiga1<br />
+        @if (!string.IsNullOrEmpty(o.IndirizzoRiga2))
+        {
+            @o.IndirizzoRiga2<br />
+        }
+        @o.Cap @o.Citta (@o.Paese)
+    </address>
+}
+@if (Model.PuoAnnullare)
+{
+    <form method="post" asp-page-handler="Annulla" asp-route-id="@o.Id">
+        <button type="submit">@_L["Annulla l'ordine"]</button>
+    </form>
+}
+<nav><a href="/account/ordini">@_L["I miei ordini"]</a></nav>

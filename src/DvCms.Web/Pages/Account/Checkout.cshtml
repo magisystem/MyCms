@@ -1,0 +1,90 @@
+@page "/account/checkout"
+@model DvCms.Web.Pages.Account.CheckoutModel
+@using DvCms.Domain.Negozio
+@using System.Globalization
+@{
+    ViewData["Titolo"] = _L["Cassa"];
+    string Importo(decimal valore) => $"{valore.ToString("N2", Model.Cultura)} {Model.Vista.Valuta}";
+}
+<h1>@_L["Cassa"]</h1>
+@if (Model.Errore is not null)
+{
+    <div class="errore" role="alert">
+        <p>@Model.Errore</p>
+        @if (Model.CampiNonValidi.Count > 0)
+        {
+            <ul>
+                @foreach (var campo in Model.CampiNonValidi)
+                {
+                    <li>@Model.NomeCampo(campo)</li>
+                }
+            </ul>
+        }
+    </div>
+}
+@if (Model.Vista.NonDisponibili.Count > 0)
+{
+    <p role="alert">@_L["Alcuni articoli non sono più disponibili: toglili dal carrello per procedere."] <a href="/account/carrello">@_L["Il tuo carrello"]</a></p>
+}
+else if (Model.Opzioni.Count == 0)
+{
+    <p>@_L["Non ci sono metodi di consegna disponibili: riprova più tardi."]</p>
+}
+else
+{
+    <table>
+        <thead>
+            <tr><th>@_L["Articolo"]</th><th>@_L["Quantità"]</th><th>@_L["Totale"]</th></tr>
+        </thead>
+        <tbody>
+            @foreach (var riga in Model.Vista.Righe)
+            {
+                <tr>
+                    <td>@riga.NomeProdotto@(riga.EtichettaVariante is { Length: > 0 } etichetta ? " — " + etichetta : null)</td>
+                    <td>@riga.Quantita</td>
+                    <td>@Importo(riga.Lordo)</td>
+                </tr>
+            }
+        </tbody>
+        <tfoot>
+            <tr><td colspan="2">@_L["Articoli (IVA inclusa)"]</td><td>@Importo(Model.Vista.TotaleLordo)</td></tr>
+        </tfoot>
+    </table>
+
+    <form method="post">
+        <fieldset>
+            <legend>@_L["Metodo di consegna"]</legend>
+            @foreach (var opzione in Model.Opzioni)
+            {
+                var m = opzione.Metodo;
+                <div>
+                    <label>
+                        <input type="radio" name="Modulo.IdMetodo" value="@m.Id" checked="@(Model.Modulo.IdMetodo == m.Id)" />
+                        @m.Nome
+                        @if (m.Tipo == TipoMetodoSpedizione.Ritiro)
+                        {
+                            <span>— @_L["ritiro in sede, nessun costo"]</span>
+                        }
+                        else
+                        {
+                            <span>— @Importo(m.TariffaLorda) (@_L["totale"] @Importo(opzione.Totale))</span>
+                        }
+                    </label>
+                    <input type="hidden" name="Modulo.Atteso[@m.Id]" value="@opzione.Totale.ToString("0.00", CultureInfo.InvariantCulture)" />
+                </div>
+            }
+        </fieldset>
+        <fieldset>
+            <legend>@_L["Indirizzo di consegna"]</legend>
+            <p>@_L["Serve solo per la consegna a domicilio; per il ritiro in sede viene ignorato."]</p>
+            <div><label for="destinatario">@_L["Destinatario"]</label> <input id="destinatario" name="Modulo.Destinatario" maxlength="@Ordine.LunghezzaMassimaDestinatario" value="@Model.Modulo.Destinatario" autocomplete="name" /></div>
+            <div><label for="riga1">@_L["Indirizzo"]</label> <input id="riga1" name="Modulo.IndirizzoRiga1" maxlength="@Ordine.LunghezzaMassimaIndirizzo" value="@Model.Modulo.IndirizzoRiga1" autocomplete="address-line1" /></div>
+            <div><label for="riga2">@_L["Indirizzo (seconda riga)"]</label> <input id="riga2" name="Modulo.IndirizzoRiga2" maxlength="@Ordine.LunghezzaMassimaIndirizzo" value="@Model.Modulo.IndirizzoRiga2" autocomplete="address-line2" /></div>
+            <div><label for="cap">@_L["CAP"]</label> <input id="cap" name="Modulo.Cap" maxlength="@Ordine.LunghezzaMassimaCap" value="@Model.Modulo.Cap" autocomplete="postal-code" /></div>
+            <div><label for="citta">@_L["Città"]</label> <input id="citta" name="Modulo.Citta" maxlength="@Ordine.LunghezzaMassimaCitta" value="@Model.Modulo.Citta" autocomplete="address-level2" /></div>
+            <div><label for="paese">@_L["Paese (codice a due lettere)"]</label> <input id="paese" name="Modulo.Paese" maxlength="2" value="@(Model.Modulo.Paese ?? "IT")" autocomplete="country" /></div>
+        </fieldset>
+        <button type="submit">@_L["Conferma l'ordine"]</button>
+    </form>
+}
+<nav><a href="/account/carrello">@_L["Torna al carrello"]</a></nav>

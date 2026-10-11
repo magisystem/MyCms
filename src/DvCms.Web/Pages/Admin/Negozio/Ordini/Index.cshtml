@@ -1,0 +1,39 @@
+@page "/admin/negozio/ordini"
+@model DvCms.Web.Pages.Admin.Negozio.Ordini.IndexModel
+@{
+    ViewData["Titolo"] = _L["Ordini"];
+}
+<div class="card">
+    @if (Model.Ordini.Count == 0)
+    {
+        <div class="card-body text-secondary">@_L["Nessun ordine."]</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-vcenter card-table">
+                <thead>
+                    <tr>
+                        <th>@_L["Ordine"]</th>
+                        <th>@_L["Data"]</th>
+                        <th>@_L["Cliente"]</th>
+                        <th>@_L["Stato"]</th>
+                        <th>@_L["Totale"]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var ordine in Model.Ordini)
+                    {
+                        <tr>
+                            <td><a href="/admin/negozio/ordini/@ordine.Id">#@ordine.Numero</a></td>
+                            <td class="text-secondary">@ordine.CreatoIlUtc.ToString("yyyy-MM-dd HH:mm")</td>
+                            <td>@ordine.EmailAcquirente</td>
+                            <td><span class="badge bg-secondary-lt">@Model.Stato(ordine.Stato)</span></td>
+                            <td>@ordine.TotaleLordo.ToString("N2", Model.Cultura) @ordine.Valuta</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

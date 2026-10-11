@@ -1,0 +1,88 @@
+using DvCms.Application.Piattaforma;
+using DvCms.Domain.Negozio;
+
+namespace DvCms.Application.Negozio;
+
+/// <summary>
+/// Scelte del cliente alla cassa. Non c'è alcun importo da fornire: totali e prezzi si ricalcolano sul server. <c>TotaleAtteso</c>
+/// è il totale che il cliente ha visto: se nel frattempo è cambiato (prezzo, disponibilità, tariffa) l'ordine non si crea
+/// (<c>Conflitto</c>) e il cliente rivede la cassa.
+/// </summary>
+public sealed record DatiOrdine(
+    Guid IdMetodoSpedizione,
+    string? Destinatario,
+    string? IndirizzoRiga1,
+    string? IndirizzoRiga2,
+    string? Cap,
+    string? Citta,
+    string? Paese,
+    decimal TotaleAtteso);
+
+public sealed record RigaOrdineVista(
+    int Posizione,
+    string Sku,
+    string NomeProdotto,
+    string? EtichettaVariante,
+    int Quantita,
+    decimal PrezzoUnitarioLordo,
+    decimal AliquotaIva,
+    decimal Lordo,
+    decimal Imponibile,
+    decimal Iva);
+
+public sealed record RiepilogoOrdine(Guid Id, int Numero, StatoOrdine Stato, decimal TotaleLordo, string Valuta, DateTime CreatoIlUtc, string EmailAcquirente);
+
+public sealed record OrdineVista(
+    Guid Id,
+    int Numero,
+    StatoOrdine Stato,
+    string Valuta,
+    decimal TotaleLordo,
+    decimal TotaleImponibile,
+    decimal TotaleIva,
+    TipoMetodoSpedizione TipoSpedizione,
+    AreaSpedizione? AreaSpedizione,
+    string NomeSpedizione,
+    decimal SpedizioneLorda,
+    decimal SpedizioneImponibile,
+    decimal SpedizioneIva,
+    string EmailAcquirente,
+    string NomeAcquirente,
+    string? Destinatario,
+    string? IndirizzoRiga1,
+    string? IndirizzoRiga2,
+    string? Cap,
+    string? Citta,
+    string? Paese,
+    DateTime CreatoIlUtc,
+    DateTime AggiornatoIlUtc,
+    IReadOnlyList<RigaOrdineVista> Righe);
+
+/// <summary>
+/// Ordini (F-003, ADR-0011, ADR-0020). Possono ordinare gli account autenticati e attivi (<c>Utente</c> o <c>TenantAdmin</c> del
+/// tenant dell'host, <c>PlatformAdmin</c> ovunque), solo con il negozio attivo; ognuno vede e annulla soltanto i propri ordini.
+/// L'amministrazione (<c>TenantAdmin</c> del tenant, <c>PlatformAdmin</c>) legge tutti gli ordini del sito. Il ruolo si riverifica
+/// sul database a ogni operazione.
+/// </summary>
+public interface IServizioOrdini
+{
+    /// <summary>
+    /// Crea l'ordine dal carrello dell'account e lo svuota, nella stessa transazione. Esiti: <c>NonConsentito</c> (negozio non attivo),
+    /// <c>DatiNonValidi</c> (con i campi: carrello vuoto, metodo, indirizzo non coerente con l'area), <c>Conflitto</c> (articoli non
+    /// più disponibili o totale diverso da quello atteso), <c>NonTrovato</c> (metodo di spedizione inesistente o disattivato).
+    /// </summary>
+    Task<EsitoOperazione> CreaDaCarrelloAsync(Guid idAccount, string codiceLingua, DatiOrdine dati, CancellationToken annullamento);
+
+    Task<IReadOnlyList<RiepilogoOrdine>> ElencaMieiAsync(Guid idAccount, CancellationToken annullamento);
+
+    /// <summary>L'ordine è restituito solo al suo proprietario: per chiunque altro è <c>null</c>.</summary>
+    Task<OrdineVista?> LeggiMioAsync(Guid idAccount, Guid idOrdine, CancellationToken annullamento);
+
+    /// <summary>Annulla un ordine non ancora pagato. <c>NonTrovato</c> se non è dell'account, <c>NonConsentito</c> se lo stato non lo ammette.</summary>
+    Task<EsitoOperazione> AnnullaMioAsync(Guid idAccount, Guid idOrdine, CancellationToken annullamento);
+
+    /// <summary>Amministrazione: i 200 ordini più recenti del sito.</summary>
+    Task<IReadOnlyList<RiepilogoOrdine>> ElencaAsync(Guid idAttore, CancellationToken annullamento);
+
+    Task<OrdineVista?> LeggiAsync(Guid idAttore, Guid idOrdine, CancellationToken annullamento);
+}

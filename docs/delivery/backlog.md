@@ -149,6 +149,7 @@ Le voci sono candidate a issue GitHub. Ogni issue deve essere piccola, verificab
 **Accettazione:** totali sempre ricalcolati server-side; prezzo manomesso dal client ignorato; l'ordine richiede un account autenticato (`Utente`, `TenantAdmin` o `PlatformAdmin`); il `Guest` non può ordinare.
 
 ### F-003: Ordine snapshot
+**Stato:** completata in M7.5 (`docs/architecture/ecommerce.md`); lo stato dell'ordine cambia davvero con pagamento (M7.7) e giacenza (M7.6).
 **Accettazione:** ordine conserva i dati commerciali essenziali al momento dell'acquisto; le modifiche prodotto non cambiano storico ordine.
 
 ### F-004: Provider e webhook
