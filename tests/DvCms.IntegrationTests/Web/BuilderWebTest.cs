@@ -48,6 +48,12 @@ public partial class BuilderWebTest
         Assert.Equal(HttpStatusCode.OK, pagina.StatusCode);
         Assert.Contains("/lib/page-builder/page-builder.js", html, StringComparison.Ordinal);
         Assert.Contains($"data-url-salva=\"/admin/pagine/{id}/builder?handler=Salva\"", html, StringComparison.Ordinal);
+
+        // Il canvas usa il tema del sito (qui il predefinito): foglio del tema e skin dei componenti, classe e variabili del corpo.
+        Assert.Contains("data-tema=", html, StringComparison.Ordinal);
+        Assert.Contains("/css/temi/classico-v1.css", html, StringComparison.Ordinal);
+        Assert.Contains("/css/temi/classico-componenti.css", html, StringComparison.Ordinal);
+        Assert.Contains("tema-classico", html, StringComparison.Ordinal);
         Assert.DoesNotMatch("<script(?![^>]*\\bsrc=)", html);
         Assert.Contains("script-src 'self'", pagina.Headers.GetValues("Content-Security-Policy").Single(), StringComparison.Ordinal);
         Assert.Contains("no-store", pagina.Headers.CacheControl?.ToString() ?? string.Empty, StringComparison.Ordinal);
@@ -239,6 +245,7 @@ public partial class BuilderWebTest
         Assert.Contains("dv-colonne dv-colonne-2", html, StringComparison.Ordinal);
         Assert.Contains("dv-sfondo-scuro", html, StringComparison.Ordinal);
         Assert.Contains("/css/componenti.css", html, StringComparison.Ordinal);
+        Assert.Contains("/css/temi/classico-componenti.css", html, StringComparison.Ordinal);
         using var immagineServita = await c.Web.SessioneA().GetAsync($"/media/{immagine:D}");
         Assert.Equal(HttpStatusCode.OK, immagineServita.StatusCode);
 
@@ -248,6 +255,8 @@ public partial class BuilderWebTest
         var htmlModerno = await moderno.Content.ReadAsStringAsync(Ct);
         Assert.Contains("tema-moderno", htmlModerno, StringComparison.Ordinal);
         Assert.DoesNotContain("tema-classico", htmlModerno, StringComparison.Ordinal);
+        Assert.Contains("/css/temi/moderno-componenti.css", htmlModerno, StringComparison.Ordinal);
+        Assert.DoesNotContain("classico-componenti", htmlModerno, StringComparison.Ordinal);
         Assert.Equal(Estrai(html, "<article class=\"dv-documento\">", "</article>"), Estrai(htmlModerno, "<article class=\"dv-documento\">", "</article>"));
     }
 

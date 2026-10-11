@@ -44,7 +44,14 @@ await pagina.goto(`${base}/admin/pagine/${id}/builder`);
 await pagina.waitForFunction(() => window.dvEditor, null, { timeout: 15000 });
 await pagina.frameLocator('iframe.gjs-frame').locator('#corpo-testo').waitFor();
 await pagina.waitForTimeout(500);
-passo('il bundle si monta');
+const temaCanvas = await pagina.evaluate(() => {
+  const corpo = window.dvEditor.Canvas.getBody();
+  const fogli = [...window.dvEditor.Canvas.getDocument().querySelectorAll('link[rel=stylesheet]')].map((l) => l.getAttribute('href'));
+  return { classe: [...corpo.classList].find((c) => c.startsWith('tema-')), fogli };
+});
+assert.ok(temaCanvas.classe, 'il corpo del canvas porta la classe del tema');
+assert.ok(temaCanvas.fogli.some((f) => f.includes('-componenti.css')), 'il canvas carica la skin dei componenti del tema');
+passo('il canvas usa tema e skin del sito');
 
 const albero = () => pagina.evaluate(() => {
   const f = (c) => `${c.getAttributes().id ?? ''}:${c.get('type')}[${c.components().map(f).join(',')}]`;

@@ -21,6 +21,7 @@ async function avvia() {
     urlAnteprima: radice.dataset.urlAnteprima,
     risorse: JSON.parse(radice.dataset.risorse || '[]'),
     testi: JSON.parse(radice.dataset.testi || '{}'),
+    tema: JSON.parse(radice.dataset.tema || '{}'),
     tokenAntiforgery: document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '',
   };
   config.testi.componenti = JSON.parse(config.testi.componenti || '{}');
@@ -65,7 +66,8 @@ async function avvia() {
     layerManager: { appendTo: ui.contenitoreLivelli },
     traitManager: { appendTo: ui.contenitoreProprieta },
     undoManager: { trackSelection: false },
-    canvas: { styles: ['/css/pubblico.css', '/css/componenti.css', '/lib/page-builder/canvas.css'] },
+    // Stessi fogli e stesso ordine della pagina pubblica (tema e skin dei componenti indicati dal server), poi gli stili solo-editor.
+    canvas: { styles: ['/css/pubblico.css', '/css/componenti.css', ...(config.tema.fogli ?? []), '/lib/page-builder/canvas.css'] },
   });
 
   // Niente scorciatoie che agiscono sui componenti (eliminare, spostarsi, copiare): scrivendo nel canvas un tasto non deve mai
@@ -78,7 +80,17 @@ async function avvia() {
   creaBlocchi(editor, definizioni, config);
 
   const salvataggio = new Salvataggio(editor, config, ui, stato.token);
+  // Classe e variabili del tema vanno sul corpo del canvas (non sul progetto: non diventano contenuto della pagina). Si riapplicano
+  // dopo il caricamento perché GrapesJS può riscrivere gli attributi del corpo quando disegna il contenitore principale.
+  const applicaTema = () => {
+    const corpo = editor.Canvas.getBody();
+    if (!corpo) return;
+    if (config.tema.classe) corpo.classList.add(config.tema.classe);
+    if (config.tema.variabili) corpo.setAttribute('style', config.tema.variabili);
+  };
+  editor.on('canvas:frame:load:body', applicaTema);
   editor.on('load', () => {
+    applicaTema();
     // Il contenitore principale viene ricreato dal progetto caricato: le regole vanno applicate dopo il caricamento.
     regolaRadice(editor, stato.vincoli, definizioni);
     applicaVincoli(editor, stato.vincoli, definizioni, config);

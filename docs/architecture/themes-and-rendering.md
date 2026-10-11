@@ -56,7 +56,7 @@ Se un documento contiene un componente non supportato, non eseguire fallback arb
 
 ## Componenti del page builder (M4)
 
-Le pagine del builder si disegnano con `Modelli/_documento_v1` e `Componenti/_Nodo` (markup indipendente dal tema, classi `dv-*`). Gli stili dei componenti stanno in `wwwroot/css/componenti.css`, separato dai fogli dei temi perché le versioni di tema rilasciate sono immutabili; usa le variabili del tema (`--tema-colore-primario`, `--tema-colore-intestazione`) e poche regole per tema (`.tema-classico`, `.tema-moderno`). Un contratto esplicito fra componenti e temi (variabili e punti di estensione per ogni componente) è da definire prima di ampliare il catalogo (M5).
+Le pagine del builder si disegnano con `Modelli/_documento_v1` e `Componenti/_Nodo` (markup indipendente dal tema, classi `dv-*`). Gli stili dei componenti stanno in `wwwroot/css/componenti.css`, separato dai fogli dei temi perché le versioni di tema rilasciate sono immutabili, e leggono solo i token `--dv-*` del contratto componenti–temi; ogni tema può fornire una «skin» (`temi/<chiave>-componenti.css`) che imposta soltanto quei token. Vedi [componenti-e-temi.md](componenti-e-temi.md).
 
 ## Attuazione (D-001, D-002)
 

@@ -1,31 +1,28 @@
 /*
- * Componenti del page builder (documento CMS). Markup e classi sono indipendenti dal tema; l'aspetto dipende dalle variabili del
- * tema (colore primario, intestazione) e da poche regole per tema. Una versione di tema già rilasciata non si modifica: questo
- * foglio è separato proprio per questo.
+ * Componenti del page builder (documento CMS). Markup e classi sono indipendenti dal tema; l'aspetto legge SOLO i token --dv-*
+ * del contratto componenti-temi (TokenComponenti, docs/architecture/componenti-e-temi.md), ciascuno con il valore predefinito come
+ * riserva di var(). Questo foglio non dichiara mai i token: li impostano i temi, con una "skin" (foglio che imposta solo token) sul
+ * corpo del documento. Un test controlla che i token usati siano quelli del catalogo e che le riserve coincidano con i predefiniti.
  */
 main:has(.dv-documento) {
     max-width: none;
     padding: 0 0 3rem;
 }
 
-.dv-documento {
-    --dv-larghezza: 46rem;
-}
-
 .dv-contenitore {
-    max-width: var(--dv-larghezza);
+    max-width: var(--dv-larghezza-contenuto, 46rem);
     margin: 0 auto;
     padding: 0 1rem;
 }
 
-.dv-sezione.dv-spaziatura-compatta { padding: 1rem 0; }
-.dv-sezione.dv-spaziatura-normale { padding: 2rem 0; }
-.dv-sezione.dv-spaziatura-ampia { padding: 4rem 0; }
+.dv-sezione.dv-spaziatura-compatta { padding: var(--dv-spazio-compatta, 1rem) 0; }
+.dv-sezione.dv-spaziatura-normale { padding: var(--dv-spazio-normale, 2rem) 0; }
+.dv-sezione.dv-spaziatura-ampia { padding: var(--dv-spazio-ampia, 4rem) 0; }
 
-.dv-sfondo-chiaro { background: #f1f5f9; color: #1f2933; }
-.dv-sfondo-scuro { background: var(--tema-colore-intestazione, #111827); color: #ffffff; }
-.dv-sfondo-scuro a:not(.pulsante) { color: #ffffff; }
-.tema-classico .dv-sfondo-scuro { background: var(--tema-colore-primario, #1f4e8c); }
+.dv-sfondo-chiaro { background: var(--dv-colore-sfondo-chiaro, #f1f5f9); color: var(--dv-colore-testo-su-chiaro, #1f2933); }
+.dv-sfondo-scuro { background: var(--dv-colore-sfondo-scuro, var(--tema-colore-intestazione, #111827)); color: var(--dv-colore-testo-su-scuro, #ffffff); }
+.dv-sfondo-primario { background: var(--dv-colore-primario, var(--tema-colore-primario, #1f4e8c)); color: var(--dv-colore-testo-su-scuro, #ffffff); }
+.dv-sfondo-scuro a:not(.pulsante) { color: var(--dv-colore-testo-su-scuro, #ffffff); }
 
 .dv-colonne {
     display: grid;
@@ -42,27 +39,35 @@ main:has(.dv-documento) {
 .dv-allineamento-centro { text-align: center; }
 .dv-allineamento-destra { text-align: right; }
 
+.dv-titolo, .dv-hero-titolo, .dv-cta-titolo { color: var(--dv-colore-titoli, inherit); }
+.dv-sfondo-scuro .dv-titolo, .dv-sfondo-scuro .dv-hero-titolo, .dv-sfondo-scuro .dv-cta-titolo,
+.dv-sfondo-primario .dv-titolo, .dv-sfondo-primario .dv-hero-titolo, .dv-sfondo-primario .dv-cta-titolo { color: var(--dv-colore-testo-su-scuro, #ffffff); }
 .dv-titolo { margin: 0 0 1rem; }
-.dv-testo { margin: 0 0 1rem; }
+.dv-testo, .dv-testo-ricco { margin: 0 0 1rem; }
 
 .dv-immagine { margin: 0 0 1rem; }
 .dv-immagine img { display: block; max-width: 100%; height: auto; }
-.dv-immagine figcaption { font-size: 0.9rem; color: #52606d; }
+.dv-immagine figcaption { font-size: 0.9rem; color: var(--dv-colore-didascalia, #52606d); }
 
+.dv-pulsante { border-radius: var(--dv-raggio-pulsante, 0.4rem); }
 .dv-pulsante-secondario {
-    color: var(--tema-colore-primario, #1f4e8c);
+    color: var(--dv-colore-primario, var(--tema-colore-primario, #1f4e8c));
     background: transparent;
     border: 2px solid currentColor;
 }
 
-.tema-moderno .dv-titolo { color: var(--tema-colore-primario, #6d28d9); }
-.tema-moderno .dv-sfondo-scuro .dv-titolo { color: #ffffff; }
-
-@media (prefers-color-scheme: dark) {
-    .dv-sfondo-chiaro { background: #1f2933; color: #e4e7eb; }
+/* Pulsanti su sfondi scuri o primari: invertiti per restare leggibili con qualunque tema (specificità sopra i fogli dei temi). */
+body .dv-sfondo-scuro .dv-pulsante-primario,
+body .dv-sfondo-primario .dv-pulsante-primario {
+    color: var(--dv-colore-primario, var(--tema-colore-primario, #1f4e8c));
+    background: var(--dv-colore-testo-su-scuro, #ffffff);
 }
 
-/* Hero, invito all'azione e fisarmonica (M5). */
+@media (prefers-color-scheme: dark) {
+    .dv-sfondo-chiaro { background: var(--dv-colore-sfondo-chiaro-notte, #1f2933); color: var(--dv-colore-testo-su-chiaro-notte, #e4e7eb); }
+}
+
+/* Hero, invito all'azione, fisarmonica e testo formattato (M5). */
 .dv-hero { position: relative; display: flex; align-items: center; overflow: hidden; }
 .dv-hero.dv-altezza-compatta { min-height: 14rem; }
 .dv-hero.dv-altezza-normale { min-height: 22rem; }
@@ -73,19 +78,19 @@ main:has(.dv-documento) {
 .dv-hero-sottotitolo { margin: 0 0 1.5rem; font-size: 1.25rem; }
 .dv-cta { padding: 3rem 0; }
 .dv-cta-titolo { margin: 0 0 0.75rem; }
-.dv-sfondo-primario { background: var(--tema-colore-primario, #1f4e8c); color: #ffffff; }
-.dv-sfondo-primario .pulsante { color: var(--tema-colore-primario, #1f4e8c); background: #ffffff; }
-.dv-fisarmonica { margin: 0 0 1rem; border-top: 1px solid #cbd2d9; }
-.dv-voce { border-bottom: 1px solid #cbd2d9; }
+.dv-testo-ricco p { margin: 0 0 0.75rem; }
+.dv-testo-ricco ul { margin: 0 0 0.75rem; padding-left: 1.5rem; }
+.dv-fisarmonica { margin: 0 0 1rem; border-top: 1px solid var(--dv-colore-bordo, #cbd2d9); }
+.dv-voce { border-bottom: 1px solid var(--dv-colore-bordo, #cbd2d9); }
 .dv-voce summary { padding: 0.9rem 0.25rem; font-weight: 600; cursor: pointer; }
-.dv-voce summary:focus-visible { outline: 2px solid var(--tema-colore-primario, #1f4e8c); outline-offset: 2px; }
+.dv-voce summary:focus-visible { outline: 2px solid var(--dv-colore-primario, var(--tema-colore-primario, #1f4e8c)); outline-offset: 2px; }
 .dv-voce-risposta { padding: 0 0.25rem 0.5rem; }
 
 /*
  * Animazioni dichiarative di comparsa (E-006). Lo stato nascosto vale solo se lo script del sito ha marcato la pagina (.dv-js):
  * senza JavaScript il contenuto resta visibile. Con prefers-reduced-motion nessuna animazione.
  */
-.dv-js .dv-anim { opacity: 0; transition: opacity 0.6s ease, transform 0.6s ease; }
+.dv-js .dv-anim { opacity: 0; transition: opacity var(--dv-durata-animazione, 0.6s) ease, transform var(--dv-durata-animazione, 0.6s) ease; }
 .dv-js .dv-anim-sale { transform: translateY(1.5rem); }
 .dv-js .dv-anim-da-sinistra { transform: translateX(-2rem); }
 .dv-js .dv-anim-da-destra { transform: translateX(2rem); }
@@ -96,11 +101,4 @@ main:has(.dv-documento) {
 
 @media (prefers-reduced-motion: reduce) {
     .dv-js .dv-anim, .dv-js .dv-anim-sale, .dv-js .dv-anim-da-sinistra, .dv-js .dv-anim-da-destra { opacity: 1; transform: none; transition: none; }
-}
-
-/* Pulsanti su sfondi scuri o del colore primario: invertiti per restare leggibili con qualunque tema (specificità sopra i fogli dei temi). */
-body .dv-sfondo-scuro .dv-pulsante-primario,
-body .dv-sfondo-primario .dv-pulsante-primario {
-    color: var(--tema-colore-primario, #1f4e8c);
-    background: #ffffff;
 }

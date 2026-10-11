@@ -1,0 +1,6 @@
+/* Skin dei componenti del builder per il tema "moderno": imposta solo token --dv-* (contratto in docs/architecture/componenti-e-temi.md). */
+body.tema-moderno {
+    --dv-colore-titoli: var(--tema-colore-primario, #6d28d9);
+    --dv-raggio-pulsante: 999px;
+    --dv-larghezza-contenuto: 64rem;
+}

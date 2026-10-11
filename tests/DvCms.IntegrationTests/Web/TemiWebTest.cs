@@ -47,6 +47,9 @@ public class TemiWebTest
         Assert.Contains("<body class=\"tema-moderno\"", moderno, StringComparison.Ordinal);
         Assert.Contains("/css/temi/moderno-v1.css?v=", moderno, StringComparison.Ordinal);
         Assert.Contains("--tema-colore-primario:#aa00bb;", moderno, StringComparison.Ordinal);
+
+        // Le pagine libere non usano i componenti del builder: nessuna skin (che vale solo per i documenti del builder).
+        Assert.DoesNotContain("-componenti.css", moderno, StringComparison.Ordinal);
         Assert.Contains("--tema-colore-intestazione:#111827;", moderno, StringComparison.Ordinal);
         Assert.Contains("<main class=\"larga\">", moderno, StringComparison.Ordinal);
         Assert.Contains("Pi&#xE8; &lt;b&gt;di pagina&lt;/b&gt;", moderno, StringComparison.Ordinal);

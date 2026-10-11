@@ -95,7 +95,6 @@ Quando una risposta cambia un ADR, creare/aggiornare ADR e ottenere approvazione
 
 - Rich text nel builder: risolto con un markup a grammatica chiusa senza sanitizzazione HTML (ADR-0005). Aperto: se servono formattazioni più ricche (titoli interni, tabelle, immagini in linea), estendere la grammatica con vettori di prova o usare componenti dedicati.
 - Accessibilità da tastiera dell'editor GrapesJS e requisiti WCAG per l'admin: verificare in M5; la modalità guidata a form resta l'alternativa accessibile.
-- Contratto fra componenti e temi (variabili e punti di estensione per componente) prima di ampliare il catalogo.
 - Migrazione dei documenti tra versioni di template e di schema (oggi il passaggio a una nuova versione è rifiutato per le pagine del builder).
 - Collegamento del testo alternativo delle immagini del builder con quelli per lingua della libreria media (ADR-0018).
 - `backbone-undo` (transitiva di GrapesJS) non più supportata: rivalutare prima di M5.

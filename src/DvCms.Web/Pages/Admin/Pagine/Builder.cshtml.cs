@@ -3,6 +3,8 @@ using DvCms.Application.Builder;
 using DvCms.Application.Localizzazione;
 using DvCms.Application.Media;
 using DvCms.Application.Piattaforma;
+using DvCms.Application.Temi;
+using DvCms.Web.Pubblico;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DvCms.Web.Pages.Admin.Pagine;
@@ -20,12 +22,14 @@ public class BuilderModel : PaginaAdmin
 {
     private readonly IServizioBuilder _builder;
     private readonly IServizioMedia _media;
+    private readonly IRisolutoreTema _temi;
 
-    public BuilderModel(IServizioBuilder builder, IServizioMedia media, ILocalizzatore localizzatore)
+    public BuilderModel(IServizioBuilder builder, IServizioMedia media, IRisolutoreTema temi, ILocalizzatore localizzatore)
         : base(localizzatore)
     {
         _builder = builder;
         _media = media;
+        _temi = temi;
     }
 
     public Guid IdPagina { get; private set; }
@@ -103,6 +107,12 @@ public class BuilderModel : PaginaAdmin
 
     public string RisorseJson { get; private set; } = "[]";
 
+    /// <summary>
+    /// Tema in vigore per il canvas: fogli (tema e skin dei componenti), classe e variabili del corpo, gli stessi della pagina pubblica,
+    /// così l'editor mostra i componenti con l'aspetto che avranno. Sono dati del server: il browser non sceglie nulla.
+    /// </summary>
+    public string TemaJson { get; private set; } = "{}";
+
     public async Task<IActionResult> OnGetAsync(Guid id, CancellationToken annullamento)
     {
         // Solo le pagine che usano un modello del builder: per le altre non c'è nulla da aprire.
@@ -112,6 +122,14 @@ public class BuilderModel : PaginaAdmin
         }
 
         IdPagina = id;
+        var tema = await _temi.RisolviAsync(annullamento);
+        var fogli = new List<string> { Url.Content(TemiVista.Foglio(tema)) };
+        if (TemiVista.FoglioComponenti(tema) is { } skin)
+        {
+            fogli.Add(Url.Content(skin));
+        }
+
+        TemaJson = JsonSerializer.Serialize(new { fogli, classe = TemiVista.Classe(tema), variabili = tema.VariabiliCss });
         var risorse = await _media.ElencaAsync(IdAttore, annullamento);
         RisorseJson = JsonSerializer.Serialize(risorse
             .Where(r => r.TipoContenuto.StartsWith("image/", StringComparison.Ordinal) && r.Visibilita == Domain.Media.VisibilitaMedia.Pubblica)

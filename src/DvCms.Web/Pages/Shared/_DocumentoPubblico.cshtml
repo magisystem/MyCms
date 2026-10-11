@@ -22,6 +22,11 @@
     @if (vista is not null)
     {
         <link rel="stylesheet" href="@DvCms.Web.Pubblico.TemiVista.Foglio(vista.Tema)" asp-append-version="true" />
+        @if (vista.Documento is not null && DvCms.Web.Pubblico.TemiVista.FoglioComponenti(vista.Tema) is { } skin)
+        {
+            @* Skin dei componenti del tema: imposta solo token --dv-*, dopo il foglio del tema. *@
+            <link rel="stylesheet" href="@skin" asp-append-version="true" />
+        }
     }
     @if (vista is { NonIndicizzare: false, UrlCanonico: { } canonico })
     {

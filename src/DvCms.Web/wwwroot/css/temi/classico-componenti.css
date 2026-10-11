@@ -1,0 +1,4 @@
+/* Skin dei componenti del builder per il tema "classico": imposta solo token --dv-* (contratto in docs/architecture/componenti-e-temi.md). */
+body.tema-classico {
+    --dv-colore-sfondo-scuro: var(--tema-colore-primario, #1f4e8c);
+}

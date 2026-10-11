@@ -40,7 +40,7 @@ Sette componenti di base (`layout.sezione`, `layout.colonne`, `layout.colonna`, 
 - **Accessibilità dell'editor.** GrapesJS è pensato per il mouse: la riorganizzazione da tastiera è limitata. Rischio da valutare in M5 (requisiti WCAG per l'admin); l'alternativa accessibile resta la modalità guidata a form.
 - **Rich text e sanitizzazione.** Il PoC ha solo testo semplice. Il rich text richiede una libreria di sanitizzazione (nuova dipendenza, da valutare con la regola 11) e una policy testata prima di entrare nel catalogo.
 - **Modifica del testo direttamente nel canvas, anteprime per dispositivo, autosave con debounce, pannello proprietà avanzato, animazioni (E-006):** non fanno parte del PoC. Il server è pronto per l'autosave (token, salvataggi senza modifica che non creano revisioni).
-- **Contratto tra componenti e temi.** I temi già rilasciati sono immutabili: gli stili dei componenti stanno in un foglio a parte (`componenti.css`) con poche regole per tema. Serve un contratto esplicito prima di molti componenti.
+- **Contratto tra componenti e temi.** Risolto in M5: token `--dv-*` e skin per tema (vedi `docs/architecture/componenti-e-temi.md`).
 - **Versioni dei componenti e dei template.** Esiste solo la versione 1: la migrazione di documenti tra versioni di template o di schema non è ancora definita (il passaggio a una nuova versione è rifiutato per le pagine del builder).
 - **Immagini.** Il testo alternativo è una proprietà del nodo, obbligatoria salvo immagine decorativa; il collegamento con i testi alternativi per lingua della libreria media (ADR-0018) è da fare.
 - **`backbone-undo`** non più supportato: da rivalutare se GrapesJS non lo sostituisce.

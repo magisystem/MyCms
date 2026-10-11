@@ -9,15 +9,21 @@ namespace DvCms.Web.Pubblico;
 /// </summary>
 public static class TemiVista
 {
-    private static readonly Dictionary<(string Chiave, int Versione), (string Vista, string Foglio)> _temi = new()
+    private static readonly Dictionary<(string Chiave, int Versione), (string Vista, string Foglio, string? Skin)> _temi = new()
     {
-        [("classico", 1)] = ("Temi/_classico_v1", "~/css/temi/classico-v1.css"),
-        [("moderno", 1)] = ("Temi/_moderno_v1", "~/css/temi/moderno-v1.css"),
+        [("classico", 1)] = ("Temi/_classico_v1", "~/css/temi/classico-v1.css", "~/css/temi/classico-componenti.css"),
+        [("moderno", 1)] = ("Temi/_moderno_v1", "~/css/temi/moderno-v1.css", "~/css/temi/moderno-componenti.css"),
     };
 
     public static string Vista(TemaRisolto? tema) => Voce(tema).Vista;
 
     public static string Foglio(TemaRisolto? tema) => Voce(tema).Foglio;
+
+    /// <summary>
+    /// "Skin" dei componenti del builder per il tema: un foglio che imposta soltanto i token <c>--dv-*</c> (contratto componenti-temi,
+    /// <c>TokenComponenti</c>). Facoltativa: un tema senza skin usa i valori predefiniti dei componenti.
+    /// </summary>
+    public static string? FoglioComponenti(TemaRisolto? tema) => Voce(tema).Skin;
 
     /// <summary>Classe CSS del corpo del documento, dalla chiave del tema in vigore.</summary>
     public static string Classe(TemaRisolto? tema) => $"tema-{ChiaveEffettiva(tema)}";
@@ -25,6 +31,6 @@ public static class TemiVista
     private static string ChiaveEffettiva(TemaRisolto? tema) =>
         tema is not null && _temi.ContainsKey((tema.Chiave, tema.Versione)) ? tema.Chiave : RegistroTemi.ChiavePredefinita;
 
-    private static (string Vista, string Foglio) Voce(TemaRisolto? tema) =>
+    private static (string Vista, string Foglio, string? Skin) Voce(TemaRisolto? tema) =>
         tema is not null && _temi.TryGetValue((tema.Chiave, tema.Versione), out var voce) ? voce : _temi[(RegistroTemi.ChiavePredefinita, 1)];
 }
