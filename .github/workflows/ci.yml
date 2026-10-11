@@ -37,6 +37,7 @@ jobs:
       DVCMS_CONNESSIONE_TEST: "Server=localhost,1433;User Id=sa;Password=Ci_DvCms_Effimera_7x!;TrustServerCertificate=True;Encrypt=False"
     steps:
       # Checkout parziale: la cartella admin-theme (kit grafico, centinaia di MB) non serve alla build.
+      # frontend/page-builder/test contiene i vettori del testo formattato condivisi con i test .NET.
       - name: Checkout
         uses: actions/checkout@v4
         with:
@@ -44,6 +45,7 @@ jobs:
           sparse-checkout: |
             src
             tests
+            frontend/page-builder/test
 
       - name: Installa .NET
         uses: actions/setup-dotnet@v4
