@@ -1,6 +1,6 @@
 # Decisioni aperte
 
-Le scelte sotto non sono definite completamente. Gli agenti devono evitare di inventarle e segnalare quando un'implementazione dipende da una risposta.
+Elenco consolidato e aggiornato, con una proposta per ogni voce: [`decisioni-da-confermare.md`](decisioni-da-confermare.md). Le scelte sotto non sono definite completamente. Gli agenti devono evitare di inventarle e segnalare quando un'implementazione dipende da una risposta.
 
 ## Prodotto
 
