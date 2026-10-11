@@ -4,7 +4,9 @@ Data: 2026-10-11. Raccoglie tutto ciò che è stato rimandato "alla fine" perch�
 
 Stato di avanzamento: M0–M6 completate (M5 page builder con exit criteria soddisfatti, M6 con sonde, metriche, baseline); M7 e-commerce bloccato da A; M8 (pilot) dipende da B.
 
-## A. Bloccanti per M7 (e-commerce): `docs/architecture/ecommerce.md`, ADR-0009
+## A. Bloccanti per M7 (e-commerce): `docs/architecture/ecommerce.md`, ADR-0009, ADR-0020
+
+**Decise il 2026-10-11** ([ADR-0020](decisions/ADR-0020-commerce-policies-and-paypal.md)): A1 **PayPal**, A2+A3 **solo EUR, IVA inclusa**, A4 **tariffa fissa per zona + ritiro**, A6 **prenotazione con scadenza 15 minuti**. **Restano da decidere A5 (resi e rimborsi) e A7 (dati personali)**: bloccano solo l'abilitazione del checkout di produzione, non lo sviluppo.
 
 Senza queste non si implementa il checkout di produzione (regola del progetto). Si può invece iniziare subito la parte che non dipende da esse (catalogo e varianti con traduzioni, registrazione degli acquirenti, carrello e totali lato server).
 

@@ -18,3 +18,5 @@ Gli ordini richiedono un account autenticato (`Utente`, `TenantAdmin`, `Platform
 ## Conseguenze
 
 Commerce si sviluppa dopo il core CMS. Provider, tassazione, valute, spedizioni e politica stock restano decisioni aperte, da finalizzare prima del checkout di produzione.
+
+Aggiornamento 2026-10-11: provider (PayPal), valuta (EUR), IVA, spedizioni e prenotazione della giacenza sono stati decisi in [ADR-0020](ADR-0020-commerce-policies-and-paypal.md); restano aperti resi e rimborsi e i dati personali degli acquirenti.

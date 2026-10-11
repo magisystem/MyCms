@@ -80,11 +80,9 @@ Elenco consolidato e aggiornato, con una proposta per ogni voce: [`decisioni-da-
 
 ## Commerce (bloccante prima del checkout produzione)
 
-- Provider pagamenti e checkout flow.
-- Mercati e valute.
-- Imposte/IVA, fatturazione e responsabilità per il calcolo.
-- Spedizioni, resi e rimborsi.
-- Prenotazione, rilascio e riconciliazione inventario.
+Decisi con ADR-0020 (2026-10-11): provider PayPal, solo EUR, IVA inclusa (fattura a cura del tenant), spedizione a tariffa fissa per zona e ritiro, prenotazione della giacenza con scadenza di 15 minuti. Restano aperti:
+
+- Resi e rimborsi.
 - Retention e dati personali degli account acquirente. (Account obbligatorio per ordinare; nessun guest checkout, vedi ADR-0011.)
 
 ## Processo

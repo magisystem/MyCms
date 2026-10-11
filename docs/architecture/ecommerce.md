@@ -42,13 +42,14 @@ Definire gli stati consentiti come transizioni esplicite (es. `InAttesaDiPagamen
 
 I componenti `negozio.*` referenziano prodotto/collezione/query tipizzata, non copiano il catalogo nel documento. Il renderer chiama il modulo Store attraverso servizi applicativi. Un'anteprima senza dati reali deve essere chiaramente distinta dal checkout reale.
 
+## Decisioni
+
+Decise con [ADR-0020](../decisions/ADR-0020-commerce-policies-and-paypal.md): provider **PayPal** (Orders v2, webhook con firma verificata e deduplicati, credenziali per tenant cifrate), solo **EUR** con prezzi **IVA inclusa** e aliquota per prodotto, **tariffa fissa per zona e ritiro in sede**, **prenotazione della giacenza con scadenza di 15 minuti**.
+
 ## Decisioni ancora aperte
 
-- Provider pagamenti e modalità checkout.
-- Mercati, valute, IVA/imposte e responsabilità di calcolo.
-- Metodi e zone spedizione.
-- Prenotazione e rilascio delle quantità.
-- Politica resi/rimborsi.
-- Gestione dati personali, conservazione e obblighi legali applicabili.
+- Politica resi e rimborsi (proposta: rimborso totale o parziale dal pannello, tramite il provider).
+- Gestione dei dati personali degli acquirenti, conservazione e obblighi legali (proposta: ordini 10 anni, account anonimizzabile su richiesta).
+- Macchina a stati definitiva dell'ordine (si approva con la slice dell'ordine).
 
-Non implementare checkout produzione finché le decisioni pertinenti non sono approvate e testate.
+Non implementare checkout di produzione finché le decisioni pertinenti non sono approvate e testate.
