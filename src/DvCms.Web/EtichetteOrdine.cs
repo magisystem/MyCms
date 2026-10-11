@@ -17,6 +17,7 @@ public static class EtichetteOrdine
             StatoOrdine.Spedito => localizzatore.Traduci("Spedito"),
             StatoOrdine.Ritirato => localizzatore.Traduci("Ritirato"),
             StatoOrdine.Annullato => localizzatore.Traduci("Annullato"),
+            StatoOrdine.Rimborsato => localizzatore.Traduci("Rimborsato"),
             _ => stato.ToString(),
         };
     }

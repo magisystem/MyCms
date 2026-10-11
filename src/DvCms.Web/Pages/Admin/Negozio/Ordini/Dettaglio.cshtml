@@ -16,7 +16,7 @@
 }
 @if (Model.DaRimborsare)
 {
-    <div class="alert alert-warning" role="alert">@_L["Il provider ha incassato questo ordine ma l'ordine non si può completare: rimborsa il cliente dal conto PayPal del negozio."]</div>
+    <div class="alert alert-warning" role="alert">@_L["Il provider ha incassato questo ordine ma l'ordine non si può completare: rimborsa l'incasso qui sotto."]</div>
 }
 <div class="row g-3">
     <div class="col-lg-8">
@@ -57,6 +57,14 @@
             <div class="card-body">
                 <p><strong>@_L["Stato"]</strong><br />@Model.Stato(o.Stato)</p>
                 <p><strong>@_L["Cliente"]</strong><br />@o.NomeAcquirente<br />@o.EmailAcquirente</p>
+                <details>
+                    <summary class="text-secondary">@_L["Dati personali dell'acquirente"]</summary>
+                    <form method="post" asp-page-handler="AnonimizzaAcquirente" asp-route-id="@o.Id">
+                        <p class="text-secondary small">@_L["Email, nome, password e carrello dell'account si cancellano e gli ordini non pagati si annullano; gli ordini pagati restano. Non si può annullare."]</p>
+                        <label class="form-check"><input type="checkbox" class="form-check-input" required /> <span class="form-check-label">@_L["Confermo la richiesta dell'interessato"]</span></label>
+                        <button type="submit" class="btn btn-outline-danger btn-sm">@_L["Anonimizza l'account dell'acquirente"]</button>
+                    </form>
+                </details>
                 <p><strong>@_L["Data"]</strong><br />@o.CreatoIlUtc.ToString("yyyy-MM-dd HH:mm") UTC</p>
                 @if (o.TipoSpedizione == TipoMetodoSpedizione.Ritiro)
                 {
@@ -93,6 +101,60 @@
                         <li class="list-group-item">
                             @Model.StatoTentativo(tentativo.Stato)<br />
                             <small class="text-secondary">@tentativo.IdProvider · @tentativo.CreatoIlUtc.ToString("yyyy-MM-dd HH:mm")</small>
+                            @if (tentativo.Stato == StatoTentativoPagamento.DaRimborsare)
+                            {
+                                <form method="post" asp-page-handler="RimborsaIncasso" asp-route-id="@o.Id" class="mt-2">
+                                    <input type="hidden" name="idTentativo" value="@tentativo.Id" />
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">@_L["Rimborsa l'incasso"] (@Importo(tentativo.Importo))</button>
+                                </form>
+                            }
+                        </li>
+                    }
+                </ul>
+            </div>
+        }
+        @if (Model.PuoRimborsare)
+        {
+            <div class="card mt-3">
+                <div class="card-header"><h3 class="card-title">@_L["Rimborso"]</h3></div>
+                <div class="card-body">
+                    <p class="text-secondary">@_L["Rimborsato"]: @Importo(o.TotaleRimborsato) — @_L["ancora rimborsabile"]: @Importo(Model.Residuo)</p>
+                    <form method="post" asp-page-handler="Rimborsa" asp-route-id="@o.Id">
+                        <div class="mb-2">
+                            <label class="form-label" for="importo">@_L["Importo (vuoto = tutto ciò che resta)"]</label>
+                            <input class="form-control" id="importo" name="importo" inputmode="decimal" />
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label" for="motivo">@_L["Motivo (lo vede anche il cliente)"]</label>
+                            <input class="form-control" id="motivo" name="motivo" maxlength="@Rimborso.LunghezzaMassimaMotivo" />
+                        </div>
+                        <button type="submit" class="btn btn-danger">@_L["Rimborsa"]</button>
+                    </form>
+                </div>
+            </div>
+        }
+        @if (Model.Rimborsi.Count > 0)
+        {
+            <div class="card mt-3">
+                <div class="card-header"><h3 class="card-title">@_L["Rimborsi"]</h3></div>
+                <ul class="list-group list-group-flush">
+                    @foreach (var rimborso in Model.Rimborsi)
+                    {
+                        <li class="list-group-item">
+                            @Importo(rimborso.Importo) — @Model.StatoRimborso(rimborso.Stato)
+                            @if (rimborso.IncassoOrfano)
+                            {
+                                <span class="text-secondary">(@_L["incasso non abbinato"])</span>
+                            }
+                            <br />
+                            <small class="text-secondary">@rimborso.CreatoIlUtc.ToString("yyyy-MM-dd HH:mm")@(rimborso.Motivo is { Length: > 0 } motivoRimborso ? " · " + motivoRimborso : null)</small>
+                            @if (rimborso.Stato == StatoRimborso.InCorso)
+                            {
+                                <form method="post" asp-page-handler="VerificaRimborso" asp-route-id="@o.Id" class="mt-2">
+                                    <input type="hidden" name="idRimborso" value="@rimborso.Id" />
+                                    <button type="submit" class="btn btn-sm">@_L["Verifica l'esito"]</button>
+                                </form>
+                            }
                         </li>
                     }
                 </ul>

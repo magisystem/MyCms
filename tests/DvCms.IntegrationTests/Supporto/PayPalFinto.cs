@@ -22,7 +22,10 @@ public sealed class PayPalFinto : HttpMessageHandler
     private readonly object _blocco = new();
     private readonly Dictionary<string, OrdineFinto> _ordini = [];
     private readonly Dictionary<string, string> _perRichiesta = [];
+    private readonly Dictionary<string, RimborsoFinto> _rimborsi = [];
+    private readonly Dictionary<string, string> _rimborsiPerRichiesta = [];
     private int _contatore;
+    private int _contatoreRimborsi;
 
     public ConcurrentQueue<RichiestaPayPal> Richieste { get; } = new();
 
@@ -32,6 +35,18 @@ public sealed class PayPalFinto : HttpMessageHandler
 
     /// <summary>Come finisce la prossima cattura: <c>COMPLETED</c> (predefinito), <c>DECLINED</c>, <c>PENDING</c>.</summary>
     public string EsitoCattura { get; set; } = "COMPLETED";
+
+    /// <summary>Come finisce il prossimo rimborso: <c>COMPLETED</c> (predefinito), <c>PENDING</c>, <c>FAILED</c>.</summary>
+    public string EsitoRimborso { get; set; } = "COMPLETED";
+
+    /// <summary>Un rimborso in sospeso si conclude (PayPal finisce la sua elaborazione).</summary>
+    public void ConcludiRimborso(string id)
+    {
+        lock (_blocco)
+        {
+            _rimborsi[id].Stato = "COMPLETED";
+        }
+    }
 
     /// <summary>Se valorizzato, la cattura risponde con questo importo invece di quello dell'ordine (prova di manomissione).</summary>
     public string? ImportoCatturato { get; set; }
@@ -110,6 +125,23 @@ public sealed class PayPalFinto : HttpMessageHandler
             var richiesta = JsonNode.Parse(corpo)!;
             var valida = richiesta["transmission_sig"]?.GetValue<string>() == FirmaValida && !string.IsNullOrEmpty(richiesta["webhook_id"]?.GetValue<string>());
             return Risposta(HttpStatusCode.OK, new JsonObject { ["verification_status"] = valida ? "SUCCESS" : "FAILURE" });
+        }
+
+        const string prefissoCatture = "/v2/payments/captures/";
+        if (percorso.StartsWith(prefissoCatture, StringComparison.Ordinal) && percorso.EndsWith("/refund", StringComparison.Ordinal) && request.Method == HttpMethod.Post)
+        {
+            return Rimborsa(percorso[prefissoCatture.Length..^"/refund".Length], corpo, idRichiesta);
+        }
+
+        const string prefissoRimborsi = "/v2/payments/refunds/";
+        if (percorso.StartsWith(prefissoRimborsi, StringComparison.Ordinal) && request.Method == HttpMethod.Get)
+        {
+            lock (_blocco)
+            {
+                return _rimborsi.TryGetValue(percorso[prefissoRimborsi.Length..], out var rimborso)
+                    ? Risposta(HttpStatusCode.OK, new JsonObject { ["id"] = percorso[prefissoRimborsi.Length..], ["status"] = rimborso.Stato })
+                    : Risposta(HttpStatusCode.NotFound, new JsonObject { ["name"] = "RESOURCE_NOT_FOUND" });
+            }
         }
 
         const string prefisso = "/v2/checkout/orders/";
@@ -208,6 +240,40 @@ public sealed class PayPalFinto : HttpMessageHandler
         }
     }
 
+    private HttpResponseMessage Rimborsa(string idCattura, string corpo, string? idRichiesta)
+    {
+        lock (_blocco)
+        {
+            if (idRichiesta is not null && _rimborsiPerRichiesta.TryGetValue(idRichiesta, out var esistente))
+            {
+                return Risposta(HttpStatusCode.Created, new JsonObject { ["id"] = esistente, ["status"] = _rimborsi[esistente].Stato });
+            }
+
+            var ordine = _ordini.Values.FirstOrDefault(o => o.Catturato && $"CAP-{_ordini.First(x => x.Value == o).Key}" == idCattura);
+            if (ordine is null)
+            {
+                return Risposta(HttpStatusCode.NotFound, new JsonObject { ["name"] = "RESOURCE_NOT_FOUND" });
+            }
+
+            var importo = decimal.Parse(JsonNode.Parse(corpo)!["amount"]!["value"]!.GetValue<string>(), CultureInfo.InvariantCulture);
+            var incassato = decimal.Parse(ordine.ImportoCatturato, CultureInfo.InvariantCulture);
+            if (EsitoRimborso == "FAILED" || importo > incassato - ordine.Rimborsato)
+            {
+                return Errore422(importo > incassato - ordine.Rimborsato ? "REFUND_AMOUNT_EXCEEDED" : "REFUND_FAILED");
+            }
+
+            var id = $"REF-{Interlocked.Increment(ref _contatoreRimborsi):D4}";
+            ordine.Rimborsato += importo;
+            _rimborsi[id] = new RimborsoFinto { Stato = EsitoRimborso };
+            if (idRichiesta is not null)
+            {
+                _rimborsiPerRichiesta[idRichiesta] = id;
+            }
+
+            return Risposta(HttpStatusCode.Created, new JsonObject { ["id"] = id, ["status"] = EsitoRimborso });
+        }
+    }
+
     private static HttpResponseMessage Errore422(string problema) => Risposta(
         HttpStatusCode.UnprocessableEntity,
         new JsonObject { ["name"] = "UNPROCESSABLE_ENTITY", ["details"] = new JsonArray { new JsonObject { ["issue"] = problema } } });
@@ -273,6 +339,13 @@ public sealed class PayPalFinto : HttpMessageHandler
         public string ImportoCatturato { get; set; } = string.Empty;
 
         public string? IdRichiestaCattura { get; set; }
+
+        public decimal Rimborsato { get; set; }
+    }
+
+    private sealed class RimborsoFinto
+    {
+        public string Stato { get; set; } = "COMPLETED";
     }
 }
 

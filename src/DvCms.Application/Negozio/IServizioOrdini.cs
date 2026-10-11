@@ -40,6 +40,7 @@ public sealed record OrdineVista(
     decimal TotaleLordo,
     decimal TotaleImponibile,
     decimal TotaleIva,
+    decimal TotaleRimborsato,
     TipoMetodoSpedizione TipoSpedizione,
     AreaSpedizione? AreaSpedizione,
     string NomeSpedizione,

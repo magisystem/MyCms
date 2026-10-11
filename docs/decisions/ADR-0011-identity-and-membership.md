@@ -55,6 +55,8 @@ Gli account sono locali, con tabelle e logica proprie, senza ASP.NET Core Identi
 
 Possono emettere ordini gli account autenticati: `Utente`, `TenantAdmin` e `PlatformAdmin`. Il `Guest` no. Un `TenantAdmin` ordina solo nel proprio tenant; un `PlatformAdmin` in qualunque tenant. Usano le stesse credenziali dell'admin per autenticarsi sul sito pubblico, ma sul sito pubblico hanno solo capacità di acquirente. L'ordine registra account e tenant dell'acquirente.
 
+**Attuazione (approvata il 2026-10-11):** l'amministratore non ha un secondo accesso con la sola password: dalla sessione di amministrazione, già passata dalla verifica a due fattori, la voce «Acquista come cliente» gli rilascia la sessione dell'area cliente, il cui principal ha sempre il ruolo `Utente`. Così la 2FA non si aggira e il cookie dell'area cliente non dà alcun potere in `/admin`.
+
 ### Regole sugli account amministrativi
 
 1. Solo il `PlatformAdmin` può creare un account `TenantAdmin` o elevare un account a `TenantAdmin`.

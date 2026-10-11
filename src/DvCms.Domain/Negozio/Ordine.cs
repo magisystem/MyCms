@@ -18,6 +18,9 @@ public enum StatoOrdine
 
     /// <summary>Annullato prima del pagamento. Finale.</summary>
     Annullato = 6,
+
+    /// <summary>Interamente rimborsato (A5): la somma dei rimborsi completati è pari al totale. Finale. I rimborsi parziali lasciano lo stato com'è.</summary>
+    Rimborsato = 7,
 }
 
 /// <summary>
@@ -30,7 +33,8 @@ public static class TransizioniOrdine
     {
         StatoOrdine.InAttesaDiPagamento => [StatoOrdine.Pagato, StatoOrdine.PagamentoFallito, StatoOrdine.Annullato],
         StatoOrdine.PagamentoFallito => [StatoOrdine.InAttesaDiPagamento, StatoOrdine.Annullato],
-        StatoOrdine.Pagato => [StatoOrdine.Spedito, StatoOrdine.Ritirato],
+        StatoOrdine.Pagato => [StatoOrdine.Spedito, StatoOrdine.Ritirato, StatoOrdine.Rimborsato],
+        StatoOrdine.Spedito or StatoOrdine.Ritirato => [StatoOrdine.Rimborsato],
         _ => [],
     };
 
@@ -93,6 +97,9 @@ public class Ordine
 
     public decimal TotaleIva { get; set; }
 
+    /// <summary>Somma dei rimborsi richiesti e non falliti (completati o in corso): non supera mai il totale. Il database lo impone.</summary>
+    public decimal TotaleRimborsato { get; set; }
+
     // Copia del metodo di spedizione scelto e del suo importo (IVA ordinaria scorporata).
     public TipoMetodoSpedizione TipoSpedizione { get; set; }
 
@@ -131,6 +138,12 @@ public class Ordine
     public DateTime CreatoIlUtc { get; set; }
 
     public DateTime AggiornatoIlUtc { get; set; }
+
+    /// <summary>
+    /// Quando i dati personali della copia (email, nome, indirizzo) sono stati cancellati, a fine conservazione (A7): restano importi,
+    /// righe e paese, che servono alla contabilità. Nullo finché i dati personali ci sono.
+    /// </summary>
+    public DateTime? AnonimizzatoIlUtc { get; set; }
 
     public byte[] TokenConcorrenza { get; set; } = [];
 }

@@ -1,6 +1,6 @@
 # ADR-0020 — Politiche commerciali iniziali e pagamenti con PayPal
 
-- **Stato:** Accepted (decisioni del committente del 2026-10-11 per A1, A2, A3, A4, A6; A5 e A7 restano proposte)
+- **Stato:** Accepted (decisioni del committente del 2026-10-11 per A1–A7; A5 e A7 approvate nella stessa data con le proposte predefinite)
 - **Data:** 2026-10-11
 
 ## Contesto
@@ -16,12 +16,14 @@ ADR-0009 definisce il modulo commerce ma lascia aperti provider, mercati, impost
 5. **Spedizioni** (A4): **tariffa fissa per zona** (Italia, UE) più **ritiro in sede**, definite per sito; nessuna integrazione con i corrieri. La tariffa scelta e il suo importo entrano nello snapshot dell'ordine; IVA sulla spedizione con l'aliquota ordinaria.
 6. **Inventario** (A6): **prenotazione con scadenza di 15 minuti** all'avvio del checkout, rilascio su scadenza, fallimento o annullamento, conferma alla cattura del pagamento. La prenotazione è atomica a livello di database (aggiornamento condizionato sulla giacenza disponibile, mai lettura-poi-scrittura) e un processo periodico riconcilia prenotazioni scadute e pagamenti catturati.
 
-## Non ancora deciso (restano proposte)
+## Decisioni successive (approvate il 2026-10-11)
 
-- **A5 Resi e rimborsi:** proposta di rimborso totale o parziale dal pannello del tenant tramite il provider, con testo della politica di reso a cura del tenant.
-- **A7 Dati personali degli acquirenti:** proposta di conservare gli ordini 10 anni e anonimizzare i dati dell'account su richiesta mantenendo gli snapshot; informativa privacy a cura del tenant; da validare con un parere legale.
+7. **Resi e rimborsi** (A5): rimborso totale o parziale dal pannello del tenant, eseguito tramite il provider con richieste idempotenti e transizioni di stato esplicite; l'ordine diventa `Rimborsato` quando i rimborsi completati coprono il totale. Il testo della politica di reso e recesso (14 giorni UE) è a cura del tenant. La restituzione fisica della merce e il reinserimento in giacenza restano gestiti dal tenant (si imposta la quantità dalla pagina delle giacenze).
+8. **Dati personali degli acquirenti** (A7): ordini conservati **10 anni** (obblighi fiscali) con i dati commerciali essenziali; l'account si **anonimizza su richiesta** mantenendo gli snapshot degli ordini; scaduti i 10 anni anche i dati personali degli snapshot si anonimizzano; informativa privacy e cookie a cura del tenant. La formulazione legale delle informative resta responsabilità del tenant.
+9. **Macchina a stati dell'ordine**: approvata come descritta in `docs/architecture/ecommerce.md`, con la sola aggiunta degli stati di rimborso.
+10. **Amministratori come acquirenti** (ADR-0011): un `TenantAdmin` (nel proprio tenant) o un `PlatformAdmin` ottiene dalla sessione di amministrazione, già passata dalla verifica a due fattori, una sessione dell'area cliente con sola capacità di acquirente.
 
-Finché A5 e A7 non sono approvate non si abilita il checkout di produzione; il catalogo, il carrello, l'ordine con snapshot, la prenotazione e l'adapter PayPal (in *sandbox*) si sviluppano e si testano.
+Il checkout di produzione non è più bloccato dalle decisioni: si accende per installazione con la configurazione `Negozio:CheckoutProduzione=true`, dopo le verifiche di esercizio (credenziali del conto reale, webhook registrato, prova con un ordine reale di importo minimo).
 
 ## Conseguenze
 

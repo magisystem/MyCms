@@ -115,6 +115,9 @@ public sealed partial class ManutenzioneDati
         // Prenotazioni di giacenza scadute: liberano la merce e annullano gli ordini che non sono stati pagati.
         totale += await ambito.ServiceProvider.GetRequiredService<IServizioGiacenze>().RilasciaScaduteAsync(annullamento);
 
+        // Fine conservazione degli ordini (A7): si cancella la copia dei dati personali, restano importi e righe.
+        totale += await ambito.ServiceProvider.GetRequiredService<IServizioDatiPersonali>().AnonimizzaOrdiniScadutiAsync(annullamento);
+
         if (totale > 0)
         {
             RegistraRipulitura(_logger, totale);

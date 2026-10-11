@@ -692,7 +692,8 @@ public sealed class ServizioPiattaforma : IServizioPiattaforma
             }
 
             // Un acquirente che non ha ancora confermato l'email non si attiva a mano (avrebbe una password che nessuno conosce).
-            if (utenza.Stato == StatoUtenza.InAttesaDiConferma)
+            // Un account anonimizzato su richiesta (A7) non torna indietro: i dati personali non esistono più.
+            if (utenza.Stato is StatoUtenza.InAttesaDiConferma or StatoUtenza.Anonimizzata)
             {
                 return Esito.Non(CodiceEsito.NonConsentito);
             }

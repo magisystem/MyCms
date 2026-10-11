@@ -313,6 +313,9 @@ public class ServizioOrdiniTest
             (StatoOrdine.PagamentoFallito, StatoOrdine.Annullato, null),
             (StatoOrdine.Pagato, StatoOrdine.Spedito, TipoMetodoSpedizione.Zona),
             (StatoOrdine.Pagato, StatoOrdine.Ritirato, TipoMetodoSpedizione.Ritiro),
+            (StatoOrdine.Pagato, StatoOrdine.Rimborsato, null),
+            (StatoOrdine.Spedito, StatoOrdine.Rimborsato, null),
+            (StatoOrdine.Ritirato, StatoOrdine.Rimborsato, null),
         };
 
         foreach (var da in Enum.GetValues<StatoOrdine>())
@@ -327,7 +330,7 @@ public class ServizioOrdiniTest
             }
         }
 
-        Assert.All([StatoOrdine.Spedito, StatoOrdine.Ritirato, StatoOrdine.Annullato], s => Assert.True(TransizioniOrdine.EFinale(s)));
-        Assert.All([StatoOrdine.InAttesaDiPagamento, StatoOrdine.PagamentoFallito, StatoOrdine.Pagato], s => Assert.False(TransizioniOrdine.EFinale(s)));
+        Assert.All([StatoOrdine.Annullato, StatoOrdine.Rimborsato], s => Assert.True(TransizioniOrdine.EFinale(s)));
+        Assert.All([StatoOrdine.InAttesaDiPagamento, StatoOrdine.PagamentoFallito, StatoOrdine.Pagato, StatoOrdine.Spedito, StatoOrdine.Ritirato], s => Assert.False(TransizioniOrdine.EFinale(s)));
     }
 }

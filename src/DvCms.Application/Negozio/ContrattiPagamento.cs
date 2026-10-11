@@ -88,6 +88,19 @@ public enum StatoCatturaProvider
 
 public sealed record EsitoCatturaProvider(StatoCatturaProvider Stato, string? IdCattura, decimal? Importo, string? Valuta);
 
+public enum StatoRimborsoProvider
+{
+    Completato = 1,
+
+    /// <summary>Il provider lo sta elaborando: l'esito arriverà (webhook o rilettura).</summary>
+    InSospeso = 2,
+
+    /// <summary>Rifiutato o impossibile (ad esempio importo oltre quanto resta rimborsabile).</summary>
+    Fallito = 3,
+}
+
+public sealed record EsitoRimborsoProvider(StatoRimborsoProvider Stato, string? IdRimborso);
+
 /// <summary>Intestazioni con cui il provider firma un webhook.</summary>
 public sealed record IntestazioniWebhook(string AuthAlgo, string CertUrl, string TransmissionId, string TransmissionSig, string TransmissionTime);
 
@@ -121,6 +134,15 @@ public interface IProviderPagamento
 
     /// <summary>Stato attuale dell'ordine presso il provider (riconciliazione e cattura già avvenuta).</summary>
     Task<EsitoCatturaProvider> LeggiOrdineAsync(CredenzialiPayPal credenziali, string idProvider, CancellationToken annullamento);
+
+    /// <summary>
+    /// Rimborsa (in tutto o in parte) un incasso. <paramref name="idRichiesta"/> è l'identificativo di idempotenza: ripetere la richiesta
+    /// dopo una risposta persa non rimborsa due volte.
+    /// </summary>
+    Task<EsitoRimborsoProvider> RimborsaAsync(CredenzialiPayPal credenziali, string idCattura, decimal importo, string valuta, Guid idRichiesta, string? nota, CancellationToken annullamento);
+
+    /// <summary>Stato attuale di un rimborso presso il provider (riconciliazione dopo un webhook).</summary>
+    Task<EsitoRimborsoProvider> LeggiRimborsoAsync(CredenzialiPayPal credenziali, string idRimborso, CancellationToken annullamento);
 
     /// <summary>Verifica la firma di un webhook con il servizio del provider e l'identificativo del webhook del conto.</summary>
     Task<bool> VerificaWebhookAsync(CredenzialiPayPal credenziali, IntestazioniWebhook intestazioni, string corpo, CancellationToken annullamento);

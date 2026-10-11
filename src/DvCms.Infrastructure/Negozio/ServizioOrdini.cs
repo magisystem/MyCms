@@ -338,6 +338,7 @@ public sealed partial class ServizioOrdini : IServizioOrdini
             o.TotaleLordo,
             o.TotaleImponibile,
             o.TotaleIva,
+            o.TotaleRimborsato,
             o.TipoSpedizione,
             o.AreaSpedizione,
             o.NomeSpedizione,

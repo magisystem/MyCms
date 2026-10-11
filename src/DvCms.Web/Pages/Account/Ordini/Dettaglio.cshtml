@@ -41,6 +41,10 @@
         <tr><td colspan="3"><strong>@_L["Totale (IVA inclusa)"]</strong></td><td><strong>@Importo(o.TotaleLordo)</strong></td></tr>
     </tfoot>
 </table>
+@if (o.TotaleRimborsato > 0)
+{
+    <p>@_L["Rimborsato"]: <strong>@Importo(o.TotaleRimborsato)</strong></p>
+}
 @if (o.TipoSpedizione == TipoMetodoSpedizione.Ritiro)
 {
     <p>@_L["Ritiro in sede."]</p>

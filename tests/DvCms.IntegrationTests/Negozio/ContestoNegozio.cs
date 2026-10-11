@@ -170,6 +170,9 @@ internal sealed class ContestoNegozio : IAsyncDisposable
             .ExecuteUpdateAsync(x => x.SetProperty(u => u.Stato, StatoUtenza.Disabilitata), Ct);
     }
 
+    /// <summary>Disabilita un account qualsiasi (anche un amministratore), come farebbe il PlatformAdmin.</summary>
+    public async Task DisabilitaAccountAsync(Guid idAccount) => await DisabilitaAsync(idAccount);
+
     public async Task SpegniNegozioAsync(DatiProva.TenantCreato tenant)
     {
         await using var ambito = Web.Fabbrica.Services.CreateAsyncScope();
@@ -239,6 +242,29 @@ internal sealed class ContestoNegozio : IAsyncDisposable
         await using var ambito = Web.Fabbrica.Services.CreateAsyncScope();
         return await ambito.ServiceProvider.GetRequiredService<ContestoDatabase>().Ordini.IgnoreQueryFilters().AsNoTracking().Where(o => o.Id == idOrdine).Select(o => o.Stato).SingleAsync(Ct);
     }
+
+    public Task<T> ComeDatiPersonaliAsync<T>(DatiProva.TenantCreato tenant, Func<IServizioDatiPersonali, Task<T>> operazione) => InAsync<IServizioDatiPersonali, T>(tenant, operazione);
+
+    public async Task InvecchiaOrdineAsync(Guid idOrdine, DateTime aggiornatoIlUtc)
+    {
+        await using var ambito = Web.Fabbrica.Services.CreateAsyncScope();
+        await ambito.ServiceProvider.GetRequiredService<ContestoDatabase>().Ordini.IgnoreQueryFilters().Where(o => o.Id == idOrdine)
+            .ExecuteUpdateAsync(x => x.SetProperty(o => o.AggiornatoIlUtc, aggiornatoIlUtc), Ct);
+    }
+
+    public async Task<Ordine> OrdineAsync(Guid idOrdine)
+    {
+        await using var ambito = Web.Fabbrica.Services.CreateAsyncScope();
+        return await ambito.ServiceProvider.GetRequiredService<ContestoDatabase>().Ordini.IgnoreQueryFilters().AsNoTracking().SingleAsync(o => o.Id == idOrdine, Ct);
+    }
+
+    public async Task<Utenza> UtenzaAsync(Guid idAccount)
+    {
+        await using var ambito = Web.Fabbrica.Services.CreateAsyncScope();
+        return await ambito.ServiceProvider.GetRequiredService<ContestoDatabase>().Utenze.IgnoreQueryFilters().AsNoTracking().SingleAsync(u => u.Id == idAccount, Ct);
+    }
+
+    public Task<T> ComeRimborsiAsync<T>(DatiProva.TenantCreato tenant, Func<IServizioRimborsi, Task<T>> operazione) => InAsync<IServizioRimborsi, T>(tenant, operazione);
 
     public Task<T> ComePagamentiAsync<T>(DatiProva.TenantCreato tenant, Func<IServizioPagamenti, Task<T>> operazione) => InAsync<IServizioPagamenti, T>(tenant, operazione);
 

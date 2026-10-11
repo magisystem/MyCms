@@ -22,6 +22,12 @@ public enum StatoTentativoPagamento
     /// garantita): serve un rimborso manuale. Finché non è approvata la politica A5 non c'è un flusso di rimborso automatico.
     /// </summary>
     DaRimborsare = 6,
+
+    /// <summary>Rimborso dell'incasso avviato presso il provider, esito non ancora noto.</summary>
+    RimborsoInCorso = 7,
+
+    /// <summary>L'incasso che non poteva diventare un ordine pagato è stato restituito al cliente.</summary>
+    Rimborsato = 8,
 }
 
 /// <summary>
@@ -52,6 +58,9 @@ public class TentativoPagamento
 
     /// <summary>Identificativo dell'incasso presso il provider, quando c'è.</summary>
     public string? IdCattura { get; set; }
+
+    /// <summary>Quanto il provider ha davvero incassato (può differire da <see cref="Importo"/> se qualcosa è andato storto): è l'importo massimo rimborsabile di questo incasso.</summary>
+    public decimal? ImportoIncassato { get; set; }
 
     public DateTime CreatoIlUtc { get; set; }
 
@@ -84,4 +93,56 @@ public class EventoWebhook
     public string Esito { get; set; } = EsitoRicevuto;
 
     public DateTime RicevutoIlUtc { get; set; }
+}
+
+public enum StatoRimborso
+{
+    /// <summary>Richiesto al provider, esito non ancora noto (in sospeso presso il provider o risposta non arrivata). L'importo resta impegnato.</summary>
+    InCorso = 1,
+
+    Completato = 2,
+
+    /// <summary>Rifiutato dal provider: l'importo torna disponibile.</summary>
+    Fallito = 3,
+}
+
+/// <summary>
+/// Rimborso totale o parziale di un incasso (A5, ADR-0020), richiesto dal tenant e eseguito dal provider. L'identificativo è anche il
+/// <c>PayPal-Request-Id</c>: ripetere la richiesta (ad esempio dopo una risposta persa) non rimborsa due volte. Un rimborso non si
+/// cancella: si conclude o fallisce.
+/// </summary>
+public class Rimborso
+{
+    public const int LunghezzaMassimaMotivo = 200;
+
+    public Guid Id { get; set; }
+
+    public Guid IdTenant { get; set; }
+
+    public Guid IdSito { get; set; }
+
+    public Guid IdOrdine { get; set; }
+
+    public Guid IdTentativo { get; set; }
+
+    /// <summary>Vero se restituisce un incasso che non era diventato un ordine pagato (nessun conteggio sull'ordine, che non è mai risultato pagato).</summary>
+    public bool IncassoOrfano { get; set; }
+
+    public decimal Importo { get; set; }
+
+    public string Valuta { get; set; } = VarianteProdotto.ValutaPredefinita;
+
+    /// <summary>Motivo indicato dal tenant; se presente lo si comunica anche a PayPal come nota per il cliente.</summary>
+    public string? Motivo { get; set; }
+
+    public StatoRimborso Stato { get; set; } = StatoRimborso.InCorso;
+
+    /// <summary>Identificativo del rimborso presso il provider, quando c'è.</summary>
+    public string? IdProvider { get; set; }
+
+    public Guid IdUtenzaRichiedente { get; set; }
+
+    public DateTime CreatoIlUtc { get; set; }
+
+    public DateTime AggiornatoIlUtc { get; set; }
 }

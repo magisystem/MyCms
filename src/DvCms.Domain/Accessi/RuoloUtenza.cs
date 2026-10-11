@@ -22,4 +22,7 @@ public enum StatoUtenza
 
     /// <summary>Acquirente registrato che non ha ancora confermato l'email e scelto la password: non può accedere.</summary>
     InAttesaDiConferma = 3,
+
+    /// <summary>Acquirente il cui account è stato anonimizzato su richiesta (A7): la riga resta solo perché gli ordini la referenziano; non può più accedere.</summary>
+    Anonimizzata = 4,
 }

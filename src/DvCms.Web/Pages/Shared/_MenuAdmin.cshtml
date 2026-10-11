@@ -49,6 +49,14 @@
             </a>
         </li>
         <li class="nav-item">
+            <form method="post" asp-page="/Admin/Negozio/Acquista" class="m-0">
+                <button type="submit" class="nav-link btn btn-link text-start w-100" title="@_L["Entra nel sito pubblico con la capacità di acquirente"]">
+                    <span class="nav-link-icon"><i class="ti ti-shopping-bag"></i></span>
+                    <span class="nav-link-title">@_L["Acquista come cliente"]</span>
+                </button>
+            </form>
+        </li>
+        <li class="nav-item">
             <a class="nav-link" href="/admin/negozio/ordini">
                 <span class="nav-link-icon"><i class="ti ti-receipt"></i></span>
                 <span class="nav-link-title">@_L["Ordini"]</span>

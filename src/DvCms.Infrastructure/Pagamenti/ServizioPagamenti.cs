@@ -27,6 +27,7 @@ public sealed partial class ServizioPagamenti : IServizioPagamenti
     private readonly IServizioGiacenze _giacenze;
     private readonly IServizioAudit _audit;
     private readonly NotificheOrdine _notifiche;
+    private readonly IServizioRimborsi _rimborsi;
     private readonly OpzioniNegozio _opzioni;
     private readonly TimeProvider _orologio;
     private readonly ILogger<ServizioPagamenti> _logger;
@@ -39,6 +40,7 @@ public sealed partial class ServizioPagamenti : IServizioPagamenti
         IServizioGiacenze giacenze,
         IServizioAudit audit,
         NotificheOrdine notifiche,
+        IServizioRimborsi rimborsi,
         OpzioniNegozio opzioni,
         TimeProvider orologio,
         ILogger<ServizioPagamenti> logger)
@@ -50,6 +52,7 @@ public sealed partial class ServizioPagamenti : IServizioPagamenti
         _giacenze = giacenze;
         _audit = audit;
         _notifiche = notifiche;
+        _rimborsi = rimborsi;
         _opzioni = opzioni;
         _orologio = orologio;
         _logger = logger;
@@ -198,12 +201,14 @@ public sealed partial class ServizioPagamenti : IServizioPagamenti
         string? idEvento;
         string? tipo;
         string? idOrdineProvider;
+        string? idRisorsa;
         try
         {
             using var documento = JsonDocument.Parse(corpo);
             var radice = documento.RootElement;
             idEvento = Testo(radice, "id");
             tipo = Testo(radice, "event_type");
+            idRisorsa = radice.TryGetProperty("resource", out var risorsaEvento) ? Testo(risorsaEvento, "id") : null;
             idOrdineProvider = radice.TryGetProperty("resource", out var risorsa) && risorsa.ValueKind == JsonValueKind.Object
                 ? (tipo is not null && tipo.StartsWith("CHECKOUT.ORDER.", StringComparison.Ordinal)
                     ? Testo(risorsa, "id")
@@ -268,6 +273,28 @@ public sealed partial class ServizioPagamenti : IServizioPagamenti
                 if (applicato == RisultatoPagamento.ErroreProvider)
                 {
                     return EsitoWebhook.ErroreProvider;
+                }
+
+                esito = EventoWebhook.EsitoElaborato;
+                break;
+            case "PAYMENT.CAPTURE.REFUNDED" or "PAYMENT.REFUND.COMPLETED" or "PAYMENT.REFUND.FAILED" or "PAYMENT.REFUND.CANCELLED":
+                // Il contenuto dell'evento non decide nulla: il rimborso si rilegge dal provider. Uno non richiesto da qui (ad esempio fatto
+                // direttamente dal conto PayPal) non si conosce e si ignora.
+                bool conosciuto;
+                try
+                {
+                    conosciuto = idRisorsa is not null && await _rimborsi.AllineaDaProviderAsync(idRisorsa, annullamento);
+                }
+                catch (ProviderPagamentoException)
+                {
+                    return EsitoWebhook.ErroreProvider;
+                }
+
+                if (!conosciuto)
+                {
+                    esito = EventoWebhook.EsitoScartato;
+                    risultato = EsitoWebhook.Ignorato;
+                    break;
                 }
 
                 esito = EventoWebhook.EsitoElaborato;
@@ -393,13 +420,13 @@ public sealed partial class ServizioPagamenti : IServizioPagamenti
         // Incassato. Prima di dichiarare pagato l'ordine si controlla che il provider abbia incassato esattamente quanto dovuto.
         if (esito.Importo != ordine.TotaleLordo || !string.Equals(esito.Valuta, ordine.Valuta, StringComparison.Ordinal))
         {
-            await ImpostaTentativoAsync(tentativo.Id, StatoTentativoPagamento.DaRimborsare, esito.IdCattura, _incassabili, annullamento);
+            await ImpostaTentativoAsync(tentativo.Id, StatoTentativoPagamento.DaRimborsare, esito.IdCattura, _incassabili, annullamento, esito.Importo);
             await _audit.RegistraAsync(AzioniAudit.PagamentoDaRimborsare, $"Ordine:{ordine.Id}", RegistroAudit.EsitoNegato, idTenant, null, $"ordine {ordine.Numero}: importo incassato diverso da quello dovuto", annullamento);
             return RisultatoPagamento.DaRimborsare;
         }
 
         await using var tx = await _contesto.Database.BeginTransactionAsync(annullamento);
-        var presa = await ImpostaTentativoAsync(tentativo.Id, StatoTentativoPagamento.Catturato, esito.IdCattura, _incassabili, annullamento);
+        var presa = await ImpostaTentativoAsync(tentativo.Id, StatoTentativoPagamento.Catturato, esito.IdCattura, _incassabili, annullamento, esito.Importo);
         if (!presa)
         {
             // Un altro processo (ritorno del cliente o webhook) l'ha già trattato: si legge com'è finito.
@@ -418,7 +445,7 @@ public sealed partial class ServizioPagamenti : IServizioPagamenti
             // Incassato ma l'ordine è stato chiuso nel frattempo, o la merce non è più riservata: nulla va confermato, serve un rimborso.
             await tx.RollbackAsync(annullamento);
             _contesto.ChangeTracker.Clear();
-            await ImpostaTentativoAsync(tentativo.Id, StatoTentativoPagamento.DaRimborsare, esito.IdCattura, _incassabili, annullamento);
+            await ImpostaTentativoAsync(tentativo.Id, StatoTentativoPagamento.DaRimborsare, esito.IdCattura, _incassabili, annullamento, esito.Importo);
             await _audit.RegistraAsync(AzioniAudit.PagamentoDaRimborsare, $"Ordine:{ordine.Id}", RegistroAudit.EsitoNegato, idTenant, null, $"ordine {ordine.Numero}: incassato ma ordine chiuso o merce non più riservata", annullamento);
             return RisultatoPagamento.DaRimborsare;
         }
@@ -432,12 +459,12 @@ public sealed partial class ServizioPagamenti : IServizioPagamenti
     }
 
     /// <summary>Cambia lo stato del tentativo solo se è ancora uno di quelli di partenza. Vero se l'ha cambiato questa chiamata.</summary>
-    private async Task<bool> ImpostaTentativoAsync(Guid idTentativo, StatoTentativoPagamento nuovo, string? idCattura, StatoTentativoPagamento[] daStati, CancellationToken annullamento)
+    private async Task<bool> ImpostaTentativoAsync(Guid idTentativo, StatoTentativoPagamento nuovo, string? idCattura, StatoTentativoPagamento[] daStati, CancellationToken annullamento, decimal? importoIncassato = null)
     {
         var adesso = _orologio.GetUtcNow().UtcDateTime;
         var cambiati = await _contesto.TentativiPagamento
             .Where(t => t.Id == idTentativo && daStati.Contains(t.Stato))
-            .ExecuteUpdateAsync(s => s.SetProperty(t => t.Stato, nuovo).SetProperty(t => t.IdCattura, t => idCattura ?? t.IdCattura).SetProperty(t => t.AggiornatoIlUtc, adesso), annullamento);
+            .ExecuteUpdateAsync(s => s.SetProperty(t => t.Stato, nuovo).SetProperty(t => t.IdCattura, t => idCattura ?? t.IdCattura).SetProperty(t => t.ImportoIncassato, t => importoIncassato ?? t.ImportoIncassato).SetProperty(t => t.AggiornatoIlUtc, adesso), annullamento);
         return cambiati > 0;
     }
 

@@ -1094,6 +1094,9 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.Property<DateTime>("AggiornatoIlUtc")
                         .HasColumnType("datetime2");
 
+                    b.Property<DateTime?>("AnonimizzatoIlUtc")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("AreaSpedizione")
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
@@ -1201,6 +1204,10 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<decimal>("TotaleRimborsato")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<string>("Valuta")
                         .IsRequired()
                         .HasMaxLength(3)
@@ -1208,6 +1215,9 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                         .IsFixedLength();
 
                     b.HasKey("Id");
+
+                    b.HasIndex("AggiornatoIlUtc")
+                        .HasFilter("[AnonimizzatoIlUtc] IS NULL");
 
                     b.HasIndex("IdUtenza");
 
@@ -1219,6 +1229,8 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.ToTable("Ordini", null, t =>
                         {
                             t.HasCheckConstraint("CK_Ordini_Consegna", "([TipoSpedizione] = 'Ritiro' AND [Paese] IS NULL AND [AreaSpedizione] IS NULL AND [SpedizioneLorda] = 0) OR ([TipoSpedizione] = 'Zona' AND [Paese] IS NOT NULL AND [AreaSpedizione] IS NOT NULL)");
+
+                            t.HasCheckConstraint("CK_Ordini_Rimborsato", "[TotaleRimborsato] >= 0 AND [TotaleRimborsato] <= [TotaleLordo]");
 
                             t.HasCheckConstraint("CK_Ordini_Totali", "[TotaleLordo] = [TotaleImponibile] + [TotaleIva] AND [SpedizioneLorda] = [SpedizioneImponibile] + [SpedizioneIva] AND [TotaleLordo] >= [SpedizioneLorda]");
                         });
@@ -1417,6 +1429,77 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                         });
                 });
 
+            modelBuilder.Entity("DvCms.Domain.Negozio.Rimborso", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("AggiornatoIlUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatoIlUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("IdOrdine")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("IdProvider")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<Guid>("IdSito")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdTenant")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdTentativo")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdUtenzaRichiedente")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("Importo")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<bool>("IncassoOrfano")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Motivo")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Stato")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Valuta")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("nchar(3)")
+                        .IsFixedLength();
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdOrdine");
+
+                    b.HasIndex("IdTentativo");
+
+                    b.HasIndex("IdUtenzaRichiedente");
+
+                    b.HasIndex("IdSito", "IdProvider")
+                        .HasFilter("[IdProvider] IS NOT NULL");
+
+                    b.HasIndex("IdTenant", "IdSito", "IdOrdine");
+
+                    b.ToTable("Rimborsi", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Rimborsi_Importo", "[Importo] > 0");
+                        });
+                });
+
             modelBuilder.Entity("DvCms.Domain.Negozio.TentativoPagamento", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1447,6 +1530,10 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<decimal>("Importo")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("ImportoIncassato")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
@@ -2255,6 +2342,28 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
 
             modelBuilder.Entity("DvCms.Domain.Negozio.RigaOrdine", b =>
                 {
+                    b.HasOne("DvCms.Domain.Negozio.Ordine", null)
+                        .WithMany()
+                        .HasForeignKey("IdTenant", "IdSito", "IdOrdine")
+                        .HasPrincipalKey("IdTenant", "IdSito", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DvCms.Domain.Negozio.Rimborso", b =>
+                {
+                    b.HasOne("DvCms.Domain.Negozio.TentativoPagamento", null)
+                        .WithMany()
+                        .HasForeignKey("IdTentativo")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("DvCms.Domain.Accessi.Utenza", null)
+                        .WithMany()
+                        .HasForeignKey("IdUtenzaRichiedente")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("DvCms.Domain.Negozio.Ordine", null)
                         .WithMany()
                         .HasForeignKey("IdTenant", "IdSito", "IdOrdine")

@@ -1,0 +1,21 @@
+@inject DvCms.Application.Cms.IServizioPaginePubbliche PaginePubbliche
+@inject DvCms.Application.Localizzazione.IContestoLingua ContestoLinguaPie
+@{
+    // Informativa privacy e condizioni di reso sono pagine normali del sito, scritte dal tenant con gli slug convenzionali
+    // «privacy» e «resi»: il collegamento compare solo se la pagina è pubblicata (ADR-0020, A5 e A7).
+    var privacy = await PaginePubbliche.TrovaAsync("privacy", ContestoLinguaPie.CodiceLingua, Context.RequestAborted);
+    var resi = await PaginePubbliche.TrovaAsync("resi", ContestoLinguaPie.CodiceLingua, Context.RequestAborted);
+}
+@if (privacy is not null || resi is not null)
+{
+    <footer class="dv-vetrina-piede">
+        @if (privacy is not null)
+        {
+            <a href="@privacy.Percorso">@_L["Informativa sulla privacy"]</a>
+        }
+        @if (resi is not null)
+        {
+            <a href="@resi.Percorso">@_L["Resi e rimborsi"]</a>
+        }
+    </footer>
+}

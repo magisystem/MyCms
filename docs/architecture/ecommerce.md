@@ -30,7 +30,8 @@ E-commerce è un modulo interno con modelli, servizi e transizioni di dominio pr
 - **Area cliente:** cookie `.DvCms.Cliente` (percorso `/`, legato all'host, distinto da quello dell'admin) e schema `DvCmsCliente`; vale solo per `Utente` (il validatore scarta ogni altro ruolo e ricontrolla a ogni richiesta account attivo, timbro di sicurezza e tenant dell'host). L'accesso cliente non cerca nemmeno gli account amministrativi (nessun effetto sui loro contatori, nessun audit di piattaforma). Richieste limitate come l'accesso admin; `/account/esci` richiede la sessione (il token antiforgery è legato all'utente).
 - **Manutenzione:** gli account mai confermati si eliminano dopo 7 giorni (e, a cascata, i loro link), così l'indirizzo torna libero.
 - **Recupero password:** la pagina di accesso cliente ha «Password dimenticata?». Il flusso (codice e collegamento in due email) è lo stesso dell'amministrazione, con l'aspetto dell'accesso admin, ma con la provenienza `da=account` (valore fisso, qualunque altro è ignorato): si parte dall'accesso cliente, il collegamento dell'email lo porta con sé e tutti i «torna all'accesso» e «vai all'accesso» puntano a `/account/accesso`.
-- **Ancora da fare:** accesso degli amministratori come acquirenti (ADR-0011) e pagine di recupero con l'aspetto dell'area cliente.
+- **Amministratori come acquirenti (ADR-0011):** un `TenantAdmin` del tenant o un `PlatformAdmin` usa la voce di menu «Acquista come cliente» (`POST /admin/negozio/acquista`): dalla sessione di amministrazione, già passata dalla verifica a due fattori, ottiene la sessione dell'area cliente. Non esiste un secondo accesso con la sola password. Sul sito pubblico il principal ha **sempre il ruolo `Utente`** (solo capacità di acquirente) e il cookie non vale nulla in `/admin`; la sessione cliente cade con la disabilitazione dell'account e con il cambio password (timbro di sicurezza) e non vale su un altro tenant. L'ordine registra l'account dell'amministratore; l'ingresso è nell'audit.
+- **Ancora da fare:** pagine di recupero con l'aspetto dell'area cliente.
 
 ## Carrello e totali (M7.3, F-002)
 
@@ -63,7 +64,7 @@ E-commerce è un modulo interno con modelli, servizi e transizioni di dominio pr
 - Applicare isolamento tenant a catalogo, carrello, ordine, cliente, inventario e webhook.
 - Evitare double-submit e race condition sulla giacenza, usando transazioni/concurrency control.
 
-## Eventi e stati (proposta, M7.5)
+## Eventi e stati (approvata il 2026-10-11)
 
 Gli stati sono un'enumerazione chiusa (`StatoOrdine`) e **ogni passaggio** passa da `TransizioniOrdine` (dominio): un passaggio non elencato non esiste. Lo stato non si modifica con un'assegnazione libera.
 
@@ -76,10 +77,11 @@ Gli stati sono un'enumerazione chiusa (`StatoOrdine`) e **ogni passaggio** passa
 | `PagamentoFallito` | `Annullato` | il cliente annulla, o scade la prenotazione |
 | `Pagato` | `Spedito` | il tenant segna la spedizione (solo metodo a zona) |
 | `Pagato` | `Ritirato` | il tenant segna il ritiro (solo metodo ritiro) |
+| `Pagato`, `Spedito`, `Ritirato` | `Rimborsato` | i rimborsi completati coprono il totale (A5); i rimborsi parziali non cambiano lo stato |
 
-`Spedito`, `Ritirato` e `Annullato` sono **finali**. Un ordine pagato non si annulla: si rimborsa, e gli stati di rimborso (`RimborsoInCorso`, `Rimborsato`, con i passaggi `Pagato` → `RimborsoInCorso` → `Rimborsato`) si aggiungono solo quando sarà approvata la politica A5. Un tentativo di pagamento è un'entità a parte (`TentativoPagamento`, M7.7); l'ordine cambia stato solo in risposta a esiti verificati (cattura lato server o webhook firmato e deduplicato), mai su dichiarazione del browser. Ogni transizione è una scrittura con controllo di concorrenza (`TokenConcorrenza`) e finisce nell'audit.
+`Annullato` e `Rimborsato` sono **finali**; `Spedito` e `Ritirato` possono ancora diventare `Rimborsato`. Un ordine pagato non si annulla: si rimborsa (sezione Rimborsi). Un tentativo di pagamento è un'entità a parte (`TentativoPagamento`, M7.7); l'ordine cambia stato solo in risposta a esiti verificati (cattura lato server o webhook firmato e deduplicato), mai su dichiarazione del browser. Ogni transizione è una scrittura con controllo di concorrenza (`TokenConcorrenza`) e finisce nell'audit.
 
-**Da approvare** dal committente (vedi `docs/decisioni-da-confermare.md`, C): questa tabella, in particolare l'assenza di annullamento di un ordine pagato e di uno stato "in preparazione".
+**Approvata** dal committente il 2026-10-11 (A5: rimborsi). Ogni transizione è una scrittura condizionale e finisce nell'audit.
 
 ## Ordini (M7.5, F-003)
 
@@ -89,7 +91,7 @@ Gli stati sono un'enumerazione chiusa (`StatoOrdine`) e **ogni passaggio** passa
 - **Creazione** (`IServizioOrdini.CreaDaCarrelloAsync`, un'unica transazione): il cliente invia solo metodo di spedizione, indirizzo e il totale che ha visto. Il server rilegge carrello e catalogo, ricalcola tutto, rifiuta (`Conflitto`) se il totale visto è diverso o se un articolo non è più disponibile, valida l'indirizzo (obbligatorio per la consegna con paese nell'area del metodo; scartato per il ritiro), svuota il carrello e crea l'ordine. Due invii della stessa cassa creano un solo ordine (le righe del carrello si tolgono per prime e devono essere tutte quelle lette). La giacenza gestita si prenota nella stessa transazione (sezione Giacenza e prenotazioni).
 - **Chi:** ordinano gli account autenticati e attivi come per il carrello; ognuno vede e annulla solo i propri ordini (un ordine altrui è `404`, come uno inesistente). Il cliente può annullare solo un ordine non ancora pagato.
 - **Pagine:** `/account/checkout` (cassa), `/account/ordini`, `/account/ordini/{id}` (con annullamento); in amministrazione `/admin/negozio/ordini` e `/admin/negozio/ordini/{id}`, **sola lettura** (gli ultimi 200 ordini; le azioni di evasione arrivano con il pagamento). L'indirizzo si scrive in campi di testo con il paese come codice a due lettere (un elenco di nomi dei paesi è un miglioramento successivo).
-- **Non ancora:** email di conferma ordine, evasione (`Spedito`/`Ritirato`) dall'amministrazione, accesso degli amministratori come acquirenti dall'area cliente (ADR-0011: il servizio li ammette già, l'area cliente oggi apre solo agli `Utente`).
+- **Non ancora:** (vedi le sezioni successive: pagamenti, rimborsi, dati personali).
 
 ## Giacenza e prenotazioni (M7.6, F-005, ADR-0020)
 
@@ -114,10 +116,10 @@ Gli stati sono un'enumerazione chiusa (`StatoOrdine`) e **ogni passaggio** passa
 - **Pagato solo a condizioni.** L'ordine diventa `Pagato` solo se il provider ha incassato **esattamente** l'importo e la valuta dovuti; nella stessa transazione la prenotazione di giacenza si conferma. Se l'importo è diverso, o l'ordine è stato chiuso nel frattempo, o la merce non è più riservata, il tentativo diventa `DaRimborsare` (in evidenza nella vista amministrativa) e l'ordine non risulta pagato: finché non è approvata la politica A5 il rimborso è manuale dal conto PayPal del negozio.
 - **Webhook** (`POST /webhooks/paypal` sul dominio del sito, pubblico): corpo limitato a 256 KB; senza le cinque intestazioni di firma → 401; la **firma si verifica con il servizio del provider** e l'identificativo del webhook del conto prima di leggere il contenuto (firma non valida → 401, errore del provider → 503 perché lo ripeta). L'evento si **deduplica** (`EventiWebhook`, indice unico sito+provider+evento; non si conserva il contenuto, che può avere dati personali del cliente): uno già elaborato non fa nulla, uno ricevuto ma mai concluso si rielabora. Il contenuto non decide nulla: per `CHECKOUT.ORDER.APPROVED` il server incassa, per `PAYMENT.CAPTURE.COMPLETED/DENIED/DECLINED` rilegge lo stato dal provider. Eventi di altri tipi o riferiti a pagamenti sconosciuti → 200 ignorati.
 - **Concorrenza.** Ritorno del cliente e webhook possono arrivare insieme, ripetuti o in disordine: ogni passaggio (tentativo, ordine, giacenza) è un aggiornamento condizionale, quindi si incassa e si conferma una volta sola (test con tre elaborazioni in parallelo).
-- **Checkout di produzione bloccato per costruzione.** Con credenziali in ambiente di produzione il pagamento non parte finché la configurazione `Negozio:CheckoutProduzione` non è `true` (predefinito falso): si abilita solo dopo l'approvazione di A5 e A7. Il Sandbox funziona sempre.
+- **Checkout di produzione per installazione.** Con credenziali in ambiente di produzione il pagamento non parte finché la configurazione `Negozio:CheckoutProduzione` non è `true` (predefinito falso): è un interruttore di esercizio che si accende dopo le verifiche (A5 e A7 sono approvate). Il Sandbox funziona sempre.
 - **Email di conferma:** quando l'ordine risulta pagato si accoda nell'outbox, **nella stessa transazione** del pagamento, una email al cliente (articoli, spedizione, totale, indirizzo o ritiro, collegamento all'ordine sul dominio del sito), cifrata a riposo perché contiene l'indirizzo e nella lingua in cui il cliente ha acquistato (`Ordine.CodiceLingua`, solo se abilitata nel sito, altrimenti la predefinita). Un solo messaggio per ordine (chiave di idempotenza); se il tenant non ha un canale email configurato non si accoda nulla e il pagamento non ne dipende. Il collegamento usa `https`: in sviluppo con porte o http il link va corretto a mano.
 - **Evasione:** in `/admin/negozio/ordini/{id}` il tenant vede i tentativi di pagamento e, per un ordine pagato, segna «spedito» (consegna) o «ritirato» (ritiro in sede) con un passaggio condizionale e audit.
-- **Non ancora:** rimborsi (A5), riconciliazione periodica con il provider per gli incassi mai notificati, pagamenti di ordini a totale zero, mostrare i pagamenti nell'elenco ordini.
+- **Non ancora:** riconciliazione periodica con il provider per gli incassi mai notificati, pagamenti di ordini a totale zero, mostrare i pagamenti nell'elenco ordini.
 
 ## Vetrina pubblica (M7.8, F-001)
 
@@ -127,6 +129,24 @@ Gli stati sono un'enumerazione chiusa (`StatoOrdine`) e **ogni passaggio** passa
 - **Aggiungi al carrello:** l'acquirente autenticato vede un modulo che invia a `/account/carrello?handler=Aggiungi` **solo identificativo della variante e quantità** (prezzi e totali restano calcolati dal server); la pagina assume l'identità dell'acquirente prima di emettere il token antiforgery, che è legato all'utente. L'anonimo vede il collegamento «Accedi per acquistare» (con ritorno alla scheda).
 - **Non ancora:** categorie e collezioni, ricerca, immagini dei prodotti, voce di menu verso `/negozio` nei temi, indicizzazione/sitemap dei prodotti, componenti `negozio.*` del page builder (richiedono una nuova versione del registro dei componenti e del modello: si fanno come slice a sé).
 
+## Rimborsi (A5, approvati il 2026-10-11)
+
+- **Dal pannello del tenant** (`/admin/negozio/ordini/{id}`): rimborso totale o parziale di un ordine pagato, spedito o ritirato; importo facoltativo (vuoto = tutto ciò che resta), al più due decimali e mai oltre quanto resta; motivo facoltativo (≤200 caratteri) che si comunica anche al cliente come nota di PayPal. Solo `TenantAdmin` del tenant o `PlatformAdmin`, ruolo riverificato a ogni operazione, audit di richiesta ed esito.
+- **Importo impegnato prima del provider.** `Ordini.TotaleRimborsato` si incrementa con un aggiornamento condizionale (il database impone `0 ≤ rimborsato ≤ totale`) **prima** di chiamare PayPal: richieste concorrenti non possono rimborsare più del totale (test con quattro richieste in parallelo). Un rifiuto del provider libera l'importo.
+- **Idempotenza ed esito incerto.** Il rimborso (`Rimborsi`) ha come identificativo il `PayPal-Request-Id`. Se la risposta si perde o PayPal lo sta ancora elaborando, il rimborso resta «in corso» con l'importo impegnato e il pulsante «Verifica l'esito» (o il webhook `PAYMENT.CAPTURE.REFUNDED` / `PAYMENT.REFUND.*`, che rilegge lo stato dal provider) lo conclude senza rimborsare due volte. Un rimborso fatto direttamente dal conto PayPal, non richiesto da qui, non si conosce e il webhook lo ignora.
+- **Stato dell'ordine.** Diventa `Rimborsato` (finale) quando i rimborsi completati coprono il totale; i parziali lo lasciano com'è e il cliente vede «Rimborsato: X». A rimborso completato parte una email al cliente (stessa cifratura e lingua dell'ordine).
+- **Incasso da rimborsare.** Un incasso che non ha potuto diventare un ordine pagato (importo diverso, ordine chiuso, merce non più riservata) si restituisce dal pulsante «Rimborsa l'incasso» (importo realmente incassato, `TentativiPagamento.ImportoIncassato`); non tocca l'ordine.
+- **Non ancora:** reinserimento automatico in giacenza (lo fa il tenant), rimborsi per articolo, riconciliazione dei rimborsi fatti fuori dal sistema.
+
+## Dati personali degli acquirenti (A7, approvati il 2026-10-11)
+
+- **Pagina «I miei dati»** (`/account/dati`, area cliente): scarica in JSON i dati dell'account e dei propri ordini (portabilità); elimina l'account con riconferma della password e casella di conferma. La riconferma conta i tentativi falliti come un accesso (stesso blocco temporaneo). Un amministratore che compra con la sessione cliente (ADR-0011) non si elimina da qui.
+- **Anonimizzazione dell'account** (`IServizioDatiPersonali`): email e nome sono sostituiti da valori non riconducibili (`anonimo-<id>@anonimizzato.invalid`, «Account eliminato»), la password diventa inutilizzabile, il secondo fattore e i token pendenti (conferme, recuperi) si cancellano, lo stato diventa `Anonimizzata` (irreversibile: neppure il `PlatformAdmin` la riattiva) e il carrello si svuota. La riga dell'account resta perché gli ordini la referenziano. Gli **ordini non pagati si annullano** nella stessa transazione e liberano la giacenza; gli ordini **pagati restano** con la copia dei dati, per gli obblighi fiscali. L'indirizzo email torna libero per una nuova registrazione.
+- **A richiesta dell'interessato a un amministratore:** dal dettaglio di un ordine (`/admin/negozio/ordini/{id}`, sezione «Dati personali dell'acquirente») il `TenantAdmin` del tenant o il `PlatformAdmin` anonimizza l'account di chi ha fatto l'ordine, senza password e con audit.
+- **Conservazione degli ordini:** `Negozio:ConservazioneOrdiniAnni` (predefinito **10**). La manutenzione periodica (`ManutenzioneDati`) anonimizza, in tutti i tenant, gli ordini non modificati da più di quel numero di anni: email, nome e indirizzo si cancellano (`Ordini.AnonimizzatoIlUtc`), restano numero, date, stato, importi, righe e paese, che servono alla contabilità. Operazione idempotente, con audit per tenant.
+- **Informative:** privacy e condizioni di reso sono **pagine normali del sito, scritte dal tenant**, con gli slug convenzionali `privacy` e `resi`: se la pagina è pubblicata nella lingua della richiesta, il piè di pagina della vetrina e dell'area cliente la collega (altrimenti nessun collegamento). Il sistema non fornisce testi legali.
+- **Non ancora:** esportazione in PDF, richiesta di cancellazione per email dal modulo di contatto, registro dei consensi per le comunicazioni commerciali (il negozio invia solo email transazionali).
+
 ## Integrazione con il builder
 
 I componenti `negozio.*` referenziano prodotto/collezione/query tipizzata, non copiano il catalogo nel documento. Il renderer chiama il modulo Store attraverso servizi applicativi. Un'anteprima senza dati reali deve essere chiaramente distinta dal checkout reale.
@@ -135,10 +155,4 @@ I componenti `negozio.*` referenziano prodotto/collezione/query tipizzata, non c
 
 Decise con [ADR-0020](../decisions/ADR-0020-commerce-policies-and-paypal.md): provider **PayPal** (Orders v2, webhook con firma verificata e deduplicati, credenziali per tenant cifrate), solo **EUR** con prezzi **IVA inclusa** e aliquota per prodotto, **tariffa fissa per zona e ritiro in sede**, **prenotazione della giacenza con scadenza di 15 minuti**.
 
-## Decisioni ancora aperte
-
-- Politica resi e rimborsi (proposta: rimborso totale o parziale dal pannello, tramite il provider).
-- Gestione dei dati personali degli acquirenti, conservazione e obblighi legali (proposta: ordini 10 anni, account anonimizzabile su richiesta).
-- Approvazione della macchina a stati dell'ordine proposta sopra.
-
-Non implementare checkout di produzione finché le decisioni pertinenti non sono approvate e testate.
+Tutte le decisioni commerciali sono prese (ADR-0020, voci 1–10): provider, mercati, IVA, spedizioni, inventario, rimborsi, dati personali, macchina a stati, amministratori come acquirenti. Restano scelte di esercizio (credenziali del conto reale, registrazione del webhook, accensione di `Negozio:CheckoutProduzione`) e le rifiniture elencate sotto «Non ancora» in ogni sezione.

@@ -52,6 +52,13 @@ public static class AzioniAudit
     public const string PagamentoRifiutato = "PagamentoRifiutato";
     public const string PagamentoDaRimborsare = "PagamentoDaRimborsare";
     public const string EvasioneOrdine = "EvasioneOrdine";
+    public const string AccessoAdminComeAcquirente = "AccessoAdminComeAcquirente";
+    public const string AnonimizzazioneAccount = "AnonimizzazioneAccount";
+    public const string EsportazioneDatiPersonali = "EsportazioneDatiPersonali";
+    public const string AnonimizzazioneOrdini = "AnonimizzazioneOrdini";
+    public const string RichiestaRimborso = "RichiestaRimborso";
+    public const string RimborsoCompletato = "RimborsoCompletato";
+    public const string RimborsoRifiutato = "RimborsoRifiutato";
     public const string ImpostazioneGiacenza = "ImpostazioneGiacenza";
     public const string ImpostazioneCommercio = "ImpostazioneCommercio";
     public const string CreazioneProdotto = "CreazioneProdotto";

@@ -2,11 +2,13 @@
 
 Data: 2026-10-11. Raccoglie tutto ciò che è stato rimandato "alla fine" perché non bloccava il lavoro (`docs/open-questions.md`, rischi accettati in `docs/operations/revisione-sicurezza.md`, obiettivi in `docs/operations/backup-e-ripristino.md`, decisioni di esercizio emerse in M6) e le decisioni che **bloccano M7**. Per ogni voce c'è una proposta predefinita: se va bene basta dire "ok" e la si registra (con un ADR dove cambia un'architettura).
 
-Stato di avanzamento: M0–M6 completate (M5 page builder con exit criteria soddisfatti, M6 con sonde, metriche, baseline); M7 e-commerce bloccato da A; M8 (pilot) dipende da B.
+Stato di avanzamento: M0–M6 completate (M5 page builder con exit criteria soddisfatti, M6 con sonde, metriche, baseline); M7 e-commerce implementato (le decisioni A sono tutte prese); M8 (pilot) dipende dalle voci B, approvate con le proposte predefinite e da eseguire sull'ambiente reale.
+
+**Approvazioni del committente del 2026-10-11:** A5 (resi e rimborsi), A7 (dati personali), macchina a stati dell'ordine, ADR-0011 (amministratori come acquirenti) e tutte le voci delle sezioni B e C con le proposte predefinite indicate.
 
 ## A. Bloccanti per M7 (e-commerce): `docs/architecture/ecommerce.md`, ADR-0009, ADR-0020
 
-**Decise il 2026-10-11** ([ADR-0020](decisions/ADR-0020-commerce-policies-and-paypal.md)): A1 **PayPal**, A2+A3 **solo EUR, IVA inclusa**, A4 **tariffa fissa per zona + ritiro**, A6 **prenotazione con scadenza 15 minuti**. **Restano da decidere A5 (resi e rimborsi) e A7 (dati personali)**: bloccano solo l'abilitazione del checkout di produzione, non lo sviluppo.
+**Tutte decise il 2026-10-11** ([ADR-0020](decisions/ADR-0020-commerce-policies-and-paypal.md)): A1 **PayPal**, A2+A3 **solo EUR, IVA inclusa**, A4 **tariffa fissa per zona + ritiro**, A6 **prenotazione con scadenza 15 minuti**. **Restano da decidere A5 (resi e rimborsi) e A7 (dati personali)**: bloccano solo l'abilitazione del checkout di produzione, non lo sviluppo.
 
 Senza queste non si implementa il checkout di produzione (regola del progetto). Si può invece iniziare subito la parte che non dipende da esse (catalogo e varianti con traduzioni, registrazione degli acquirenti, carrello e totali lato server).
 
@@ -21,6 +23,8 @@ Senza queste non si implementa il checkout di produzione (regola del progetto). 
 | A7 | **Dati personali degli acquirenti** | Account obbligatorio per ordinare (già deciso, ADR-0011); ordini conservati 10 anni (obblighi fiscali), dati dell'account cancellabili/anonimizzabili su richiesta mantenendo gli snapshot degli ordini; informativa privacy e cookie a cura del tenant | Valutazione legale (GDPR) prima del pilot |
 
 ## B. Da confermare prima del pilot (M8) o della produzione
+
+**Approvate il 2026-10-11 con le proposte predefinite**: restano da eseguire/verificare sull'ambiente reale.
 
 | # | Voce | Proposta predefinita | Dove |
 |---|---|---|---|
@@ -37,6 +41,8 @@ Senza queste non si implementa il checkout di produzione (regola del progetto). 
 | B10 | **SSO/OIDC** per clienti enterprise | Fuori dal primo rilascio: solo account locali con 2FA | `open-questions.md` |
 
 ## C. Rimandate, non bloccanti (si decidono quando serve)
+
+**Approvate il 2026-10-11 come indicate** (le proposte predefinite valgono finché non servono).
 
 - **Page builder:** `backbone-undo` (dipendenza transitiva di GrapesJS, non più mantenuta, senza vulnerabilità note: rivalutare a ogni aggiornamento di GrapesJS); migrazione dei documenti fra versioni di template e di schema (oggi si cambia versione solo se il documento è già valido per la nuova); testo alternativo delle immagini per lingua collegato alla libreria media (ADR-0018); estensioni del testo formattato (titoli interni, tabelle, immagini in linea) con nuovi vettori di prova o con componenti dedicati.
 - **Accessibilità:** prova con screen reader reali e audit WCAG automatico dell'editor (nuova dipendenza da valutare con la regola 11), contrasti dell'interfaccia dell'editor, spostamento da tastiera di un componente in un altro contenitore; requisiti di accessibilità dettagliati e design system.

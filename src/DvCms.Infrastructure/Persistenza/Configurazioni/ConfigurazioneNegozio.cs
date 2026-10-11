@@ -166,6 +166,7 @@ internal sealed class ConfigurazioneOrdine : IEntityTypeConfiguration<Ordine>
         entita.ToTable("Ordini", tabella =>
         {
             tabella.HasCheckConstraint("CK_Ordini_Totali", "[TotaleLordo] = [TotaleImponibile] + [TotaleIva] AND [SpedizioneLorda] = [SpedizioneImponibile] + [SpedizioneIva] AND [TotaleLordo] >= [SpedizioneLorda]");
+            tabella.HasCheckConstraint("CK_Ordini_Rimborsato", "[TotaleRimborsato] >= 0 AND [TotaleRimborsato] <= [TotaleLordo]");
             tabella.HasCheckConstraint("CK_Ordini_Consegna", "([TipoSpedizione] = 'Ritiro' AND [Paese] IS NULL AND [AreaSpedizione] IS NULL AND [SpedizioneLorda] = 0) OR ([TipoSpedizione] = 'Zona' AND [Paese] IS NOT NULL AND [AreaSpedizione] IS NOT NULL)");
         });
         entita.HasKey(ordine => ordine.Id);
@@ -177,6 +178,7 @@ internal sealed class ConfigurazioneOrdine : IEntityTypeConfiguration<Ordine>
         entita.Property(ordine => ordine.TotaleLordo).HasPrecision(18, 2);
         entita.Property(ordine => ordine.TotaleImponibile).HasPrecision(18, 2);
         entita.Property(ordine => ordine.TotaleIva).HasPrecision(18, 2);
+        entita.Property(ordine => ordine.TotaleRimborsato).HasPrecision(18, 2);
         entita.Property(ordine => ordine.TipoSpedizione).HasConversion<string>().HasMaxLength(20).IsRequired();
         entita.Property(ordine => ordine.AreaSpedizione).HasConversion<string>().HasMaxLength(20);
         entita.Property(ordine => ordine.NomeSpedizione).HasMaxLength(MetodoSpedizione.LunghezzaMassimaNome).IsRequired();
@@ -192,6 +194,7 @@ internal sealed class ConfigurazioneOrdine : IEntityTypeConfiguration<Ordine>
         entita.Property(ordine => ordine.Citta).HasMaxLength(Ordine.LunghezzaMassimaCitta);
         entita.Property(ordine => ordine.Paese).HasMaxLength(2).IsFixedLength();
         entita.Property(ordine => ordine.PrenotazioneScadeIlUtc);
+        entita.Property(ordine => ordine.AnonimizzatoIlUtc);
 
         entita.HasOne<Sito>()
             .WithMany()
@@ -203,6 +206,7 @@ internal sealed class ConfigurazioneOrdine : IEntityTypeConfiguration<Ordine>
         entita.HasAlternateKey(ordine => new { ordine.IdTenant, ordine.IdSito, ordine.Id });
         entita.HasIndex(ordine => new { ordine.IdSito, ordine.Numero }).IsUnique();
         entita.HasIndex(ordine => new { ordine.IdSito, ordine.IdUtenza, ordine.CreatoIlUtc });
+        entita.HasIndex(ordine => ordine.AggiornatoIlUtc).HasFilter("[AnonimizzatoIlUtc] IS NULL");
     }
 }
 
@@ -322,6 +326,7 @@ internal sealed class ConfigurazioneTentativoPagamento : IEntityTypeConfiguratio
         entita.Property(tentativo => tentativo.IdProvider).HasMaxLength(64).IsRequired();
         entita.Property(tentativo => tentativo.IdCattura).HasMaxLength(64);
         entita.Property(tentativo => tentativo.Importo).HasPrecision(18, 2);
+        entita.Property(tentativo => tentativo.ImportoIncassato).HasPrecision(18, 2);
         entita.Property(tentativo => tentativo.Valuta).HasMaxLength(3).IsFixedLength().IsRequired();
         entita.Property(tentativo => tentativo.Stato).HasConversion<string>().HasMaxLength(20).IsRequired();
 
@@ -354,5 +359,30 @@ internal sealed class ConfigurazioneEventoWebhook : IEntityTypeConfiguration<Eve
             .OnDelete(DeleteBehavior.Restrict);
         // La deduplica: lo stesso evento dello stesso provider non si registra due volte nello stesso sito.
         entita.HasIndex(evento => new { evento.IdSito, evento.Provider, evento.IdEvento }).IsUnique();
+    }
+}
+
+internal sealed class ConfigurazioneRimborso : IEntityTypeConfiguration<Rimborso>
+{
+    public void Configure(EntityTypeBuilder<Rimborso> entita)
+    {
+        entita.ToTable("Rimborsi", tabella => tabella.HasCheckConstraint("CK_Rimborsi_Importo", "[Importo] > 0"));
+        entita.HasKey(rimborso => rimborso.Id);
+        entita.Property(rimborso => rimborso.Id).ValueGeneratedNever();
+        entita.Property(rimborso => rimborso.Importo).HasPrecision(18, 2);
+        entita.Property(rimborso => rimborso.Valuta).HasMaxLength(3).IsFixedLength().IsRequired();
+        entita.Property(rimborso => rimborso.Motivo).HasMaxLength(Rimborso.LunghezzaMassimaMotivo);
+        entita.Property(rimborso => rimborso.Stato).HasConversion<string>().HasMaxLength(20).IsRequired();
+        entita.Property(rimborso => rimborso.IdProvider).HasMaxLength(64);
+
+        entita.HasOne<Ordine>()
+            .WithMany()
+            .HasForeignKey(rimborso => new { rimborso.IdTenant, rimborso.IdSito, rimborso.IdOrdine })
+            .HasPrincipalKey(ordine => new { ordine.IdTenant, ordine.IdSito, ordine.Id })
+            .OnDelete(DeleteBehavior.Restrict);
+        entita.HasOne<TentativoPagamento>().WithMany().HasForeignKey(rimborso => rimborso.IdTentativo).OnDelete(DeleteBehavior.Restrict);
+        entita.HasOne<DvCms.Domain.Accessi.Utenza>().WithMany().HasForeignKey(rimborso => rimborso.IdUtenzaRichiedente).OnDelete(DeleteBehavior.Restrict);
+        entita.HasIndex(rimborso => rimborso.IdOrdine);
+        entita.HasIndex(rimborso => new { rimborso.IdSito, rimborso.IdProvider }).HasFilter("[IdProvider] IS NOT NULL");
     }
 }

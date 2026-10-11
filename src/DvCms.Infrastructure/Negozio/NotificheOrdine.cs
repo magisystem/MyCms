@@ -90,6 +90,46 @@ public sealed class NotificheOrdine
         return true;
     }
 
+    /// <summary>Accoda l'avviso di un rimborso concluso. Non salva: lo fa chi chiama, nella sua transazione. Vero se l'ha accodato.</summary>
+    public async Task<bool> AccodaRimborsoAsync(Ordine ordine, Rimborso rimborso, bool totale, CancellationToken annullamento)
+    {
+        ArgumentNullException.ThrowIfNull(ordine);
+        ArgumentNullException.ThrowIfNull(rimborso);
+
+        var idTenant = _tenant.IdTenant;
+        if (!await _contesto.ImpostazioniEmailTenant.IgnoreQueryFilters().AsNoTracking().AnyAsync(i => i.IdTenant == idTenant, annullamento))
+        {
+            return false;
+        }
+
+        var nomeSito = await _contesto.Siti.AsNoTracking().Where(s => s.Id == ordine.IdSito).Select(s => s.Nome).SingleAsync(annullamento);
+        var lingua = ordine.CodiceLingua;
+        var importo = $"{rimborso.Importo.ToString("N2", Cultura(lingua))} {rimborso.Valuta}";
+        var testo = new StringBuilder();
+        if (totale)
+        {
+            testo.AppendLine(_localizzatore.TraduciIn(lingua, "Abbiamo rimborsato per intero l'ordine n. {0} su {1}: {2}.", ordine.Numero, nomeSito, importo));
+        }
+        else
+        {
+            testo.AppendLine(_localizzatore.TraduciIn(lingua, "Abbiamo rimborsato una parte dell'ordine n. {0} su {1}: {2}.", ordine.Numero, nomeSito, importo));
+        }
+
+        if (!string.IsNullOrEmpty(rimborso.Motivo))
+        {
+            testo.AppendLine(_localizzatore.TraduciIn(lingua, "Motivo: {0}", rimborso.Motivo));
+        }
+
+        testo.AppendLine(_localizzatore.TraduciIn(lingua, "L'accredito sul metodo di pagamento che hai usato può richiedere alcuni giorni."));
+        testo.AppendLine(_localizzatore.TraduciIn(lingua, "Puoi consultare l'ordine qui: {0}", $"https://{_tenant.Host}/account/ordini/{ordine.Id:D}"));
+        _email.Accoda(
+            idTenant,
+            new MessaggioEmail(ordine.EmailAcquirente, ordine.NomeAcquirente, _localizzatore.TraduciIn(lingua, "Rimborso per l'ordine n. {0} - {1}", ordine.Numero, nomeSito), testo.ToString()),
+            chiaveIdempotenza: $"rimborso:{rimborso.Id:D}",
+            riservato: true);
+        return true;
+    }
+
     private static CultureInfo Cultura(string codiceLingua)
     {
         try

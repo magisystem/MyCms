@@ -1,0 +1,44 @@
+@page "/account/dati"
+@model DvCms.Web.Pages.Account.DatiModel
+@{
+    ViewData["Titolo"] = _L["I miei dati"];
+}
+@if (Model.Eliminato)
+{
+    <h1>@_L["Account eliminato"]</h1>
+    <p>@_L["Il tuo account è stato eliminato e non puoi più accedere. Gli ordini già pagati restano conservati, senza collegamento al tuo account, per gli obblighi di legge; gli ordini non pagati sono stati annullati."]</p>
+    <p><a href="/">@_L["Torna al sito"]</a></p>
+}
+else
+{
+    <h1>@_L["I miei dati"]</h1>
+    <h2>@_L["Copia dei tuoi dati"]</h2>
+    <p>@_L["Scarica in un file JSON i dati del tuo account e dei tuoi ordini."]</p>
+    <p><a href="/account/dati?handler=Esporta" download>@_L["Scarica i miei dati"]</a></p>
+
+    <h2>@_L["Elimina il mio account"]</h2>
+    <p>@_L["Cancelliamo email, nome, password e carrello e annulliamo gli ordini non ancora pagati. Gli ordini già pagati restano conservati per gli obblighi di legge (10 anni), poi anche i dati personali negli ordini vengono cancellati. L'operazione non si può annullare."]</p>
+    @if (Model.Errore == "password")
+    {
+        <p role="alert">@_L["La password non è corretta."]</p>
+    }
+    else if (Model.Errore == "confermo")
+    {
+        <p role="alert">@_L["Spunta la casella per confermare."]</p>
+    }
+    else if (Model.Errore == "nonconsentito")
+    {
+        <p role="alert">@_L["Questo account non si può eliminare da qui."]</p>
+    }
+    <form method="post" asp-page-handler="Elimina">
+        <p>
+            <label for="Password">@_L["Password"]</label>
+            <input id="Password" name="Password" type="password" autocomplete="current-password" required />
+        </p>
+        <p>
+            <label><input type="checkbox" name="Confermo" value="true" /> @_L["Confermo di voler eliminare il mio account"]</label>
+        </p>
+        <button type="submit">@_L["Elimina il mio account"]</button>
+    </form>
+    <nav><a href="/account">@_L["Il mio account"]</a></nav>
+}

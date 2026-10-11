@@ -147,6 +147,57 @@ public sealed partial class ClientePayPal : IProviderPagamento
         return risposta.IsSuccessStatusCode ? Interpreta(json) : throw Errore(risposta);
     }
 
+    public async Task<EsitoRimborsoProvider> RimborsaAsync(CredenzialiPayPal credenziali, string idCattura, decimal importo, string valuta, Guid idRichiesta, string? nota, CancellationToken annullamento)
+    {
+        ArgumentNullException.ThrowIfNull(credenziali);
+        ControllaId(idCattura);
+        if (importo <= 0 || !string.Equals(valuta, VarianteProdotto.ValutaPredefinita, StringComparison.Ordinal))
+        {
+            throw new ArgumentException("Importo o valuta del rimborso non validi.", nameof(importo));
+        }
+
+        var corpo = new JsonObject
+        {
+            ["amount"] = new JsonObject
+            {
+                ["currency_code"] = valuta,
+                ["value"] = importo.ToString("0.00", CultureInfo.InvariantCulture),
+            },
+        };
+        if (!string.IsNullOrWhiteSpace(nota))
+        {
+            corpo["note_to_payer"] = Tronca(nota.Trim(), 255);
+        }
+
+        using var client = _fabbrica.CreateClient(NomeClientHttp);
+        var token = await OttieniTokenAsync(client, credenziali, annullamento);
+        using var messaggio = Costruisci(HttpMethod.Post, credenziali, $"/v2/payments/captures/{idCattura}/refund", token, corpo.ToJsonString(), idRichiesta);
+        using var risposta = await InviaAsync(client, messaggio, annullamento);
+        var json = await LeggiGiornaleAsync(risposta, annullamento);
+        if (risposta.IsSuccessStatusCode)
+        {
+            return InterpretaRimborso(json);
+        }
+
+        // Un rifiuto motivato (importo oltre il rimborsabile, incasso già rimborsato, conto non abilitato) è un esito, non un guasto.
+        return risposta.StatusCode == HttpStatusCode.UnprocessableEntity || risposta.StatusCode == HttpStatusCode.Forbidden
+            ? new EsitoRimborsoProvider(StatoRimborsoProvider.Fallito, null)
+            : throw Errore(risposta);
+    }
+
+    public async Task<EsitoRimborsoProvider> LeggiRimborsoAsync(CredenzialiPayPal credenziali, string idRimborso, CancellationToken annullamento)
+    {
+        ArgumentNullException.ThrowIfNull(credenziali);
+        ControllaId(idRimborso);
+
+        using var client = _fabbrica.CreateClient(NomeClientHttp);
+        var token = await OttieniTokenAsync(client, credenziali, annullamento);
+        using var messaggio = Costruisci(HttpMethod.Get, credenziali, $"/v2/payments/refunds/{idRimborso}", token, null, null);
+        using var risposta = await InviaAsync(client, messaggio, annullamento);
+        var json = await LeggiGiornaleAsync(risposta, annullamento);
+        return risposta.IsSuccessStatusCode ? InterpretaRimborso(json) : throw Errore(risposta);
+    }
+
     public async Task<bool> VerificaWebhookAsync(CredenzialiPayPal credenziali, IntestazioniWebhook intestazioni, string corpo, CancellationToken annullamento)
     {
         ArgumentNullException.ThrowIfNull(credenziali);
@@ -337,6 +388,19 @@ public sealed partial class ClientePayPal : IProviderPagamento
             _ => StatoCatturaProvider.InSospeso,
         };
         return new EsitoCatturaProvider(risultato, id, importo, valuta);
+    }
+
+    private static EsitoRimborsoProvider InterpretaRimborso(JsonElement json)
+    {
+        var id = json.TryGetProperty("id", out var i) ? i.GetString() : null;
+        var stato = json.TryGetProperty("status", out var s) ? s.GetString() : null;
+        var risultato = stato switch
+        {
+            "COMPLETED" => StatoRimborsoProvider.Completato,
+            "FAILED" or "CANCELLED" => StatoRimborsoProvider.Fallito,
+            _ => StatoRimborsoProvider.InSospeso,
+        };
+        return new EsitoRimborsoProvider(risultato, IdProviderValido(id) ? id : null);
     }
 
     private static bool OspiteFidato(Uri uri) =>
