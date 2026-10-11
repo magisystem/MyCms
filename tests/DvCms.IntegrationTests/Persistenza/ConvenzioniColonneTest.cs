@@ -104,6 +104,7 @@ public class ConvenzioniColonneTest
             modelBuilder.Ignore<DvCms.Domain.Media.TraduzioneRisorsaMedia>();
             modelBuilder.Ignore<DvCms.Domain.Negozio.TraduzioneProdotto>();
             modelBuilder.Ignore<DvCms.Domain.Negozio.TraduzioneVarianteProdotto>();
+            modelBuilder.Ignore<DvCms.Domain.Negozio.RigaCarrello>();
             var entita = modelBuilder.Entity<ElementoProva>();
             entita.ToTable("ElementiProva");
             entita.Property(elemento => elemento.Id).ValueGeneratedNever();

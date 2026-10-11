@@ -96,6 +96,10 @@ public class ContestoDatabase : DbContext
 
     public DbSet<TraduzioneVarianteProdotto> TraduzioniVarianteProdotto => Set<TraduzioneVarianteProdotto>();
 
+    public DbSet<Carrello> Carrelli => Set<Carrello>();
+
+    public DbSet<RigaCarrello> RigheCarrello => Set<RigaCarrello>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         ArgumentNullException.ThrowIfNull(modelBuilder);
@@ -124,6 +128,8 @@ public class ContestoDatabase : DbContext
         modelBuilder.Entity<VarianteProdotto>().HasQueryFilter(variante => variante.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<TraduzioneProdotto>().HasQueryFilter(traduzione => traduzione.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<TraduzioneVarianteProdotto>().HasQueryFilter(traduzione => traduzione.IdTenant == IdTenantCorrente);
+        modelBuilder.Entity<Carrello>().HasQueryFilter(carrello => carrello.IdTenant == IdTenantCorrente);
+        modelBuilder.Entity<RigaCarrello>().HasQueryFilter(riga => riga.IdTenant == IdTenantCorrente);
     }
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)

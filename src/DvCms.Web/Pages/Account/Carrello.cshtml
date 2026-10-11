@@ -1,0 +1,74 @@
+@page "/account/carrello"
+@model DvCms.Web.Pages.Account.CarrelloModel
+@{
+    ViewData["Titolo"] = _L["Carrello"];
+    string Importo(decimal valore) => $"{valore.ToString("N2", Model.Cultura)} {Model.Vista.Valuta}";
+}
+<h1>@_L["Il tuo carrello"]</h1>
+@if (Model.Errore is not null)
+{
+    <p class="errore" role="alert">@Model.Errore</p>
+}
+@if (Model.Vista.Righe.Count == 0 && Model.Vista.NonDisponibili.Count == 0)
+{
+    <p>@_L["Il carrello è vuoto."]</p>
+}
+else
+{
+    <table>
+        <thead>
+            <tr>
+                <th>@_L["Articolo"]</th>
+                <th>@_L["Prezzo"]</th>
+                <th>@_L["Quantità"]</th>
+                <th>@_L["Totale"]</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var riga in Model.Vista.Righe)
+            {
+                <tr>
+                    <td>@riga.NomeProdotto@(riga.EtichettaVariante is { Length: > 0 } etichetta ? " — " + etichetta : null) <small>(@riga.Sku)</small></td>
+                    <td>@Importo(riga.PrezzoUnitarioLordo)</td>
+                    <td>
+                        <form method="post" asp-page-handler="Quantita">
+                            <input type="hidden" name="idVariante" value="@riga.IdVariante" />
+                            <label class="visually-hidden" for="qta-@riga.IdVariante">@_L["Quantità"]</label>
+                            <input type="number" id="qta-@riga.IdVariante" name="quantita" value="@riga.Quantita" min="0" max="99" />
+                            <button type="submit">@_L["Aggiorna"]</button>
+                        </form>
+                    </td>
+                    <td>@Importo(riga.Lordo)</td>
+                    <td>
+                        <form method="post" asp-page-handler="Rimuovi">
+                            <input type="hidden" name="idVariante" value="@riga.IdVariante" />
+                            <button type="submit">@_L["Rimuovi"]</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+            @foreach (var idVariante in Model.Vista.NonDisponibili)
+            {
+                <tr>
+                    <td colspan="4">@_L["Articolo non più disponibile: non è compreso nel totale."]</td>
+                    <td>
+                        <form method="post" asp-page-handler="Rimuovi">
+                            <input type="hidden" name="idVariante" value="@idVariante" />
+                            <button type="submit">@_L["Rimuovi"]</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+        <tfoot>
+            <tr><td colspan="3">@_L["Imponibile"]</td><td colspan="2">@Importo(Model.Vista.TotaleImponibile)</td></tr>
+            <tr><td colspan="3">@_L["IVA"]</td><td colspan="2">@Importo(Model.Vista.TotaleIva)</td></tr>
+            <tr><td colspan="3"><strong>@_L["Totale (IVA inclusa)"]</strong></td><td colspan="2"><strong>@Importo(Model.Vista.TotaleLordo)</strong></td></tr>
+        </tfoot>
+    </table>
+    <form method="post" asp-page-handler="Svuota">
+        <button type="submit">@_L["Svuota il carrello"]</button>
+    </form>
+}
+<nav><a href="/account">@_L["Il mio account"]</a></nav>

@@ -145,6 +145,7 @@ Le voci sono candidate a issue GitHub. Ogni issue deve essere piccola, verificab
 **Accettazione:** tenant-scoped prodotti/varianti/prezzi; denaro con decimal e valuta; test accesso.
 
 ### F-002: Carrello e calcolo totale
+**Stato:** completata in M7.3 (`docs/architecture/ecommerce.md`); la spedizione entra nei totali con la slice dell'ordine.
 **Accettazione:** totali sempre ricalcolati server-side; prezzo manomesso dal client ignorato; l'ordine richiede un account autenticato (`Utente`, `TenantAdmin` o `PlatformAdmin`); il `Guest` non può ordinare.
 
 ### F-003: Ordine snapshot

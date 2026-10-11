@@ -216,6 +216,7 @@ public static class EstensioniServizi
 
         servizi.TryAddScoped<IServizioMedia, ServizioMedia>();
         servizi.TryAddScoped<IServizioCatalogo, ServizioCatalogo>();
+        servizi.TryAddScoped<IServizioCarrello, ServizioCarrello>();
         servizi.TryAddScoped<VerificatoreArchivio>();
     }
 

@@ -92,3 +92,45 @@ internal sealed class ConfigurazioneTraduzioneVarianteProdotto : IEntityTypeConf
         entita.HasOne<Lingua>().WithMany().HasForeignKey(traduzione => traduzione.IdLingua).OnDelete(DeleteBehavior.Restrict);
     }
 }
+
+internal sealed class ConfigurazioneCarrello : IEntityTypeConfiguration<Carrello>
+{
+    public void Configure(EntityTypeBuilder<Carrello> entita)
+    {
+        entita.ToTable("Carrelli");
+        entita.HasKey(carrello => carrello.Id);
+        entita.Property(carrello => carrello.Id).ValueGeneratedNever();
+        entita.Property(carrello => carrello.TokenConcorrenza).IsRowVersion();
+
+        entita.HasOne<Sito>()
+            .WithMany()
+            .HasForeignKey(carrello => new { carrello.IdTenant, carrello.IdSito })
+            .HasPrincipalKey(sito => new { sito.IdTenant, sito.Id })
+            .OnDelete(DeleteBehavior.Restrict);
+        entita.HasOne<DvCms.Domain.Accessi.Utenza>().WithMany().HasForeignKey(carrello => carrello.IdUtenza).OnDelete(DeleteBehavior.Restrict);
+
+        entita.HasAlternateKey(carrello => new { carrello.IdTenant, carrello.IdSito, carrello.Id });
+        // Un solo carrello per account e per sito.
+        entita.HasIndex(carrello => new { carrello.IdSito, carrello.IdUtenza }).IsUnique();
+    }
+}
+
+internal sealed class ConfigurazioneRigaCarrello : IEntityTypeConfiguration<RigaCarrello>
+{
+    public void Configure(EntityTypeBuilder<RigaCarrello> entita)
+    {
+        entita.ToTable("RigheCarrello", tabella => tabella.HasCheckConstraint("CK_RigheCarrello_Quantita", "[Quantita] BETWEEN 1 AND 99"));
+        entita.HasKey(riga => new { riga.IdCarrello, riga.IdVariante });
+
+        entita.HasOne<Carrello>()
+            .WithMany()
+            .HasForeignKey(riga => new { riga.IdTenant, riga.IdSito, riga.IdCarrello })
+            .HasPrincipalKey(carrello => new { carrello.IdTenant, carrello.IdSito, carrello.Id })
+            .OnDelete(DeleteBehavior.Restrict);
+        entita.HasOne<VarianteProdotto>()
+            .WithMany()
+            .HasForeignKey(riga => new { riga.IdTenant, riga.IdSito, riga.IdVariante })
+            .HasPrincipalKey(variante => new { variante.IdTenant, variante.IdSito, variante.Id })
+            .OnDelete(DeleteBehavior.Restrict);
+    }
+}

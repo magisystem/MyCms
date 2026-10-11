@@ -55,7 +55,7 @@ h1 {
 }
 
 /* Area cliente (registrazione, accesso, account). */
-.dv-account { max-width: 26rem; }
+.dv-account { max-width: 40rem; }
 .dv-account-sito { margin: 0 0 1rem; font-weight: 700; }
 .dv-account label { display: block; margin: 0.75rem 0 0.25rem; font-weight: 600; }
 .dv-account input[type="text"], .dv-account input[type="email"], .dv-account input[type="password"] { width: 100%; box-sizing: border-box; padding: 0.5rem; font: inherit; }
@@ -63,3 +63,8 @@ h1 {
 .dv-account .errore { padding: 0.5rem 0.75rem; color: #7f1d1d; background: #fee2e2; }
 .dv-account .avviso { padding: 0.5rem 0.75rem; color: #14532d; background: #dcfce7; }
 .dv-account nav { margin-top: 1.5rem; }
+.dv-account table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+.dv-account th, .dv-account td { padding: 0.4rem; text-align: left; vertical-align: top; }
+.dv-account tfoot td { border-top: 1px solid #cbd2d9; }
+.dv-account input[type="number"] { width: 4.5rem; padding: 0.3rem; font: inherit; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }

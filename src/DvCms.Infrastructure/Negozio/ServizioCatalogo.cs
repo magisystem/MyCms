@@ -251,6 +251,9 @@ public sealed class ServizioCatalogo : IServizioCatalogo
         {
             var idVecchie = vecchie.Select(v => v.Id).ToList();
             _contesto.TraduzioniVarianteProdotto.RemoveRange(await _contesto.TraduzioniVarianteProdotto.Where(t => idVecchie.Contains(t.IdVariante)).ToListAsync(annullamento));
+            // Le righe dei carrelli (temporanee) che puntano a una variante tolta si tolgono con lei; gli ordini, quando ci saranno,
+            // conservano i loro snapshot e una variante già ordinata si disattiva soltanto.
+            _contesto.RigheCarrello.RemoveRange(await _contesto.RigheCarrello.Where(r => idVecchie.Contains(r.IdVariante)).ToListAsync(annullamento));
             _contesto.VariantiProdotto.RemoveRange(vecchie);
         }
 
