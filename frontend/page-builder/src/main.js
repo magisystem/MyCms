@@ -9,6 +9,7 @@ import { registraComponenti, creaBlocchi } from './catalogo.js';
 import { applicaVincoli, regolaRadice } from './vincoli.js';
 import { creaInterfaccia } from './interfaccia.js';
 import { Salvataggio } from './salvataggio.js';
+import { migliora } from './proprieta.js';
 import { creaAzioni, creaStruttura, nomeComponente, nomiCampiProprieta, rendiBlocchiAccessibili } from './tastiera.js';
 
 async function avvia() {
@@ -27,6 +28,7 @@ async function avvia() {
   };
   config.testi.componenti = JSON.parse(config.testi.componenti || '{}');
   config.testi.campi = JSON.parse(config.testi.campi || '{}');
+  config.testi.gruppi = JSON.parse(config.testi.gruppi || '{}');
 
   const ui = creaInterfaccia(radice, config);
   ui.creaDispositivi(config.testi, (id) => window.dvEditor?.setDevice(id));
@@ -87,6 +89,7 @@ async function avvia() {
   const contestoTastiera = { testi: config.testi, definizioni, vincoli: stato.vincoli, annuncia: ui.annuncia, vaiAProprieta: ui.vaiAProprieta };
   rendiBlocchiAccessibili(ui.contenitoreBlocchi, config.testi);
   nomiCampiProprieta(ui.contenitoreProprieta);
+  migliora(ui.contenitoreProprieta, editor, config.testi);
   creaStruttura(editor, ui.contenitoreStruttura, contestoTastiera);
   creaAzioni(editor, ui.contenitoreAzioni, contestoTastiera);
   ui.pulsanteAnnulla.addEventListener('click', () => editor.UndoManager.undo());

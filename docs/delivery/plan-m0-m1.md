@@ -45,6 +45,7 @@ Piano di implementazione richiesto da `docs/AI_START_HERE.md`, preparato prima d
 | M5.5 Contratto componenti-temi | Completata (token `--dv-*` e skin per tema, canvas con tema e skin del sito, test di coerenza; `docs/architecture/componenti-e-temi.md`) |
 | M5.6 Editor da tastiera | Completata (blocchi inseribili con Invio, struttura ad albero, azioni sposta/duplica/elimina, annunci, nomi accessibili; smoke da sola tastiera; restano prova con screen reader e audit WCAG automatico) |
 | M5.7 Caratteristiche e testimonianze | Completata (`contenuto.caratteristiche` e `contenuto.testimonianze` con elementi figli, template v4, vista di rendering verificata da test) |
+| M5.8 Pannello proprietà e percorso utente completo | Completata (gruppi, obbligatori, contatore e controllo immediato; `smoke/percorso-utente.mjs`: template guidato e pagina libera fino alla pubblicazione e alla lettura da visitatore anonimo) |
 | B-010 Gestione testi statici | Completata (`/admin/platform/testi`: ricerca, filtri, modifica, cache e audit) |
 | B-007 Creazione TenantAdmin e non-escalation | Completata (password temporanea mostrata una volta; elevazione `Utente` → `TenantAdmin`) |
 

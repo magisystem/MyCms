@@ -104,6 +104,13 @@ public class BuilderModel : PaginaAdmin
             ["contenuto.testimonianze"] = Localizzatore.Traduci("Testimonianze"),
             ["contenuto.testimonianza"] = Localizzatore.Traduci("Testimonianza"),
         }),
+        ["campoObbligatorio"] = Localizzatore.Traduci("Campo obbligatorio"),
+        ["gruppi"] = JsonSerializer.Serialize(new Dictionary<string, string>
+        {
+            ["contenuto"] = Localizzatore.Traduci("Contenuto"),
+            ["aspetto"] = Localizzatore.Traduci("Aspetto"),
+            ["animazione"] = Localizzatore.Traduci("Animazione"),
+        }),
         ["campi"] = JsonSerializer.Serialize(new Dictionary<string, string>
         {
             ["testo"] = Localizzatore.Traduci("Testo"),

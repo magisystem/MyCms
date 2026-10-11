@@ -156,6 +156,30 @@ const testo = await pagina.evaluate(() => window.dvEditor.getSelected().getAttri
 assert.equal(testo, 'Scritto solo con la tastiera');
 passo('proprietà modificate da tastiera');
 
+// Pannello proprietà: gruppi, obbligatorio, contatore, controllo immediato.
+await pagina.locator('.dv-struttura [role=treeitem]', { hasText: 'Titolo' }).first().focus();
+await pagina.keyboard.press('Home');
+await pagina.keyboard.press('ArrowDown');
+assert.equal(await selezionato(), 'contenuto.titolo');
+await pagina.waitForTimeout(200);
+const pannello = await pagina.evaluate(() => ({
+  gruppi: [...document.querySelectorAll('.dv-proprieta .dv-gruppo')].map((e) => e.textContent),
+  obbligatori: [...document.querySelectorAll('.dv-proprieta [aria-required=true]')].length,
+  note: [...document.querySelectorAll('.dv-proprieta .dv-campo-nota')].map((e) => e.textContent),
+}));
+assert.deepEqual(pannello.gruppi, ['Contenuto', 'Aspetto', 'Animazione']);
+assert.equal(pannello.obbligatori, 1, 'il testo del titolo è obbligatorio');
+assert.ok(pannello.note.some((n) => /^\d+ \/ 200$/.test(n)), `contatore dei caratteri: ${pannello.note.join('|')}`);
+const campoTesto = pagina.locator('.dv-proprieta input[aria-required=true]');
+await campoTesto.fill('');
+await campoTesto.dispatchEvent('change');
+assert.equal(await campoTesto.getAttribute('aria-invalid'), 'true');
+assert.match(await pagina.locator('.dv-proprieta .dv-campo-errore').first().textContent(), /Campo obbligatorio/);
+await campoTesto.fill('Titolo valido');
+await campoTesto.dispatchEvent('change');
+assert.equal(await campoTesto.getAttribute('aria-invalid'), 'false');
+passo('pannello proprietà: gruppi, campi obbligatori, contatore e controllo immediato');
+
 // 5. Salvataggio da tastiera e nessuna violazione.
 const [salvato] = await Promise.all([pagina.waitForResponse((r) => r.url().includes('handler=Salva')), pagina.keyboard.press('Control+S')]);
 assert.equal(salvato.status(), 200);

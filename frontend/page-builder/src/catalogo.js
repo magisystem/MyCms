@@ -3,6 +3,7 @@
 // legge solo questi attributi. L'aspetto nel canvas è calcolato nella vista (classi e testo dell'elemento, mai nel modello),
 // quindi non entra nel progetto salvato.
 import { consentito } from './vincoli.js';
+import { gruppoDi } from './proprieta.js';
 import { analizza, costruisci, urlConsentito } from './testoRicco.js';
 
 const FOGLIE = new Set(['contenuto.titolo', 'contenuto.testo', 'contenuto.testo-ricco', 'contenuto.immagine', 'contenuto.pulsante', 'contenuto.hero', 'contenuto.cta', 'contenuto.voce', 'contenuto.caratteristica', 'contenuto.testimonianza']);
@@ -188,9 +189,9 @@ function riempi(el, voci) {
   );
 }
 
-function creaTrait(definizione, config) {
+function creaTrait(definizione, config, eStile) {
   const etichetta = config.testi.campi[definizione.nome] ?? definizione.nome;
-  const base = { name: definizione.attributo, label: etichetta, default: definizione.predefinito };
+  const base = { name: definizione.attributo, label: etichetta, default: definizione.predefinito, obbligatoria: definizione.obbligatoria, gruppo: gruppoDi(definizione, eStile) };
   switch (definizione.tipo) {
     case 'Enumerazione':
       return { ...base, type: 'select', options: definizione.valori.map((v) => ({ id: v, label: v })) };
@@ -298,7 +299,7 @@ export function registraComponenti(editor, catalogo, vincoli, config) {
   const definizioni = new Map(catalogo.map((c) => [c.tipo, c]));
   for (const definizione of catalogo) {
     const tipo = definizione.tipo;
-    const tratti = [...definizione.proprieta, ...definizione.stili].map((d) => creaTrait(d, config));
+    const tratti = [...definizione.proprieta.map((d) => creaTrait(d, config, false)), ...definizione.stili.map((d) => creaTrait(d, config, true))];
     editor.DomComponents.addType(tipo, {
       isComponent: () => false,
       model: {

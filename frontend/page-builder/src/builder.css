@@ -72,3 +72,10 @@ body.dv-builder { display: flex; flex-direction: column; background: #f4f6fa; co
 .dv-albero-riga[aria-selected="true"] { background: #dbeafe; border-left-color: #2563eb; font-weight: 600; }
 .dv-albero-riga[aria-expanded="false"]::after { content: "\25B8"; margin-inline-start: auto; }
 .dv-albero-riga[aria-expanded="true"]::after { content: "\25BE"; margin-inline-start: auto; }
+
+/* Pannello delle proprietà: gruppi, campi obbligatori, contatore. */
+.dv-gruppo { margin: 0.75rem 0 0; padding: 0.35rem 0.75rem; font-size: 0.75rem; letter-spacing: 0.05em; text-transform: uppercase; color: #52606d; border-top: 1px solid #d9dee7; }
+.dv-obbligatorio { color: #b91c1c; font-weight: 700; }
+.dv-campo-nota { padding: 0 0.75rem 0.25rem; font-size: 0.8rem; color: #52606d; min-height: 1rem; }
+.dv-campo-errore { color: #b91c1c; font-weight: 600; }
+.dv-campo-non-valido { outline: 2px solid #b91c1c; }
