@@ -40,6 +40,22 @@ public static class CalcolatoreTotali
         return new RigaCalcolata(prezzoUnitarioLordo, quantita, aliquota, lordo, imponibile, lordo - imponibile);
     }
 
+    /// <summary>
+    /// Spedizione: la tariffa è IVA inclusa con l'aliquota ordinaria (ADR-0020) e si scorpora come una riga. Una tariffa zero
+    /// (ritiro in sede o spedizione gratuita) dà una riga a zero.
+    /// </summary>
+    public static RigaCalcolata CalcolaSpedizione(decimal tariffaLorda)
+    {
+        if (!MetodoSpedizione.TariffaValida(tariffaLorda))
+        {
+            throw new ArgumentOutOfRangeException(nameof(tariffaLorda), "Tariffa non valida.");
+        }
+
+        return tariffaLorda == 0m
+            ? new RigaCalcolata(0m, 1, AliquoteIva.Predefinita, 0m, 0m, 0m)
+            : CalcolaRiga(tariffaLorda, 1, AliquoteIva.Predefinita);
+    }
+
     public static TotaliCalcolati Somma(IEnumerable<RigaCalcolata> righe)
     {
         ArgumentNullException.ThrowIfNull(righe);

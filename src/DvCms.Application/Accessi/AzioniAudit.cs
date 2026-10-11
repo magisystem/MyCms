@@ -42,6 +42,7 @@ public static class AzioniAudit
     public const string RegistrazioneAcquirente = "RegistrazioneAcquirente";
     public const string ConfermaAcquirente = "ConfermaAcquirente";
     public const string ImpostazioneRegistrazioneAcquirenti = "ImpostazioneRegistrazioneAcquirenti";
+    public const string ModificaMetodoSpedizione = "ModificaMetodoSpedizione";
     public const string ImpostazioneCommercio = "ImpostazioneCommercio";
     public const string CreazioneProdotto = "CreazioneProdotto";
     public const string ModificaProdotto = "ModificaProdotto";

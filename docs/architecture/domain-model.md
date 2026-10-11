@@ -72,6 +72,7 @@ I template non devono sovrascrivere contenuti già creati quando viene pubblicat
 - `ArticoloMagazzino` e `MovimentoMagazzino` (non trattare solo una quantità modificabile senza storico se serve audit)
 - `Carrello`, `RigaCarrello`
 - `Ordine`, `RigaOrdine` con snapshot di nome, SKU, prezzo, imposte/valori applicati e valuta
+- `MetodoSpedizione` (M7.4: tariffa fissa IVA inclusa per area, o ritiro; vedi `ecommerce.md`)
 - `TentativoPagamento`/`Pagamento`, `Rimborso`, `Spedizione`
 - `EventoWebhook` deduplicato e tracciabile
 
@@ -114,6 +115,7 @@ Convenzioni per il database:
 | `RisorsaMedia` | `RisorseMedia` | `Pagamento` | `Pagamenti` |
 | `MessaggioOutbox` | `MessaggiOutbox` | `Rimborso` | `Rimborsi` |
 | `RegistroAudit` | `RegistroAudit` | `Spedizione` | `Spedizioni` |
+| `MetodoSpedizione` | `MetodiSpedizione` | | |
 | `Reindirizzamento` | `Reindirizzamenti` | `EventoWebhook` | `EventiWebhook` |
 | `Lingua` | `Lingue` | `TestoStatico` | `TestiStatici` |
 | `LinguaSito` | `LingueSito` | `TraduzioneProdotto` | `TraduzioniProdotto` |

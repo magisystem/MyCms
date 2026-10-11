@@ -1,0 +1,106 @@
+@page "/admin/negozio/spedizioni"
+@model DvCms.Web.Pages.Admin.Negozio.Spedizioni.IndexModel
+@using DvCms.Domain.Negozio
+@{
+    ViewData["Titolo"] = _L["Spedizioni"];
+}
+@if (Model.Messaggio is not null)
+{
+    <div class="alert alert-success" role="status">@Model.Messaggio</div>
+}
+@if (Model.ErroreDaMostrare is not null)
+{
+    <div class="alert alert-danger" role="alert">
+        @Model.ErroreDaMostrare
+        @if (Model.CampiNonValidi.Count > 0)
+        {
+            <ul class="mb-0">
+                @foreach (var campo in Model.CampiNonValidi)
+                {
+                    <li>@Model.NomeCampo(campo)</li>
+                }
+            </ul>
+        }
+    </div>
+}
+<p class="text-secondary">@_L["Le tariffe sono fisse per area, in EUR e comprendono l'IVA con l'aliquota ordinaria. Il ritiro in sede non ha costo."]</p>
+
+@foreach (var metodo in Model.Metodi)
+{
+    var errato = Model.Errato(metodo.Id);
+    var valori = errato ? Model.ModuloErrato! : null;
+    <form method="post" asp-page-handler="Salva" class="card mb-3">
+        <div class="card-body row g-3 align-items-end">
+            <input type="hidden" name="Id" value="@metodo.Id" />
+            <input type="hidden" name="Tipo" value="@metodo.Tipo" />
+            <div class="col-md-4">
+                <label class="form-label" for="nome-@metodo.Id">@_L["Nome"]</label>
+                <input class="form-control" id="nome-@metodo.Id" name="Nome" maxlength="@MetodoSpedizione.LunghezzaMassimaNome" value="@(valori?.Nome ?? metodo.Nome)" />
+            </div>
+            @if (metodo.Tipo == TipoMetodoSpedizione.Zona)
+            {
+                <div class="col-md-3">
+                    <label class="form-label" for="area-@metodo.Id">@_L["Area"]</label>
+                    <select class="form-select" id="area-@metodo.Id" name="Area">
+                        <option value="Italia" selected="@((valori?.Area ?? metodo.Area) == AreaSpedizione.Italia)">@Model.NomeArea(AreaSpedizione.Italia)</option>
+                        <option value="UnioneEuropea" selected="@((valori?.Area ?? metodo.Area) == AreaSpedizione.UnioneEuropea)">@Model.NomeArea(AreaSpedizione.UnioneEuropea)</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label" for="tariffa-@metodo.Id">@_L["Tariffa (EUR, IVA inclusa)"]</label>
+                    <input class="form-control" id="tariffa-@metodo.Id" name="Tariffa" inputmode="decimal" value="@(valori?.Tariffa ?? metodo.TariffaLorda.ToString("0.00", Model.Cultura))" />
+                </div>
+            }
+            else
+            {
+                <div class="col-md-5 text-secondary">@_L["Ritiro in sede"]</div>
+            }
+            <div class="col-md-1">
+                <label class="form-check">
+                    <input type="hidden" name="Attivo" value="false" />
+                    <input class="form-check-input" type="checkbox" name="Attivo" value="true" checked="@(valori?.Attivo ?? metodo.Attivo)" />
+                    <span class="form-check-label">@_L["Attivo"]</span>
+                </label>
+            </div>
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-primary">@_L["Salva"]</button>
+                <button type="submit" class="btn btn-outline-danger" asp-page-handler="Elimina" asp-route-id="@metodo.Id" formnovalidate>@_L["Elimina"]</button>
+            </div>
+        </div>
+    </form>
+}
+
+<form method="post" asp-page-handler="Salva" class="card">
+    @{
+        var nuovo = Model.Errato(null) ? Model.ModuloErrato! : null;
+    }
+    <div class="card-header"><h3 class="card-title">@_L["Nuovo metodo di spedizione"]</h3></div>
+    <div class="card-body row g-3 align-items-end">
+        <div class="col-md-3">
+            <label class="form-label" for="nuovo-tipo">@_L["Tipo"]</label>
+            <select class="form-select" id="nuovo-tipo" name="Tipo">
+                <option value="Zona" selected="@(nuovo?.Tipo != TipoMetodoSpedizione.Ritiro)">@_L["Consegna con tariffa per area"]</option>
+                <option value="Ritiro" selected="@(nuovo?.Tipo == TipoMetodoSpedizione.Ritiro)">@_L["Ritiro in sede"]</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label" for="nuovo-nome">@_L["Nome"]</label>
+            <input class="form-control" id="nuovo-nome" name="Nome" maxlength="@MetodoSpedizione.LunghezzaMassimaNome" value="@nuovo?.Nome" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label" for="nuovo-area">@_L["Area"]</label>
+            <select class="form-select" id="nuovo-area" name="Area">
+                <option value="Italia" selected="@(nuovo?.Area != AreaSpedizione.UnioneEuropea)">@Model.NomeArea(AreaSpedizione.Italia)</option>
+                <option value="UnioneEuropea" selected="@(nuovo?.Area == AreaSpedizione.UnioneEuropea)">@Model.NomeArea(AreaSpedizione.UnioneEuropea)</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label" for="nuovo-tariffa">@_L["Tariffa (EUR, IVA inclusa)"]</label>
+            <input class="form-control" id="nuovo-tariffa" name="Tariffa" inputmode="decimal" value="@nuovo?.Tariffa" />
+        </div>
+        <div class="col-md-2">
+            <input type="hidden" name="Attivo" value="true" />
+            <button type="submit" class="btn btn-primary">@_L["Aggiungi"]</button>
+        </div>
+    </div>
+</form>

@@ -134,3 +134,27 @@ internal sealed class ConfigurazioneRigaCarrello : IEntityTypeConfiguration<Riga
             .OnDelete(DeleteBehavior.Restrict);
     }
 }
+
+internal sealed class ConfigurazioneMetodoSpedizione : IEntityTypeConfiguration<MetodoSpedizione>
+{
+    public void Configure(EntityTypeBuilder<MetodoSpedizione> entita)
+    {
+        entita.ToTable("MetodiSpedizione", tabella =>
+        {
+            tabella.HasCheckConstraint("CK_MetodiSpedizione_TipoEArea", "([Tipo] = 'Ritiro' AND [Area] IS NULL AND [TariffaLorda] = 0) OR ([Tipo] = 'Zona' AND [Area] IS NOT NULL AND [TariffaLorda] >= 0)");
+        });
+        entita.HasKey(metodo => metodo.Id);
+        entita.Property(metodo => metodo.Id).ValueGeneratedNever();
+        entita.Property(metodo => metodo.Tipo).HasConversion<string>().HasMaxLength(20).IsRequired();
+        entita.Property(metodo => metodo.Area).HasConversion<string>().HasMaxLength(20);
+        entita.Property(metodo => metodo.Nome).HasMaxLength(MetodoSpedizione.LunghezzaMassimaNome).IsRequired();
+        entita.Property(metodo => metodo.TariffaLorda).HasPrecision(18, 2);
+
+        entita.HasOne<Sito>()
+            .WithMany()
+            .HasForeignKey(metodo => new { metodo.IdTenant, metodo.IdSito })
+            .HasPrincipalKey(sito => new { sito.IdTenant, sito.Id })
+            .OnDelete(DeleteBehavior.Restrict);
+        entita.HasIndex(metodo => new { metodo.IdSito, metodo.Posizione });
+    }
+}

@@ -868,6 +868,53 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.ToTable("Carrelli", (string)null);
                 });
 
+            modelBuilder.Entity("DvCms.Domain.Negozio.MetodoSpedizione", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Area")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<bool>("Attivo")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("IdSito")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdTenant")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("Posizione")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("TariffaLorda")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdSito", "Posizione");
+
+                    b.HasIndex("IdTenant", "IdSito");
+
+                    b.ToTable("MetodiSpedizione", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_MetodiSpedizione_TipoEArea", "([Tipo] = 'Ritiro' AND [Area] IS NULL AND [TariffaLorda] = 0) OR ([Tipo] = 'Zona' AND [Area] IS NOT NULL AND [TariffaLorda] >= 0)");
+                        });
+                });
+
             modelBuilder.Entity("DvCms.Domain.Negozio.Prodotto", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1595,6 +1642,16 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("DvCms.Domain.Tenancy.Sito", null)
+                        .WithMany()
+                        .HasForeignKey("IdTenant", "IdSito")
+                        .HasPrincipalKey("IdTenant", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DvCms.Domain.Negozio.MetodoSpedizione", b =>
+                {
                     b.HasOne("DvCms.Domain.Tenancy.Sito", null)
                         .WithMany()
                         .HasForeignKey("IdTenant", "IdSito")

@@ -84,5 +84,34 @@ public class CalcolatoreTotaliTest
         Assert.Empty(totali.Righe);
     }
 
+    [Theory]
+    [InlineData("0", "0", "0")]
+    [InlineData("6.90", "5.66", "1.24")]
+    [InlineData("10.00", "8.20", "1.80")]
+    [InlineData("14.50", "11.89", "2.61")]
+    public void LaSpedizioneScorporaLIvaOrdinaria(string tariffa, string imponibile, string iva)
+    {
+        var riga = CalcolatoreTotali.CalcolaSpedizione(D(tariffa));
+
+        Assert.Equal((D(tariffa), D(imponibile), D(iva)), (riga.Lordo, riga.Imponibile, riga.Iva));
+        Assert.Equal(22m, riga.Aliquota);
+    }
+
+    [Theory]
+    [InlineData("-0.01")]
+    [InlineData("10000.01")]
+    [InlineData("1.005")]
+    public void UnaTariffaNonValidaDiSpedizioneERifiutata(string tariffa) =>
+        Assert.Throws<ArgumentOutOfRangeException>(() => CalcolatoreTotali.CalcolaSpedizione(D(tariffa)));
+
+    [Fact]
+    public void LaSpedizioneSiSommaAlCarrelloEITotaliRestanoCoerenti()
+    {
+        var totali = CalcolatoreTotali.Somma([CalcolatoreTotali.CalcolaRiga(19.90m, 3, 22m), CalcolatoreTotali.CalcolaRiga(12.00m, 1, 4m), CalcolatoreTotali.CalcolaSpedizione(6.90m)]);
+
+        Assert.Equal(78.60m, totali.Lordo);
+        Assert.Equal(totali.Lordo, totali.Imponibile + totali.Iva);
+    }
+
     private static decimal D(string testo) => decimal.Parse(testo, System.Globalization.CultureInfo.InvariantCulture);
 }
