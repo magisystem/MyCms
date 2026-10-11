@@ -1,0 +1,26 @@
+@page "/negozio"
+@model DvCms.Web.Pages.Negozio.IndexModel
+@{
+    ViewData["Titolo"] = _L["Negozio"];
+}
+<h1>@_L["Negozio"]</h1>
+@if (Model.Prodotti.Count == 0)
+{
+    <p>@_L["Nessun prodotto disponibile."]</p>
+}
+else
+{
+    <ul class="dv-prodotti">
+        @foreach (var prodotto in Model.Prodotti)
+        {
+            <li class="dv-prodotto @(prodotto.Disponibile ? null : "dv-esaurito")">
+                <a href="/negozio/@prodotto.Id">@(prodotto.Nome.Length > 0 ? prodotto.Nome : "—")</a>
+                <p class="dv-prodotto-prezzo">@_L["da"] @prodotto.PrezzoDa.ToString("N2", Model.Cultura) @prodotto.Valuta</p>
+                @if (!prodotto.Disponibile)
+                {
+                    <p>@_L["Esaurito"]</p>
+                }
+            </li>
+        }
+    </ul>
+}

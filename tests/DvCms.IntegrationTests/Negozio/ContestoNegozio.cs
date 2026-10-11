@@ -83,9 +83,12 @@ internal sealed class ContestoNegozio : IAsyncDisposable
         Assert.True(esito.Riuscito, esito.Codice.ToString());
     }
 
-    public async Task<IReadOnlyList<Guid>> CreaProdottoAsync(DatiProva.TenantCreato tenant, string nome, decimal iva, params (string Sku, decimal Prezzo, string? Etichetta)[] varianti)
+    public Task<IReadOnlyList<Guid>> CreaProdottoAsync(DatiProva.TenantCreato tenant, string nome, decimal iva, params (string Sku, decimal Prezzo, string? Etichetta)[] varianti) =>
+        CreaProdottoAsync(tenant, nome, iva, StatoProdotto.Pubblicato, varianti);
+
+    public async Task<IReadOnlyList<Guid>> CreaProdottoAsync(DatiProva.TenantCreato tenant, string nome, decimal iva, StatoProdotto stato, params (string Sku, decimal Prezzo, string? Etichetta)[] varianti)
     {
-        var dati = new DatiProdotto(null, null, StatoProdotto.Pubblicato, iva, [new TraduzioneProdottoDati("it", nome, null)],
+        var dati = new DatiProdotto(null, null, stato, iva, [new TraduzioneProdottoDati("it", nome, null)],
             [.. varianti.Select(v => new VarianteDati(null, v.Sku, v.Prezzo, null, true, v.Etichetta is null ? null : new Dictionary<string, string> { ["it"] = v.Etichetta }))]);
         var esito = await InAsync<IServizioCatalogo, EsitoOperazione>(tenant, s => s.SalvaAsync(Attore(tenant), dati, Ct));
         Assert.True(esito.Riuscito, $"{esito.Codice} {string.Join(',', esito.CampiNonValidi ?? [])}");
@@ -204,6 +207,22 @@ internal sealed class ContestoNegozio : IAsyncDisposable
         var passato = DateTime.UtcNow.AddMinutes(-1);
         await ambito.ServiceProvider.GetRequiredService<ContestoDatabase>().PrenotazioniGiacenza.IgnoreQueryFilters().Where(p => p.IdOrdine == idOrdine)
             .ExecuteUpdateAsync(x => x.SetProperty(p => p.ScadeIlUtc, passato), Ct);
+    }
+
+    public async Task ArchiviaAsync(DatiProva.TenantCreato tenant, Guid idVariante)
+    {
+        var idProdotto = await IdProdottoAsync(idVariante);
+        var dettaglio = (await InAsync<IServizioCatalogo, DettaglioProdotto?>(tenant, s => s.LeggiAsync(Attore(tenant), idProdotto, Ct)))!;
+        var dati = new DatiProdotto(dettaglio.Id, dettaglio.TokenConcorrenza, StatoProdotto.Archiviato, dettaglio.AliquotaIva, dettaglio.Traduzioni,
+            [.. dettaglio.Varianti.Select(v => new VarianteDati(v.Id, v.Sku, v.PrezzoLordo, v.Valuta, v.Attiva, v.Etichette))]);
+        var esito = await InAsync<IServizioCatalogo, EsitoOperazione>(tenant, s => s.SalvaAsync(Attore(tenant), dati, Ct));
+        Assert.True(esito.Riuscito, esito.Codice.ToString());
+    }
+
+    public async Task<Guid> IdProdottoAsync(Guid idVariante)
+    {
+        await using var ambito = Web.Fabbrica.Services.CreateAsyncScope();
+        return await ambito.ServiceProvider.GetRequiredService<ContestoDatabase>().VariantiProdotto.IgnoreQueryFilters().Where(v => v.Id == idVariante).Select(v => v.IdProdotto).SingleAsync(Ct);
     }
 
     public async Task<StatoOrdine> StatoOrdineAsync(Guid idOrdine)

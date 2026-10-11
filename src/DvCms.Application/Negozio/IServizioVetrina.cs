@@ -1,0 +1,25 @@
+namespace DvCms.Application.Negozio;
+
+/// <summary>Un prodotto pubblicato nell'elenco della vetrina. <c>PrezzoDa</c> è il prezzo IVA inclusa più basso fra le varianti attive.</summary>
+public sealed record ProdottoInVetrina(Guid Id, string Nome, decimal PrezzoDa, string Valuta, bool Disponibile);
+
+/// <summary>
+/// Una variante acquistabile. <c>Massimo</c> è la quantità che il cliente può chiedere adesso (al più 99): per giacenza gestita è
+/// quanto non è già prenotato o venduto; zero significa esaurita. Non si espone la giacenza esatta.
+/// </summary>
+public sealed record VarianteInVetrina(Guid Id, string Sku, string? Etichetta, decimal PrezzoLordo, string Valuta, int Massimo);
+
+public sealed record ProdottoPubblico(Guid Id, string Nome, string Descrizione, IReadOnlyList<VarianteInVetrina> Varianti);
+
+/// <summary>
+/// Vetrina pubblica del negozio (F-001, ADR-0009): sola lettura, senza account. Mostra solo prodotti pubblicati con almeno una
+/// variante attiva, solo se il sito ha il negozio attivo, e mai bozze, archiviati, varianti disattivate o dati di altri tenant.
+/// </summary>
+public interface IServizioVetrina
+{
+    /// <param name="codiceLingua">Lingua preferita; se manca la traduzione si ripiega sulla lingua predefinita del sito.</param>
+    Task<IReadOnlyList<ProdottoInVetrina>> ElencaAsync(string codiceLingua, CancellationToken annullamento);
+
+    /// <summary><c>null</c> se il prodotto non esiste, non è pubblicato o il negozio non è attivo.</summary>
+    Task<ProdottoPubblico?> LeggiAsync(Guid idProdotto, string codiceLingua, CancellationToken annullamento);
+}

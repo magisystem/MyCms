@@ -116,6 +116,14 @@ Gli stati sono un'enumerazione chiusa (`StatoOrdine`) e **ogni passaggio** passa
 - **Evasione:** in `/admin/negozio/ordini/{id}` il tenant vede i tentativi di pagamento e, per un ordine pagato, segna «spedito» (consegna) o «ritirato» (ritiro in sede) con un passaggio condizionale e audit.
 - **Non ancora:** email di conferma ordine, rimborsi (A5), riconciliazione periodica con il provider per gli incassi mai notificati, pagamenti di ordini a totale zero, mostrare i pagamenti nell'elenco ordini.
 
+## Vetrina pubblica (M7.8, F-001)
+
+- **Pagine:** `/negozio` (elenco) e `/negozio/{id}` (scheda con varianti), pubbliche e senza cache (dipendono dall'acquirente). Il percorso `negozio` (come `webhooks`) è **riservato**: una pagina del CMS non può usarlo come slug.
+- **Cosa si vede:** solo prodotti **pubblicati** con almeno una variante **attiva**, solo se il sito ha il negozio attivo (altrimenti 404); mai bozze, archiviati, varianti disattivate o dati di altri tenant. Nomi, etichette e descrizione nella lingua della richiesta con ripiego sulla lingua predefinita; il testo è sempre codificato (nessun HTML).
+- **Disponibilità:** per giacenza gestita la quantità richiedibile è quella libera (disponibile meno riservata, al più 99); zero = «Esaurito». La giacenza esatta non è esposta. Resta un controllo di cortesia: la garanzia vera è la prenotazione alla creazione dell'ordine.
+- **Aggiungi al carrello:** l'acquirente autenticato vede un modulo che invia a `/account/carrello?handler=Aggiungi` **solo identificativo della variante e quantità** (prezzi e totali restano calcolati dal server); la pagina assume l'identità dell'acquirente prima di emettere il token antiforgery, che è legato all'utente. L'anonimo vede il collegamento «Accedi per acquistare» (con ritorno alla scheda).
+- **Non ancora:** categorie e collezioni, ricerca, immagini dei prodotti, voce di menu verso `/negozio` nei temi, indicizzazione/sitemap dei prodotti, componenti `negozio.*` del page builder (richiedono una nuova versione del registro dei componenti e del modello: si fanno come slice a sé).
+
 ## Integrazione con il builder
 
 I componenti `negozio.*` referenziano prodotto/collezione/query tipizzata, non copiano il catalogo nel documento. Il renderer chiama il modulo Store attraverso servizi applicativi. Un'anteprima senza dati reali deve essere chiaramente distinta dal checkout reale.

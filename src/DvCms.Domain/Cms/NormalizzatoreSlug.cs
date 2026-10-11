@@ -13,7 +13,7 @@ public static class NormalizzatoreSlug
 
     /// <summary>Percorsi dell'applicazione che uno slug non può occupare: area admin, asset statici, pagina di errore.</summary>
     public static IReadOnlySet<string> Riservati { get; } =
-        new HashSet<string>(StringComparer.Ordinal) { "admin", "account", "lib", "errore", "media", "webhooks" };
+        new HashSet<string>(StringComparer.Ordinal) { "admin", "account", "lib", "errore", "media", "webhooks", "negozio" };
 
     public static bool ERiservato(string slug) => Riservati.Contains(slug);
 

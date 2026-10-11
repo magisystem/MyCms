@@ -1,0 +1,38 @@
+@page "/negozio/{id:guid}"
+@model DvCms.Web.Pages.Negozio.DettaglioModel
+@{
+    ViewData["Titolo"] = Model.Prodotto.Nome;
+}
+<h1>@Model.Prodotto.Nome</h1>
+@foreach (var riga in Model.Prodotto.Descrizione.Split('\n', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries))
+{
+    <p>@riga</p>
+}
+<section aria-label="@_L["Varianti"]">
+    @foreach (var variante in Model.Prodotto.Varianti)
+    {
+        <div class="dv-variante @(variante.Massimo > 0 ? null : "dv-esaurito")">
+            <span>@(variante.Etichetta is { Length: > 0 } etichetta ? etichetta : Model.Prodotto.Nome)</span>
+            <small>(@variante.Sku)</small>
+            <strong>@variante.PrezzoLordo.ToString("N2", Model.Cultura) @variante.Valuta</strong>
+            @if (variante.Massimo == 0)
+            {
+                <span>@_L["Esaurito"]</span>
+            }
+            else if (Model.Autenticato)
+            {
+                <form method="post" action="/account/carrello?handler=Aggiungi" asp-antiforgery="true">
+                    <input type="hidden" name="idVariante" value="@variante.Id" />
+                    <label class="visually-hidden" for="qta-@variante.Id">@_L["Quantità"]</label>
+                    <input type="number" id="qta-@variante.Id" name="quantita" value="1" min="1" max="@variante.Massimo" />
+                    <button type="submit">@_L["Aggiungi al carrello"]</button>
+                </form>
+            }
+            else
+            {
+                <a href="/account/accesso?returnUrl=@Uri.EscapeDataString("/negozio/" + Model.Prodotto.Id)">@_L["Accedi per acquistare"]</a>
+            }
+        </div>
+    }
+</section>
+<p><a href="/negozio">@_L["Torna al negozio"]</a></p>

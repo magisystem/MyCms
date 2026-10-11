@@ -1,0 +1,29 @@
+@inject DvCms.Application.Temi.IRisolutoreTema Temi
+@inject DvCms.Application.Localizzazione.IContestoLingua ContestoLingua
+@{
+    var tema = await Temi.RisolviAsync(Context.RequestAborted);
+}
+<!DOCTYPE html>
+<html lang="@ContestoLingua.CodiceLingua">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="referrer" content="no-referrer" />
+    <title>@(ViewData["Titolo"] is string titolo ? titolo + " - " : string.Empty)@tema.NomeSito</title>
+    <link rel="stylesheet" href="~/css/pubblico.css" asp-append-version="true" />
+    <link rel="stylesheet" href="@DvCms.Web.Pubblico.TemiVista.Foglio(tema)" asp-append-version="true" />
+</head>
+<body class="@DvCms.Web.Pubblico.TemiVista.Classe(tema)" style="@tema.VariabiliCss">
+    <main class="dv-vetrina">
+        <header class="dv-vetrina-testata">
+            <a class="dv-account-sito" href="/">@tema.NomeSito</a>
+            <nav aria-label="@_L["Negozio"]">
+                <a href="/negozio">@_L["Negozio"]</a>
+                <a href="/account/carrello">@_L["Carrello"]</a>
+                <a href="/account">@_L["Il mio account"]</a>
+            </nav>
+        </header>
+        @RenderBody()
+    </main>
+</body>
+</html>

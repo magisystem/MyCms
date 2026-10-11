@@ -42,6 +42,7 @@ public class NormalizzatoreSlugTest
     [InlineData("lib")]
     [InlineData("errore")]
     [InlineData("webhooks")]
+    [InlineData("negozio")]
     [InlineData("media")]
     public void RifiutaGliSlugRiservati(string ingresso)
     {
