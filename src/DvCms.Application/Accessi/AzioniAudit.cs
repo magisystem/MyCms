@@ -39,5 +39,8 @@ public static class AzioniAudit
     public const string ModificaTestoStatico = "ModificaTestoStatico";
     public const string ModificaImpostazioniEmail = "ModificaImpostazioniEmail";
     public const string ProvaInvioEmail = "ProvaInvioEmail";
+    public const string ImpostazioneCommercio = "ImpostazioneCommercio";
+    public const string CreazioneProdotto = "CreazioneProdotto";
+    public const string ModificaProdotto = "ModificaProdotto";
     public const string OperazioneNegata = "OperazioneNegata";
 }

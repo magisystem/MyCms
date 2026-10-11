@@ -136,9 +136,11 @@ Le voci sono candidate a issue GitHub. Ogni issue deve essere piccola, verificab
 **Accettazione:** registrazione possibile solo se il sito ha e-commerce attivo (`RegistrazioneAcquirentiAbilitata`), altrimenti 404; crea sempre un `Utente` del tenant, senza possibilità di scegliere il ruolo; conferma email e rate limiting; un `Utente` non accede all'admin; account separati per tenant; test cross-tenant.
 
 ### F-006: Traduzioni del catalogo
+**Stato:** per prodotti e varianti completata in M7.1; restano categorie e collezioni (con le loro tabelle di traduzione).
 **Accettazione:** tabelle `Traduzioni<Entità>` per prodotti, categorie e collezioni; ripiego sulla lingua predefinita del sito; edizione per lingua nell'admin; test.
 
 ### F-001: Catalogo
+**Stato:** prodotti, varianti, prezzi e IVA completati in M7.1 (`docs/architecture/domain-model.md`); categorie, collezioni e giacenza seguono.
 **Accettazione:** tenant-scoped prodotti/varianti/prezzi; denaro con decimal e valuta; test accesso.
 
 ### F-002: Carrello e calcolo totale

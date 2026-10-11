@@ -47,6 +47,7 @@ Piano di implementazione richiesto da `docs/AI_START_HERE.md`, preparato prima d
 | M5.7 Caratteristiche e testimonianze | Completata (`contenuto.caratteristiche` e `contenuto.testimonianze` con elementi figli, template v4, vista di rendering verificata da test) |
 | M5.8 Pannello proprietà e percorso utente completo | Completata (gruppi, obbligatori, contatore e controllo immediato; `smoke/percorso-utente.mjs`: template guidato e pagina libera fino alla pubblicazione e alla lettura da visitatore anonimo) |
 | G-007 Osservabilità e baseline (M6) | Completata (`/health/live` e `/health/ready` con database migrato e archivio, metriche `DvCms.Web` e `DvCms.Cache` a bassa cardinalità, baseline misurata con `tools/baseline-prestazioni.mjs`; `docs/operations/osservabilita.md` e `prestazioni.md`; restano la scelta dell'esportatore delle metriche e gli alert nel sistema di monitoraggio) |
+| M7.1 Catalogo prodotti (F-001, F-006) | Completata (`Sito.CommercioAttivo` e interruttore nel dettaglio del tenant, prodotti con varianti, prezzi IVA inclusa in EUR e traduzioni, servizio con validazione e concorrenza, amministrazione `/admin/negozio/prodotti`, test di isolamento; restano categorie, collezioni, carrello, ordini, inventario e provider PayPal) |
 | B-010 Gestione testi statici | Completata (`/admin/platform/testi`: ricerca, filtri, modifica, cache e audit) |
 | B-007 Creazione TenantAdmin e non-escalation | Completata (password temporanea mostrata una volta; elevazione `Utente` → `TenantAdmin`) |
 

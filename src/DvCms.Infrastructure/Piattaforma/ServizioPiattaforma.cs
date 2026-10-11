@@ -118,7 +118,8 @@ public sealed class ServizioPiattaforma : IServizioPiattaforma
                     dominio.SoloSviluppo,
                     dominio.VerificatoIlUtc,
                     dominio.VerificatoDaIdUtenza is { } id && verificatori.TryGetValue(id, out var email) ? email : null))],
-                [.. lingueSito.Where(l => l.IdSito == sito.Id).Select(l => l.Lingua)]))],
+                [.. lingueSito.Where(l => l.IdSito == sito.Id).Select(l => l.Lingua)],
+                sito.CommercioAttivo))],
             [.. account.Select(utenza => new DettaglioAccount(
                 utenza.Id,
                 utenza.Email,
@@ -246,6 +247,26 @@ public sealed class ServizioPiattaforma : IServizioPiattaforma
             sito.AggiornatoIlUtc = Adesso();
             _invalidazione.Registra(idTenant, sito.Id);
             return Esito.Ok(sito.Id, idTenant, $"sito '{sito.Nome}', stato {sito.Stato}");
+        }, annullamento);
+
+    public Task<EsitoOperazione> ImpostaCommercioAsync(Guid idAttore, Guid idTenant, Guid idSito, bool attivo, CancellationToken annullamento) =>
+        EseguiAsync(idAttore, AzioniAudit.ImpostazioneCommercio, "Sito", idTenant, async _ =>
+        {
+            var sito = await _contesto.Siti.IgnoreQueryFilters().SingleOrDefaultAsync(candidato => candidato.Id == idSito && candidato.IdTenant == idTenant, annullamento);
+            if (sito is null)
+            {
+                return Esito.Non(CodiceEsito.NonTrovato);
+            }
+
+            sito.CommercioAttivo = attivo;
+            if (!attivo)
+            {
+                sito.RegistrazioneAcquirentiAbilitata = false;
+            }
+
+            sito.AggiornatoIlUtc = Adesso();
+            _invalidazione.Registra(idTenant, sito.Id);
+            return Esito.Ok(sito.Id, idTenant, $"negozio {(attivo ? "attivo" : "non attivo")}");
         }, annullamento);
 
     public Task<EsitoOperazione> AbilitaLinguaAsync(Guid idAttore, Guid idTenant, Guid idSito, string? codiceLingua, CancellationToken annullamento) =>

@@ -5,6 +5,7 @@ using DvCms.Application.Cms;
 using DvCms.Application.Email;
 using DvCms.Application.Localizzazione;
 using DvCms.Application.Media;
+using DvCms.Application.Negozio;
 using DvCms.Application.Outbox;
 using DvCms.Application.Piattaforma;
 using DvCms.Application.Temi;
@@ -16,6 +17,7 @@ using DvCms.Infrastructure.Email;
 using DvCms.Infrastructure.Localizzazione;
 using DvCms.Infrastructure.Manutenzione;
 using DvCms.Infrastructure.Media;
+using DvCms.Infrastructure.Negozio;
 using DvCms.Infrastructure.Outbox;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.Infrastructure.Piattaforma;
@@ -208,6 +210,7 @@ public static class EstensioniServizi
         }
 
         servizi.TryAddScoped<IServizioMedia, ServizioMedia>();
+        servizi.TryAddScoped<IServizioCatalogo, ServizioCatalogo>();
         servizi.TryAddScoped<VerificatoreArchivio>();
     }
 

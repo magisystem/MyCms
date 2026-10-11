@@ -4,6 +4,7 @@ using DvCms.Domain.Cms;
 using DvCms.Domain.Email;
 using DvCms.Domain.Localizzazione;
 using DvCms.Domain.Media;
+using DvCms.Domain.Negozio;
 using DvCms.Domain.Outbox;
 using DvCms.Domain.Temi;
 using DvCms.Domain.Tenancy;
@@ -85,6 +86,14 @@ public class ContestoDatabase : DbContext
 
     public DbSet<RegistroAudit> RegistroAudit => Set<RegistroAudit>();
 
+    public DbSet<Prodotto> Prodotti => Set<Prodotto>();
+
+    public DbSet<VarianteProdotto> VariantiProdotto => Set<VarianteProdotto>();
+
+    public DbSet<TraduzioneProdotto> TraduzioniProdotto => Set<TraduzioneProdotto>();
+
+    public DbSet<TraduzioneVarianteProdotto> TraduzioniVarianteProdotto => Set<TraduzioneVarianteProdotto>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         ArgumentNullException.ThrowIfNull(modelBuilder);
@@ -108,6 +117,10 @@ public class ContestoDatabase : DbContext
         modelBuilder.Entity<MessaggioOutbox>().HasQueryFilter(messaggio => messaggio.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<Utenza>().HasQueryFilter(utenza => utenza.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<RegistroAudit>().HasQueryFilter(voce => voce.IdTenant == IdTenantCorrente);
+        modelBuilder.Entity<Prodotto>().HasQueryFilter(prodotto => prodotto.IdTenant == IdTenantCorrente);
+        modelBuilder.Entity<VarianteProdotto>().HasQueryFilter(variante => variante.IdTenant == IdTenantCorrente);
+        modelBuilder.Entity<TraduzioneProdotto>().HasQueryFilter(traduzione => traduzione.IdTenant == IdTenantCorrente);
+        modelBuilder.Entity<TraduzioneVarianteProdotto>().HasQueryFilter(traduzione => traduzione.IdTenant == IdTenantCorrente);
     }
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)

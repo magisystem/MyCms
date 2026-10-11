@@ -14,6 +14,9 @@ public class Sito
     /// <summary>Fuso orario IANA del sito, usato solo per la presentazione (gli istanti restano UTC).</summary>
     public string FusoOrario { get; set; } = FusoOrarioPredefinito;
 
+    /// <summary>Il sito ha il negozio (catalogo, carrello, ordini). Lo imposta il <c>PlatformAdmin</c>; default falso.</summary>
+    public bool CommercioAttivo { get; set; }
+
     /// <summary>Abilita la registrazione degli acquirenti; vero solo se l'e-commerce è attivo (default falso).</summary>
     public bool RegistrazioneAcquirentiAbilitata { get; set; }
 

@@ -1,0 +1,60 @@
+@page "/admin/negozio/prodotti"
+@model DvCms.Web.Pages.Admin.Negozio.Prodotti.IndexModel
+@using DvCms.Domain.Negozio
+@{
+    ViewData["Titolo"] = _L["Prodotti"];
+}
+@if (Model.Messaggio is not null)
+{
+    <div class="alert alert-success" role="status">@Model.Messaggio</div>
+}
+<div class="d-flex mb-3">
+    <a class="btn btn-primary ms-auto" href="/admin/negozio/prodotti/nuovo">@_L["Nuovo prodotto"]</a>
+</div>
+<div class="card">
+    @if (Model.Prodotti.Count == 0)
+    {
+        <div class="card-body text-secondary">@_L["Nessun prodotto."]</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-vcenter card-table">
+                <thead>
+                    <tr>
+                        <th>@_L["Nome"]</th>
+                        <th>@_L["Stato"]</th>
+                        <th>@_L["Varianti"]</th>
+                        <th>@_L["Prezzo da"]</th>
+                        <th>@_L["Aggiornato"]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var prodotto in Model.Prodotti)
+                    {
+                        <tr>
+                            <td><a href="/admin/negozio/prodotti/@prodotto.Id">@(prodotto.Nome.Length > 0 ? prodotto.Nome : "—")</a></td>
+                            <td>
+                                @switch (prodotto.Stato)
+                                {
+                                    case StatoProdotto.Pubblicato:
+                                        <span class="badge bg-green-lt">@_L["Pubblicato"]</span>
+                                        break;
+                                    case StatoProdotto.Archiviato:
+                                        <span class="badge bg-secondary-lt">@_L["Archiviato"]</span>
+                                        break;
+                                    default:
+                                        <span class="badge bg-yellow-lt">@_L["Bozza"]</span>
+                                        break;
+                                }
+                            </td>
+                            <td>@prodotto.Varianti</td>
+                            <td>@(prodotto.PrezzoDa is { } prezzo ? $"{prezzo.ToString("N2", Model.Cultura)} {prodotto.Valuta}" : "—")</td>
+                            <td class="text-secondary">@prodotto.AggiornatoIlUtc.ToString("yyyy-MM-dd HH:mm")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

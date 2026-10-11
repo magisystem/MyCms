@@ -791,6 +791,161 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.ToTable("TraduzioniRisorseMedia", (string)null);
                 });
 
+            modelBuilder.Entity("DvCms.Domain.Negozio.Prodotto", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("AggiornatoIlUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("AliquotaIva")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<DateTime>("CreatoIlUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("IdSito")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdTenant")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Stato")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<byte[]>("TokenConcorrenza")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdSito", "Stato");
+
+                    b.ToTable("Prodotti", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Prodotti_AliquotaIva", "[AliquotaIva] IN (0, 4, 5, 10, 22)");
+                        });
+                });
+
+            modelBuilder.Entity("DvCms.Domain.Negozio.TraduzioneProdotto", b =>
+                {
+                    b.Property<Guid>("IdProdotto")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdLingua")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Descrizione")
+                        .IsRequired()
+                        .HasMaxLength(5000)
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("IdSito")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdTenant")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("IdProdotto", "IdLingua");
+
+                    b.HasIndex("IdLingua");
+
+                    b.HasIndex("IdTenant", "IdSito", "IdProdotto");
+
+                    b.ToTable("TraduzioniProdotto", (string)null);
+                });
+
+            modelBuilder.Entity("DvCms.Domain.Negozio.TraduzioneVarianteProdotto", b =>
+                {
+                    b.Property<Guid>("IdVariante")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdLingua")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Etichetta")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid>("IdSito")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdTenant")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("IdVariante", "IdLingua");
+
+                    b.HasIndex("IdLingua");
+
+                    b.HasIndex("IdTenant", "IdSito", "IdVariante");
+
+                    b.ToTable("TraduzioniVarianteProdotto", (string)null);
+                });
+
+            modelBuilder.Entity("DvCms.Domain.Negozio.VarianteProdotto", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("Attiva")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("IdProdotto")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdSito")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdTenant")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Posizione")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("PrezzoLordo")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Sku")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Valuta")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("nchar(3)")
+                        .IsFixedLength();
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdProdotto");
+
+                    b.HasIndex("IdSito", "Sku")
+                        .IsUnique();
+
+                    b.HasIndex("IdTenant", "IdSito", "IdProdotto");
+
+                    b.ToTable("VariantiProdotto", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_VariantiProdotto_Prezzo", "[PrezzoLordo] > 0");
+
+                            t.HasCheckConstraint("CK_VariantiProdotto_Valuta", "[Valuta] = 'EUR'");
+                        });
+                });
+
             modelBuilder.Entity("DvCms.Domain.Outbox.MessaggioOutbox", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1017,6 +1172,9 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.Property<DateTime>("AggiornatoIlUtc")
                         .HasColumnType("datetime2");
 
+                    b.Property<bool>("CommercioAttivo")
+                        .HasColumnType("bit");
+
                     b.Property<DateTime>("CreatoIlUtc")
                         .HasColumnType("datetime2");
 
@@ -1049,7 +1207,10 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
 
                     b.HasKey("Id");
 
-                    b.ToTable("Siti", (string)null);
+                    b.ToTable("Siti", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Siti_RegistrazioneRichiedeCommercio", "[RegistrazioneAcquirentiAbilitata] = 0 OR [CommercioAttivo] = 1");
+                        });
                 });
 
             modelBuilder.Entity("DvCms.Domain.Tenancy.Tenant", b =>
@@ -1297,6 +1458,58 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.HasOne("DvCms.Domain.Media.RisorsaMedia", null)
                         .WithMany()
                         .HasForeignKey("IdTenant", "IdSito", "IdRisorsa")
+                        .HasPrincipalKey("IdTenant", "IdSito", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DvCms.Domain.Negozio.Prodotto", b =>
+                {
+                    b.HasOne("DvCms.Domain.Tenancy.Sito", null)
+                        .WithMany()
+                        .HasForeignKey("IdTenant", "IdSito")
+                        .HasPrincipalKey("IdTenant", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DvCms.Domain.Negozio.TraduzioneProdotto", b =>
+                {
+                    b.HasOne("DvCms.Domain.Localizzazione.Lingua", null)
+                        .WithMany()
+                        .HasForeignKey("IdLingua")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("DvCms.Domain.Negozio.Prodotto", null)
+                        .WithMany()
+                        .HasForeignKey("IdTenant", "IdSito", "IdProdotto")
+                        .HasPrincipalKey("IdTenant", "IdSito", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DvCms.Domain.Negozio.TraduzioneVarianteProdotto", b =>
+                {
+                    b.HasOne("DvCms.Domain.Localizzazione.Lingua", null)
+                        .WithMany()
+                        .HasForeignKey("IdLingua")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("DvCms.Domain.Negozio.VarianteProdotto", null)
+                        .WithMany()
+                        .HasForeignKey("IdTenant", "IdSito", "IdVariante")
+                        .HasPrincipalKey("IdTenant", "IdSito", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DvCms.Domain.Negozio.VarianteProdotto", b =>
+                {
+                    b.HasOne("DvCms.Domain.Negozio.Prodotto", null)
+                        .WithMany()
+                        .HasForeignKey("IdTenant", "IdSito", "IdProdotto")
                         .HasPrincipalKey("IdTenant", "IdSito", "Id")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();

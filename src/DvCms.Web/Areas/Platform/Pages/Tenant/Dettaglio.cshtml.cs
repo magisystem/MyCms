@@ -56,6 +56,9 @@ public class DettaglioModel : PaginaPiattaforma
         CancellationToken annullamento) =>
         EseguiAsync(id, () => _piattaforma.ModificaSitoAsync(IdAttore, id, idSito, nome, fusoOrario, attivo, annullamento), Localizzatore.Traduci("Sito aggiornato."));
 
+    public Task<IActionResult> OnPostCommercioAsync(Guid id, Guid idSito, bool attivo, CancellationToken annullamento) =>
+        EseguiAsync(id, () => _piattaforma.ImpostaCommercioAsync(IdAttore, id, idSito, attivo, annullamento), Localizzatore.Traduci("Negozio aggiornato."));
+
     public Task<IActionResult> OnPostAbilitaLinguaAsync(Guid id, Guid idSito, string? lingua, CancellationToken annullamento) =>
         EseguiAsync(id, () => _piattaforma.AbilitaLinguaAsync(IdAttore, id, idSito, lingua, annullamento), Localizzatore.Traduci("Lingua abilitata."));
 

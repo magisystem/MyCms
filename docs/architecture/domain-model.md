@@ -75,7 +75,9 @@ I template non devono sovrascrivere contenuti già creati quando viene pubblicat
 - `TentativoPagamento`/`Pagamento`, `Rimborso`, `Spedizione`
 - `EventoWebhook` deduplicato e tracciabile
 
-I confini definitivi di imposte, spedizioni, prenotazione giacenza, multi-valuta e resi dipendono dai requisiti commerciali, da definire prima del checkout di produzione.
+I confini di imposte, spedizioni, prenotazione della giacenza e valuta sono stabiliti da [ADR-0020](../decisions/ADR-0020-commerce-policies-and-paypal.md) (EUR, IVA inclusa, tariffa fissa per zona e ritiro, prenotazione di 15 minuti); resi, rimborsi e dati personali degli acquirenti restano da decidere prima del checkout di produzione.
+
+**Attuazione del catalogo (M7.1, F-001, F-006).** `Sito.CommercioAttivo` (impostato dal `PlatformAdmin`; la registrazione degli acquirenti richiede il negozio attivo, vincolo `CK_Siti_RegistrazioneRichiedeCommercio`). Tabelle `Prodotti` (`Stato` bozza/pubblicato/archiviato, `AliquotaIva` fra 0, 4, 5, 10, 22 con vincolo di controllo, token di concorrenza), `VariantiProdotto` (`Sku` unico nel sito, maiuscolo; `PrezzoLordo` `decimal(18,2)` positivo IVA inclusa; `Valuta` solo `EUR`, anche con vincolo di controllo; `Attiva`, `Posizione`), `TraduzioniProdotto` (nome e descrizione per lingua) e `TraduzioniVarianteProdotto` (etichetta per lingua). Tutte con `IdTenant` e `IdSito`, chiavi esterne composte, filtro globale di tenant e nessuna cancellazione a cascata. Il servizio `IServizioCatalogo` salva prodotto, traduzioni e varianti in una sola transazione, valida tutto lato server (prezzo con al più due decimali, codici validi e non ripetuti, lingue del sito, nome nella lingua predefinita, almeno una variante attiva per pubblicare), controlla la concorrenza e riverifica l'attore a ogni operazione; l'amministrazione è in `/admin/negozio/prodotti`, visibile solo se il negozio è attivo. Categorie e collezioni, giacenza, carrello e ordini arrivano con le slice successive.
 
 ## Tabelle operative
 

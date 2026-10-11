@@ -28,7 +28,8 @@ internal sealed class ConfigurazioneSito : IEntityTypeConfiguration<Sito>
 {
     public void Configure(EntityTypeBuilder<Sito> entita)
     {
-        entita.ToTable("Siti");
+        // La registrazione degli acquirenti ha senso solo se il negozio è attivo (docs/architecture/domain-model.md).
+        entita.ToTable("Siti", tabella => tabella.HasCheckConstraint("CK_Siti_RegistrazioneRichiedeCommercio", "[RegistrazioneAcquirentiAbilitata] = 0 OR [CommercioAttivo] = 1"));
         entita.HasKey(sito => sito.Id);
         entita.Property(sito => sito.Id).ValueGeneratedNever();
         entita.Property(sito => sito.Nome).HasMaxLength(200).IsRequired();

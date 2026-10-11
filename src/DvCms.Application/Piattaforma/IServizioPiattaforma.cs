@@ -75,7 +75,8 @@ public sealed record DettaglioSito(
     string FusoOrario,
     StatoSito Stato,
     IReadOnlyList<DettaglioDominio> Domini,
-    IReadOnlyList<LinguaDelSito> Lingue);
+    IReadOnlyList<LinguaDelSito> Lingue,
+    bool CommercioAttivo = false);
 
 public sealed record DettaglioAccount(
     Guid Id,
@@ -126,6 +127,12 @@ public interface IServizioPiattaforma
         string? fusoOrario,
         bool attivo,
         CancellationToken annullamento);
+
+    /// <summary>
+    /// Attiva o disattiva il negozio del sito. Disattivarlo spegne anche la registrazione degli acquirenti (che ha senso solo con il
+    /// negozio attivo). I dati del catalogo non si toccano.
+    /// </summary>
+    Task<EsitoOperazione> ImpostaCommercioAsync(Guid idAttore, Guid idTenant, Guid idSito, bool attivo, CancellationToken annullamento);
 
     Task<EsitoOperazione> AggiungiDominioAsync(
         Guid idAttore,

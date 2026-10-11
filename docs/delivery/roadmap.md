@@ -100,6 +100,8 @@ Il piano dettagliato è in [`plan-m0-m1.md`](plan-m0-m1.md).
 - Ordini, snapshot, inventario e email essenziali.
 - Componenti commerce nel renderer/page builder.
 
+**Stato (2026-10-11):** politiche iniziali decise (ADR-0020); fatta la slice del catalogo (prodotti, varianti, traduzioni, amministrazione). Seguono acquirenti, carrello e totali, ordine con snapshot, inventario con prenotazione, adapter PayPal con webhook e componenti nel builder.
+
 **Exit criteria:** test integrato per pagamento riuscito/fallito/duplicato, tenancy e riconciliazione; policy fiscali/spedizione approvate.
 
 ## M8 — Lancio controllato

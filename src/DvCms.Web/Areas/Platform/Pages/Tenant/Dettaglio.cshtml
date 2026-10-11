@@ -101,6 +101,13 @@
                             <div class="col-md-auto"><button type="submit" class="btn btn-primary">@_L["Salva"]</button></div>
                         </form>
 
+                        <form method="post" asp-page-handler="Commercio" asp-route-id="@tenant.Id" class="d-flex align-items-center gap-3 mt-3">
+                            <input type="hidden" name="idSito" value="@sito.Id" />
+                            <span>@_L["Negozio"]: <strong>@(sito.CommercioAttivo ? _L["attivo"] : _L["non attivo"])</strong></span>
+                            <input type="hidden" name="attivo" value="@((!sito.CommercioAttivo).ToString().ToLowerInvariant())" />
+                            <button type="submit" class="btn btn-sm @(sito.CommercioAttivo ? "btn-outline-danger" : "btn-outline-primary")">@(sito.CommercioAttivo ? _L["Disattiva il negozio"] : _L["Attiva il negozio"])</button>
+                        </form>
+
                         <table class="table table-sm mt-3 mb-2">
                             <thead>
                                 <tr>

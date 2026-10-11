@@ -1,3 +1,4 @@
+@inject DvCms.Application.Negozio.IServizioCatalogo Catalogo
 <ul class="navbar-nav pt-lg-3">
     <li class="nav-section-title">@_L["Generale"]</li>
     <li class="nav-item">
@@ -25,6 +26,17 @@
             <span class="nav-link-title">@_L["Aspetto"]</span>
         </a>
     </li>
+    @* Il negozio compare solo nei siti che lo hanno attivo; le pagine verificano comunque lo stesso requisito lato server. *@
+    @if (await Catalogo.CommercioAttivoAsync(Context.RequestAborted))
+    {
+        <li class="nav-section-title">@_L["Negozio"]</li>
+        <li class="nav-item">
+            <a class="nav-link" href="/admin/negozio/prodotti">
+                <span class="nav-link-icon"><i class="ti ti-shopping-cart"></i></span>
+                <span class="nav-link-title">@_L["Prodotti"]</span>
+            </a>
+        </li>
+    }
     @* La visibilità è solo comodità: ogni pagina dell'area Platform è protetta lato server dalla politica del PlatformAdmin. *@
     @if (User.IsInRole("PlatformAdmin"))
     {

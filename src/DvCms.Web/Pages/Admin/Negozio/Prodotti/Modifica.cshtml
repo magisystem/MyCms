@@ -1,0 +1,126 @@
+@page "/admin/negozio/prodotti/{id}"
+@model DvCms.Web.Pages.Admin.Negozio.Prodotti.ModificaModel
+@using DvCms.Domain.Negozio
+@{
+    ViewData["Titolo"] = Model.Nuovo ? _L["Nuovo prodotto"] : _L["Modifica prodotto"];
+}
+@if (Model.Messaggio is not null)
+{
+    <div class="alert alert-success" role="status">@Model.Messaggio</div>
+}
+@if (Model.ErroreDaMostrare is not null)
+{
+    <div class="alert alert-danger" role="alert">
+        @Model.ErroreDaMostrare
+        @if (Model.CampiNonValidi.Count > 0)
+        {
+            <ul class="mb-0 mt-1">
+                @foreach (var campo in Model.CampiNonValidi)
+                {
+                    <li>@Model.NomeCampo(campo)</li>
+                }
+            </ul>
+        }
+    </div>
+}
+<form method="post" novalidate>
+    <input type="hidden" asp-for="Modulo.Token" />
+    <div class="card mb-3">
+        <div class="card-header"><h3 class="card-title">@_L["Dati generali"]</h3></div>
+        <div class="card-body row g-3">
+            <div class="col-md-4">
+                <label class="form-label" for="stato">@_L["Stato"]</label>
+                <select class="form-select" id="stato" name="Modulo.Stato">
+                    <option value="@StatoProdotto.Bozza" selected="@(Model.Modulo.Stato == StatoProdotto.Bozza)">@_L["Bozza"]</option>
+                    <option value="@StatoProdotto.Pubblicato" selected="@(Model.Modulo.Stato == StatoProdotto.Pubblicato)">@_L["Pubblicato"]</option>
+                    @if (!Model.Nuovo)
+                    {
+                        <option value="@StatoProdotto.Archiviato" selected="@(Model.Modulo.Stato == StatoProdotto.Archiviato)">@_L["Archiviato"]</option>
+                    }
+                </select>
+                <div class="form-hint">@_L["Un prodotto pubblicato richiede almeno una variante attiva."]</div>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" for="aliquota">@_L["Aliquota IVA (%)"]</label>
+                <select class="form-select" id="aliquota" name="Modulo.Aliquota">
+                    @foreach (var aliquota in Model.AliquoteAmmesse)
+                    {
+                        <option value="@Model.Formatta(aliquota)" selected="@(Model.Modulo.Aliquota == Model.Formatta(aliquota))">@Model.Formatta(aliquota)</option>
+                    }
+                </select>
+                <div class="form-hint">@_L["I prezzi delle varianti sono IVA inclusa, in euro."]</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header"><h3 class="card-title">@_L["Nome e descrizione"]</h3></div>
+        <div class="card-body">
+            @for (var i = 0; i < Model.Modulo.Traduzioni.Count; i++)
+            {
+                var lingua = Model.Lingue.Single(l => l.Codice == Model.Modulo.Traduzioni[i].Codice);
+                <fieldset class="mb-3">
+                    <legend class="form-label">@lingua.Nome (@lingua.Codice)@(lingua.Predefinita ? " · " + _L["predefinita"] : null)</legend>
+                    <input type="hidden" name="Modulo.Traduzioni[@i].Codice" value="@lingua.Codice" />
+                    <div class="mb-2">
+                        <label class="form-label" for="nome-@i">@_L["Nome"]</label>
+                        <input class="form-control" id="nome-@i" name="Modulo.Traduzioni[@i].Nome" value="@Model.Modulo.Traduzioni[i].Nome" maxlength="@Prodotto.LunghezzaMassimaNome" />
+                    </div>
+                    <div>
+                        <label class="form-label" for="descrizione-@i">@_L["Descrizione"]</label>
+                        <textarea class="form-control" id="descrizione-@i" name="Modulo.Traduzioni[@i].Descrizione" rows="3" maxlength="@Prodotto.LunghezzaMassimaDescrizione">@Model.Modulo.Traduzioni[i].Descrizione</textarea>
+                    </div>
+                </fieldset>
+            }
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header"><h3 class="card-title">@_L["Varianti"]</h3></div>
+        <div class="card-body">
+            <p class="text-secondary">@_L["Ogni prodotto ha almeno una variante con il suo codice articolo e il suo prezzo. Le righe vuote si ignorano; togliere i dati di una variante esistente la elimina."]</p>
+            @for (var i = 0; i < Model.Modulo.Varianti.Count; i++)
+            {
+                var variante = Model.Modulo.Varianti[i];
+                <fieldset class="border rounded p-3 mb-3">
+                    <legend class="form-label">@_L["Variante"] @(i + 1)</legend>
+                    @if (variante.Id is { } idVariante)
+                    {
+                        <input type="hidden" name="Modulo.Varianti[@i].Id" value="@idVariante" />
+                    }
+                    <div class="row g-2">
+                        <div class="col-md-3">
+                            <label class="form-label" for="sku-@i">@_L["Codice articolo"]</label>
+                            <input class="form-control" id="sku-@i" name="Modulo.Varianti[@i].Sku" value="@variante.Sku" maxlength="50" />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label" for="prezzo-@i">@_L["Prezzo (EUR, IVA inclusa)"]</label>
+                            <input class="form-control" id="prezzo-@i" name="Modulo.Varianti[@i].Prezzo" value="@variante.Prezzo" inputmode="decimal" />
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <label class="form-check mb-2">
+                                <input type="checkbox" class="form-check-input" name="Modulo.Varianti[@i].Attiva" value="true" checked="@variante.Attiva" />
+                                <input type="hidden" name="Modulo.Varianti[@i].Attiva" value="false" />
+                                <span class="form-check-label">@_L["Attiva"]</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="row g-2 mt-1">
+                        @foreach (var lingua in Model.Lingue)
+                        {
+                            <div class="col-md-4">
+                                <label class="form-label" for="etichetta-@i-@lingua.Codice">@_L["Etichetta"] (@lingua.Codice)</label>
+                                <input class="form-control" id="etichetta-@i-@lingua.Codice" name="Modulo.Varianti[@i].Etichette[@lingua.Codice]" value="@variante.Etichette.GetValueOrDefault(lingua.Codice)" maxlength="@VarianteProdotto.LunghezzaMassimaEtichetta" />
+                            </div>
+                        }
+                    </div>
+                </fieldset>
+            }
+        </div>
+    </div>
+
+    <div class="d-flex">
+        <a class="btn btn-outline-secondary" href="/admin/negozio/prodotti">@_L["Torna ai prodotti"]</a>
+        <button type="submit" class="btn btn-primary ms-auto">@_L["Salva"]</button>
+    </div>
+</form>
