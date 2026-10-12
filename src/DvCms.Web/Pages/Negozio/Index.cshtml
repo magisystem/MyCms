@@ -4,19 +4,28 @@
     ViewData["Titolo"] = _L["Negozio"];
 }
 <h1>@_L["Negozio"]</h1>
+<form method="get" action="/negozio" role="search" class="dv-ricerca">
+    @if (Model.Selezionata is { } categoriaScelta)
+    {
+        <input type="hidden" name="categoria" value="@categoriaScelta.Id" />
+    }
+    <label for="q">@_L["Cerca nel negozio"]</label>
+    <input id="q" name="q" type="search" maxlength="100" value="@Model.Ricerca" />
+    <button type="submit">@_L["Cerca"]</button>
+</form>
 @if (Model.Categorie.Count > 0)
 {
     <nav class="dv-categorie" aria-label="@_L["Categorie"]">
         <a href="/negozio" aria-current="@(Model.Selezionata is null ? "true" : null)">@_L["Tutti"]</a>
         @foreach (var categoria in Model.Categorie)
         {
-            <a href="/negozio?categoria=@categoria.Id" aria-current="@(Model.Selezionata?.Id == categoria.Id ? "true" : null)">@(categoria.Nome.Length > 0 ? categoria.Nome : "—") (@categoria.Prodotti)</a>
+            <a href="/negozio?categoria=@categoria.Id@(Model.Ricerca is null ? null : "&q=" + Uri.EscapeDataString(Model.Ricerca))" aria-current="@(Model.Selezionata?.Id == categoria.Id ? "true" : null)">@(categoria.Nome.Length > 0 ? categoria.Nome : "—") (@categoria.Prodotti)</a>
         }
     </nav>
 }
 @if (Model.Prodotti.Count == 0)
 {
-    <p>@_L["Nessun prodotto disponibile."]</p>
+    <p>@(Model.Ricerca is null ? _L["Nessun prodotto disponibile."] : _L["Nessun prodotto corrisponde alla ricerca."])</p>
 }
 else
 {

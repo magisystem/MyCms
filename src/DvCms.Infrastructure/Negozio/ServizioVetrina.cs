@@ -66,6 +66,40 @@ public sealed class ServizioVetrina : IServizioVetrina
         return [.. visibili.Where(p => inCategoria.Contains(p.Id))];
     }
 
+    public async Task<IReadOnlyList<ProdottoInVetrina>> CercaAsync(string codiceLingua, string? testo, Guid? idCategoria, CancellationToken annullamento)
+    {
+        var visibili = idCategoria is { } categoria
+            ? await ElencaPerCategoriaAsync(codiceLingua, categoria, annullamento)
+            : await ElencaAsync(codiceLingua, annullamento);
+        var parole = Parole(testo);
+        if (parole.Count == 0 || visibili.Count == 0)
+        {
+            return visibili;
+        }
+
+        var idSito = _tenant.IdSito;
+        var ids = visibili.Select(p => p.Id).ToList();
+        var traduzioni = await _contesto.TraduzioniProdotto.AsNoTracking().Where(t => t.IdSito == idSito && ids.Contains(t.IdProdotto)).ToListAsync(annullamento);
+        var codici = await _contesto.VariantiProdotto.AsNoTracking().Where(v => v.IdSito == idSito && v.Attiva && ids.Contains(v.IdProdotto)).Select(v => new { v.IdProdotto, v.Sku }).ToListAsync(annullamento);
+
+        var paglia = ids.ToDictionary(
+            id => id,
+            id => string.Join(
+                ' ',
+                traduzioni.Where(t => t.IdProdotto == id).Select(t => t.Nome + " " + t.Descrizione)
+                    .Concat(codici.Where(c => c.IdProdotto == id).Select(c => c.Sku))));
+        return [.. visibili.Where(p => parole.All(parola => paglia[p.Id].Contains(parola, StringComparison.OrdinalIgnoreCase)))];
+    }
+
+    /// <summary>Le parole da cercare: separate da spazi, di almeno due caratteri, senza controlli, al più cinque e lunghe al più 50.</summary>
+    private static List<string> Parole(string? testo) =>
+        [.. (testo ?? string.Empty)
+            .Split([' ', '\t', '\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Where(p => p.Length >= 2 && !p.Any(char.IsControl))
+            .Select(p => p.Length > 50 ? p[..50] : p)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Take(5)];
+
     public async Task<IReadOnlyList<CategoriaInVetrina>> CategorieAsync(string codiceLingua, CancellationToken annullamento)
     {
         var idSito = _tenant.IdSito;

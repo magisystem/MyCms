@@ -75,6 +75,7 @@ h1 {
 .dv-vetrina-testata nav { display: flex; gap: 1rem; }
 .dv-barra-negozio { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.5rem 1rem; padding: 0.35rem 1rem; font-size: 0.85rem; border-bottom: 1px solid currentColor; }
 .dv-vetrina-piede { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid currentColor; font-size: 0.875rem; }
+.dv-ricerca { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin: 0 0 1rem; }
 .dv-categorie { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; margin: 0 0 1rem; }
 .dv-categorie a[aria-current="true"] { font-weight: 700; text-decoration: none; }
 .dv-prodotti { display: grid; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); gap: 1rem; list-style: none; margin: 0; padding: 0; }

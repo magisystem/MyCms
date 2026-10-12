@@ -49,6 +49,36 @@ public class VetrinaWebTest
     }
 
     [Fact]
+    public async Task LaRicercaTrovaPerNomeECodiceSenzaDistinguereLeMaiuscoleELimitaAiVisibiliEAlTenant()
+    {
+        await using var c = await ContestoNegozio.CreaAsync();
+        await c.CreaProdottoAsync(c.A, "Quaderno a righe", 22m, ("QUA-100", 5m, null));
+        await c.CreaProdottoAsync(c.A, "Penna blu", 22m, ("PEN-200", 2m, null));
+        await c.CreaProdottoAsync(c.A, "Quaderno segreto", 22m, StatoProdotto.Bozza, ("QUA-999", 5m, null));
+        await c.CreaProdottoAsync(c.B, "Quaderno di B", 22m, ("QUB-1", 5m, null));
+        var anonimo = c.Web.SessioneSu(c.A.Host);
+
+        var perNome = await (await anonimo.GetAsync("/negozio?q=quaderno")).Content.ReadAsStringAsync(Ct);
+        var perCodice = await (await anonimo.GetAsync("/negozio?q=pen-2")).Content.ReadAsStringAsync(Ct);
+        var piuParole = await (await anonimo.GetAsync("/negozio?q=quaderno%20righe")).Content.ReadAsStringAsync(Ct);
+        var nessuno = await (await anonimo.GetAsync("/negozio?q=zzz")).Content.ReadAsStringAsync(Ct);
+        var vuota = await (await anonimo.GetAsync("/negozio?q=%20%20")).Content.ReadAsStringAsync(Ct);
+        var xss = await (await anonimo.GetAsync("/negozio?q=%3Cscript%3Ealert(1)%3C%2Fscript%3E")).Content.ReadAsStringAsync(Ct);
+
+        Assert.Contains("Quaderno a righe", perNome, StringComparison.Ordinal);
+        Assert.DoesNotContain("Penna blu", perNome, StringComparison.Ordinal);
+        Assert.DoesNotContain("Quaderno segreto", perNome, StringComparison.Ordinal);
+        Assert.DoesNotContain("Quaderno di B", perNome, StringComparison.Ordinal);
+        Assert.Contains("Penna blu", perCodice, StringComparison.Ordinal);
+        Assert.DoesNotContain("Quaderno a righe", perCodice, StringComparison.Ordinal);
+        Assert.Contains("Quaderno a righe", piuParole, StringComparison.Ordinal);
+        Assert.Contains("Nessun prodotto corrisponde alla ricerca.", nessuno, StringComparison.Ordinal);
+        Assert.Contains("Quaderno a righe", vuota, StringComparison.Ordinal);
+        Assert.Contains("Penna blu", vuota, StringComparison.Ordinal);
+        Assert.DoesNotContain("<script>alert", xss, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task SenzaNegozioAttivoLaVetrinaNonEsiste()
     {
         await using var c = await ContestoNegozio.CreaAsync();

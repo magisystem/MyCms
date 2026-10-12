@@ -30,7 +30,10 @@ public class IndexModel : PageModel
 
     public CultureInfo Cultura { get; } = CultureInfo.GetCultureInfo("it-IT");
 
-    public async Task<IActionResult> OnGetAsync(Guid? categoria, CancellationToken annullamento)
+    /// <summary>Il testo cercato (al più 100 caratteri), come l'ha digitato il cliente.</summary>
+    public string? Ricerca { get; private set; }
+
+    public async Task<IActionResult> OnGetAsync(Guid? categoria, string? q, CancellationToken annullamento)
     {
         if (!await _catalogo.CommercioAttivoAsync(annullamento))
         {
@@ -45,9 +48,8 @@ public class IndexModel : PageModel
             return NotFound();
         }
 
-        Prodotti = Selezionata is { } scelta
-            ? await _vetrina.ElencaPerCategoriaAsync(_lingua.CodiceLingua, scelta.Id, annullamento)
-            : await _vetrina.ElencaAsync(_lingua.CodiceLingua, annullamento);
+        Ricerca = string.IsNullOrWhiteSpace(q) ? null : (q.Trim().Length > 100 ? q.Trim()[..100] : q.Trim());
+        Prodotti = await _vetrina.CercaAsync(_lingua.CodiceLingua, Ricerca, Selezionata?.Id, annullamento);
         return Page();
     }
 }
