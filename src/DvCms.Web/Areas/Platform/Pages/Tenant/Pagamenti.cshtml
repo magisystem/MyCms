@@ -49,3 +49,48 @@
         </form>
     </div>
 </div>
+@if (Model.Rapporto is { } rapporto)
+{
+    <div class="card mt-3">
+        <div class="card-header">
+            <h3 class="card-title">@_L["Verifica di esercizio"]</h3>
+            <div class="card-actions">
+                @if (rapporto.Pronto)
+                {
+                    <span class="badge bg-green-lt">@_L["Pronto per i pagamenti"]</span>
+                }
+                else
+                {
+                    <span class="badge bg-red-lt">@_L["Non ancora pronto"]</span>
+                }
+            </div>
+        </div>
+        <div class="list-group list-group-flush">
+            @foreach (var controllo in rapporto.Controlli)
+            {
+                <div class="list-group-item d-flex justify-content-between align-items-start gap-3">
+                    <div>
+                        @Model.EtichettaControllo(controllo.Codice)
+                        @if (controllo.Dettaglio is { Length: > 0 } dettaglio)
+                        {
+                            <div class="text-secondary small"><code>@dettaglio</code></div>
+                        }
+                    </div>
+                    @switch (controllo.Stato)
+                    {
+                        case DvCms.Application.Negozio.StatoControllo.Ok:
+                            <span class="badge bg-green-lt">@_L["OK"]</span>
+                            break;
+                        case DvCms.Application.Negozio.StatoControllo.Attenzione:
+                            <span class="badge bg-yellow-lt">@_L["Da controllare"]</span>
+                            break;
+                        default:
+                            <span class="badge bg-red-lt">@_L["Bloccante"]</span>
+                            break;
+                    }
+                </div>
+            }
+        </div>
+        <div class="card-footer text-secondary">@_L["L'ultima verifica prima di accendere i pagamenti reali è un ordine di prova di importo minimo, con rimborso. Vedi docs/operations/negozio-esercizio.md."]</div>
+    </div>
+}

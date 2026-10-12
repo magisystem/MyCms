@@ -155,6 +155,10 @@ Gli stati sono un'enumerazione chiusa (`StatoOrdine`) e **ogni passaggio** passa
 - **Informative:** privacy e condizioni di reso sono **pagine normali del sito, scritte dal tenant**, con gli slug convenzionali `privacy` e `resi`: se la pagina è pubblicata nella lingua della richiesta, il piè di pagina della vetrina e dell'area cliente la collega (altrimenti nessun collegamento). Il sistema non fornisce testi legali.
 - **Non ancora:** esportazione in PDF, richiesta di cancellazione per email dal modulo di contatto, registro dei consensi per le comunicazioni commerciali (il negozio invia solo email transazionali).
 
+## Esercizio (M7.22)
+
+La **Verifica di esercizio** (`IServizioProntezzaNegozio`) è una sezione della pagina Pagamenti del tenant nell'area Platform: controlli in sola lettura, solo per il `PlatformAdmin`, senza segreti — negozio attivo, credenziali PayPal leggibili, webhook, interruttore di produzione (bloccante solo in ambiente Produzione), prodotti pubblicati, metodi di spedizione, canale email, amministratori attivi, pagine `privacy` e `resi`, manutenzione abilitata e dominio pubblico (con l'indirizzo del webhook da registrare). La procedura completa per accendere i pagamenti reali è in [`operations/negozio-esercizio.md`](../operations/negozio-esercizio.md).
+
 ## Integrazione con il builder
 
 I componenti `negozio.*` referenziano prodotto/collezione/query tipizzata, non copiano il catalogo nel documento. Il renderer chiama il modulo Store attraverso servizi applicativi. Un'anteprima senza dati reali deve essere chiaramente distinta dal checkout reale.

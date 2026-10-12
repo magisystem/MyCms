@@ -68,6 +68,7 @@ Piano di implementazione richiesto da `docs/AI_START_HERE.md`, preparato prima d
 | M7.19 Ricerca nel catalogo | Completata (`/negozio?q=` su nome, descrizione e codice articolo, combinabile con la categoria, solo sui prodotti visibili, testo codificato e limitato) |
 | M7.20 Griglia di categoria nel page builder | Completata (`negozio.griglia-categoria` con selettore della categoria nell'editor, verifica server di esistenza nel sito, template e modello v7 con impronte fissate, rendering alla visita dei soli prodotti visibili) |
 | M7.21 Avviso al tenant e reinserimento in giacenza | Completata (email agli amministratori a ordine pagato, spegnibile; reinserimento una tantum dei soli ordini interamente rimborsati con movimento «Reso» e audit)  |
+| M7.22 Verifica di esercizio e runbook | Completata (verifica di prontezza per sito nell'area Platform, in sola lettura e senza segreti; runbook `docs/operations/negozio-esercizio.md`; restano le azioni che richiedono credenziali reali: conto PayPal, webhook, interruttore di produzione, ordine di prova) |
 | B-010 Gestione testi statici | Completata (`/admin/platform/testi`: ricerca, filtri, modifica, cache e audit) |
 | B-007 Creazione TenantAdmin e non-escalation | Completata (password temporanea mostrata una volta; elevazione `Utente` → `TenantAdmin`) |
 

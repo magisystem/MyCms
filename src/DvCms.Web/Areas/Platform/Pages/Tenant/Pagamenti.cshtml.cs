@@ -14,12 +14,35 @@ namespace DvCms.Web.Areas.Platform.Pages.Tenant;
 public class PagamentiModel : PaginaPiattaforma
 {
     private readonly IServizioImpostazioniPagamento _pagamenti;
+    private readonly IServizioProntezzaNegozio _prontezza;
 
-    public PagamentiModel(IServizioImpostazioniPagamento pagamenti, ILocalizzatore localizzatore)
+    public PagamentiModel(IServizioImpostazioniPagamento pagamenti, IServizioProntezzaNegozio prontezza, ILocalizzatore localizzatore)
         : base(localizzatore)
     {
         _pagamenti = pagamenti;
+        _prontezza = prontezza;
     }
+
+    /// <summary>Verifica di prontezza del negozio del sito (sola lettura).</summary>
+    public RapportoProntezza? Rapporto { get; private set; }
+
+    public string EtichettaControllo(string codice) => codice switch
+    {
+        "NegozioAttivo" => Localizzatore.Traduci("Negozio attivo per il sito"),
+        "CredenzialiPayPal" => Localizzatore.Traduci("Credenziali PayPal complete e leggibili"),
+        "WebhookPayPal" => Localizzatore.Traduci("Identificativo del webhook impostato"),
+        "InterruttoreProduzione" => Localizzatore.Traduci("Interruttore di produzione acceso (Negozio:CheckoutProduzione)"),
+        "AmbienteProva" => Localizzatore.Traduci("Ambiente di prova (nessun denaro reale)"),
+        "ProdottiPubblicati" => Localizzatore.Traduci("Almeno un prodotto pubblicato con una variante attiva"),
+        "MetodiSpedizione" => Localizzatore.Traduci("Almeno un metodo di spedizione attivo"),
+        "CanaleEmail" => Localizzatore.Traduci("Canale email del tenant configurato (conferme e avvisi)"),
+        "AmministratoriAttivi" => Localizzatore.Traduci("Almeno un amministratore attivo (avvisi dei nuovi ordini)"),
+        "PaginaPrivacy" => Localizzatore.Traduci("Pagina «privacy» pubblicata"),
+        "PaginaResi" => Localizzatore.Traduci("Pagina «resi» pubblicata"),
+        "ManutenzioneAttiva" => Localizzatore.Traduci("Manutenzione periodica attiva (scadenza prenotazioni, riconciliazione, conservazione)"),
+        "DominioPubblico" => Localizzatore.Traduci("Dominio pubblico del sito (indirizzo del webhook)"),
+        _ => codice,
+    };
 
     public Guid IdTenant { get; private set; }
 
@@ -45,6 +68,7 @@ public class PagamentiModel : PaginaPiattaforma
 
         Ambiente = Scheda.Ambiente;
         IdClient = Scheda.IdClient;
+        Rapporto = await _prontezza.VerificaAsync(IdAttore, id, idSito, annullamento);
         return Page();
     }
 
@@ -79,6 +103,7 @@ public class PagamentiModel : PaginaPiattaforma
         }
 
         Ambiente = scelto;
+        Rapporto = await _prontezza.VerificaAsync(IdAttore, id, idSito, annullamento);
         IdClient = idClient ?? string.Empty;
         CampiNonValidi = esito.CampiNonValidi ?? [];
         Errore = Localizzatore.Traduci("Controlla i campi evidenziati.");
