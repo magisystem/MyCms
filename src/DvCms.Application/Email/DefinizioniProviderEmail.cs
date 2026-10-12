@@ -62,12 +62,29 @@ public static partial class DefinizioniProviderEmail
         new("NomeMittente", "Nome del mittente", TipoCampoEmail.Testo, false, false),
     ];
 
+    /// <summary>App OAuth del tenant per Microsoft 365: registrata in Microsoft Entra dal <c>TenantAdmin</c> (ADR-0021).</summary>
+    private static readonly CampoProviderEmail[] _microsoftOAuth =
+    [
+        new("TenantMicrosoft", "Tenant Microsoft", TipoCampoEmail.Identificativo, true, false),
+        new("IdClient", "Identificativo client", TipoCampoEmail.Identificativo, true, false),
+        new("SegretoClient", "Segreto del client", TipoCampoEmail.Testo, true, true),
+    ];
+
+    /// <summary>App OAuth del tenant per Google: creata nella Google Cloud Console dal <c>TenantAdmin</c> (ADR-0021).</summary>
+    private static readonly CampoProviderEmail[] _googleOAuth =
+    [
+        new("IdClient", "Identificativo client", TipoCampoEmail.Identificativo, true, false),
+        new("SegretoClient", "Segreto del client", TipoCampoEmail.Testo, true, true),
+    ];
+
     public static IReadOnlyList<CampoProviderEmail> Campi(ProviderEmail provider) => provider switch
     {
         ProviderEmail.Smtp => _smtp,
         ProviderEmail.Graph => _graph,
         ProviderEmail.Gmail => _gmail,
         ProviderEmail.SendGrid => _sendGrid,
+        ProviderEmail.MicrosoftOAuth => _microsoftOAuth,
+        ProviderEmail.GoogleOAuth => _googleOAuth,
         _ => throw new ArgumentOutOfRangeException(nameof(provider), provider, "Provider email sconosciuto."),
     };
 

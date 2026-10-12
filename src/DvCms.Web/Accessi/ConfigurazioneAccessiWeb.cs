@@ -87,6 +87,10 @@ public static class ConfigurazioneAccessiWeb
                 .AddAuthenticationSchemes(Schemi.Admin)
                 .RequireAuthenticatedUser()
                 .RequireRole("TenantAdmin", "PlatformAdmin"))
+            .AddPolicy(Politiche.SoloAmministratoreTenant, politica => politica
+                .AddAuthenticationSchemes(Schemi.Admin)
+                .RequireAuthenticatedUser()
+                .RequireRole("TenantAdmin"))
             .AddPolicy(Politiche.Acquirente, politica => politica
                 .AddAuthenticationSchemes(Schemi.Cliente)
                 .RequireAuthenticatedUser()

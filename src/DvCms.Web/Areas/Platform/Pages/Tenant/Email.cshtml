@@ -20,11 +20,17 @@
                 <div class="card-actions"><a href="/admin/platform/tenant/@Model.IdTenant" class="btn btn-link">@_L["Torna al tenant"]</a></div>
             </div>
             <div class="card-body">
+                @if (Model.CanaleGestitoDalTenant)
+                {
+                    <div class="alert alert-info" role="status">@_L["Il tenant usa"] <strong>@Model.NomeProvider(Model.Scheda.Impostazioni!.Provider)</strong>: @_L["l'app OAuth e il collegamento della casella li gestisce l'amministratore del tenant e non sono visibili né modificabili qui. L'invio di prova resta disponibile."]</div>
+                }
+                else
+                {
                 <form method="get" class="row g-2 align-items-end mb-4">
                     <div class="col">
                         <label class="form-label" for="Canale">@_L["Canale di invio"]</label>
                         <select class="form-select" id="Canale" name="provider">
-                            @foreach (var provider in Enum.GetValues<DvCms.Domain.Email.ProviderEmail>())
+                            @foreach (var provider in DvCms.Web.Areas.Platform.Pages.Tenant.EmailModel.CanaliConfigurabili)
                             {
                                 <option value="@provider" selected="@(provider == Model.Provider)">@Model.NomeProvider(provider)</option>
                             }
@@ -78,6 +84,7 @@
                     }
                     <button type="submit" class="btn btn-primary">@_L["Salva"]</button>
                 </form>
+                }
             </div>
         </div>
     </div>

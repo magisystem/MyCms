@@ -26,6 +26,12 @@ public class EmailModel : PaginaPiattaforma
 
     public ProviderEmail Provider { get; private set; } = ProviderEmail.Smtp;
 
+    /// <summary>Il canale con consenso OAuth è del <c>TenantAdmin</c>: qui si vede soltanto che c'è.</summary>
+    public bool CanaleGestitoDalTenant => Scheda?.Impostazioni?.Provider.UsaOAuth() == true;
+
+    /// <summary>I canali che il <c>PlatformAdmin</c> può configurare (quelli con consenso OAuth li gestisce il tenant).</summary>
+    public static IReadOnlyList<ProviderEmail> CanaliConfigurabili { get; } = [ProviderEmail.Smtp, ProviderEmail.Graph, ProviderEmail.Gmail, ProviderEmail.SendGrid];
+
     public IReadOnlyList<CampoProviderEmail> Campi => DefinizioniProviderEmail.Campi(Provider);
 
     /// <summary>Valori da mostrare nei campi (mai i segreti).</summary>
@@ -46,9 +52,9 @@ public class EmailModel : PaginaPiattaforma
             return NotFound();
         }
 
-        Provider = Enum.TryParse<ProviderEmail>(provider, ignoreCase: true, out var scelto) && Enum.IsDefined(scelto)
+        Provider = Enum.TryParse<ProviderEmail>(provider, ignoreCase: true, out var scelto) && Enum.IsDefined(scelto) && !scelto.UsaOAuth()
             ? scelto
-            : Scheda.Impostazioni?.Provider ?? ProviderEmail.Smtp;
+            : Scheda.Impostazioni?.Provider is { } salvato && !salvato.UsaOAuth() ? salvato : ProviderEmail.Smtp;
         PreparaValori();
         return Page();
     }
@@ -129,6 +135,8 @@ public class EmailModel : PaginaPiattaforma
         ProviderEmail.Graph => Localizzatore.Traduci("Microsoft Graph"),
         ProviderEmail.Gmail => Localizzatore.Traduci("Gmail"),
         ProviderEmail.SendGrid => Localizzatore.Traduci("SendGrid"),
+        ProviderEmail.MicrosoftOAuth => Localizzatore.Traduci("Microsoft 365 (con consenso)"),
+        ProviderEmail.GoogleOAuth => Localizzatore.Traduci("Google Mail (con consenso)"),
         _ => provider.ToString(),
     };
 

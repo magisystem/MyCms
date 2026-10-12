@@ -32,6 +32,9 @@ public static class Politiche
 
     public const string AmministratorePiattaforma = "AmministratorePiattaforma";
 
+    /// <summary>Solo il <c>TenantAdmin</c>: nemmeno il <c>PlatformAdmin</c> (impostazioni che il tenant tiene per sé, ADR-0021).</summary>
+    public const string SoloAmministratoreTenant = "SoloAmministratoreTenant";
+
     /// <summary>Acquirente registrato (<c>Utente</c>) autenticato con il cookie dell'area cliente.</summary>
     public const string Acquirente = "Acquirente";
 

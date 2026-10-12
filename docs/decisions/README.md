@@ -25,5 +25,7 @@ Stato: `Proposed`, `Accepted`, `Superseded`, `Deprecated`.
 - [ADR-0017 — Denominazione in italiano](ADR-0017-italian-naming.md)
 - [ADR-0018 — Localizzazione dei testi (italiano e inglese)](ADR-0018-localization.md)
 - [ADR-0019 — Autenticazione a due fattori (TOTP e codici di recupero)](ADR-0019-two-factor-authentication.md)
+- [ADR-0020 — Politiche commerciali e PayPal](ADR-0020-commerce-policies-and-paypal.md)
+- [ADR-0021 — Email con consenso OAuth, app OAuth del tenant](ADR-0021-email-oauth-per-tenant.md)
 
 Per le regole operative della persistenza, vedere [`docs/architecture/database.md`](../architecture/database.md).

@@ -91,7 +91,16 @@ public class DefinizioniProviderEmailTest
         {
             var campi = DefinizioniProviderEmail.Campi(provider);
             Assert.NotEmpty(campi);
-            Assert.Contains(campi, c => c.Tipo == TipoCampoEmail.Email && c.Obbligatorio);
+
+            // Con il consenso OAuth il mittente è la casella collegata, non un campo: l'app ha invece il segreto del client.
+            if (provider.UsaOAuth())
+            {
+                Assert.Contains(campi, c => c.Nome == "SegretoClient" && c.Segreto && c.Obbligatorio);
+            }
+            else
+            {
+                Assert.Contains(campi, c => c.Tipo == TipoCampoEmail.Email && c.Obbligatorio);
+            }
         }
     }
 

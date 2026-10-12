@@ -53,7 +53,8 @@ public sealed class ServizioImpostazioniEmail : IServizioImpostazioniEmail
             var segreti = new HashSet<string>(StringComparer.Ordinal);
             try
             {
-                if (!string.IsNullOrEmpty(riga.SegretiProtetti))
+                // L'app OAuth è del TenantAdmin (ADR-0021): il PlatformAdmin vede il canale e nient'altro.
+                if (!string.IsNullOrEmpty(riga.SegretiProtetti) && !riga.Provider.UsaOAuth())
                 {
                     segreti.UnionWith((JsonSerializer.Deserialize<Dictionary<string, string>>(_protettore.Rivela(riga.SegretiProtetti)) ?? []).Keys);
                 }
@@ -65,7 +66,7 @@ public sealed class ServizioImpostazioniEmail : IServizioImpostazioniEmail
 
             visibili = new ImpostazioniEmailVisibili(
                 riga.Provider,
-                JsonSerializer.Deserialize<Dictionary<string, string>>(riga.ValoriJson) ?? [],
+                riga.Provider.UsaOAuth() ? [] : JsonSerializer.Deserialize<Dictionary<string, string>>(riga.ValoriJson) ?? [],
                 segreti,
                 Convert.ToBase64String(riga.TokenConcorrenza),
                 riga.AggiornatoIlUtc);
@@ -110,6 +111,13 @@ public sealed class ServizioImpostazioniEmail : IServizioImpostazioniEmail
         }
 
         var riga = await _contesto.ImpostazioniEmailTenant.IgnoreQueryFilters().SingleOrDefaultAsync(i => i.IdTenant == idTenant, annullamento);
+        if (provider.UsaOAuth() || riga?.Provider.UsaOAuth() == true)
+        {
+            // I canali con consenso OAuth (Microsoft 365, Google Mail) li configura e li rimuove solo il TenantAdmin (ADR-0021).
+            await RegistraNegazioneAsync(idAttore, idTenant, AzioniAudit.ModificaImpostazioniEmail, annullamento);
+            return new EsitoSalvataggioEmail(CodiceEsito.NonConsentito, []);
+        }
+
         if (riga is not null && !string.IsNullOrWhiteSpace(tokenConcorrenza))
         {
             try

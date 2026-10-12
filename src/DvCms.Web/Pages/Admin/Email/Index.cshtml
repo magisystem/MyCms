@@ -1,0 +1,182 @@
+@page "/admin/email"
+@model DvCms.Web.Pages.Admin.Email.IndexModel
+@using DvCms.Domain.Email
+@using DvCms.Domain.Outbox
+@{
+    ViewData["Titolo"] = _L["Email del tenant"];
+    var scheda = Model.Scheda;
+    var connessione = scheda.Connessione;
+    var altroCanale = scheda.CanaleAttivo is { } attivo && !attivo.UsaOAuth() ? attivo : (ProviderEmail?)null;
+}
+@if (Model.Messaggio is not null)
+{
+    <div class="alert alert-success" role="status">@Model.Messaggio</div>
+}
+@if (Model.ErroreDaMostrare is not null)
+{
+    <div class="alert alert-danger" role="alert">@Model.ErroreDaMostrare</div>
+}
+<div class="row row-cards">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header"><h3 class="card-title">@_L["App OAuth"]</h3></div>
+            <div class="card-body">
+                <p class="text-secondary">@_L["Le email partono dalla tua casella Microsoft 365 o Google Mail con il tuo consenso. Registra un'app OAuth presso il provider e inserisci qui i suoi dati: solo tu, amministratore del tenant, puoi leggerli o modificarli."]</p>
+                @if (altroCanale is { } esistente)
+                {
+                    <div class="alert alert-warning" role="alert">@_L["Oggi il tenant usa un canale configurato dalla piattaforma:"] <strong>@Model.NomeProvider(esistente)</strong>. @_L["Salvando un'app OAuth lo sostituisci."]</div>
+                }
+                <form method="get" class="row g-2 align-items-end mb-4">
+                    <div class="col">
+                        <label class="form-label" for="Canale">@_L["Provider"]</label>
+                        <select class="form-select" id="Canale" name="provider">
+                            @foreach (var provider in DvCms.Web.Pages.Admin.Email.IndexModel.Canali)
+                            {
+                                <option value="@provider" selected="@(provider == Model.Provider)">@Model.NomeProvider(provider)</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-auto"><button type="submit" class="btn">@_L["Mostra i campi"]</button></div>
+                </form>
+
+                <div class="mb-3">
+                    <label class="form-label" for="url-ritorno">@_L["Indirizzo di ritorno da registrare nell'app"]</label>
+                    <input type="text" class="form-control" id="url-ritorno" value="@Model.UrlRitorno" readonly />
+                    <div class="form-hint">@_L["Deve coincidere esattamente con quello registrato presso il provider."]</div>
+                </div>
+
+                <form method="post" asp-page-handler="SalvaApp" autocomplete="off" novalidate>
+                    <input type="hidden" name="provider" value="@Model.Provider" />
+                    <input type="hidden" name="tokenConcorrenza" value="@Model.TokenConcorrenza" />
+                    @foreach (var campo in Model.Campi)
+                    {
+                        var invalido = Model.CampiNonValidi.Contains(campo.Nome);
+                        var nome = "v_" + campo.Nome;
+                        <div class="mb-3">
+                            <label class="form-label @(campo.Obbligatorio ? "required" : null)" for="@nome">@Model.Etichetta(campo.Nome)</label>
+                            @if (campo.Segreto)
+                            {
+                                <input type="password" class="form-control @(invalido ? "is-invalid" : null)" id="@nome" name="@nome" autocomplete="new-password"
+                                       placeholder="@(Model.SegretoImpostato ? _L["Impostato: lascia vuoto per non cambiarlo"] : string.Empty)" />
+                            }
+                            else
+                            {
+                                <input type="text" class="form-control @(invalido ? "is-invalid" : null)" id="@nome" name="@nome" value="@Model.Valori.GetValueOrDefault(campo.Nome)" maxlength="100" />
+                            }
+                        </div>
+                    }
+                    @if (altroCanale is not null)
+                    {
+                        <label class="form-check mb-3">
+                            <input type="checkbox" class="form-check-input" name="sostituisciCanale" value="true" />
+                            <span class="form-check-label">@_L["Confermo di sostituire il canale configurato dalla piattaforma"]</span>
+                        </label>
+                    }
+                    <button type="submit" class="btn btn-primary">@_L["Salva l'app"]</button>
+                </form>
+            </div>
+        </div>
+
+        @if (scheda.App is not null)
+        {
+            <div class="card mt-3">
+                <div class="card-header"><h3 class="card-title">@_L["Casella collegata"]</h3></div>
+                <div class="card-body">
+                    @if (connessione is null)
+                    {
+                        <p class="text-secondary">@_L["Nessuna casella collegata: collega quella da cui partiranno le email."]</p>
+                    }
+                    else
+                    {
+                        <p>
+                            <strong>@connessione.Casella</strong>
+                            @if (connessione.Stato == StatoConnessioneEmail.Attiva && connessione.CorrispondeAllaApp)
+                            {
+                                <span class="badge bg-green-lt ms-2">@_L["Collegata"]</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-red-lt ms-2">@_L["Da ricollegare"]</span>
+                            }
+                        </p>
+                        <div class="small text-secondary mb-2">
+                            @_L["Collegata il"] @connessione.CollegataIlUtc.ToString("yyyy-MM-dd HH:mm", System.Globalization.CultureInfo.InvariantCulture) UTC
+                            @if (connessione.UltimoRinnovoIlUtc is { } rinnovo)
+                            {
+                                <span> - @_L["ultimo rinnovo del token"] @rinnovo.ToString("yyyy-MM-dd HH:mm", System.Globalization.CultureInfo.InvariantCulture) UTC</span>
+                            }
+                        </div>
+                        @if (connessione.Stato == StatoConnessioneEmail.Revocata)
+                        {
+                            <div class="alert alert-danger" role="alert">@_L["Il provider ha revocato il consenso: le email non partono finché non ricolleghi la casella."]</div>
+                        }
+                        else if (!connessione.CorrispondeAllaApp)
+                        {
+                            <div class="alert alert-warning" role="alert">@_L["Il collegamento è di un'app diversa da quella salvata: ricollega la casella."]</div>
+                        }
+                        @if (connessione.UltimoErrore is not null)
+                        {
+                            <div class="small text-danger mb-2">@connessione.UltimoErrore</div>
+                        }
+                    }
+                    <div class="btn-list">
+                        <form method="post" asp-page-handler="Collega" class="d-inline">
+                            <button type="submit" class="btn btn-primary">@(connessione is null ? _L["Collega la casella"] : _L["Ricollega la casella"])</button>
+                        </form>
+                        @if (connessione is not null)
+                        {
+                            <form method="post" asp-page-handler="Scollega" class="d-inline">
+                                <button type="submit" class="btn">@_L["Scollega"]</button>
+                            </form>
+                        }
+                        <form method="post" asp-page-handler="Rimuovi" class="d-inline">
+                            <button type="submit" class="btn btn-outline-danger">@_L["Rimuovi il canale"]</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="col-lg-4">
+        @if (connessione is { Stato: StatoConnessioneEmail.Attiva, CorrispondeAllaApp: true })
+        {
+            <div class="card">
+                <div class="card-header"><h3 class="card-title">@_L["Email di prova"]</h3></div>
+                <div class="card-body">
+                    <form method="post" asp-page-handler="Prova">
+                        <div class="mb-3">
+                            <label class="form-label" for="destinatario">@_L["Destinatario"]</label>
+                            <input type="email" class="form-control" id="destinatario" name="destinatario" maxlength="254" required />
+                        </div>
+                        <button type="submit" class="btn">@_L["Invia una prova"]</button>
+                    </form>
+                </div>
+            </div>
+        }
+        <div class="card mt-3">
+            <div class="card-header"><h3 class="card-title">@_L["Invii non riusciti"]</h3></div>
+            @if (scheda.Problemi.Count == 0)
+            {
+                <div class="card-body text-secondary">@_L["Nessun problema."]</div>
+            }
+            else
+            {
+                <div class="list-group list-group-flush">
+                    @foreach (var problema in scheda.Problemi)
+                    {
+                        <div class="list-group-item">
+                            <span class="badge @(problema.Stato == StatoMessaggioOutbox.Fallito ? "bg-red-lt" : "bg-orange-lt")">@(problema.Stato == StatoMessaggioOutbox.Fallito ? _L["Fallito"] : _L["Nuovo tentativo"])</span>
+                            <span class="small text-secondary ms-1">@problema.CreatoIlUtc.ToString("yyyy-MM-dd HH:mm", System.Globalization.CultureInfo.InvariantCulture) UTC - @problema.Tentativi @_L["tentativi"]</span>
+                            <div class="small mt-1">@problema.UltimoErrore</div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Script {
+    <script src="~/js/canale-email.js"></script>
+}

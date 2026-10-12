@@ -69,6 +69,17 @@
             </a>
         </li>
     }
+    @* Impostazioni del tenant che il PlatformAdmin non gestisce: solo il TenantAdmin (la pagina lo verifica comunque lato server). *@
+    @if (User.IsInRole("TenantAdmin"))
+    {
+        <li class="nav-section-title">@_L["Impostazioni"]</li>
+        <li class="nav-item">
+            <a class="nav-link" href="/admin/email">
+                <span class="nav-link-icon"><i class="ti ti-mail"></i></span>
+                <span class="nav-link-title">@_L["Email"]</span>
+            </a>
+        </li>
+    }
     @* La visibilità è solo comodità: ogni pagina dell'area Platform è protetta lato server dalla politica del PlatformAdmin. *@
     @if (User.IsInRole("PlatformAdmin"))
     {

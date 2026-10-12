@@ -594,6 +594,76 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.ToTable("RevisioniPagina", (string)null);
                 });
 
+            modelBuilder.Entity("DvCms.Domain.Email.ConnessioneEmailOAuth", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Casella")
+                        .IsRequired()
+                        .HasMaxLength(320)
+                        .HasColumnType("nvarchar(320)");
+
+                    b.Property<Guid>("CollegataDaIdUtenza")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CollegataIlUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("IdTenant")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ImprontaApp")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("Provider")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime?>("ScadenzaAccessoUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Stato")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("TokenAccessoProtetto")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TokenAggiornamentoProtetto")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<byte[]>("TokenConcorrenza")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("UltimoErrore")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime?>("UltimoErroreIlUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("UltimoRinnovoIlUtc")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CollegataDaIdUtenza");
+
+                    b.HasIndex("IdTenant")
+                        .IsUnique();
+
+                    b.ToTable("ConnessioniEmailOAuth", (string)null);
+                });
+
             modelBuilder.Entity("DvCms.Domain.Email.ImpostazioniEmailTenant", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2262,6 +2332,21 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                         .WithMany()
                         .HasForeignKey("IdTenant", "IdSito", "IdPagina")
                         .HasPrincipalKey("IdTenant", "IdSito", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DvCms.Domain.Email.ConnessioneEmailOAuth", b =>
+                {
+                    b.HasOne("DvCms.Domain.Accessi.Utenza", null)
+                        .WithMany()
+                        .HasForeignKey("CollegataDaIdUtenza")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("DvCms.Domain.Tenancy.Tenant", null)
+                        .WithMany()
+                        .HasForeignKey("IdTenant")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

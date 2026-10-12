@@ -1,6 +1,6 @@
 # ADR-0015 — Invio email tramite adapter intercambiabili
 
-- **Stato:** Accepted
+- **Stato:** Accepted (integrato da [ADR-0021](ADR-0021-email-oauth-per-tenant.md): i canali con consenso OAuth si configurano dal `TenantAdmin`)
 - **Data:** 2026-10-09
 
 ## Contesto

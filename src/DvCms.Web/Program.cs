@@ -14,6 +14,8 @@ costruttore.Services.AddRazorPages(opzioni =>
 {
     // Tutta l'area /admin richiede un amministratore del tenant (o il PlatformAdmin); l'accesso è l'unica eccezione.
     opzioni.Conventions.AuthorizeFolder("/Admin", Politiche.AmministratoreTenant);
+    // Canale email con consenso OAuth: l'app del tenant la gestisce solo il suo TenantAdmin, non il PlatformAdmin (ADR-0021).
+    opzioni.Conventions.AuthorizeFolder("/Admin/Email", Politiche.SoloAmministratoreTenant);
     opzioni.Conventions.AllowAnonymousToPage("/Admin/Accesso");
     opzioni.Conventions.AllowAnonymousToPage("/Admin/Verifica");
     opzioni.Conventions.AllowAnonymousToFolder("/Admin/Recupero");

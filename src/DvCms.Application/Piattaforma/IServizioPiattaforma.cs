@@ -32,6 +32,12 @@ public enum CodiceEsito
 
     /// <summary>Il tenant non ha ancora configurato il canale email (serve per gli inviti).</summary>
     EmailNonConfigurata = 10,
+
+    /// <summary>Un servizio esterno (provider email, pagamenti) ha rifiutato la richiesta o non ha risposto come previsto.</summary>
+    ServizioEsternoNonRiuscito = 11,
+
+    /// <summary>L'utente ha negato il consenso al provider, oppure il collegamento non corrisponde alla richiesta (stato scaduto o diverso).</summary>
+    ConsensoNegato = 12,
 }
 
 public sealed record EsitoOperazione(CodiceEsito Codice, Guid? Id = null, IReadOnlyList<string>? CampiNonValidi = null)

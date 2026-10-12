@@ -17,11 +17,13 @@ public sealed class InvioEmailPerTenant : IInvioEmail
     private readonly ContestoDatabase _contesto;
     private readonly IProtettoreSegreti _protettore;
     private readonly Dictionary<ProviderEmail, IAdapterEmail> _adapter;
+    private readonly GestoreAccessoEmailOAuth _accessoOAuth;
 
-    public InvioEmailPerTenant(ContestoDatabase contesto, IProtettoreSegreti protettore, IEnumerable<IAdapterEmail> adapter)
+    public InvioEmailPerTenant(ContestoDatabase contesto, IProtettoreSegreti protettore, IEnumerable<IAdapterEmail> adapter, GestoreAccessoEmailOAuth accessoOAuth)
     {
         _contesto = contesto;
         _protettore = protettore;
+        _accessoOAuth = accessoOAuth;
         _adapter = adapter.ToDictionary(candidato => candidato.Provider);
     }
 
@@ -48,6 +50,15 @@ public sealed class InvioEmailPerTenant : IInvioEmail
         if (!_adapter.TryGetValue(impostazioni.Provider, out var adapter))
         {
             throw new ConfigurazioneEmailNonValidaException($"Il canale {impostazioni.Provider} non è ancora disponibile.");
+        }
+
+        if (impostazioni.Provider.UsaOAuth())
+        {
+            // Il token di accesso non sta nelle impostazioni: lo dà il gestore del collegamento (rinnovandolo se serve).
+            var accesso = await _accessoOAuth.OttieniAsync(idTenant, impostazioni, annullamento);
+            impostazioni = new ImpostazioniEmail(
+                impostazioni.Provider,
+                new Dictionary<string, string>(impostazioni.Valori, StringComparer.Ordinal) { ["TokenAccesso"] = accesso.Token, ["Casella"] = accesso.Casella });
         }
 
         await adapter.InviaAsync(impostazioni, messaggio, annullamento);

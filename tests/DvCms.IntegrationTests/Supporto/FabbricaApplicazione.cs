@@ -180,6 +180,7 @@ public sealed class FabbricaApplicazioneConConnessione : FabbricaApplicazione
 {
     private readonly bool _registraRisoluzioni;
     private readonly PayPalFinto? _payPal;
+    private readonly ProviderOAuthFinto? _oauthEmail;
 
     public FabbricaApplicazioneConConnessione(
         string connessione,
@@ -187,11 +188,13 @@ public sealed class FabbricaApplicazioneConConnessione : FabbricaApplicazione
         IReadOnlyDictionary<string, string?>? impostazioni = null,
         IPAddress? indirizzoRemoto = null,
         bool registraRisoluzioni = false,
-        PayPalFinto? payPal = null)
+        PayPalFinto? payPal = null,
+        ProviderOAuthFinto? oauthEmail = null)
         : base(connessione, ambiente, impostazioni, indirizzoRemoto)
     {
         _registraRisoluzioni = registraRisoluzioni;
         _payPal = payPal;
+        _oauthEmail = oauthEmail;
     }
 
     protected override void ConfiguraServizi(IServiceCollection servizi)
@@ -205,6 +208,12 @@ public sealed class FabbricaApplicazioneConConnessione : FabbricaApplicazione
         {
             // Il client PayPal vero parla con il PayPal finto: nessuna richiesta esce dal processo.
             servizi.AddHttpClient(DvCms.Infrastructure.Pagamenti.ClientePayPal.NomeClientHttp).ConfigurePrimaryHttpMessageHandler(() => _payPal);
+        }
+
+        if (_oauthEmail is not null)
+        {
+            // Microsoft 365 e Google finti al posto dei veri (il nome è quello del client HTTP delle email).
+            servizi.AddHttpClient("email").ConfigurePrimaryHttpMessageHandler(() => _oauthEmail);
         }
     }
 }

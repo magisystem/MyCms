@@ -29,14 +29,15 @@ public sealed class ScenarioWeb : IAsyncDisposable
 
     public DatiProva.TenantCreato B { get; }
 
-    public static async Task<ScenarioWeb> CreaAsync(string ambiente = "Development", int richiesteAlMinuto = 1000, IReadOnlyDictionary<string, string?>? impostazioni = null, PayPalFinto? payPal = null)
+    public static async Task<ScenarioWeb> CreaAsync(string ambiente = "Development", int richiesteAlMinuto = 1000, IReadOnlyDictionary<string, string?>? impostazioni = null, PayPalFinto? payPal = null, ProviderOAuthFinto? oauthEmail = null)
     {
         var database = await DatabaseDiProva.CreaAsync(TestContext.Current.CancellationToken);
         var fabbrica = new FabbricaApplicazioneConConnessione(
             database.Connessione,
             ambiente,
             ImpostazioniAvvio(richiesteAlMinuto, impostazioni),
-            payPal: payPal);
+            payPal: payPal,
+            oauthEmail: oauthEmail);
         var esito = await DvCms.Web.Comandi.ComandoMigra.EseguiAsync(fabbrica.Services, TestContext.Current.CancellationToken);
         Assert.Equal(0, esito);
 

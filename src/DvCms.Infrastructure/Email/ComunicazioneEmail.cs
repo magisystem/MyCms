@@ -62,15 +62,14 @@ internal static class ComunicazioneEmail
     public static StringContent Json(object contenuto) =>
         new(JsonSerializer.Serialize(contenuto), Encoding.UTF8, "application/json");
 
-    /// <summary>Invia la richiesta con un'attesa massima; se la risposta non è un successo solleva un'eccezione senza corpo né segreti.</summary>
-    public static async Task<HttpResponseMessage> InviaAsync(HttpClient client, string canale, HttpRequestMessage richiesta, CancellationToken annullamento)
+    /// <summary>Invia la richiesta con un'attesa massima e restituisce la risposta qualunque sia lo stato; solo gli errori di rete diventano eccezioni.</summary>
+    public static async Task<HttpResponseMessage> InviaGrezzoAsync(HttpClient client, string canale, HttpRequestMessage richiesta, CancellationToken annullamento)
     {
         using var limite = CancellationTokenSource.CreateLinkedTokenSource(annullamento);
         limite.CancelAfter(_attesaMassima);
-        HttpResponseMessage risposta;
         try
         {
-            risposta = await client.SendAsync(richiesta, limite.Token);
+            return await client.SendAsync(richiesta, limite.Token);
         }
         catch (HttpRequestException eccezione)
         {
@@ -80,7 +79,12 @@ internal static class ComunicazioneEmail
         {
             throw new InvioEmailFallitoException($"{canale}: tempo di attesa scaduto.");
         }
+    }
 
+    /// <summary>Invia la richiesta con un'attesa massima; se la risposta non è un successo solleva un'eccezione senza corpo né segreti.</summary>
+    public static async Task<HttpResponseMessage> InviaAsync(HttpClient client, string canale, HttpRequestMessage richiesta, CancellationToken annullamento)
+    {
+        var risposta = await InviaGrezzoAsync(client, canale, richiesta, annullamento);
         if (!risposta.IsSuccessStatusCode)
         {
             var codice = (int)risposta.StatusCode;

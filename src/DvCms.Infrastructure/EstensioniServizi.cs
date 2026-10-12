@@ -121,6 +121,11 @@ public static class EstensioniServizi
         servizi.AddScoped<IAdapterEmail, AdapterGraph>();
         servizi.AddScoped<IAdapterEmail, AdapterGmail>();
         servizi.AddScoped<IAdapterEmail, AdapterSendGrid>();
+        servizi.AddScoped<IAdapterEmail, AdapterMicrosoftOAuth>();
+        servizi.AddScoped<IAdapterEmail, AdapterGoogleOAuth>();
+        servizi.AddScoped<ClienteOAuthEmail>();
+        servizi.AddScoped<GestoreAccessoEmailOAuth>();
+        servizi.TryAddScoped<IServizioConnessioneEmail, ServizioConnessioneEmail>();
         servizi.TryAddScoped<IInvioEmail, InvioEmailPerTenant>();
         servizi.TryAddScoped<IAccodatoreEmail, AccodatoreEmail>();
         servizi.TryAddScoped<IServizioImpostazioniEmail, ServizioImpostazioniEmail>();

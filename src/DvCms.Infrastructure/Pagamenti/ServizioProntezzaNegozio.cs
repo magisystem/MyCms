@@ -1,6 +1,7 @@
 using DvCms.Application.Negozio;
 using DvCms.Domain.Accessi;
 using DvCms.Domain.Cms;
+using DvCms.Domain.Email;
 using DvCms.Domain.Negozio;
 using DvCms.Infrastructure.Manutenzione;
 using DvCms.Infrastructure.Persistenza;
@@ -71,7 +72,12 @@ public sealed class ServizioProntezzaNegozio : IServizioProntezzaNegozio
         var spedizioni = await _contesto.MetodiSpedizione.IgnoreQueryFilters().AsNoTracking().CountAsync(m => m.IdSito == idSito && m.IdTenant == idTenant && m.Attivo, annullamento);
         Aggiungi("MetodiSpedizione", spedizioni > 0, StatoControllo.Bloccante, spedizioni.ToString(System.Globalization.CultureInfo.InvariantCulture));
 
-        Aggiungi("CanaleEmail", await _contesto.ImpostazioniEmailTenant.IgnoreQueryFilters().AsNoTracking().AnyAsync(i => i.IdTenant == idTenant, annullamento), StatoControllo.Attenzione);
+        // Con un canale a consenso OAuth (ADR-0021) non basta l'app: serve anche una casella collegata e con il consenso valido.
+        var canaleEmail = await _contesto.ImpostazioniEmailTenant.IgnoreQueryFilters().AsNoTracking()
+            .AnyAsync(i => i.IdTenant == idTenant
+                && (i.Provider != ProviderEmail.MicrosoftOAuth && i.Provider != ProviderEmail.GoogleOAuth
+                    || _contesto.ConnessioniEmailOAuth.IgnoreQueryFilters().Any(c => c.IdTenant == idTenant && c.Stato == StatoConnessioneEmail.Attiva)), annullamento);
+        Aggiungi("CanaleEmail", canaleEmail, StatoControllo.Attenzione);
 
         var amministratori = await _contesto.Utenze.IgnoreQueryFilters().AsNoTracking()
             .CountAsync(u => u.IdTenant == idTenant && u.Ruolo == RuoloUtenza.TenantAdmin && u.Stato == StatoUtenza.Attiva, annullamento);

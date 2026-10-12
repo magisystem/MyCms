@@ -39,6 +39,9 @@ public static class AzioniAudit
     public const string ModificaTestoStatico = "ModificaTestoStatico";
     public const string ModificaImpostazioniEmail = "ModificaImpostazioniEmail";
     public const string ProvaInvioEmail = "ProvaInvioEmail";
+    public const string ModificaAppEmailOAuth = "ModificaAppEmailOAuth";
+    public const string CollegamentoEmailOAuth = "CollegamentoEmailOAuth";
+    public const string ScollegamentoEmailOAuth = "ScollegamentoEmailOAuth";
     public const string RegistrazioneAcquirente = "RegistrazioneAcquirente";
     public const string ConfermaAcquirente = "ConfermaAcquirente";
     public const string ImpostazioneRegistrazioneAcquirenti = "ImpostazioneRegistrazioneAcquirenti";
