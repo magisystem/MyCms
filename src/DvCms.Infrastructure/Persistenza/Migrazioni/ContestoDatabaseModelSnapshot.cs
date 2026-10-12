@@ -1179,6 +1179,9 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                         .HasMaxLength(320)
                         .HasColumnType("nvarchar(320)");
 
+                    b.Property<DateTime?>("GiacenzaReinseritaIlUtc")
+                        .HasColumnType("datetime2");
+
                     b.Property<Guid>("IdSito")
                         .HasColumnType("uniqueidentifier");
 

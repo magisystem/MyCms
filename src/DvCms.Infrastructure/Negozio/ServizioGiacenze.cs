@@ -163,6 +163,79 @@ public sealed class ServizioGiacenze : IServizioGiacenze
         return new EsitoOperazione(CodiceEsito.Riuscito, idVariante);
     }
 
+    public async Task<EsitoOperazione> ReinserisciOrdineAsync(Guid idAttore, Guid idOrdine, CancellationToken annullamento)
+    {
+        var attore = await TrovaAttoreAsync(idAttore, annullamento);
+        if (attore is null)
+        {
+            await RegistraNegazioneAsync(idAttore);
+            return new EsitoOperazione(CodiceEsito.NonAutorizzato);
+        }
+
+        var idTenant = _tenant.IdTenant;
+        var idSito = _tenant.IdSito;
+        var ordine = await _contesto.Ordini.AsNoTracking().SingleOrDefaultAsync(o => o.Id == idOrdine && o.IdSito == idSito, annullamento);
+        if (ordine is null)
+        {
+            return new EsitoOperazione(CodiceEsito.NonTrovato);
+        }
+
+        if (ordine.Stato != StatoOrdine.Rimborsato)
+        {
+            return new EsitoOperazione(CodiceEsito.NonConsentito);
+        }
+
+        var adesso = _orologio.GetUtcNow().UtcDateTime;
+        await using var transazione = await _contesto.Database.BeginTransactionAsync(annullamento);
+
+        // Una volta sola: chi arriva per secondo non trova più l'ordine «da reinserire».
+        var presa = await _contesto.Ordini.Where(o => o.Id == idOrdine && o.GiacenzaReinseritaIlUtc == null)
+            .ExecuteUpdateAsync(s => s.SetProperty(o => o.GiacenzaReinseritaIlUtc, adesso), annullamento);
+        if (presa == 0)
+        {
+            return new EsitoOperazione(CodiceEsito.Conflitto);
+        }
+
+        var righe = await _contesto.RigheOrdine.AsNoTracking().Where(r => r.IdOrdine == idOrdine).OrderBy(r => r.IdVariante).ToListAsync(annullamento);
+        var reinserite = 0;
+        foreach (var riga in righe.GroupBy(r => r.IdVariante).Select(g => (IdVariante: g.Key, Quantita: g.Sum(r => r.Quantita))))
+        {
+            var q = riga.Quantita;
+            var massima = GiacenzaVariante.QuantitaMassima;
+            var aggiornate = await _contesto.GiacenzeVarianti
+                .Where(g => g.IdVariante == riga.IdVariante && g.IdSito == idSito)
+                .ExecuteUpdateAsync(
+                    s => s.SetProperty(g => g.Disponibile, g => g.Disponibile + q > massima ? massima : g.Disponibile + q).SetProperty(g => g.AggiornataIlUtc, adesso),
+                    annullamento);
+            if (aggiornate == 0)
+            {
+                // Giacenza non gestita (o variante tolta dal catalogo): non c'è nulla da rimettere.
+                continue;
+            }
+
+            var dopo = await _contesto.GiacenzeVarianti.AsNoTracking().Where(g => g.IdVariante == riga.IdVariante).Select(g => g.Disponibile).SingleAsync(annullamento);
+            _contesto.MovimentiGiacenza.Add(new MovimentoGiacenza
+            {
+                Id = Identificativi.Nuovo(_orologio),
+                IdTenant = idTenant,
+                IdSito = idSito,
+                IdVariante = riga.IdVariante,
+                Motivo = MotivoMovimento.Reso,
+                Variazione = q,
+                DisponibileDopo = dopo,
+                IdOrdine = idOrdine,
+                IdAttore = attore.Id,
+                CreatoIlUtc = adesso,
+            });
+            reinserite++;
+        }
+
+        await _contesto.SaveChangesAsync(annullamento);
+        await transazione.CommitAsync(annullamento);
+        await _audit.RegistraAsync(AzioniAudit.ReinserimentoGiacenza, $"Ordine:{idOrdine}", RegistroAudit.EsitoRiuscito, idTenant, attore.Id, $"ordine {ordine.Numero}: {reinserite} articoli rimessi in giacenza", annullamento);
+        return new EsitoOperazione(CodiceEsito.Riuscito, idOrdine);
+    }
+
     public Task<int> RilasciaScaduteAsync(CancellationToken annullamento) =>
         RiprovaSuDeadlock.EseguiAsync(_contesto, () => RilasciaScaduteUnaVoltaAsync(annullamento));
 

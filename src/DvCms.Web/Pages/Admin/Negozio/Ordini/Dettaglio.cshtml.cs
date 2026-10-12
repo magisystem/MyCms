@@ -14,8 +14,9 @@ public class DettaglioModel : PaginaAdmin
     private readonly IServizioRimborsi _rimborsi;
     private readonly IServizioCatalogo _catalogo;
     private readonly IServizioDatiPersonali _dati;
+    private readonly IServizioGiacenze _giacenze;
 
-    public DettaglioModel(IServizioOrdini ordini, IServizioPagamenti pagamenti, IServizioRimborsi rimborsi, IServizioCatalogo catalogo, IServizioDatiPersonali dati, ILocalizzatore localizzatore)
+    public DettaglioModel(IServizioOrdini ordini, IServizioPagamenti pagamenti, IServizioRimborsi rimborsi, IServizioCatalogo catalogo, IServizioDatiPersonali dati, IServizioGiacenze giacenze, ILocalizzatore localizzatore)
         : base(localizzatore)
     {
         _ordini = ordini;
@@ -23,6 +24,7 @@ public class DettaglioModel : PaginaAdmin
         _rimborsi = rimborsi;
         _catalogo = catalogo;
         _dati = dati;
+        _giacenze = giacenze;
     }
 
     public OrdineVista Ordine { get; private set; } = null!;
@@ -96,6 +98,34 @@ public class DettaglioModel : PaginaAdmin
                 return Forbid();
             default:
                 MessaggioErrore = Localizzatore.Traduci("L'account di questo acquirente non esiste più o non si può anonimizzare.");
+                break;
+        }
+
+        return RedirectToPage(new { id });
+    }
+
+    public async Task<IActionResult> OnPostReinserisciAsync(Guid id, CancellationToken annullamento)
+    {
+        if (!await _catalogo.CommercioAttivoAsync(annullamento))
+        {
+            return NotFound();
+        }
+
+        var esito = await _giacenze.ReinserisciOrdineAsync(IdAttore, id, annullamento);
+        switch (esito.Codice)
+        {
+            case CodiceEsito.Riuscito:
+                Messaggio = Localizzatore.Traduci("Articoli rimessi in giacenza.");
+                break;
+            case CodiceEsito.NonTrovato:
+                return NotFound();
+            case CodiceEsito.NonAutorizzato:
+                return Forbid();
+            case CodiceEsito.Conflitto:
+                MessaggioErrore = Localizzatore.Traduci("Gli articoli di questo ordine sono già stati rimessi in giacenza.");
+                break;
+            default:
+                MessaggioErrore = Localizzatore.Traduci("Si possono rimettere in giacenza solo gli ordini interamente rimborsati.");
                 break;
         }
 

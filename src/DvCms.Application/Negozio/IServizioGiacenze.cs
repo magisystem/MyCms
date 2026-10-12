@@ -35,5 +35,13 @@ public interface IServizioGiacenze
     Task<EsitoOperazione> ConfermaOrdineAsync(Guid idOrdine, CancellationToken annullamento);
 
     /// <summary>Rilascia le prenotazioni attive di un ordine del tenant corrente. Idempotente.</summary>
+    /// <summary>
+    /// Rimette in giacenza gli articoli di un ordine **interamente rimborsato** (stato «Rimborsato»), una volta sola: per ogni riga con
+    /// giacenza gestita la disponibilità aumenta della quantità ordinata e il movimento «Reso» resta nello storico. Decide l'amministratore,
+    /// perché la merce rientra davvero solo se è stata restituita. Esiti: <c>NonConsentito</c> (ordine non interamente rimborsato),
+    /// <c>Conflitto</c> (già reinserita), <c>NonTrovato</c>, <c>NonAutorizzato</c>. Per i rimborsi parziali si usa <c>ImpostaAsync</c>.
+    /// </summary>
+    Task<EsitoOperazione> ReinserisciOrdineAsync(Guid idAttore, Guid idOrdine, CancellationToken annullamento);
+
     Task<EsitoOperazione> RilasciaOrdineAsync(Guid idOrdine, CancellationToken annullamento);
 }

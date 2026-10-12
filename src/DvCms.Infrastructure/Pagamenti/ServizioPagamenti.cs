@@ -516,6 +516,11 @@ public sealed partial class ServizioPagamenti : IServizioPagamenti
 
         // La conferma al cliente nasce nella stessa transazione del pagamento: o ci sono entrambi o nessuno dei due.
         await _notifiche.AccodaConfermaPagamentoAsync(ordine, annullamento);
+        if (_opzioni.AvvisoNuovoOrdineAmministratori)
+        {
+            await _notifiche.AccodaAvvisoAmministratoriAsync(ordine, annullamento);
+        }
+
         await _contesto.SaveChangesAsync(annullamento);
         await tx.CommitAsync(annullamento);
         await _audit.RegistraAsync(AzioniAudit.PagamentoOrdine, $"Ordine:{ordine.Id}", RegistroAudit.EsitoRiuscito, idTenant, null, $"ordine {ordine.Numero}, incasso {esito.IdCattura}", annullamento);

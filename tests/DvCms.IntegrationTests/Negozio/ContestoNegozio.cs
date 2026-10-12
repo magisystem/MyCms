@@ -39,12 +39,13 @@ internal sealed class ContestoNegozio : IAsyncDisposable
 
     public Guid ClienteDiB { get; private set; }
 
-    public static async Task<ContestoNegozio> CreaAsync(PayPalFinto? payPal = null, bool produzioneAbilitata = false, bool conEmail = false)
+    public static async Task<ContestoNegozio> CreaAsync(PayPalFinto? payPal = null, bool produzioneAbilitata = false, bool conEmail = false, bool avvisoAmministratori = true)
     {
         var impostazioni = new Dictionary<string, string?>
         {
             ["Sicurezza:ChiaveSegreti"] = Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32)),
             ["Negozio:CheckoutProduzione"] = produzioneAbilitata ? "true" : "false",
+            ["Negozio:AvvisoNuovoOrdineAmministratori"] = avvisoAmministratori ? "true" : "false",
         };
         var c = new ContestoNegozio(await ScenarioWeb.CreaAsync(impostazioni: impostazioni, payPal: payPal));
         if (conEmail)

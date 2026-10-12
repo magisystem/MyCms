@@ -133,6 +133,26 @@
                 </div>
             </div>
         }
+        @if (Model.Ordine.Stato == DvCms.Domain.Negozio.StatoOrdine.Rimborsato)
+        {
+            <div class="card mt-3">
+                <div class="card-header"><h3 class="card-title">@_L["Giacenza"]</h3></div>
+                <div class="card-body">
+                    @if (Model.Ordine.GiacenzaReinseritaIlUtc is { } reinserita)
+                    {
+                        <p class="mb-0">@_L["Articoli rimessi in giacenza il"] @reinserita.ToString("yyyy-MM-dd HH:mm") UTC</p>
+                    }
+                    else
+                    {
+                        <p class="text-secondary">@_L["Se la merce è rientrata, rimettila in giacenza: per gli articoli con giacenza gestita la disponibilità aumenta della quantità ordinata. Si fa una volta sola."]</p>
+                        <form method="post" asp-page-handler="Reinserisci" asp-route-id="@o.Id">
+                            <button type="submit" class="btn btn-outline-primary">@_L["Rimetti in giacenza"]</button>
+                        </form>
+                    }
+                </div>
+            </div>
+        }
+
         @if (Model.Rimborsi.Count > 0)
         {
             <div class="card mt-3">

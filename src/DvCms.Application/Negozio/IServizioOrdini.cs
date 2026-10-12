@@ -58,7 +58,8 @@ public sealed record OrdineVista(
     DateTime CreatoIlUtc,
     DateTime AggiornatoIlUtc,
     DateTime? PrenotazioneScadeIlUtc,
-    IReadOnlyList<RigaOrdineVista> Righe);
+    IReadOnlyList<RigaOrdineVista> Righe,
+    DateTime? GiacenzaReinseritaIlUtc = null);
 
 /// <summary>
 /// Ordini (F-003, ADR-0011, ADR-0020). Possono ordinare gli account autenticati e attivi (<c>Utente</c> o <c>TenantAdmin</c> del

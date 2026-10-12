@@ -90,6 +90,54 @@ public sealed class NotificheOrdine
         return true;
     }
 
+    /// <summary>
+    /// Accoda l'avviso di un nuovo ordine pagato agli amministratori attivi del tenant (al più dieci), nella lingua predefinita del sito.
+    /// Una email per amministratore, con chiave di idempotenza propria. Non salva: lo fa chi chiama, nella sua transazione.
+    /// </summary>
+    public async Task<int> AccodaAvvisoAmministratoriAsync(Ordine ordine, CancellationToken annullamento)
+    {
+        ArgumentNullException.ThrowIfNull(ordine);
+
+        var idTenant = _tenant.IdTenant;
+        if (!await _contesto.ImpostazioniEmailTenant.IgnoreQueryFilters().AsNoTracking().AnyAsync(i => i.IdTenant == idTenant, annullamento))
+        {
+            return 0;
+        }
+
+        var destinatari = await _contesto.Utenze.IgnoreQueryFilters().AsNoTracking()
+            .Where(u => u.IdTenant == idTenant && u.Ruolo == DvCms.Domain.Accessi.RuoloUtenza.TenantAdmin && u.Stato == DvCms.Domain.Accessi.StatoUtenza.Attiva)
+            .OrderBy(u => u.CreatoIlUtc)
+            .Select(u => new { u.Id, u.Email, u.NomeVisualizzato })
+            .Take(10)
+            .ToListAsync(annullamento);
+        if (destinatari.Count == 0)
+        {
+            return 0;
+        }
+
+        var lingua = (await DvCms.Infrastructure.Cms.LingueDelSito.ElencaAsync(_contesto, ordine.IdSito, annullamento)).FirstOrDefault(l => l.Predefinita)?.Codice ?? "it";
+        var nomeSito = await _contesto.Siti.AsNoTracking().Where(s => s.Id == ordine.IdSito).Select(s => s.Nome).SingleAsync(annullamento);
+        var articoli = await _contesto.RigheOrdine.AsNoTracking().Where(r => r.IdOrdine == ordine.Id).SumAsync(r => r.Quantita, annullamento);
+        var importo = $"{ordine.TotaleLordo.ToString("N2", Cultura(lingua))} {ordine.Valuta}";
+
+        var testo = new StringBuilder();
+        testo.AppendLine(_localizzatore.TraduciIn(lingua, "Nuovo ordine pagato n. {0} su {1}: {2}, {3} articoli.", ordine.Numero, nomeSito, importo, articoli));
+        testo.AppendLine(_localizzatore.TraduciIn(lingua, "Cliente: {0} ({1})", ordine.NomeAcquirente, ordine.EmailAcquirente));
+        testo.AppendLine(_localizzatore.TraduciIn(lingua, "Consegna: {0}", ordine.NomeSpedizione));
+        testo.AppendLine(_localizzatore.TraduciIn(lingua, "Gestisci l'ordine qui: {0}", $"https://{_tenant.Host}/admin/negozio/ordini/{ordine.Id:D}"));
+
+        foreach (var destinatario in destinatari)
+        {
+            _email.Accoda(
+                idTenant,
+                new MessaggioEmail(destinatario.Email, destinatario.NomeVisualizzato, _localizzatore.TraduciIn(lingua, "Nuovo ordine n. {0} - {1}", ordine.Numero, nomeSito), testo.ToString()),
+                chiaveIdempotenza: $"ordine-pagato-admin:{ordine.Id:D}:{destinatario.Id:D}",
+                riservato: true);
+        }
+
+        return destinatari.Count;
+    }
+
     /// <summary>Accoda l'avviso di un rimborso concluso. Non salva: lo fa chi chiama, nella sua transazione. Vero se l'ha accodato.</summary>
     public async Task<bool> AccodaRimborsoAsync(Ordine ordine, Rimborso rimborso, bool totale, CancellationToken annullamento)
     {

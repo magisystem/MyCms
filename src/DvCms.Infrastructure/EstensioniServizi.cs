@@ -225,7 +225,7 @@ public static class EstensioniServizi
         servizi.TryAddScoped<IServizioGiacenze, ServizioGiacenze>();
         servizi.AddHttpClient(ClientePayPal.NomeClientHttp, client => client.Timeout = Timeout.InfiniteTimeSpan);
         servizi.TryAddScoped<IProviderPagamento, ClientePayPal>();
-        servizi.TryAddSingleton(new OpzioniNegozio(configurazione.GetValue<bool>("Negozio:CheckoutProduzione")));
+        servizi.TryAddSingleton(new OpzioniNegozio(configurazione.GetValue<bool>("Negozio:CheckoutProduzione"), configurazione.GetValue("Negozio:AvvisoNuovoOrdineAmministratori", true)));
         servizi.TryAddScoped<NotificheOrdine>();
         servizi.TryAddScoped<IServizioRimborsi, ServizioRimborsi>();
         servizi.TryAddSingleton(new OpzioniDatiPersonali(LeggiIntero(configurazione, "Negozio:ConservazioneOrdiniAnni", OpzioniDatiPersonali.Predefinite.ConservazioneOrdiniAnni, 1, 30)));

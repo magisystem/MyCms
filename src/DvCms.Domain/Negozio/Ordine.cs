@@ -145,6 +145,9 @@ public class Ordine
     /// </summary>
     public DateTime? AnonimizzatoIlUtc { get; set; }
 
+    /// <summary>Quando gli articoli di un ordine interamente rimborsato sono rientrati in giacenza (una volta sola); nullo se non è successo.</summary>
+    public DateTime? GiacenzaReinseritaIlUtc { get; set; }
+
     public byte[] TokenConcorrenza { get; set; } = [];
 }
 

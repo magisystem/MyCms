@@ -403,8 +403,15 @@ public class ServizioPagamentiTest
         await c.ComePagamentiAsync(c.A, s => s.CompletaAsync(c.Cliente, ordine, idProvider, Ct));
         await c.ComePagamentiAsync(c.A, s => s.CompletaAsync(c.Cliente, ordine, idProvider, Ct));
         await c.ComePagamentiAsync(c.A, s => s.ElaboraWebhookAsync(Firma(), Evento("WH-1", "CHECKOUT.ORDER.APPROVED", idProvider), Ct));
-        var email = Assert.Single(await c.ElaboraEmailAsync());
+        var tutte = await c.ElaboraEmailAsync();
+        var email = Assert.Single(tutte, e => e.Oggetto.Contains("confermato", StringComparison.Ordinal));
+        var avviso = Assert.Single(tutte, e => e.Oggetto.Contains("Nuovo ordine", StringComparison.Ordinal));
 
+        Assert.Equal(2, tutte.Count);
+        Assert.Equal(["anna@esempio.it"], avviso.Destinatari.Select(d => d.Trim('<', '>')));
+        Assert.Contains("Nuovo ordine n. 1", avviso.Oggetto, StringComparison.Ordinal);
+        Assert.Contains($"https://a.esempio.it/admin/negozio/ordini/{ordine:D}", avviso.Testo, StringComparison.Ordinal);
+        Assert.Contains("cliente@esempio.it", avviso.Testo, StringComparison.Ordinal);
         Assert.Equal(["cliente@esempio.it"], email.Destinatari.Select(d => d.Trim('<', '>')));
         Assert.Contains("Ordine n. 1 confermato", email.Oggetto, StringComparison.Ordinal);
         Assert.Contains("Libro <raro>", email.Testo, StringComparison.Ordinal);
@@ -414,7 +421,25 @@ public class ServizioPagamentiTest
         Assert.Contains("Mario Rossi", email.Testo, StringComparison.Ordinal);
         Assert.Contains("20100 Milano (IT)", email.Testo, StringComparison.Ordinal);
         Assert.Contains($"https://a.esempio.it/account/ordini/{ordine:D}", email.Testo, StringComparison.Ordinal);
-        Assert.Equal(1, await c.ContaMessaggiAsync());
+        Assert.Equal(2, await c.ContaMessaggiAsync());
+    }
+
+    [Fact]
+    public async Task LAvvisoAgliAmministratoriSiPuoSpegnereConLaConfigurazione()
+    {
+        var finto = new PayPalFinto();
+        await using var c = await ContestoNegozio.CreaAsync(payPal: finto, conEmail: true, avvisoAmministratori: false);
+        var varianti = await c.CreaProdottoAsync(c.A, "Libro", 4m, ("LIB-1", 10.00m, null));
+        var ritiro = await c.CreaRitiroAsync(c.A);
+        await c.ConfiguraPagamentoAsync(c.A);
+        await c.AggiungiAsync(c.Cliente, varianti[0], 1);
+        var ordine = (await c.ComeAsync(c.A, s => s.CreaDaCarrelloAsync(c.Cliente, "it", new DatiOrdine(ritiro, null, null, null, null, null, null, 10m), Ct))).Id!.Value;
+        var idProvider = await AvviaEApprovaAsync(c, finto, ordine);
+
+        await c.ComePagamentiAsync(c.A, s => s.CompletaAsync(c.Cliente, ordine, idProvider, Ct));
+
+        var email = Assert.Single(await c.ElaboraEmailAsync());
+        Assert.Equal(["cliente@esempio.it"], email.Destinatari.Select(d => d.Trim('<', '>')));
     }
 
     [Fact]

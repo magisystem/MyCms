@@ -356,7 +356,8 @@ public sealed partial class ServizioOrdini : IServizioOrdini
             o.CreatoIlUtc,
             o.AggiornatoIlUtc,
             o.PrenotazioneScadeIlUtc,
-            [.. righe.Select(r => new RigaOrdineVista(r.Posizione, r.Sku, r.NomeProdotto, r.EtichettaVariante, r.Quantita, r.PrezzoUnitarioLordo, r.AliquotaIva, r.Lordo, r.Imponibile, r.Iva))]);
+            [.. righe.Select(r => new RigaOrdineVista(r.Posizione, r.Sku, r.NomeProdotto, r.EtichettaVariante, r.Quantita, r.PrezzoUnitarioLordo, r.AliquotaIva, r.Lordo, r.Imponibile, r.Iva))],
+            o.GiacenzaReinseritaIlUtc);
     }
 
     private sealed record Indirizzo(string Destinatario, string Riga1, string? Riga2, string Cap, string Citta, string Paese);

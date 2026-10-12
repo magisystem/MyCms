@@ -8,7 +8,11 @@ namespace DvCms.Application.Negozio;
 /// Vero solo dopo che il committente ha approvato resi/rimborsi e dati personali degli acquirenti (ADR-0020, A5/A7). Finché è falso un
 /// sito con credenziali PayPal in ambiente di produzione non può avviare pagamenti; il Sandbox funziona sempre.
 /// </param>
-public sealed record OpzioniNegozio(bool CheckoutProduzioneAbilitato)
+/// <param name="AvvisoNuovoOrdineAmministratori">
+/// Vero (predefinito): quando un ordine risulta pagato, una email avvisa gli amministratori attivi del tenant (se il tenant ha un canale
+/// email). Si spegne con <c>Negozio:AvvisoNuovoOrdineAmministratori=false</c>.
+/// </param>
+public sealed record OpzioniNegozio(bool CheckoutProduzioneAbilitato, bool AvvisoNuovoOrdineAmministratori = true)
 {
     public static OpzioniNegozio Predefinite { get; } = new(false);
 }

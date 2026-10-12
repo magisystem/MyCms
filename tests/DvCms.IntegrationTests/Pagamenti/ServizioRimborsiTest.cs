@@ -1,5 +1,6 @@
 using System.Text.Json.Nodes;
 using DvCms.Application.Negozio;
+using DvCms.Application.Piattaforma;
 using DvCms.Domain.Negozio;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Negozio;
@@ -48,6 +49,44 @@ public class ServizioRimborsiTest
     {
         await using var ambito = c.Web.Fabbrica.Services.CreateAsyncScope();
         return await ambito.ServiceProvider.GetRequiredService<ContestoDatabase>().Ordini.IgnoreQueryFilters().AsNoTracking().SingleAsync(o => o.Id == id, Ct);
+    }
+
+    [Fact]
+    public async Task UnOrdineInteramenteRimborsatoRientraInGiacenzaUnaSolaVoltaEConStoricoDeiMovimenti()
+    {
+        var finto = new PayPalFinto();
+        await using var c = await ContestoNegozio.CreaAsync(payPal: finto);
+        var varianti = await c.CreaProdottoAsync(c.A, "Libro", 4m, ("LIB-1", 10.00m, null));
+        var ritiro = await c.CreaRitiroAsync(c.A);
+        await c.ImpostaGiacenzaAsync(c.A, varianti[0], 5);
+        await c.ConfiguraPagamentoAsync(c.A);
+        await c.AggiungiAsync(c.Cliente, varianti[0], 2);
+        var ordine = (await c.ComeAsync(c.A, s => s.CreaDaCarrelloAsync(c.Cliente, "it", new DatiOrdine(ritiro, null, null, null, null, null, null, 20m), Ct))).Id!.Value;
+        await c.ComePagamentiAsync(c.A, s => s.AvviaAsync(c.Cliente, ordine, ContestoNegozio.Link, Ct));
+        var idProvider = (await c.TentativiAsync(ordine)).Single().IdProvider;
+        finto.Approva(idProvider);
+        await c.ComePagamentiAsync(c.A, s => s.CompletaAsync(c.Cliente, ordine, idProvider, Ct));
+        Assert.Equal(3, (await c.GiacenzaAsync(varianti[0])).Disponibile);
+
+        var troppoPresto = await c.ComeGiacenzeAsync(c.A, s => s.ReinserisciOrdineAsync(c.AdminA, ordine, Ct));
+        Assert.Equal(RisultatoRimborso.Completato, await Rimborsa(c, ordine, 5m));
+        var parziale = await c.ComeGiacenzeAsync(c.A, s => s.ReinserisciOrdineAsync(c.AdminA, ordine, Ct));
+        Assert.Equal(RisultatoRimborso.Completato, await Rimborsa(c, ordine, null));
+        var comeCliente = await c.ComeGiacenzeAsync(c.A, s => s.ReinserisciOrdineAsync(c.Cliente, ordine, Ct));
+        var daB = await c.ComeGiacenzeAsync(c.B, s => s.ReinserisciOrdineAsync(c.AdminB, ordine, Ct));
+        var riuscito = await c.ComeGiacenzeAsync(c.A, s => s.ReinserisciOrdineAsync(c.AdminA, ordine, Ct));
+        var ripetuto = await c.ComeGiacenzeAsync(c.A, s => s.ReinserisciOrdineAsync(c.AdminA, ordine, Ct));
+
+        Assert.Equal(CodiceEsito.NonConsentito, troppoPresto.Codice);
+        Assert.Equal(CodiceEsito.NonConsentito, parziale.Codice);
+        Assert.Equal(CodiceEsito.NonAutorizzato, comeCliente.Codice);
+        Assert.Equal(CodiceEsito.NonTrovato, daB.Codice);
+        Assert.Equal(CodiceEsito.Riuscito, riuscito.Codice);
+        Assert.Equal(CodiceEsito.Conflitto, ripetuto.Codice);
+        Assert.Equal(5, (await c.GiacenzaAsync(varianti[0])).Disponibile);
+        var reso = Assert.Single(await c.MovimentiAsync(varianti[0]), m => m.Motivo == MotivoMovimento.Reso);
+        Assert.Equal((2, 5, ordine, c.AdminA), (reso.Variazione, reso.DisponibileDopo, reso.IdOrdine!.Value, reso.IdAttore!.Value));
+        Assert.NotNull((await LeggiOrdineAsync(c, ordine)).GiacenzaReinseritaIlUtc);
     }
 
     [Fact]

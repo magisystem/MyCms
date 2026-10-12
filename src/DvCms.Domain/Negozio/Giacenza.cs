@@ -71,6 +71,9 @@ public enum MotivoMovimento
 
     /// <summary>Uscita per un ordine pagato.</summary>
     Vendita = 2,
+
+    /// <summary>Rientro in giacenza degli articoli di un ordine interamente rimborsato, confermato dall'amministrazione.</summary>
+    Reso = 3,
 }
 
 /// <summary>Storico dei cambiamenti della quantità fisica. Sopravvive alla variante (nessuna chiave verso di lei).</summary>
