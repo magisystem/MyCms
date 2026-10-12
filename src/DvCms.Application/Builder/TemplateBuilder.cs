@@ -142,6 +142,11 @@ public sealed class RegistroTemplateBuilder
         5,
         ["layout.colonne", "contenuto.titolo", "contenuto.testo", "contenuto.testo-ricco", "contenuto.immagine", "contenuto.pulsante", "contenuto.hero", "contenuto.cta", "contenuto.fisarmonica", "contenuto.caratteristiche", "contenuto.testimonianze", "negozio.griglia-prodotti"]);
 
+    /// <summary>Versione 6 (M7): il corpo ammette anche la scheda di un prodotto scelto. Le versioni precedenti restano valide.</summary>
+    public static TemplateBuilder TemplateIntestazioneFissaV6 { get; } = CreaIntestazioneFissa(
+        6,
+        ["layout.colonne", "contenuto.titolo", "contenuto.testo", "contenuto.testo-ricco", "contenuto.immagine", "contenuto.pulsante", "contenuto.hero", "contenuto.cta", "contenuto.fisarmonica", "contenuto.caratteristiche", "contenuto.testimonianze", "negozio.griglia-prodotti", "negozio.scheda-prodotto"]);
+
     private static TemplateBuilder CreaIntestazioneFissa(int versione, IReadOnlyList<string> tipiNelCorpo) => new(
         IntestazioneFissa,
         versione,
@@ -177,7 +182,7 @@ public sealed class RegistroTemplateBuilder
                 ]),
         ]);
 
-    public static IReadOnlyList<TemplateBuilder> Predefiniti { get; } = [TemplatePaginaLibera, TemplateIntestazioneFissa, TemplateIntestazioneFissaV2, TemplateIntestazioneFissaV3, TemplateIntestazioneFissaV4, TemplateIntestazioneFissaV5];
+    public static IReadOnlyList<TemplateBuilder> Predefiniti { get; } = [TemplatePaginaLibera, TemplateIntestazioneFissa, TemplateIntestazioneFissaV2, TemplateIntestazioneFissaV3, TemplateIntestazioneFissaV4, TemplateIntestazioneFissaV5, TemplateIntestazioneFissaV6];
 
     public IReadOnlyList<TemplateBuilder> Tutti => [.. _template.Values.OrderBy(t => t.Id, StringComparer.Ordinal).ThenBy(t => t.Versione)];
 

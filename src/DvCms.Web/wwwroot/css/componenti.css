@@ -105,6 +105,9 @@ body .dv-sfondo-primario .dv-pulsante-primario {
 .dv-griglia-prodotto a { font-weight: 700; color: var(--dv-colore-titoli, inherit); }
 .dv-griglia-prodotto p { margin: 0.4rem 0 0; }
 .dv-griglia-prodotto.dv-esaurito { opacity: 0.7; }
+.dv-scheda-prodotto { padding: 1rem; border: 1px solid var(--dv-colore-bordo, #cbd2d9); border-radius: 0.5rem; margin: 0 0 1.5rem; }
+.dv-scheda-prodotto-nome { margin: 0 0 0.5rem; color: var(--dv-colore-titoli, inherit); }
+.dv-scheda-prodotto-varianti { margin: 0 0 0.75rem; padding-left: 1.25rem; }
 .dv-griglia-prodotti-anteprima { padding: 1rem; border: 2px dashed var(--dv-colore-bordo, #cbd2d9); border-radius: 0.5rem; text-align: center; }
 
 /*

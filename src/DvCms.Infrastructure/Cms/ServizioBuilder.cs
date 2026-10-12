@@ -119,6 +119,7 @@ public sealed class ServizioBuilder : IServizioBuilder
         if (errori.Count == 0)
         {
             errori.AddRange(await VerificaRisorseAsync(documento, annullamento));
+            errori.AddRange(await VerificaProdottiAsync(documento, annullamento));
         }
 
         if (errori.Count > 0)
@@ -199,6 +200,27 @@ public sealed class ServizioBuilder : IServizioBuilder
             .Select(risorsa => risorsa.Id)
             .ToListAsync(annullamento)).ToHashSet();
         return [.. richieste.Where(r => !valide.Contains(r.Risorsa)).Select(r => new ErroreBuilder("RisorsaNonDisponibile", r.Id, "idRisorsa"))];
+    }
+
+    /// <summary>I prodotti scelti devono esistere nel sito dell'host e non essere archiviati (bozze sì: si prepara la pagina prima di pubblicare). Il renderer mostra solo i pubblicati.</summary>
+    private async Task<List<ErroreBuilder>> VerificaProdottiAsync(DocumentoCms documento, CancellationToken annullamento)
+    {
+        var richieste = documento.Visita()
+            .Where(nodo => nodo.Tipo == "negozio.scheda-prodotto" && nodo.Proprieta.ContainsKey("idProdotto"))
+            .Select(nodo => (nodo.Id, Prodotto: Guid.Parse(nodo.Proprieta["idProdotto"])))
+            .ToList();
+        if (richieste.Count == 0)
+        {
+            return [];
+        }
+
+        var idSito = _tenant.IdSito;
+        var ids = richieste.Select(r => r.Prodotto).Distinct().ToList();
+        var validi = (await _contesto.Prodotti.AsNoTracking()
+            .Where(prodotto => ids.Contains(prodotto.Id) && prodotto.IdSito == idSito && prodotto.Stato != DvCms.Domain.Negozio.StatoProdotto.Archiviato)
+            .Select(prodotto => prodotto.Id)
+            .ToListAsync(annullamento)).ToHashSet();
+        return [.. richieste.Where(r => !validi.Contains(r.Prodotto)).Select(r => new ErroreBuilder("ProdottoNonDisponibile", r.Id, "idProdotto"))];
     }
 
     private Task<Utenza?> TrovaAttoreAsync(Guid idAttore, CancellationToken annullamento)

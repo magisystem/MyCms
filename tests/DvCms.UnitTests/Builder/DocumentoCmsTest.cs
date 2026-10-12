@@ -27,7 +27,7 @@ public sealed class DocumentoCmsTest
 
     [Fact]
     public void LeDefinizioniDeiComponentiHannoUnImprontaFissata() =>
-        Assert.Equal("2074EDFC1D56CA310223540D85F868B17F1E1FB39A192D6D575D276D49B01086", _registro.Impronta);
+        Assert.Equal("13FD93863A4A829491650088D31B2C2E0891ABED3FDA5492D95045E8CA1AE44A", _registro.Impronta);
 
     [Fact]
     public void IlRegistroRifiutaDefinizioniDuplicateOFigliSconosciuti()
@@ -230,8 +230,21 @@ public sealed class DocumentoCmsTest
         Assert.Empty(_registro.Valida(documento));
     }
 
+    [Fact]
+    public void LaSchedaProdottoVuoleUnIdentificativoValido()
+    {
+        var id = Guid.NewGuid().ToString("D");
+        var valido = new DocumentoCms(1, [Nodo("s", "layout.sezione", null, null, Nodo("p", "negozio.scheda-prodotto", new() { ["idProdotto"] = id }, new() { ["animazione"] = "sale" }))]);
+
+        Assert.Empty(_registro.Valida(valido));
+    }
+
     public static TheoryData<string, Func<DocumentoCms>> AvanzatiNonValidi() => new()
     {
+        { "ProprietaMancante", () => new(1, [Nodo("s", "layout.sezione", null, null, Nodo("p", "negozio.scheda-prodotto"))]) },
+        { "ProprietaNonValida", () => new(1, [Nodo("s", "layout.sezione", null, null, Nodo("p", "negozio.scheda-prodotto", new() { ["idProdotto"] = "non-un-guid" }))]) },
+        { "ProprietaNonValida", () => new(1, [Nodo("s", "layout.sezione", null, null, Nodo("p", "negozio.scheda-prodotto", new() { ["idProdotto"] = Guid.Empty.ToString("D") }))]) },
+        { "FiglioNonAmmesso", () => new(1, [Nodo("s", "layout.sezione", null, null, Nodo("k", "layout.colonne", null, null, Nodo("c1", "layout.colonna", null, null, Nodo("p", "negozio.scheda-prodotto", new() { ["idProdotto"] = Guid.NewGuid().ToString("D") })), Nodo("c2", "layout.colonna")))]) },
         { "ProprietaNonValida", () => new(1, [Nodo("s", "layout.sezione", null, null, Nodo("p", "negozio.griglia-prodotti", new() { ["quanti"] = "100" }))]) },
         { "StileNonValida", () => new(1, [Nodo("s", "layout.sezione", null, null, Nodo("p", "negozio.griglia-prodotti", null, new() { ["colonne"] = "7" }))]) },
         { "FiglioNonAmmesso", () => new(1, [Nodo("s", "layout.sezione", null, null, Nodo("k", "layout.colonne", null, null, Nodo("c1", "layout.colonna", null, null, Nodo("p", "negozio.griglia-prodotti")), Nodo("c2", "layout.colonna")))]) },

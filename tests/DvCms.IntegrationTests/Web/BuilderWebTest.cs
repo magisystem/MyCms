@@ -66,8 +66,8 @@ public partial class BuilderWebTest
         Assert.True(System.Text.Json.Nodes.JsonNode.DeepEquals(
             System.Text.Json.Nodes.JsonNode.Parse(stato.GetProperty("progetto").GetRawText()),
             System.Text.Json.Nodes.JsonNode.Parse(Progetto(Iniziale()))));
-        Assert.Equal(17, stato.GetProperty("catalogo").GetArrayLength());
-        Assert.Equal(5, stato.GetProperty("versioneTemplate").GetInt32());
+        Assert.Equal(18, stato.GetProperty("catalogo").GetArrayLength());
+        Assert.Equal(6, stato.GetProperty("versioneTemplate").GetInt32());
         Assert.True(stato.GetProperty("vincoli").GetProperty("nodi").GetProperty("avviso").GetProperty("bloccato").GetBoolean());
         Assert.Equal(30, stato.GetProperty("vincoli").GetProperty("nodi").GetProperty("corpo").GetProperty("slot").GetProperty("figliMassimi").GetInt32());
 
@@ -363,6 +363,43 @@ public partial class BuilderWebTest
     }
 
     [Fact]
+    public async Task LaSchedaProdottoVuoleUnProdottoDelSitoEMostraSoloQuelloPubblicato()
+    {
+        await using var c = await Contesto.CreaAsync();
+        var (id, percorso) = await c.CreaPaginaAsync("pagina-con-intestazione-fissa", "scheda", slug: "scheda");
+        var piattaforma = await c.Web.CreaPlatformAdminAsync("root@esempio.it");
+        await c.ImpostaNegozioAsync(piattaforma, true);
+        await c.ImpostaNegozioAsync(piattaforma, true, c.Web.B);
+        var pubblicato = await c.CreaProdottoAsync(c.Web.A, "Quaderno <i>a righe</i>", 4.50m);
+        var bozza = await c.CreaProdottoAsync(c.Web.A, "Prodotto in bozza", 5m, StatoProdotto.Bozza);
+        var altrui = await c.CreaProdottoAsync(c.Web.B, "Prodotto di un altro tenant", 5m);
+        var stato = await c.StatoAsync(id);
+        var token = stato.GetProperty("token").GetString()!;
+
+        using var inesistente = await c.SalvaAsync(id, token, Progetto(ConCorpo(Iniziale(), Nodo("p", "negozio.scheda-prodotto", new() { ["idProdotto"] = Guid.NewGuid().ToString("D") }))));
+        using var diAltri = await c.SalvaAsync(id, token, Progetto(ConCorpo(Iniziale(), Nodo("p", "negozio.scheda-prodotto", new() { ["idProdotto"] = altrui.ToString("D") }))));
+        using var buono = await c.SalvaAsync(id, token, Progetto(ConCorpo(Iniziale(), Nodo("p", "negozio.scheda-prodotto", new() { ["idProdotto"] = pubblicato.ToString("D") }))));
+        await c.PubblicaAsync(percorso);
+        using var vista = await c.Web.SessioneA().GetAsync("/scheda");
+        var html = await vista.Content.ReadAsStringAsync(Ct);
+        var nuovoToken = (await c.StatoAsync(id)).GetProperty("token").GetString()!;
+        using var conBozza = await c.SalvaAsync(id, nuovoToken, Progetto(ConCorpo(Iniziale(), Nodo("p", "negozio.scheda-prodotto", new() { ["idProdotto"] = bozza.ToString("D") }))));
+        await c.PubblicaAsync(percorso);
+        using var vistaBozza = await c.Web.SessioneA().GetAsync("/scheda");
+
+        Assert.Contains((await Json(inesistente)).GetProperty("errori").EnumerateArray(), e => e.GetProperty("codice").GetString() == "ProdottoNonDisponibile");
+        Assert.Contains((await Json(diAltri)).GetProperty("errori").EnumerateArray(), e => e.GetProperty("codice").GetString() == "ProdottoNonDisponibile");
+        Assert.Equal(HttpStatusCode.OK, buono.StatusCode);
+        Assert.Contains("Quaderno &lt;i&gt;a righe&lt;/i&gt;", html, StringComparison.Ordinal);
+        Assert.Contains("4,50 EUR", html, StringComparison.Ordinal);
+        Assert.Contains($"href=\"/negozio/{pubblicato:D}\"", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("<i>a righe", html, StringComparison.Ordinal);
+        Assert.Equal(HttpStatusCode.OK, conBozza.StatusCode);
+        Assert.DoesNotContain("Prodotto in bozza", await vistaBozza.Content.ReadAsStringAsync(Ct), StringComparison.Ordinal);
+        Assert.DoesNotContain("dv-scheda-prodotto", await vistaBozza.Content.ReadAsStringAsync(Ct), StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task UnaPaginaDellaVersione1PassaAllUltimaVersioneSoloSeIlDocumentoEValido()
     {
         await using var c = await Contesto.CreaAsync();
@@ -386,10 +423,10 @@ public partial class BuilderWebTest
         Assert.True(SessioneProva.EReindirizzamento(passaggio));
 
         var revisioni = await c.RevisioniAsync(id);
-        Assert.Equal(5, revisioni[^1].VersioneModello);
+        Assert.Equal(6, revisioni[^1].VersioneModello);
         Assert.Equal(revisioni[^2].DocumentoRenderJson, revisioni[^1].DocumentoRenderJson);
         var dopo = await c.StatoAsync(id);
-        Assert.Equal(5, dopo.GetProperty("versioneTemplate").GetInt32());
+        Assert.Equal(6, dopo.GetProperty("versioneTemplate").GetInt32());
         using var oraAccettato = await c.SalvaAsync(id, dopo.GetProperty("token").GetString()!, Progetto(ConCorpo(Iniziale(), Nodo("h", "contenuto.hero", new() { ["titolo"] = "x" }))));
         Assert.Equal(HttpStatusCode.OK, oraAccettato.StatusCode);
     }
@@ -687,19 +724,22 @@ public partial class BuilderWebTest
             Assert.True(SessioneProva.EReindirizzamento(risposta));
         }
 
-        public async Task ImpostaNegozioAsync(Guid piattaforma, bool attivo)
+        public async Task ImpostaNegozioAsync(Guid piattaforma, bool attivo, DatiProva.TenantCreato? tenant = null)
         {
+            tenant ??= Web.A;
             await using var ambito = Web.Fabbrica.Services.CreateAsyncScope();
-            Assert.True((await ambito.ServiceProvider.GetRequiredService<IServizioPiattaforma>().ImpostaCommercioAsync(piattaforma, Web.A.IdTenant, Web.A.IdSito, attivo, Ct)).Riuscito);
+            Assert.True((await ambito.ServiceProvider.GetRequiredService<IServizioPiattaforma>().ImpostaCommercioAsync(piattaforma, tenant.IdTenant, tenant.IdSito, attivo, Ct)).Riuscito);
         }
 
-        public async Task CreaProdottoAsync(DatiProva.TenantCreato tenant, string nome, decimal prezzo, StatoProdotto stato = StatoProdotto.Pubblicato)
+        public async Task<Guid> CreaProdottoAsync(DatiProva.TenantCreato tenant, string nome, decimal prezzo, StatoProdotto stato = StatoProdotto.Pubblicato)
         {
             await using var ambito = Web.Fabbrica.Services.CreateAsyncScope();
             ambito.ServiceProvider.GetRequiredService<ContestoTenant>().Imposta(new DatiTenantRisolto(tenant.IdTenant, tenant.IdSito, tenant.IdDominio, tenant.Host, false));
             var dati = new DatiProdotto(null, null, stato, 22m, [new TraduzioneProdottoDati("it", nome, null)], [new VarianteDati(null, "SKU-" + Guid.NewGuid().ToString("N")[..8], prezzo, null, true, null)]);
-            var esito = await ambito.ServiceProvider.GetRequiredService<IServizioCatalogo>().SalvaAsync(AdminA, dati, Ct);
+            var attore = tenant.IdTenant == Web.A.IdTenant ? AdminA : await IdAdminBAsync();
+            var esito = await ambito.ServiceProvider.GetRequiredService<IServizioCatalogo>().SalvaAsync(attore, dati, Ct);
             Assert.True(esito.Riuscito, esito.Codice.ToString());
+            return esito.Id!.Value;
         }
 
         public async Task<IReadOnlyList<RevisionePagina>> RevisioniAsync(Guid idPagina)

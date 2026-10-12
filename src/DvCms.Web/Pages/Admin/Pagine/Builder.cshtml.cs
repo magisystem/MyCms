@@ -2,6 +2,7 @@ using System.Text.Json;
 using DvCms.Application.Builder;
 using DvCms.Application.Localizzazione;
 using DvCms.Application.Media;
+using DvCms.Application.Negozio;
 using DvCms.Application.Piattaforma;
 using DvCms.Application.Temi;
 using DvCms.Web.Pubblico;
@@ -22,13 +23,15 @@ public class BuilderModel : PaginaAdmin
 {
     private readonly IServizioBuilder _builder;
     private readonly IServizioMedia _media;
+    private readonly IServizioCatalogo _catalogo;
     private readonly IRisolutoreTema _temi;
 
-    public BuilderModel(IServizioBuilder builder, IServizioMedia media, IRisolutoreTema temi, ILocalizzatore localizzatore)
+    public BuilderModel(IServizioBuilder builder, IServizioMedia media, IServizioCatalogo catalogo, IRisolutoreTema temi, ILocalizzatore localizzatore)
         : base(localizzatore)
     {
         _builder = builder;
         _media = media;
+        _catalogo = catalogo;
         _temi = temi;
     }
 
@@ -85,6 +88,7 @@ public class BuilderModel : PaginaAdmin
         ["proprieta"] = Localizzatore.Traduci("Proprietà"),
         ["nonSalvato"] = Localizzatore.Traduci("Modifiche non salvate."),
         ["nessunaRisorsa"] = Localizzatore.Traduci("(nessuna immagine)"),
+        ["nessunProdotto"] = Localizzatore.Traduci("(scegli un prodotto)"),
         ["componenti"] = JsonSerializer.Serialize(new Dictionary<string, string>
         {
             ["layout.sezione"] = Localizzatore.Traduci("Sezione"),
@@ -104,6 +108,7 @@ public class BuilderModel : PaginaAdmin
             ["contenuto.testimonianze"] = Localizzatore.Traduci("Testimonianze"),
             ["contenuto.testimonianza"] = Localizzatore.Traduci("Testimonianza"),
             ["negozio.griglia-prodotti"] = Localizzatore.Traduci("Griglia di prodotti"),
+            ["negozio.scheda-prodotto"] = Localizzatore.Traduci("Scheda prodotto"),
         }),
         ["campoObbligatorio"] = Localizzatore.Traduci("Campo obbligatorio"),
         ["gruppi"] = JsonSerializer.Serialize(new Dictionary<string, string>
@@ -138,6 +143,7 @@ public class BuilderModel : PaginaAdmin
             ["ruolo"] = Localizzatore.Traduci("Ruolo"),
             ["colonne"] = Localizzatore.Traduci("Colonne"),
             ["quanti"] = Localizzatore.Traduci("Quanti prodotti"),
+            ["idProdotto"] = Localizzatore.Traduci("Prodotto"),
             ["altezza"] = Localizzatore.Traduci("Altezza"),
             ["animazione"] = Localizzatore.Traduci("Animazione"),
             ["ritardoAnimazione"] = Localizzatore.Traduci("Ritardo (ms)"),
@@ -151,6 +157,9 @@ public class BuilderModel : PaginaAdmin
     /// così l'editor mostra i componenti con l'aspetto che avranno. Sono dati del server: il browser non sceglie nulla.
     /// </summary>
     public string TemaJson { get; private set; } = "{}";
+
+    /// <summary>Prodotti del catalogo scelti nei componenti del negozio (identificativo e nome); vuoto se il negozio non è attivo.</summary>
+    public string ProdottiJson { get; private set; } = "[]";
 
     public async Task<IActionResult> OnGetAsync(Guid id, CancellationToken annullamento)
     {
@@ -173,6 +182,15 @@ public class BuilderModel : PaginaAdmin
         RisorseJson = JsonSerializer.Serialize(risorse
             .Where(r => r.TipoContenuto.StartsWith("image/", StringComparison.Ordinal) && r.Visibilita == Domain.Media.VisibilitaMedia.Pubblica)
             .Select(r => new { id = r.Id, nome = r.NomeOriginale, alt = r.TestoAlternativoPredefinito }));
+        ProdottiJson = "[]";
+        if (await _catalogo.CommercioAttivoAsync(annullamento))
+        {
+            var prodotti = await _catalogo.ElencaAsync(IdAttore, annullamento);
+            ProdottiJson = JsonSerializer.Serialize(prodotti
+                .Where(p => p.Stato != Domain.Negozio.StatoProdotto.Archiviato)
+                .Select(p => new { id = p.Id, nome = p.Nome }));
+        }
+
         return Page();
     }
 

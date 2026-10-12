@@ -129,8 +129,10 @@ public sealed class RegistroModelliPagina
 
     public static ModelloPagina ModelloIntestazioneFissaV5 { get; } = ModelloBuilder(Builder.RegistroTemplateBuilder.IntestazioneFissa, 5);
 
+    public static ModelloPagina ModelloIntestazioneFissaV6 { get; } = ModelloBuilder(Builder.RegistroTemplateBuilder.IntestazioneFissa, 6);
+
     /// <summary>(Dichiarata dopo i modelli: l'ordine degli inizializzatori statici conta.) I modelli rilasciati con il prodotto.</summary>
-    public static IReadOnlyList<ModelloPagina> Predefiniti { get; } = [ModelloTestoSemplice, ModelloPresentazione, ModelloPaginaLibera, ModelloIntestazioneFissa, ModelloIntestazioneFissaV2, ModelloIntestazioneFissaV3, ModelloIntestazioneFissaV4, ModelloIntestazioneFissaV5];
+    public static IReadOnlyList<ModelloPagina> Predefiniti { get; } = [ModelloTestoSemplice, ModelloPresentazione, ModelloPaginaLibera, ModelloIntestazioneFissa, ModelloIntestazioneFissaV2, ModelloIntestazioneFissaV3, ModelloIntestazioneFissaV4, ModelloIntestazioneFissaV5, ModelloIntestazioneFissaV6];
 
     private static ModelloPagina ModelloBuilder(string id, int versione = 1) =>
         new(id, versione, [], new PoliticaEditing(ContenutoLiberoAmmesso: false, LunghezzaMassimaContenuto: 0), [], Builder: true);

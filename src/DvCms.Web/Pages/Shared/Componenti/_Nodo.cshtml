@@ -273,4 +273,32 @@
             }
         }
         break;
+    case "negozio.scheda-prodotto":
+        {
+            // Il documento conserva solo l'identificativo: nome, descrizione, prezzi e disponibilità si leggono alla visita, e un prodotto
+            // non più pubblicato (o di un negozio spento) non produce nulla.
+            var scelto = Guid.TryParseExact(Valore(Model.Proprieta, "idProdotto", string.Empty), "D", out var idProdotto)
+                ? await Vetrina.LeggiAsync(idProdotto, ContestoLinguaNodo.CodiceLingua, Context.RequestAborted)
+                : null;
+            if (scelto is not null)
+            {
+                var cultura = System.Globalization.CultureInfo.GetCultureInfo("it-IT");
+                var disponibile = scelto.Varianti.Any(v => v.Massimo > 0);
+                <article class="@("dv-scheda-prodotto" + Animazione(Model.Stili))">
+                    <h3 class="dv-scheda-prodotto-nome">@(scelto.Nome.Length > 0 ? scelto.Nome : "—")</h3>
+                    @foreach (var paragrafo in scelto.Descrizione.Split("\n\n", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                    {
+                        <p>@paragrafo</p>
+                    }
+                    <ul class="dv-scheda-prodotto-varianti">
+                        @foreach (var variante in scelto.Varianti)
+                        {
+                            <li>@(variante.Etichetta is { Length: > 0 } etichetta ? etichetta + ": " : string.Empty)@variante.PrezzoLordo.ToString("N2", cultura) @variante.Valuta@(variante.Massimo > 0 ? string.Empty : " — " + _L["Esaurito"])</li>
+                        }
+                    </ul>
+                    <p><a class="pulsante dv-pulsante dv-pulsante-primario" href="/negozio/@scelto.Id.ToString("D")">@(disponibile ? _L["Vedi e acquista"] : _L["Vedi il prodotto"])</a></p>
+                </article>
+            }
+        }
+        break;
 }
