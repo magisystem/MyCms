@@ -1,9 +1,13 @@
 using System.Net;
 using System.Text.RegularExpressions;
+using DvCms.Application.Cms;
 using DvCms.Application.Negozio;
+using DvCms.Application.Tenancy;
 using DvCms.Domain.Negozio;
+using DvCms.Infrastructure.Cache;
 using DvCms.IntegrationTests.Negozio;
 using DvCms.IntegrationTests.Supporto;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace DvCms.IntegrationTests.Web;
@@ -19,6 +23,29 @@ public class VetrinaWebTest
         using var accesso = await sessione.InviaModuloAsync("/account/accesso", [new("Email", "cliente@esempio.it"), new("Password", DatiProva.PasswordProva)]);
         Assert.True(SessioneProva.EReindirizzamento(accesso));
         return sessione;
+    }
+
+    [Fact]
+    public async Task LeVociDelNegozioCompaionoSullePagineDelSitoSoloConIlNegozioAttivo()
+    {
+        await using var c = await ContestoNegozio.CreaAsync();
+        await using (var ambito = c.Web.Fabbrica.Services.CreateAsyncScope())
+        {
+            ambito.ServiceProvider.GetRequiredService<ContestoTenant>().Imposta(new DatiTenantRisolto(c.A.IdTenant, c.A.IdSito, c.A.IdDominio, c.A.Host, false));
+            var pagine = ambito.ServiceProvider.GetRequiredService<IServizioPagine>();
+            var creata = await pagine.CreaAsync(c.AdminA, new DatiNuovaPagina("benvenuto", "Benvenuto", "ciao", "it", false), Ct);
+            var dettaglio = (await pagine.LeggiAsync(c.AdminA, creata.Id!.Value, Ct))!;
+            Assert.True((await pagine.PubblicaAsync(c.AdminA, creata.Id.Value, dettaglio.TokenConcorrenza, Ct)).Riuscito);
+        }
+
+        var anonimo = c.Web.SessioneSu(c.A.Host);
+        var acceso = await (await anonimo.GetAsync("/benvenuto")).Content.ReadAsStringAsync(Ct);
+        await c.SpegniNegozioAsync(c.A);
+        var spento = await (await anonimo.GetAsync("/benvenuto")).Content.ReadAsStringAsync(Ct);
+
+        Assert.Contains("class=\"dv-barra-negozio\"", acceso, StringComparison.Ordinal);
+        Assert.Contains("href=\"/negozio\"", acceso, StringComparison.Ordinal);
+        Assert.DoesNotContain("dv-barra-negozio", spento, StringComparison.Ordinal);
     }
 
     [Fact]

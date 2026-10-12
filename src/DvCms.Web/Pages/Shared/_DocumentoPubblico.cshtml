@@ -85,6 +85,11 @@
     }
     else
     {
+        @if (vista.EtichettaAnteprima is null)
+        {
+            <partial name="_BarraNegozio" />
+        }
+
         @* Il tema decide l'aspetto (intestazione, selettore di lingua, contenitore, piè di pagina); il contenuto è lo stesso per ogni tema. *@
         <partial name="@DvCms.Web.Pubblico.TemiVista.Vista(vista.Tema)" model="vista" />
     }

@@ -73,6 +73,7 @@ h1 {
 .dv-vetrina { max-width: 60rem; margin: 0 auto; padding: 1rem; }
 .dv-vetrina-testata { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.5rem 1rem; margin-bottom: 1.5rem; }
 .dv-vetrina-testata nav { display: flex; gap: 1rem; }
+.dv-barra-negozio { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.5rem 1rem; padding: 0.35rem 1rem; font-size: 0.85rem; border-bottom: 1px solid currentColor; }
 .dv-vetrina-piede { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid currentColor; font-size: 0.875rem; }
 .dv-prodotti { display: grid; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); gap: 1rem; list-style: none; margin: 0; padding: 0; }
 .dv-prodotto { border: 1px solid currentColor; border-radius: 0.5rem; padding: 1rem; }

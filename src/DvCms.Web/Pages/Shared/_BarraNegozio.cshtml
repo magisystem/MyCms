@@ -1,0 +1,10 @@
+@inject DvCms.Application.Negozio.IServizioCatalogo Catalogo
+@* Barra del negozio sopra il tema: le versioni di tema rilasciate sono immutabili, quindi il collegamento sta qui e non nelle loro viste. Compare solo se il sito ha il negozio attivo. *@
+@if (await Catalogo.CommercioAttivoAsync(Context.RequestAborted))
+{
+    <nav class="dv-barra-negozio" aria-label="@_L["Negozio"]">
+        <a href="/negozio">@_L["Negozio"]</a>
+        <a href="/account/carrello">@_L["Carrello"]</a>
+        <a href="/account">@_L["Il mio account"]</a>
+    </nav>
+}
