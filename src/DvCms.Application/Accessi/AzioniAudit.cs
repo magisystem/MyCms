@@ -55,6 +55,7 @@ public static class AzioniAudit
     public const string PagamentoRifiutato = "PagamentoRifiutato";
     public const string PagamentoDaRimborsare = "PagamentoDaRimborsare";
     public const string EvasioneOrdine = "EvasioneOrdine";
+    public const string EsportazioneOrdini = "EsportazioneOrdini";
     public const string ReinserimentoGiacenza = "ReinserimentoGiacenza";
     public const string AccessoAdminComeAcquirente = "AccessoAdminComeAcquirente";
     public const string AnonimizzazioneAccount = "AnonimizzazioneAccount";

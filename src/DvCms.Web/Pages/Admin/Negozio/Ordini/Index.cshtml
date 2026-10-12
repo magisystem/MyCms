@@ -3,6 +3,49 @@
 @{
     ViewData["Titolo"] = _L["Ordini"];
 }
+@if (Model.Messaggio is not null)
+{
+    <div class="alert alert-success" role="status">@Model.Messaggio</div>
+}
+@if (Model.ErroreDaMostrare is not null)
+{
+    <div class="alert alert-danger" role="alert">@Model.ErroreDaMostrare</div>
+}
+<div class="card mb-3">
+    <div class="card-header"><h3 class="card-title">@_L["Esporta gli ordini in CSV"]</h3></div>
+    <div class="card-body">
+        <form method="get" class="row g-2 align-items-end">
+            <input type="hidden" name="handler" value="Esporta" />
+            <div class="col-md-2">
+                <label class="form-label" for="dal">@_L["Dal"]</label>
+                <input type="date" class="form-control" id="dal" name="dal" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label" for="al">@_L["Al"]</label>
+                <input type="date" class="form-control" id="al" name="al" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" for="stato">@_L["Stato"]</label>
+                <select class="form-select" id="stato" name="stato">
+                    <option value="">@_L["Tutti"]</option>
+                    @foreach (var stato in DvCms.Web.Pages.Admin.Negozio.Ordini.IndexModel.StatiFiltrabili)
+                    {
+                        <option value="@stato">@Model.Stato(stato)</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" for="formato">@_L["Formato"]</label>
+                <select class="form-select" id="formato" name="formato">
+                    <option value="Ordini">@_L["Una riga per ordine"]</option>
+                    <option value="Righe">@_L["Una riga per articolo (contabilità)"]</option>
+                </select>
+            </div>
+            <div class="col-md-2"><button type="submit" class="btn btn-primary w-100">@_L["Scarica"]</button></div>
+        </form>
+        <div class="form-hint mt-2">@_L["Il file contiene dati personali degli acquirenti: conservalo e condividilo con cautela. Le date sono UTC; i decimali usano la virgola."]</div>
+    </div>
+</div>
 <div class="card">
     @if (Model.Ordini.Count == 0)
     {

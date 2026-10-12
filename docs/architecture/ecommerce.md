@@ -155,6 +155,14 @@ Gli stati sono un'enumerazione chiusa (`StatoOrdine`) e **ogni passaggio** passa
 - **Informative:** privacy e condizioni di reso sono **pagine normali del sito, scritte dal tenant**, con gli slug convenzionali `privacy` e `resi`: se la pagina è pubblicata nella lingua della richiesta, il piè di pagina della vetrina e dell'area cliente la collega (altrimenti nessun collegamento). Il sistema non fornisce testi legali.
 - **Non ancora:** esportazione in PDF, richiesta di cancellazione per email dal modulo di contatto, registro dei consensi per le comunicazioni commerciali (il negozio invia solo email transazionali).
 
+## Esportazione degli ordini (M7.23)
+
+- **Dove:** `/admin/negozio/ordini`, sezione «Esporta gli ordini in CSV» (`IServizioEsportazioneOrdini`). `TenantAdmin` del tenant e `PlatformAdmin`, riverificati sul database a ogni richiesta; solo gli ordini del sito dell'host.
+- **Filtri:** date (sulla data di creazione, UTC, estremi inclusi), stato, formato. **Formati:** *Una riga per ordine* (totali, rimborsato, spedizione, acquirente, indirizzo) e *Una riga per articolo* (codice, nome, variante, quantità, prezzo, aliquota, lordo, imponibile, IVA; la spedizione è una riga a parte), pensato per la contabilità. Massimo 50.000 ordini per file (`X-Esportazione-Troncata` se superato: restringere l'intervallo).
+- **Formato del file:** UTF-8 con BOM, separatore `;`, fine riga `CRLF`, decimali con la virgola (Excel in italiano), date UTC `aaaa-mm-gg hh:mm:ss`, stati con il nome interno (`Pagato`, `Spedito`…), campi con `;`, virgolette o a capo racchiusi fra virgolette. I testi liberi che iniziano con `=`, `+`, `-`, `@` o con un carattere di controllo sono preceduti da un apice, perché un foglio di calcolo non li esegua come formule.
+- **Dati personali:** il file contiene email, nome e indirizzi degli acquirenti. Risposta senza cache; ogni esportazione è nell'audit (`EsportazioneOrdini`: formato, numero di righe, filtro; mai i dati). Gli ordini già anonimizzati (A7) escono anonimizzati.
+- **Non c'è:** fattura o ricevuta generata dal sistema (ADR-0020: responsabilità del tenant).
+
 ## Esercizio (M7.22)
 
 La **Verifica di esercizio** (`IServizioProntezzaNegozio`) è una sezione della pagina Pagamenti del tenant nell'area Platform: controlli in sola lettura, solo per il `PlatformAdmin`, senza segreti — negozio attivo, credenziali PayPal leggibili, webhook, interruttore di produzione (bloccante solo in ambiente Produzione), prodotti pubblicati, metodi di spedizione, canale email, amministratori attivi, pagine `privacy` e `resi`, manutenzione abilitata e dominio pubblico (con l'indirizzo del webhook da registrare). La procedura completa per accendere i pagamenti reali è in [`operations/negozio-esercizio.md`](../operations/negozio-esercizio.md).

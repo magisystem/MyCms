@@ -16,7 +16,7 @@ Chi lo fa: un `PlatformAdmin` (credenziali e verifica) e il responsabile dell'in
 2. Almeno un prodotto pubblicato con una variante attiva, almeno un metodo di spedizione attivo (anche solo il ritiro in sede).
 3. Canale email del tenant configurato (conferme al cliente, avvisi di nuovo ordine, rimborsi).
 4. Pagine **`privacy`** e **`resi`** scritte dal tenant e pubblicate (slug esatti): il piè di pagina le collega. Il sistema non fornisce testi legali.
-5. Fatture o ricevute: restano fuori dal sistema (responsabilità del tenant, che dispone dell'esportazione degli ordini).
+5. Fatture o ricevute: restano fuori dal sistema (responsabilità del tenant, che dispone dell'esportazione CSV degli ordini da `/admin/negozio/ordini`: un file per ordine o per articolo, per periodo e stato; contiene dati personali, quindi da conservare e condividere con cautela).
 
 ## 2. Conto PayPal del tenant
 

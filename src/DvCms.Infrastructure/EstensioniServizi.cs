@@ -227,6 +227,7 @@ public static class EstensioniServizi
         servizi.TryAddScoped<IServizioVetrina, ServizioVetrina>();
         servizi.TryAddScoped<IServizioCategorie, ServizioCategorie>();
         servizi.TryAddScoped<IServizioOrdini, ServizioOrdini>();
+        servizi.TryAddScoped<IServizioEsportazioneOrdini, ServizioEsportazioneOrdini>();
         servizi.TryAddScoped<IServizioGiacenze, ServizioGiacenze>();
         servizi.AddHttpClient(ClientePayPal.NomeClientHttp, client => client.Timeout = Timeout.InfiniteTimeSpan);
         servizi.TryAddScoped<IProviderPagamento, ClientePayPal>();
