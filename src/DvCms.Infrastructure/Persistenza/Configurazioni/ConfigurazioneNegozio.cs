@@ -148,6 +148,27 @@ internal sealed class ConfigurazioneTraduzioneProdotto : IEntityTypeConfiguratio
     }
 }
 
+internal sealed class ConfigurazioneTermineRicercaProdotto : IEntityTypeConfiguration<TermineRicercaProdotto>
+{
+    public void Configure(EntityTypeBuilder<TermineRicercaProdotto> entita)
+    {
+        entita.ToTable("TerminiRicercaProdotto");
+        entita.HasKey(termine => new { termine.IdProdotto, termine.IdLingua, termine.Campo, termine.Termine });
+        entita.Property(termine => termine.Campo).HasConversion<byte>();
+
+        // Confronto binario: i termini sono già normalizzati e così la ricerca per prefisso usa l'indice.
+        entita.Property(termine => termine.Termine).HasMaxLength(AnalizzatoreRicerca.LunghezzaMassima).UseCollation("Latin1_General_100_BIN2").IsRequired();
+
+        // Nessun vincolo sulla lingua: i codici articolo usano la lingua neutra (Guid vuoto).
+        entita.HasOne<Prodotto>()
+            .WithMany()
+            .HasForeignKey(termine => new { termine.IdTenant, termine.IdSito, termine.IdProdotto })
+            .HasPrincipalKey(prodotto => new { prodotto.IdTenant, prodotto.IdSito, prodotto.Id })
+            .OnDelete(DeleteBehavior.Restrict);
+        entita.HasIndex(termine => new { termine.IdSito, termine.Termine }).IncludeProperties(termine => new { termine.IdProdotto, termine.IdLingua, termine.Campo });
+    }
+}
+
 internal sealed class ConfigurazioneTraduzioneVarianteProdotto : IEntityTypeConfiguration<TraduzioneVarianteProdotto>
 {
     public void Configure(EntityTypeBuilder<TraduzioneVarianteProdotto> entita)

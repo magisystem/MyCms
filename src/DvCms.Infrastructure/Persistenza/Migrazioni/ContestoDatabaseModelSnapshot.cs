@@ -1719,6 +1719,39 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                         });
                 });
 
+            modelBuilder.Entity("DvCms.Domain.Negozio.TermineRicercaProdotto", b =>
+                {
+                    b.Property<Guid>("IdProdotto")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdLingua")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte>("Campo")
+                        .HasColumnType("tinyint");
+
+                    b.Property<string>("Termine")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .UseCollation("Latin1_General_100_BIN2");
+
+                    b.Property<Guid>("IdSito")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdTenant")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("IdProdotto", "IdLingua", "Campo", "Termine");
+
+                    b.HasIndex("IdSito", "Termine");
+
+                    SqlServerIndexBuilderExtensions.IncludeProperties(b.HasIndex("IdSito", "Termine"), new[] { "IdProdotto", "IdLingua", "Campo" });
+
+                    b.HasIndex("IdTenant", "IdSito", "IdProdotto");
+
+                    b.ToTable("TerminiRicercaProdotto", (string)null);
+                });
+
             modelBuilder.Entity("DvCms.Domain.Negozio.TraduzioneCategoria", b =>
                 {
                     b.Property<Guid>("IdCategoria")
@@ -2608,6 +2641,16 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.HasOne("DvCms.Domain.Negozio.Ordine", null)
                         .WithMany()
                         .HasForeignKey("IdTenant", "IdSito", "IdOrdine")
+                        .HasPrincipalKey("IdTenant", "IdSito", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DvCms.Domain.Negozio.TermineRicercaProdotto", b =>
+                {
+                    b.HasOne("DvCms.Domain.Negozio.Prodotto", null)
+                        .WithMany()
+                        .HasForeignKey("IdTenant", "IdSito", "IdProdotto")
                         .HasPrincipalKey("IdTenant", "IdSito", "Id")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();

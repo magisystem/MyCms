@@ -197,6 +197,15 @@ public sealed class ServizioCatalogo : IServizioCatalogo
             return esitoVarianti;
         }
 
+        // L'indice di ricerca si aggiorna nello stesso salvataggio: testi nelle lingue volute e codici degli articoli attivi.
+        await IndiceRicercaProdotti.SincronizzaAsync(
+            _contesto,
+            prodotto,
+            nuovo,
+            dati.Traduzioni.Select(t => new TestoProdottoIndicizzabile(perCodice[t.CodiceLingua.Trim()].IdLingua, perCodice[t.CodiceLingua.Trim()].Codice, t.Nome.Trim(), t.Descrizione?.Trim() ?? string.Empty)),
+            dati.Varianti.Where(v => v.Attiva).Select(v => (v.Sku ?? string.Empty).Trim()),
+            annullamento);
+
         try
         {
             await _contesto.SaveChangesAsync(annullamento);

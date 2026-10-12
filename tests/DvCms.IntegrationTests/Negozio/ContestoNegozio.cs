@@ -265,6 +265,8 @@ internal sealed class ContestoNegozio : IAsyncDisposable
 
     public Task<T> ComeEsportazioneAsync<T>(DatiProva.TenantCreato tenant, Func<IServizioEsportazioneOrdini, Task<T>> operazione) => InAsync<IServizioEsportazioneOrdini, T>(tenant, operazione);
 
+    public Task<T> ComeVetrinaAsync<T>(DatiProva.TenantCreato tenant, Func<IServizioVetrina, Task<T>> operazione) => InAsync<IServizioVetrina, T>(tenant, operazione);
+
     public Task<T> ComeCategorieAsync<T>(DatiProva.TenantCreato tenant, Func<IServizioCategorie, Task<T>> operazione) => InAsync<IServizioCategorie, T>(tenant, operazione);
 
     public Task<T> ComeCatalogoAsync<T>(DatiProva.TenantCreato tenant, Func<IServizioCatalogo, Task<T>> operazione) => InAsync<IServizioCatalogo, T>(tenant, operazione);

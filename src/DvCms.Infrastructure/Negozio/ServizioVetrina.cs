@@ -71,34 +71,91 @@ public sealed class ServizioVetrina : IServizioVetrina
         var visibili = idCategoria is { } categoria
             ? await ElencaPerCategoriaAsync(codiceLingua, categoria, annullamento)
             : await ElencaAsync(codiceLingua, annullamento);
-        var parole = Parole(testo);
-        if (parole.Count == 0 || visibili.Count == 0)
+        if (visibili.Count == 0)
         {
             return visibili;
         }
 
         var idSito = _tenant.IdSito;
-        var ids = visibili.Select(p => p.Id).ToList();
-        var traduzioni = await _contesto.TraduzioniProdotto.AsNoTracking().Where(t => t.IdSito == idSito && ids.Contains(t.IdProdotto)).ToListAsync(annullamento);
-        var codici = await _contesto.VariantiProdotto.AsNoTracking().Where(v => v.IdSito == idSito && v.Attiva && ids.Contains(v.IdProdotto)).Select(v => new { v.IdProdotto, v.Sku }).ToListAsync(annullamento);
+        var (idRichiesta, idPredefinita) = await LinguaAsync(idSito, codiceLingua, annullamento);
+        var termini = AnalizzatoreRicerca.TerminiRicerca(testo, codiceLingua);
+        if (termini.Count == 0)
+        {
+            return visibili;
+        }
 
-        var paglia = ids.ToDictionary(
-            id => id,
-            id => string.Join(
-                ' ',
-                traduzioni.Where(t => t.IdProdotto == id).Select(t => t.Nome + " " + t.Descrizione)
-                    .Concat(codici.Where(c => c.IdProdotto == id).Select(c => c.Sku))));
-        return [.. visibili.Where(p => parole.All(parola => paglia[p.Id].Contains(parola, StringComparison.OrdinalIgnoreCase)))];
+        var ids = visibili.Select(p => p.Id).ToList();
+        await AssicuraIndiceAsync(idSito, ids, annullamento);
+
+        // Una query per termine (al più cinque): ogni prodotto deve avere tutti i termini (E logico), con il punteggio migliore per termine.
+        var lingue = new List<Guid> { TermineRicercaProdotto.LinguaNeutra };
+        if (idRichiesta is { } richiesta)
+        {
+            lingue.Add(richiesta);
+        }
+
+        if (idPredefinita is { } predefinita && predefinita != idRichiesta)
+        {
+            lingue.Add(predefinita);
+        }
+
+        Dictionary<Guid, int>? punteggi = null;
+        foreach (var termine in termini)
+        {
+            var prefisso = termine.Length >= 3;
+            var trovati = await _contesto.TerminiRicercaProdotto.AsNoTracking()
+                .Where(r => r.IdSito == idSito && lingue.Contains(r.IdLingua) && (prefisso ? EF.Functions.Like(r.Termine, termine + "%") : r.Termine == termine))
+                .GroupBy(r => r.IdProdotto)
+                .Select(g => new
+                {
+                    IdProdotto = g.Key,
+                    Punti = g.Max(r => r.Campo == CampoRicerca.Nome ? (r.Termine == termine ? 10 : 6)
+                        : r.Campo == CampoRicerca.Codice ? (r.Termine == termine ? 8 : 5)
+                        : (r.Termine == termine ? 3 : 1)),
+                })
+                .ToListAsync(annullamento);
+
+            punteggi = punteggi is null
+                ? trovati.ToDictionary(t => t.IdProdotto, t => t.Punti)
+                : trovati.Where(t => punteggi.ContainsKey(t.IdProdotto)).ToDictionary(t => t.IdProdotto, t => punteggi[t.IdProdotto] + t.Punti);
+            if (punteggi.Count == 0)
+            {
+                return [];
+            }
+        }
+
+        // Dal più pertinente; a parità l'ordine alfabetico della vetrina.
+        return [.. visibili.Where(p => punteggi!.ContainsKey(p.Id)).OrderByDescending(p => punteggi![p.Id])];
     }
 
-    /// <summary>Le parole da cercare: separate da spazi, di almeno due caratteri, senza controlli, al più cinque e lunghe al più 50.</summary>
-    private static List<string> Parole(string? testo) =>
-        [.. (testo ?? string.Empty)
-            .Split([' ', '\t', '\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .Where(p => p.Length >= 2 && !p.Any(char.IsControl))
-            .Select(p => p.Length > 50 ? p[..50] : p)
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .Take(5)];
+    /// <summary>
+    /// I prodotti nati prima dell'indice di ricerca non hanno termini: alla prima ricerca si indicizzano (al più
+    /// <see cref="IndiceRicercaProdotti.MassimoRicostruzioniPerRichiesta"/> per volta). Una richiesta concorrente che li ha già
+    /// indicizzati non è un errore.
+    /// </summary>
+    private async Task AssicuraIndiceAsync(Guid idSito, List<Guid> idProdotti, CancellationToken annullamento)
+    {
+        var indicizzati = await _contesto.TerminiRicercaProdotto.AsNoTracking()
+            .Where(r => r.IdSito == idSito && idProdotti.Contains(r.IdProdotto))
+            .Select(r => r.IdProdotto)
+            .Distinct()
+            .ToListAsync(annullamento);
+        var mancanti = idProdotti.Except(indicizzati).Take(IndiceRicercaProdotti.MassimoRicostruzioniPerRichiesta).ToList();
+        if (mancanti.Count == 0)
+        {
+            return;
+        }
+
+        try
+        {
+            await IndiceRicercaProdotti.RicostruisciAsync(_contesto, idSito, mancanti, annullamento);
+            await _contesto.SaveChangesAsync(annullamento);
+        }
+        catch (DbUpdateException)
+        {
+            _contesto.ChangeTracker.Clear();
+        }
+    }
 
     public async Task<IReadOnlyList<CategoriaInVetrina>> CategorieAsync(string codiceLingua, CancellationToken annullamento)
     {
