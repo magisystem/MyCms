@@ -19,13 +19,24 @@ public class IndexModel : PaginaAdmin
 
     private static readonly string[] _prefissiConsentiti = ["https://login.microsoftonline.com/", "https://accounts.google.com/"];
 
-    private readonly IServizioConnessioneEmail _email;
+    /// <summary>Da quanti giorni prima della scadenza del segreto del client la pagina avvisa.</summary>
+    public const int GiorniPreavvisoScadenza = 30;
 
-    public IndexModel(IServizioConnessioneEmail email, ILocalizzatore localizzatore)
+    private readonly IServizioConnessioneEmail _email;
+    private readonly TimeProvider _orologio;
+
+    public IndexModel(IServizioConnessioneEmail email, TimeProvider orologio, ILocalizzatore localizzatore)
         : base(localizzatore)
     {
         _email = email;
+        _orologio = orologio;
     }
+
+    /// <summary>Giorni alla scadenza del segreto del client (negativi se già scaduto), se il tenant ne ha indicato la data.</summary>
+    public int? GiorniAllaScadenzaSegreto =>
+        Scheda.App is { } app && app.Valori.TryGetValue(DefinizioniProviderEmail.CampoScadenzaSegreto, out var testo) && DefinizioniProviderEmail.TentaLeggereData(testo, out var data)
+            ? data.DayNumber - DateOnly.FromDateTime(_orologio.GetUtcNow().UtcDateTime).DayNumber
+            : null;
 
     public SchedaConnessioneEmail Scheda { get; private set; } = new(null, null, null, []);
 
@@ -210,6 +221,7 @@ public class IndexModel : PaginaAdmin
         "TenantMicrosoft" => Localizzatore.Traduci("Tenant Microsoft"),
         "IdClient" => Localizzatore.Traduci("Identificativo client"),
         "SegretoClient" => Localizzatore.Traduci("Segreto del client"),
+        DefinizioniProviderEmail.CampoScadenzaSegreto => Localizzatore.Traduci("Scadenza del segreto del client (facoltativa)"),
         _ => campo,
     };
 

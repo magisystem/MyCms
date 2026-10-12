@@ -16,6 +16,15 @@
 {
     <div class="alert alert-danger" role="alert">@Model.ErroreDaMostrare</div>
 }
+@if (Model.GiorniAllaScadenzaSegreto is { } giorni && giorni <= DvCms.Web.Pages.Admin.Email.IndexModel.GiorniPreavvisoScadenza)
+{
+    <div class="alert @(giorni < 0 ? "alert-danger" : "alert-warning")" role="alert">
+        @(giorni < 0
+            ? _L["Il segreto del client è scaduto: le email non partono finché non ne crei uno nuovo presso il provider e lo inserisci qui."]
+            : _L["Il segreto del client sta per scadere: crea un nuovo segreto presso il provider e inseriscilo qui prima della scadenza. Il collegamento della casella resta valido."])
+        <strong>@giorni @_L["giorni"]</strong>
+    </div>
+}
 <div class="row row-cards">
     <div class="col-lg-8">
         <div class="card">
@@ -58,6 +67,10 @@
                             {
                                 <input type="password" class="form-control @(invalido ? "is-invalid" : null)" id="@nome" name="@nome" autocomplete="new-password"
                                        placeholder="@(Model.SegretoImpostato ? _L["Impostato: lascia vuoto per non cambiarlo"] : string.Empty)" />
+                            }
+                            else if (campo.Tipo == DvCms.Application.Email.TipoCampoEmail.Data)
+                            {
+                                <input type="date" class="form-control @(invalido ? "is-invalid" : null)" id="@nome" name="@nome" value="@Model.Valori.GetValueOrDefault(campo.Nome)" />
                             }
                             else
                             {

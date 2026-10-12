@@ -16,6 +16,9 @@ public enum TipoCampoEmail
 
     /// <summary>JSON di un account di servizio Google (<c>type</c>, <c>client_email</c>, <c>private_key</c>).</summary>
     CredenzialiGoogle = 7,
+
+    /// <summary>Data nel formato <c>aaaa-mm-gg</c>.</summary>
+    Data = 8,
 }
 
 /// <summary>Un campo di configurazione di un canale: la UI mostra solo i campi del canale scelto.</summary>
@@ -24,6 +27,9 @@ public sealed record CampoProviderEmail(string Nome, string Etichetta, TipoCampo
 /// <summary>Campi e regole di validazione dei quattro canali (ADR-0015). Un solo posto per UI, validazione e adapter.</summary>
 public static partial class DefinizioniProviderEmail
 {
+    /// <summary>Data (facoltativa) in cui scade il segreto del client OAuth: la pagina del tenant avvisa in anticipo (ADR-0021).</summary>
+    public const string CampoScadenzaSegreto = "ScadenzaSegretoClient";
+
     public const string TlsNessuna = "Nessuna";
     public const string TlsStartTls = "StartTls";
     public const string TlsImmediato = "TlsImmediato";
@@ -68,6 +74,7 @@ public static partial class DefinizioniProviderEmail
         new("TenantMicrosoft", "Tenant Microsoft", TipoCampoEmail.Identificativo, true, false),
         new("IdClient", "Identificativo client", TipoCampoEmail.Identificativo, true, false),
         new("SegretoClient", "Segreto del client", TipoCampoEmail.Testo, true, true),
+        new(CampoScadenzaSegreto, "Scadenza del segreto del client", TipoCampoEmail.Data, false, false),
     ];
 
     /// <summary>App OAuth del tenant per Google: creata nella Google Cloud Console dal <c>TenantAdmin</c> (ADR-0021).</summary>
@@ -75,6 +82,7 @@ public static partial class DefinizioniProviderEmail
     [
         new("IdClient", "Identificativo client", TipoCampoEmail.Identificativo, true, false),
         new("SegretoClient", "Segreto del client", TipoCampoEmail.Testo, true, true),
+        new(CampoScadenzaSegreto, "Scadenza del segreto del client", TipoCampoEmail.Data, false, false),
     ];
 
     public static IReadOnlyList<CampoProviderEmail> Campi(ProviderEmail provider) => provider switch
@@ -137,8 +145,13 @@ public static partial class DefinizioniProviderEmail
         TipoCampoEmail.ModalitaTls => ModalitaTls.Contains(valore),
         TipoCampoEmail.Identificativo => Identificativo().IsMatch(valore),
         TipoCampoEmail.CredenzialiGoogle => CredenzialiGoogleValide(valore),
+        TipoCampoEmail.Data => TentaLeggereData(valore, out _),
         _ => true,
     };
+
+    /// <summary>Legge una data <c>aaaa-mm-gg</c> (solo quel formato).</summary>
+    public static bool TentaLeggereData(string? valore, out DateOnly data) =>
+        DateOnly.TryParseExact(valore?.Trim(), "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out data);
 
     [System.Text.RegularExpressions.GeneratedRegex("^[A-Za-z0-9][A-Za-z0-9._-]{0,99}$", System.Text.RegularExpressions.RegexOptions.CultureInvariant)]
     private static partial System.Text.RegularExpressions.Regex Identificativo();

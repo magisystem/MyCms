@@ -131,6 +131,44 @@ public class ConnessioneEmailWebTest
     }
 
     [Fact]
+    public async Task LaPaginaAvvisaQuandoIlSegretoDelClientStaPerScadereOEScaduto()
+    {
+        await using var scenario = await ScenarioWeb.CreaAsync(impostazioni: Chiave(), oauthEmail: new ProviderOAuthFinto());
+        await scenario.CreaTenantAdminAsync("anna@esempio.it");
+        var anna = scenario.SessioneA();
+        await anna.AccediAsync("anna@esempio.it", DatiProva.PasswordProva);
+
+        async Task<string> ConScadenzaAsync(int giorniDaOggi)
+        {
+            var data = DateTime.UtcNow.AddDays(giorniDaOggi).ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
+            await anna.InviaModuloAsync(
+                Pagina,
+                [new("provider", "MicrosoftOAuth"), new("v_TenantMicrosoft", "common"), new("v_IdClient", "client-1"), new("v_SegretoClient", "segreto"), new("v_ScadenzaSegretoClient", data)],
+                $"{Pagina}?handler=SalvaApp");
+            return await (await anna.GetAsync(Pagina)).Content.ReadAsStringAsync(Ct);
+        }
+
+        var lontana = await ConScadenzaAsync(90);
+        var vicina = await ConScadenzaAsync(10);
+        var scaduta = await ConScadenzaAsync(-2);
+
+        Assert.DoesNotContain("sta per scadere", lontana, StringComparison.Ordinal);
+        Assert.DoesNotContain("alert-danger", lontana, StringComparison.Ordinal);
+        Assert.Contains("sta per scadere", vicina, StringComparison.Ordinal);
+        Assert.Contains("alert-warning", vicina, StringComparison.Ordinal);
+        Assert.Contains("le email non partono finch", scaduta, StringComparison.Ordinal);
+        Assert.Contains("alert-danger", scaduta, StringComparison.Ordinal);
+        Assert.Contains("name=\"v_ScadenzaSegretoClient\"", lontana, StringComparison.Ordinal);
+
+        // Una data non valida non salva niente e il modulo segnala il campo.
+        using var errata = await anna.InviaModuloAsync(
+            Pagina,
+            [new("provider", "MicrosoftOAuth"), new("v_TenantMicrosoft", "common"), new("v_IdClient", "client-1"), new("v_ScadenzaSegretoClient", "31/12/2027")],
+            $"{Pagina}?handler=SalvaApp");
+        Assert.Contains("Controlla i campi evidenziati", await errata.Content.ReadAsStringAsync(Ct), StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task LaPaginaPlatformNonMostraNeModificaLAppOAuthDelTenant()
     {
         await using var scenario = await ScenarioWeb.CreaAsync(impostazioni: Chiave(), oauthEmail: new ProviderOAuthFinto());

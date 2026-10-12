@@ -29,8 +29,8 @@ public class OAuthEmailTest
     [Fact]
     public void LAppDeiCanaliOAuthHaSoloIDatiDellApp()
     {
-        Assert.Equal(["TenantMicrosoft", "IdClient", "SegretoClient"], DefinizioniProviderEmail.Campi(ProviderEmail.MicrosoftOAuth).Select(c => c.Nome));
-        Assert.Equal(["IdClient", "SegretoClient"], DefinizioniProviderEmail.Campi(ProviderEmail.GoogleOAuth).Select(c => c.Nome));
+        Assert.Equal(["TenantMicrosoft", "IdClient", "SegretoClient", "ScadenzaSegretoClient"], DefinizioniProviderEmail.Campi(ProviderEmail.MicrosoftOAuth).Select(c => c.Nome));
+        Assert.Equal(["IdClient", "SegretoClient", "ScadenzaSegretoClient"], DefinizioniProviderEmail.Campi(ProviderEmail.GoogleOAuth).Select(c => c.Nome));
         Assert.True(DefinizioniProviderEmail.Campi(ProviderEmail.GoogleOAuth).Single(c => c.Nome == "SegretoClient").Segreto);
         Assert.Empty(DefinizioniProviderEmail.Valida(ProviderEmail.MicrosoftOAuth, AppMicrosoft()));
         Assert.Empty(DefinizioniProviderEmail.Valida(ProviderEmail.GoogleOAuth, new Dictionary<string, string> { ["IdClient"] = "x.apps.googleusercontent.com", ["SegretoClient"] = "s" }));
@@ -46,6 +46,20 @@ public class OAuthEmailTest
         valori.Remove(campo);
 
         Assert.Equal([campo], DefinizioniProviderEmail.Valida(ProviderEmail.MicrosoftOAuth, valori));
+    }
+
+    [Theory]
+    [InlineData("2027-03-31", true)]
+    [InlineData("", true)]
+    [InlineData("31/03/2027", false)]
+    [InlineData("2027-02-30", false)]
+    [InlineData("domani", false)]
+    public void LaScadenzaDelSegretoEFacoltativaEDeveEssereUnaData(string scadenza, bool valida)
+    {
+        var valori = AppMicrosoft();
+        valori[DefinizioniProviderEmail.CampoScadenzaSegreto] = scadenza;
+
+        Assert.Equal(valida, DefinizioniProviderEmail.Valida(ProviderEmail.MicrosoftOAuth, valori).Count == 0);
     }
 
     [Fact]
