@@ -147,6 +147,11 @@ public sealed class RegistroTemplateBuilder
         6,
         ["layout.colonne", "contenuto.titolo", "contenuto.testo", "contenuto.testo-ricco", "contenuto.immagine", "contenuto.pulsante", "contenuto.hero", "contenuto.cta", "contenuto.fisarmonica", "contenuto.caratteristiche", "contenuto.testimonianze", "negozio.griglia-prodotti", "negozio.scheda-prodotto"]);
 
+    /// <summary>Versione 7 (M7): il corpo ammette anche la griglia dei prodotti di una categoria. Le versioni precedenti restano valide.</summary>
+    public static TemplateBuilder TemplateIntestazioneFissaV7 { get; } = CreaIntestazioneFissa(
+        7,
+        ["layout.colonne", "contenuto.titolo", "contenuto.testo", "contenuto.testo-ricco", "contenuto.immagine", "contenuto.pulsante", "contenuto.hero", "contenuto.cta", "contenuto.fisarmonica", "contenuto.caratteristiche", "contenuto.testimonianze", "negozio.griglia-prodotti", "negozio.scheda-prodotto", "negozio.griglia-categoria"]);
+
     private static TemplateBuilder CreaIntestazioneFissa(int versione, IReadOnlyList<string> tipiNelCorpo) => new(
         IntestazioneFissa,
         versione,
@@ -182,7 +187,7 @@ public sealed class RegistroTemplateBuilder
                 ]),
         ]);
 
-    public static IReadOnlyList<TemplateBuilder> Predefiniti { get; } = [TemplatePaginaLibera, TemplateIntestazioneFissa, TemplateIntestazioneFissaV2, TemplateIntestazioneFissaV3, TemplateIntestazioneFissaV4, TemplateIntestazioneFissaV5, TemplateIntestazioneFissaV6];
+    public static IReadOnlyList<TemplateBuilder> Predefiniti { get; } = [TemplatePaginaLibera, TemplateIntestazioneFissa, TemplateIntestazioneFissaV2, TemplateIntestazioneFissaV3, TemplateIntestazioneFissaV4, TemplateIntestazioneFissaV5, TemplateIntestazioneFissaV6, TemplateIntestazioneFissaV7];
 
     public IReadOnlyList<TemplateBuilder> Tutti => [.. _template.Values.OrderBy(t => t.Id, StringComparer.Ordinal).ThenBy(t => t.Versione)];
 

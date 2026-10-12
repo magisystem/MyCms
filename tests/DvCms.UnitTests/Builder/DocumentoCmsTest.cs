@@ -27,7 +27,7 @@ public sealed class DocumentoCmsTest
 
     [Fact]
     public void LeDefinizioniDeiComponentiHannoUnImprontaFissata() =>
-        Assert.Equal("13FD93863A4A829491650088D31B2C2E0891ABED3FDA5492D95045E8CA1AE44A", _registro.Impronta);
+        Assert.Equal("6F8048E79CD0C8C2D73B87F08E810A616777AA017655CD62BA6429D576843180", _registro.Impronta);
 
     [Fact]
     public void IlRegistroRifiutaDefinizioniDuplicateOFigliSconosciuti()
@@ -239,8 +239,18 @@ public sealed class DocumentoCmsTest
         Assert.Empty(_registro.Valida(valido));
     }
 
+    [Fact]
+    public void LaGrigliaDiCategoriaVuoleUnIdentificativoValido()
+    {
+        var valido = new DocumentoCms(1, [Nodo("s", "layout.sezione", null, null, Nodo("g", "negozio.griglia-categoria", new() { ["idCategoria"] = Guid.NewGuid().ToString("D"), ["quanti"] = "12" }, new() { ["colonne"] = "2" }))]);
+
+        Assert.Empty(_registro.Valida(valido));
+    }
+
     public static TheoryData<string, Func<DocumentoCms>> AvanzatiNonValidi() => new()
     {
+        { "ProprietaMancante", () => new(1, [Nodo("s", "layout.sezione", null, null, Nodo("g", "negozio.griglia-categoria"))]) },
+        { "ProprietaNonValida", () => new(1, [Nodo("s", "layout.sezione", null, null, Nodo("g", "negozio.griglia-categoria", new() { ["idCategoria"] = "x" }))]) },
         { "ProprietaMancante", () => new(1, [Nodo("s", "layout.sezione", null, null, Nodo("p", "negozio.scheda-prodotto"))]) },
         { "ProprietaNonValida", () => new(1, [Nodo("s", "layout.sezione", null, null, Nodo("p", "negozio.scheda-prodotto", new() { ["idProdotto"] = "non-un-guid" }))]) },
         { "ProprietaNonValida", () => new(1, [Nodo("s", "layout.sezione", null, null, Nodo("p", "negozio.scheda-prodotto", new() { ["idProdotto"] = Guid.Empty.ToString("D") }))]) },

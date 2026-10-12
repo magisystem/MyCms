@@ -248,12 +248,17 @@
             </figure>
         }
         break;
-    case "negozio.griglia-prodotti":
+    case "negozio.griglia-prodotti" or "negozio.griglia-categoria":
         {
             // Legge i prodotti pubblicati al momento della visita (il documento non copia il catalogo): se il negozio non è attivo
-            // o non c'è nulla da mostrare il componente non produce niente.
+            // o non c'è nulla da mostrare il componente non produce niente. La griglia di categoria mostra solo quella categoria.
             var quanti = int.Parse(Token(Model.Proprieta, "quanti", "6", "3", "6", "9", "12"), System.Globalization.CultureInfo.InvariantCulture);
-            var prodotti = (await Vetrina.ElencaAsync(ContestoLinguaNodo.CodiceLingua, Context.RequestAborted)).Take(quanti).ToList();
+            var visibili = Model.Tipo == "negozio.griglia-categoria"
+                ? (Guid.TryParseExact(Valore(Model.Proprieta, "idCategoria", string.Empty), "D", out var idCategoria)
+                    ? await Vetrina.ElencaPerCategoriaAsync(ContestoLinguaNodo.CodiceLingua, idCategoria, Context.RequestAborted)
+                    : [])
+                : await Vetrina.ElencaAsync(ContestoLinguaNodo.CodiceLingua, Context.RequestAborted);
+            var prodotti = visibili.Take(quanti).ToList();
             if (prodotti.Count > 0)
             {
                 var cultura = System.Globalization.CultureInfo.GetCultureInfo("it-IT");

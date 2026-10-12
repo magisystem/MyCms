@@ -66,6 +66,7 @@ Piano di implementazione richiesto da `docs/AI_START_HERE.md`, preparato prima d
 | M7.17 Riconciliazione dei pagamenti | Completata (rilettura periodica dei tentativi aperti oltre 20 minuti, solo lettura, per sito e con il tenant del sito; incassi arrivati su ordini chiusi o già pagati diventano «da rimborsare»; errori del provider innocui e ripetibili) |
 | M7.18 Categorie e collezioni | Completata (categorie per sito con nomi per lingua, gestione admin, assegnazione dal modulo del prodotto, filtro `/negozio?categoria=` con sole categorie visibili, 404 per quelle vuote o altrui, test di isolamento) |
 | M7.19 Ricerca nel catalogo | Completata (`/negozio?q=` su nome, descrizione e codice articolo, combinabile con la categoria, solo sui prodotti visibili, testo codificato e limitato) |
+| M7.20 Griglia di categoria nel page builder | Completata (`negozio.griglia-categoria` con selettore della categoria nell'editor, verifica server di esistenza nel sito, template e modello v7 con impronte fissate, rendering alla visita dei soli prodotti visibili) |
 | B-010 Gestione testi statici | Completata (`/admin/platform/testi`: ricerca, filtri, modifica, cache e audit) |
 | B-007 Creazione TenantAdmin e non-escalation | Completata (password temporanea mostrata una volta; elevazione `Utente` → `TenantAdmin`) |
 

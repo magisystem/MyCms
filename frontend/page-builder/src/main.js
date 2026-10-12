@@ -23,6 +23,7 @@ async function avvia() {
     urlAnteprima: radice.dataset.urlAnteprima,
     risorse: JSON.parse(radice.dataset.risorse || '[]'),
     prodotti: JSON.parse(radice.dataset.prodotti || '[]'),
+    categorie: JSON.parse(radice.dataset.categorie || '[]'),
     testi: JSON.parse(radice.dataset.testi || '{}'),
     tema: JSON.parse(radice.dataset.tema || '{}'),
     tokenAntiforgery: document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '',

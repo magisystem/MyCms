@@ -120,6 +120,7 @@ public sealed class ServizioBuilder : IServizioBuilder
         {
             errori.AddRange(await VerificaRisorseAsync(documento, annullamento));
             errori.AddRange(await VerificaProdottiAsync(documento, annullamento));
+            errori.AddRange(await VerificaCategorieAsync(documento, annullamento));
         }
 
         if (errori.Count > 0)
@@ -221,6 +222,27 @@ public sealed class ServizioBuilder : IServizioBuilder
             .Select(prodotto => prodotto.Id)
             .ToListAsync(annullamento)).ToHashSet();
         return [.. richieste.Where(r => !validi.Contains(r.Prodotto)).Select(r => new ErroreBuilder("ProdottoNonDisponibile", r.Id, "idProdotto"))];
+    }
+
+    /// <summary>Le categorie scelte devono esistere nel sito dell'host.</summary>
+    private async Task<List<ErroreBuilder>> VerificaCategorieAsync(DocumentoCms documento, CancellationToken annullamento)
+    {
+        var richieste = documento.Visita()
+            .Where(nodo => nodo.Tipo == "negozio.griglia-categoria" && nodo.Proprieta.ContainsKey("idCategoria"))
+            .Select(nodo => (nodo.Id, Categoria: Guid.Parse(nodo.Proprieta["idCategoria"])))
+            .ToList();
+        if (richieste.Count == 0)
+        {
+            return [];
+        }
+
+        var idSito = _tenant.IdSito;
+        var ids = richieste.Select(r => r.Categoria).Distinct().ToList();
+        var valide = (await _contesto.Categorie.AsNoTracking()
+            .Where(categoria => ids.Contains(categoria.Id) && categoria.IdSito == idSito)
+            .Select(categoria => categoria.Id)
+            .ToListAsync(annullamento)).ToHashSet();
+        return [.. richieste.Where(r => !valide.Contains(r.Categoria)).Select(r => new ErroreBuilder("CategoriaNonDisponibile", r.Id, "idCategoria"))];
     }
 
     private Task<Utenza?> TrovaAttoreAsync(Guid idAttore, CancellationToken annullamento)

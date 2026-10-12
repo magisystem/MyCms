@@ -23,6 +23,9 @@ public enum TipoProprieta
 
     /// <summary>Identificativo (GUID) di un prodotto del catalogo; l'esistenza nel sito la verifica il servizio, la pubblicazione la verifica il renderer a ogni visita.</summary>
     IdProdotto = 8,
+
+    /// <summary>Identificativo (GUID) di una categoria del negozio; l'esistenza nel sito la verifica il servizio, i prodotti visibili il renderer a ogni visita.</summary>
+    IdCategoria = 9,
 }
 
 /// <summary>Una proprietà (o uno stile) ammessa da un componente. Gli stili sono sempre enumerazioni: token e varianti, mai CSS libero.</summary>
@@ -107,7 +110,7 @@ public sealed partial class RegistroComponenti
                 new("sfondo", TipoProprieta.Enumerazione, Valori: ["nessuno", "chiaro", "scuro"], Predefinito: "nessuno"),
                 .. _animazione,
             ],
-            ["layout.colonne", .. _contenutoBase, "contenuto.hero", "contenuto.cta", "contenuto.fisarmonica", "contenuto.caratteristiche", "contenuto.testimonianze", "negozio.griglia-prodotti", "negozio.scheda-prodotto"], FigliMassimi: 50),
+            ["layout.colonne", .. _contenutoBase, "contenuto.hero", "contenuto.cta", "contenuto.fisarmonica", "contenuto.caratteristiche", "contenuto.testimonianze", "negozio.griglia-prodotti", "negozio.scheda-prodotto", "negozio.griglia-categoria"], FigliMassimi: 50),
         new("layout.colonne", 2, [], [.. _animazione], ["layout.colonna"], FigliMinimi: 2, FigliMassimi: 3),
         new("layout.colonna", 2, [], [], [.. _contenutoBase, "contenuto.fisarmonica"], FigliMassimi: 20),
         new("contenuto.titolo", 2,
@@ -194,6 +197,10 @@ public sealed partial class RegistroComponenti
         // restano solo quanti mostrarne e in quante colonne. Nessun identificativo di prodotto, nessun prezzo.
         new("negozio.griglia-prodotti", 1,
             [new("quanti", TipoProprieta.Enumerazione, Valori: ["3", "6", "9", "12"], Predefinito: "6")],
+            [new("colonne", TipoProprieta.Enumerazione, Valori: ["2", "3"], Predefinito: "3"), .. _animazione], []),
+        // I prodotti visibili di una categoria scelta dall'editor: il documento conserva solo l'identificativo della categoria.
+        new("negozio.griglia-categoria", 1,
+            [new("idCategoria", TipoProprieta.IdCategoria, Obbligatoria: true), new("quanti", TipoProprieta.Enumerazione, Valori: ["3", "6", "9", "12"], Predefinito: "6")],
             [new("colonne", TipoProprieta.Enumerazione, Valori: ["2", "3"], Predefinito: "3"), .. _animazione], []),
         // Un prodotto scelto dall'editor: il documento conserva solo il suo identificativo; nome, prezzo e disponibilità si leggono alla visita.
         new("negozio.scheda-prodotto", 1, [new("idProdotto", TipoProprieta.IdProdotto, Obbligatoria: true)], [.. _animazione], []),
@@ -415,7 +422,7 @@ public sealed partial class RegistroComponenti
         TipoProprieta.TestoLungo => valore.Length <= definizione.LunghezzaMassima && !valore.Any(c => char.IsControl(c) && c is not ('\n' or '\t')),
         TipoProprieta.Url => valore.Length <= definizione.LunghezzaMassima && RegistroModelliPagina.UrlConsentito(valore),
         TipoProprieta.Enumerazione => definizione.Valori?.Contains(valore, StringComparer.Ordinal) == true,
-        TipoProprieta.IdRisorsa or TipoProprieta.IdProdotto => Guid.TryParseExact(valore, "D", out var guid) && guid != Guid.Empty && guid.ToString("D") == valore,
+        TipoProprieta.IdRisorsa or TipoProprieta.IdProdotto or TipoProprieta.IdCategoria => Guid.TryParseExact(valore, "D", out var guid) && guid != Guid.Empty && guid.ToString("D") == valore,
         TipoProprieta.Booleano => valore is "si" or "no",
         TipoProprieta.TestoRicco => valore.Length <= definizione.LunghezzaMassima && TestoRicco.TentaAnalizza(valore, out _),
         _ => false,

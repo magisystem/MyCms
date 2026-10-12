@@ -24,14 +24,16 @@ public class BuilderModel : PaginaAdmin
     private readonly IServizioBuilder _builder;
     private readonly IServizioMedia _media;
     private readonly IServizioCatalogo _catalogo;
+    private readonly IServizioCategorie _categorie;
     private readonly IRisolutoreTema _temi;
 
-    public BuilderModel(IServizioBuilder builder, IServizioMedia media, IServizioCatalogo catalogo, IRisolutoreTema temi, ILocalizzatore localizzatore)
+    public BuilderModel(IServizioBuilder builder, IServizioMedia media, IServizioCatalogo catalogo, IServizioCategorie categorie, IRisolutoreTema temi, ILocalizzatore localizzatore)
         : base(localizzatore)
     {
         _builder = builder;
         _media = media;
         _catalogo = catalogo;
+        _categorie = categorie;
         _temi = temi;
     }
 
@@ -89,6 +91,7 @@ public class BuilderModel : PaginaAdmin
         ["nonSalvato"] = Localizzatore.Traduci("Modifiche non salvate."),
         ["nessunaRisorsa"] = Localizzatore.Traduci("(nessuna immagine)"),
         ["nessunProdotto"] = Localizzatore.Traduci("(scegli un prodotto)"),
+        ["nessunaCategoria"] = Localizzatore.Traduci("(scegli una categoria)"),
         ["componenti"] = JsonSerializer.Serialize(new Dictionary<string, string>
         {
             ["layout.sezione"] = Localizzatore.Traduci("Sezione"),
@@ -109,6 +112,7 @@ public class BuilderModel : PaginaAdmin
             ["contenuto.testimonianza"] = Localizzatore.Traduci("Testimonianza"),
             ["negozio.griglia-prodotti"] = Localizzatore.Traduci("Griglia di prodotti"),
             ["negozio.scheda-prodotto"] = Localizzatore.Traduci("Scheda prodotto"),
+            ["negozio.griglia-categoria"] = Localizzatore.Traduci("Prodotti di una categoria"),
         }),
         ["campoObbligatorio"] = Localizzatore.Traduci("Campo obbligatorio"),
         ["gruppi"] = JsonSerializer.Serialize(new Dictionary<string, string>
@@ -144,6 +148,7 @@ public class BuilderModel : PaginaAdmin
             ["colonne"] = Localizzatore.Traduci("Colonne"),
             ["quanti"] = Localizzatore.Traduci("Quanti prodotti"),
             ["idProdotto"] = Localizzatore.Traduci("Prodotto"),
+            ["idCategoria"] = Localizzatore.Traduci("Categoria"),
             ["altezza"] = Localizzatore.Traduci("Altezza"),
             ["animazione"] = Localizzatore.Traduci("Animazione"),
             ["ritardoAnimazione"] = Localizzatore.Traduci("Ritardo (ms)"),
@@ -160,6 +165,9 @@ public class BuilderModel : PaginaAdmin
 
     /// <summary>Prodotti del catalogo scelti nei componenti del negozio (identificativo e nome); vuoto se il negozio non è attivo.</summary>
     public string ProdottiJson { get; private set; } = "[]";
+
+    /// <summary>Categorie del negozio scelte nella griglia di categoria (identificativo e nome nella lingua predefinita); vuoto se il negozio non è attivo.</summary>
+    public string CategorieJson { get; private set; } = "[]";
 
     public async Task<IActionResult> OnGetAsync(Guid id, CancellationToken annullamento)
     {
@@ -183,8 +191,13 @@ public class BuilderModel : PaginaAdmin
             .Where(r => r.TipoContenuto.StartsWith("image/", StringComparison.Ordinal) && r.Visibilita == Domain.Media.VisibilitaMedia.Pubblica)
             .Select(r => new { id = r.Id, nome = r.NomeOriginale, alt = r.TestoAlternativoPredefinito }));
         ProdottiJson = "[]";
+        CategorieJson = "[]";
         if (await _catalogo.CommercioAttivoAsync(annullamento))
         {
+            var lingue = await _catalogo.LingueAsync(IdAttore, annullamento);
+            var predefinita = lingue.FirstOrDefault(l => l.Predefinita)?.Codice;
+            CategorieJson = JsonSerializer.Serialize((await _categorie.ElencaAsync(IdAttore, annullamento))
+                .Select(c => new { id = c.Id, nome = (c.Nomi.FirstOrDefault(n => n.CodiceLingua == predefinita) ?? (c.Nomi.Count > 0 ? c.Nomi[0] : null))?.Nome ?? "—" }));
             var prodotti = await _catalogo.ElencaAsync(IdAttore, annullamento);
             ProdottiJson = JsonSerializer.Serialize(prodotti
                 .Where(p => p.Stato != Domain.Negozio.StatoProdotto.Archiviato)

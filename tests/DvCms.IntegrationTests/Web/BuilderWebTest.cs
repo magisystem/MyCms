@@ -66,8 +66,8 @@ public partial class BuilderWebTest
         Assert.True(System.Text.Json.Nodes.JsonNode.DeepEquals(
             System.Text.Json.Nodes.JsonNode.Parse(stato.GetProperty("progetto").GetRawText()),
             System.Text.Json.Nodes.JsonNode.Parse(Progetto(Iniziale()))));
-        Assert.Equal(18, stato.GetProperty("catalogo").GetArrayLength());
-        Assert.Equal(6, stato.GetProperty("versioneTemplate").GetInt32());
+        Assert.Equal(19, stato.GetProperty("catalogo").GetArrayLength());
+        Assert.Equal(7, stato.GetProperty("versioneTemplate").GetInt32());
         Assert.True(stato.GetProperty("vincoli").GetProperty("nodi").GetProperty("avviso").GetProperty("bloccato").GetBoolean());
         Assert.Equal(30, stato.GetProperty("vincoli").GetProperty("nodi").GetProperty("corpo").GetProperty("slot").GetProperty("figliMassimi").GetInt32());
 
@@ -400,6 +400,35 @@ public partial class BuilderWebTest
     }
 
     [Fact]
+    public async Task LaGrigliaDiCategoriaVuoleUnaCategoriaDelSitoEMostraSoloIProdottiVisibiliDiQuellaCategoria()
+    {
+        await using var c = await Contesto.CreaAsync();
+        var (id, percorso) = await c.CreaPaginaAsync("pagina-con-intestazione-fissa", "cat", slug: "cat");
+        var piattaforma = await c.Web.CreaPlatformAdminAsync("root@esempio.it");
+        await c.ImpostaNegozioAsync(piattaforma, true);
+        await c.ImpostaNegozioAsync(piattaforma, true, c.Web.B);
+        var libri = await c.CreaCategoriaAsync(c.Web.A, "Libri");
+        var altrui = await c.CreaCategoriaAsync(c.Web.B, "Di B");
+        await c.CreaProdottoAsync(c.Web.A, "Romanzo", 12m, categoria: libri);
+        await c.CreaProdottoAsync(c.Web.A, "Penna", 2m);
+        await c.CreaProdottoAsync(c.Web.A, "Libro in bozza", 9m, StatoProdotto.Bozza, libri);
+        var token = (await c.StatoAsync(id)).GetProperty("token").GetString()!;
+
+        using var inesistente = await c.SalvaAsync(id, token, Progetto(ConCorpo(Iniziale(), Nodo("g", "negozio.griglia-categoria", new() { ["idCategoria"] = Guid.NewGuid().ToString("D") }))));
+        using var diAltri = await c.SalvaAsync(id, token, Progetto(ConCorpo(Iniziale(), Nodo("g", "negozio.griglia-categoria", new() { ["idCategoria"] = altrui.ToString("D") }))));
+        using var buona = await c.SalvaAsync(id, token, Progetto(ConCorpo(Iniziale(), Nodo("g", "negozio.griglia-categoria", new() { ["idCategoria"] = libri.ToString("D"), ["quanti"] = "3" }))));
+        await c.PubblicaAsync(percorso);
+        var html = await (await c.Web.SessioneA().GetAsync("/cat")).Content.ReadAsStringAsync(Ct);
+
+        Assert.Contains((await Json(inesistente)).GetProperty("errori").EnumerateArray(), e => e.GetProperty("codice").GetString() == "CategoriaNonDisponibile");
+        Assert.Contains((await Json(diAltri)).GetProperty("errori").EnumerateArray(), e => e.GetProperty("codice").GetString() == "CategoriaNonDisponibile");
+        Assert.Equal(HttpStatusCode.OK, buona.StatusCode);
+        Assert.Contains("Romanzo", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("Penna", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("Libro in bozza", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task UnaPaginaDellaVersione1PassaAllUltimaVersioneSoloSeIlDocumentoEValido()
     {
         await using var c = await Contesto.CreaAsync();
@@ -423,10 +452,10 @@ public partial class BuilderWebTest
         Assert.True(SessioneProva.EReindirizzamento(passaggio));
 
         var revisioni = await c.RevisioniAsync(id);
-        Assert.Equal(6, revisioni[^1].VersioneModello);
+        Assert.Equal(7, revisioni[^1].VersioneModello);
         Assert.Equal(revisioni[^2].DocumentoRenderJson, revisioni[^1].DocumentoRenderJson);
         var dopo = await c.StatoAsync(id);
-        Assert.Equal(6, dopo.GetProperty("versioneTemplate").GetInt32());
+        Assert.Equal(7, dopo.GetProperty("versioneTemplate").GetInt32());
         using var oraAccettato = await c.SalvaAsync(id, dopo.GetProperty("token").GetString()!, Progetto(ConCorpo(Iniziale(), Nodo("h", "contenuto.hero", new() { ["titolo"] = "x" }))));
         Assert.Equal(HttpStatusCode.OK, oraAccettato.StatusCode);
     }
@@ -731,13 +760,23 @@ public partial class BuilderWebTest
             Assert.True((await ambito.ServiceProvider.GetRequiredService<IServizioPiattaforma>().ImpostaCommercioAsync(piattaforma, tenant.IdTenant, tenant.IdSito, attivo, Ct)).Riuscito);
         }
 
-        public async Task<Guid> CreaProdottoAsync(DatiProva.TenantCreato tenant, string nome, decimal prezzo, StatoProdotto stato = StatoProdotto.Pubblicato)
+        public async Task<Guid> CreaProdottoAsync(DatiProva.TenantCreato tenant, string nome, decimal prezzo, StatoProdotto stato = StatoProdotto.Pubblicato, Guid? categoria = null, string? descrizione = null)
         {
             await using var ambito = Web.Fabbrica.Services.CreateAsyncScope();
             ambito.ServiceProvider.GetRequiredService<ContestoTenant>().Imposta(new DatiTenantRisolto(tenant.IdTenant, tenant.IdSito, tenant.IdDominio, tenant.Host, false));
-            var dati = new DatiProdotto(null, null, stato, 22m, [new TraduzioneProdottoDati("it", nome, null)], [new VarianteDati(null, "SKU-" + Guid.NewGuid().ToString("N")[..8], prezzo, null, true, null)]);
+            var dati = new DatiProdotto(null, null, stato, 22m, [new TraduzioneProdottoDati("it", nome, descrizione)], [new VarianteDati(null, "SKU-" + Guid.NewGuid().ToString("N")[..8], prezzo, null, true, null)], null, categoria is { } cat ? [cat] : null);
             var attore = tenant.IdTenant == Web.A.IdTenant ? AdminA : await IdAdminBAsync();
             var esito = await ambito.ServiceProvider.GetRequiredService<IServizioCatalogo>().SalvaAsync(attore, dati, Ct);
+            Assert.True(esito.Riuscito, esito.Codice.ToString());
+            return esito.Id!.Value;
+        }
+
+        public async Task<Guid> CreaCategoriaAsync(DatiProva.TenantCreato tenant, string nome)
+        {
+            await using var ambito = Web.Fabbrica.Services.CreateAsyncScope();
+            ambito.ServiceProvider.GetRequiredService<ContestoTenant>().Imposta(new DatiTenantRisolto(tenant.IdTenant, tenant.IdSito, tenant.IdDominio, tenant.Host, false));
+            var attore = tenant.IdTenant == Web.A.IdTenant ? AdminA : await IdAdminBAsync();
+            var esito = await ambito.ServiceProvider.GetRequiredService<IServizioCategorie>().SalvaAsync(attore, new DatiCategoria(null, 0, [new NomeCategoriaDati("it", nome)]), Ct);
             Assert.True(esito.Riuscito, esito.Codice.ToString());
             return esito.Id!.Value;
         }
