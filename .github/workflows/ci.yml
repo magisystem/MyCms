@@ -16,7 +16,9 @@ jobs:
   build-e-test:
     name: Build e test
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    # La suite di integrazione (SQL Server vero) supera ormai i 15 minuti sui runner di GitHub: 20 non bastano più
+    # (le esecuzioni M7.22 sono state annullate dal limite). 45 lascia margine senza nascondere un blocco vero.
+    timeout-minutes: 45
     # SQL Server effimero per i test di integrazione (ADR-0012). La password serve solo a questo container
     # temporaneo, raggiungibile soltanto dal job: non è un segreto dell'applicazione.
     services:
