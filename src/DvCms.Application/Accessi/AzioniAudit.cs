@@ -63,5 +63,8 @@ public static class AzioniAudit
     public const string ImpostazioneCommercio = "ImpostazioneCommercio";
     public const string CreazioneProdotto = "CreazioneProdotto";
     public const string ModificaProdotto = "ModificaProdotto";
+    public const string CreazioneCategoria = "CreazioneCategoria";
+    public const string ModificaCategoria = "ModificaCategoria";
+    public const string EliminazioneCategoria = "EliminazioneCategoria";
     public const string OperazioneNegata = "OperazioneNegata";
 }

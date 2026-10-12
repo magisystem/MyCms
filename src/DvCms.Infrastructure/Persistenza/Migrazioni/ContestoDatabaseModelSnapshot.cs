@@ -868,6 +868,33 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.ToTable("Carrelli", (string)null);
                 });
 
+            modelBuilder.Entity("DvCms.Domain.Negozio.Categoria", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("AggiornatoIlUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatoIlUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("IdSito")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdTenant")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Posizione")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdSito", "Posizione");
+
+                    b.ToTable("Categorie", (string)null);
+                });
+
             modelBuilder.Entity("DvCms.Domain.Negozio.EventoWebhook", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1351,6 +1378,31 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                         });
                 });
 
+            modelBuilder.Entity("DvCms.Domain.Negozio.ProdottoCategoria", b =>
+                {
+                    b.Property<Guid>("IdProdotto")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdCategoria")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdSito")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdTenant")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("IdProdotto", "IdCategoria");
+
+                    b.HasIndex("IdCategoria");
+
+                    b.HasIndex("IdTenant", "IdSito", "IdCategoria");
+
+                    b.HasIndex("IdTenant", "IdSito", "IdProdotto");
+
+                    b.ToTable("ProdottiCategoria", (string)null);
+                });
+
             modelBuilder.Entity("DvCms.Domain.Negozio.RigaCarrello", b =>
                 {
                     b.Property<Guid>("IdCarrello")
@@ -1592,6 +1644,34 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                         {
                             t.HasCheckConstraint("CK_TentativiPagamento_Importo", "[Importo] > 0");
                         });
+                });
+
+            modelBuilder.Entity("DvCms.Domain.Negozio.TraduzioneCategoria", b =>
+                {
+                    b.Property<Guid>("IdCategoria")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdLingua")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdSito")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdTenant")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("IdCategoria", "IdLingua");
+
+                    b.HasIndex("IdLingua");
+
+                    b.HasIndex("IdTenant", "IdSito", "IdCategoria");
+
+                    b.ToTable("TraduzioniCategoria", (string)null);
                 });
 
             modelBuilder.Entity("DvCms.Domain.Negozio.TraduzioneProdotto", b =>
@@ -2258,6 +2338,16 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("DvCms.Domain.Negozio.Categoria", b =>
+                {
+                    b.HasOne("DvCms.Domain.Tenancy.Sito", null)
+                        .WithMany()
+                        .HasForeignKey("IdTenant", "IdSito")
+                        .HasPrincipalKey("IdTenant", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("DvCms.Domain.Negozio.EventoWebhook", b =>
                 {
                     b.HasOne("DvCms.Domain.Tenancy.Sito", null)
@@ -2359,6 +2449,23 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("DvCms.Domain.Negozio.ProdottoCategoria", b =>
+                {
+                    b.HasOne("DvCms.Domain.Negozio.Categoria", null)
+                        .WithMany()
+                        .HasForeignKey("IdTenant", "IdSito", "IdCategoria")
+                        .HasPrincipalKey("IdTenant", "IdSito", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("DvCms.Domain.Negozio.Prodotto", null)
+                        .WithMany()
+                        .HasForeignKey("IdTenant", "IdSito", "IdProdotto")
+                        .HasPrincipalKey("IdTenant", "IdSito", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("DvCms.Domain.Negozio.RigaCarrello", b =>
                 {
                     b.HasOne("DvCms.Domain.Negozio.Carrello", null)
@@ -2413,6 +2520,22 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.HasOne("DvCms.Domain.Negozio.Ordine", null)
                         .WithMany()
                         .HasForeignKey("IdTenant", "IdSito", "IdOrdine")
+                        .HasPrincipalKey("IdTenant", "IdSito", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DvCms.Domain.Negozio.TraduzioneCategoria", b =>
+                {
+                    b.HasOne("DvCms.Domain.Localizzazione.Lingua", null)
+                        .WithMany()
+                        .HasForeignKey("IdLingua")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("DvCms.Domain.Negozio.Categoria", null)
+                        .WithMany()
+                        .HasForeignKey("IdTenant", "IdSito", "IdCategoria")
                         .HasPrincipalKey("IdTenant", "IdSito", "Id")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();

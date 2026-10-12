@@ -50,6 +50,51 @@ public sealed class ServizioVetrina : IServizioVetrina
             .ThenBy(p => p.Id)];
     }
 
+    public async Task<IReadOnlyList<ProdottoInVetrina>> ElencaPerCategoriaAsync(string codiceLingua, Guid idCategoria, CancellationToken annullamento)
+    {
+        var idSito = _tenant.IdSito;
+        var visibili = await ElencaAsync(codiceLingua, annullamento);
+        if (visibili.Count == 0)
+        {
+            return [];
+        }
+
+        var inCategoria = (await _contesto.ProdottiCategoria.AsNoTracking()
+            .Where(p => p.IdSito == idSito && p.IdCategoria == idCategoria)
+            .Select(p => p.IdProdotto)
+            .ToListAsync(annullamento)).ToHashSet();
+        return [.. visibili.Where(p => inCategoria.Contains(p.Id))];
+    }
+
+    public async Task<IReadOnlyList<CategoriaInVetrina>> CategorieAsync(string codiceLingua, CancellationToken annullamento)
+    {
+        var idSito = _tenant.IdSito;
+        var visibili = (await ElencaAsync(codiceLingua, annullamento)).Select(p => p.Id).ToHashSet();
+        if (visibili.Count == 0)
+        {
+            return [];
+        }
+
+        var (idRichiesta, idPredefinita) = await LinguaAsync(idSito, codiceLingua, annullamento);
+        var conteggi = (await _contesto.ProdottiCategoria.AsNoTracking().Where(p => p.IdSito == idSito).ToListAsync(annullamento))
+            .Where(p => visibili.Contains(p.IdProdotto))
+            .GroupBy(p => p.IdCategoria)
+            .ToDictionary(g => g.Key, g => g.Count());
+        if (conteggi.Count == 0)
+        {
+            return [];
+        }
+
+        var idCategorie = conteggi.Keys.ToList();
+        var categorie = await _contesto.Categorie.AsNoTracking().Where(c => c.IdSito == idSito && idCategorie.Contains(c.Id)).ToListAsync(annullamento);
+        var nomi = await _contesto.TraduzioniCategoria.AsNoTracking().Where(t => t.IdSito == idSito && idCategorie.Contains(t.IdCategoria)).ToListAsync(annullamento);
+        return [.. categorie
+            .Select(c => (Categoria: c, Nome: Scegli(nomi.Where(t => t.IdCategoria == c.Id), t => t.IdLingua, t => t.Nome, idRichiesta, idPredefinita) ?? string.Empty))
+            .OrderBy(x => x.Categoria.Posizione)
+            .ThenBy(x => x.Nome, StringComparer.CurrentCultureIgnoreCase)
+            .Select(x => new CategoriaInVetrina(x.Categoria.Id, x.Nome, conteggi[x.Categoria.Id]))];
+    }
+
     public async Task<ProdottoPubblico?> LeggiAsync(Guid idProdotto, string codiceLingua, CancellationToken annullamento)
     {
         var idSito = _tenant.IdSito;

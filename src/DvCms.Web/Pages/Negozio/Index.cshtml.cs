@@ -23,16 +23,31 @@ public class IndexModel : PageModel
 
     public IReadOnlyList<ProdottoInVetrina> Prodotti { get; private set; } = [];
 
+    public IReadOnlyList<CategoriaInVetrina> Categorie { get; private set; } = [];
+
+    /// <summary>La categoria su cui si sta filtrando, se esiste fra quelle visibili.</summary>
+    public CategoriaInVetrina? Selezionata { get; private set; }
+
     public CultureInfo Cultura { get; } = CultureInfo.GetCultureInfo("it-IT");
 
-    public async Task<IActionResult> OnGetAsync(CancellationToken annullamento)
+    public async Task<IActionResult> OnGetAsync(Guid? categoria, CancellationToken annullamento)
     {
         if (!await _catalogo.CommercioAttivoAsync(annullamento))
         {
             return NotFound();
         }
 
-        Prodotti = await _vetrina.ElencaAsync(_lingua.CodiceLingua, annullamento);
+        Categorie = await _vetrina.CategorieAsync(_lingua.CodiceLingua, annullamento);
+        Selezionata = categoria is { } id ? Categorie.FirstOrDefault(c => c.Id == id) : null;
+        if (categoria is not null && Selezionata is null)
+        {
+            // Una categoria che non c'è (o senza prodotti visibili) non si distingue da una inesistente.
+            return NotFound();
+        }
+
+        Prodotti = Selezionata is { } scelta
+            ? await _vetrina.ElencaPerCategoriaAsync(_lingua.CodiceLingua, scelta.Id, annullamento)
+            : await _vetrina.ElencaAsync(_lingua.CodiceLingua, annullamento);
         return Page();
     }
 }

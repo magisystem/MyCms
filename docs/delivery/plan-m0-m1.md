@@ -64,6 +64,7 @@ Piano di implementazione richiesto da `docs/AI_START_HERE.md`, preparato prima d
 | M7.15 Immagini dei prodotti | Completata (fino a 8 immagini per prodotto da libreria media, ordine con numeri nel modulo admin, validazione server su pubbliche/pulite/del sito, vetrina, griglia e scheda del builder, risorse tolte che spariscono senza rompere il prodotto) |
 | M7.16 Collegamento al negozio nelle pagine pubbliche | Completata (barra Negozio/Carrello/Account sopra il tema, solo con negozio attivo e fuori dalle anteprime, senza toccare le versioni di tema rilasciate) |
 | M7.17 Riconciliazione dei pagamenti | Completata (rilettura periodica dei tentativi aperti oltre 20 minuti, solo lettura, per sito e con il tenant del sito; incassi arrivati su ordini chiusi o già pagati diventano «da rimborsare»; errori del provider innocui e ripetibili) |
+| M7.18 Categorie e collezioni | Completata (categorie per sito con nomi per lingua, gestione admin, assegnazione dal modulo del prodotto, filtro `/negozio?categoria=` con sole categorie visibili, 404 per quelle vuote o altrui, test di isolamento) |
 | B-010 Gestione testi statici | Completata (`/admin/platform/testi`: ricerca, filtri, modifica, cache e audit) |
 | B-007 Creazione TenantAdmin e non-escalation | Completata (password temporanea mostrata una volta; elevazione `Utente` → `TenantAdmin`) |
 

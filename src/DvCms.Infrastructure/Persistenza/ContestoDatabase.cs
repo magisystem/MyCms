@@ -96,6 +96,12 @@ public class ContestoDatabase : DbContext
 
     public DbSet<ImmagineProdotto> ImmaginiProdotto => Set<ImmagineProdotto>();
 
+    public DbSet<Categoria> Categorie => Set<Categoria>();
+
+    public DbSet<TraduzioneCategoria> TraduzioniCategoria => Set<TraduzioneCategoria>();
+
+    public DbSet<ProdottoCategoria> ProdottiCategoria => Set<ProdottoCategoria>();
+
     public DbSet<TraduzioneVarianteProdotto> TraduzioniVarianteProdotto => Set<TraduzioneVarianteProdotto>();
 
     public DbSet<Carrello> Carrelli => Set<Carrello>();
@@ -150,6 +156,9 @@ public class ContestoDatabase : DbContext
         modelBuilder.Entity<VarianteProdotto>().HasQueryFilter(variante => variante.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<TraduzioneProdotto>().HasQueryFilter(traduzione => traduzione.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<ImmagineProdotto>().HasQueryFilter(immagine => immagine.IdTenant == IdTenantCorrente);
+        modelBuilder.Entity<Categoria>().HasQueryFilter(categoria => categoria.IdTenant == IdTenantCorrente);
+        modelBuilder.Entity<TraduzioneCategoria>().HasQueryFilter(traduzione => traduzione.IdTenant == IdTenantCorrente);
+        modelBuilder.Entity<ProdottoCategoria>().HasQueryFilter(appartenenza => appartenenza.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<TraduzioneVarianteProdotto>().HasQueryFilter(traduzione => traduzione.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<Carrello>().HasQueryFilter(carrello => carrello.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<RigaCarrello>().HasQueryFilter(riga => riga.IdTenant == IdTenantCorrente);

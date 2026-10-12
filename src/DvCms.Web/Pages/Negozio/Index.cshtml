@@ -4,6 +4,16 @@
     ViewData["Titolo"] = _L["Negozio"];
 }
 <h1>@_L["Negozio"]</h1>
+@if (Model.Categorie.Count > 0)
+{
+    <nav class="dv-categorie" aria-label="@_L["Categorie"]">
+        <a href="/negozio" aria-current="@(Model.Selezionata is null ? "true" : null)">@_L["Tutti"]</a>
+        @foreach (var categoria in Model.Categorie)
+        {
+            <a href="/negozio?categoria=@categoria.Id" aria-current="@(Model.Selezionata?.Id == categoria.Id ? "true" : null)">@(categoria.Nome.Length > 0 ? categoria.Nome : "—") (@categoria.Prodotti)</a>
+        }
+    </nav>
+}
 @if (Model.Prodotti.Count == 0)
 {
     <p>@_L["Nessun prodotto disponibile."]</p>

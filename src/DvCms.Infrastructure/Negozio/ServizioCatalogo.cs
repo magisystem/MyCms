@@ -93,6 +93,7 @@ public sealed class ServizioCatalogo : IServizioCatalogo
         var idVarianti = varianti.Select(v => v.Id).ToList();
         var etichette = await _contesto.TraduzioniVarianteProdotto.AsNoTracking().Where(t => idVarianti.Contains(t.IdVariante)).ToListAsync(annullamento);
         var immagini = await _contesto.ImmaginiProdotto.AsNoTracking().Where(i => i.IdProdotto == idProdotto).OrderBy(i => i.Posizione).Select(i => i.IdRisorsa).ToListAsync(annullamento);
+        var categorie = await _contesto.ProdottiCategoria.AsNoTracking().Where(c => c.IdProdotto == idProdotto).Select(c => c.IdCategoria).ToListAsync(annullamento);
 
         return new DettaglioProdotto(
             prodotto.Id,
@@ -107,7 +108,8 @@ public sealed class ServizioCatalogo : IServizioCatalogo
                 v.Valuta,
                 v.Attiva,
                 etichette.Where(e => e.IdVariante == v.Id).ToDictionary(e => lingue.GetValueOrDefault(e.IdLingua) ?? string.Empty, e => e.Etichetta)))],
-            immagini);
+            immagini,
+            categorie);
     }
 
     public async Task<EsitoOperazione> SalvaAsync(Guid idAttore, DatiProdotto dati, CancellationToken annullamento)
@@ -143,6 +145,11 @@ public sealed class ServizioCatalogo : IServizioCatalogo
             return new EsitoOperazione(CodiceEsito.DatiNonValidi, null, ["Immagini"]);
         }
 
+        if (dati.Categorie is { Count: > 0 } categorieRichieste && !await CategorieValideAsync(categorieRichieste, annullamento))
+        {
+            return new EsitoOperazione(CodiceEsito.DatiNonValidi, null, ["Categorie"]);
+        }
+
         var adesso = _orologio.GetUtcNow().UtcDateTime;
         var nuovo = dati.Id is null;
         Prodotto? esistente = null;
@@ -173,6 +180,11 @@ public sealed class ServizioCatalogo : IServizioCatalogo
         prodotto.AggiornatoIlUtc = adesso;
 
         await SincronizzaTraduzioniAsync(prodotto, dati, perCodice, annullamento);
+        if (dati.Categorie is not null)
+        {
+            await SincronizzaCategorieAsync(prodotto, dati.Categorie, nuovo, annullamento);
+        }
+
         if (dati.Immagini is not null)
         {
             await SincronizzaImmaginiAsync(prodotto, dati.Immagini, nuovo, annullamento);
@@ -234,6 +246,28 @@ public sealed class ServizioCatalogo : IServizioCatalogo
                 attuale.Nome = voluta.Nome.Trim();
                 attuale.Descrizione = testo;
             }
+        }
+    }
+
+    /// <summary>Le categorie devono essere diverse fra loro e del sito dell'host.</summary>
+    private async Task<bool> CategorieValideAsync(IReadOnlyList<Guid> richieste, CancellationToken annullamento)
+    {
+        if (richieste.Count > Categoria.NumeroMassimo || richieste.Distinct().Count() != richieste.Count)
+        {
+            return false;
+        }
+
+        var idSito = _tenant.IdSito;
+        return await _contesto.Categorie.AsNoTracking().CountAsync(c => richieste.Contains(c.Id) && c.IdSito == idSito, annullamento) == richieste.Count;
+    }
+
+    private async Task SincronizzaCategorieAsync(Prodotto prodotto, IReadOnlyList<Guid> volute, bool nuovo, CancellationToken annullamento)
+    {
+        var esistenti = nuovo ? [] : await _contesto.ProdottiCategoria.Where(c => c.IdProdotto == prodotto.Id).ToListAsync(annullamento);
+        _contesto.ProdottiCategoria.RemoveRange(esistenti.Where(c => !volute.Contains(c.IdCategoria)));
+        foreach (var idCategoria in volute.Where(id => esistenti.All(c => c.IdCategoria != id)))
+        {
+            _contesto.ProdottiCategoria.Add(new ProdottoCategoria { IdTenant = prodotto.IdTenant, IdSito = prodotto.IdSito, IdProdotto = prodotto.Id, IdCategoria = idCategoria });
         }
     }
 

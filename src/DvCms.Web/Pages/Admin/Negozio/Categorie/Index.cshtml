@@ -1,0 +1,76 @@
+@page "/admin/negozio/categorie"
+@model DvCms.Web.Pages.Admin.Negozio.Categorie.IndexModel
+@using DvCms.Domain.Negozio
+@{
+    ViewData["Titolo"] = _L["Categorie"];
+}
+@if (Model.Messaggio is not null)
+{
+    <div class="alert alert-success" role="status">@Model.Messaggio</div>
+}
+@if (Model.ErroreDaMostrare is not null)
+{
+    <div class="alert alert-danger" role="alert">
+        @Model.ErroreDaMostrare
+        @if (Model.CampiNonValidi.Count > 0)
+        {
+            <ul class="mb-0">
+                @foreach (var campo in Model.CampiNonValidi)
+                {
+                    <li>@Model.NomeCampo(campo)</li>
+                }
+            </ul>
+        }
+    </div>
+}
+<p class="text-secondary">@_L["Le categorie raggruppano i prodotti in vetrina (al più {0}). I prodotti si assegnano dal modulo del prodotto; una categoria senza prodotti pubblicati non compare in vetrina.", Model.Massimo]</p>
+
+@foreach (var categoria in Model.Categorie)
+{
+    var valori = Model.Errato(categoria.Id) ? Model.ModuloErrato : null;
+    <form method="post" asp-page-handler="Salva" class="card mb-3">
+        <div class="card-body row g-3 align-items-end">
+            <input type="hidden" name="Id" value="@categoria.Id" />
+            @foreach (var lingua in Model.Lingue)
+            {
+                <div class="col-md-3">
+                    <label class="form-label" for="nome-@categoria.Id-@lingua.Codice">@_L["Nome"] (@lingua.Codice)@(lingua.Predefinita ? " · " + _L["predefinita"] : null)</label>
+                    <input class="form-control" id="nome-@categoria.Id-@lingua.Codice" name="Nomi[@lingua.Codice]" maxlength="@Categoria.LunghezzaMassimaNome"
+                           value="@(valori is not null ? valori.Nomi.GetValueOrDefault(lingua.Codice) : categoria.Nomi.FirstOrDefault(n => n.CodiceLingua == lingua.Codice)?.Nome)" />
+                </div>
+            }
+            <div class="col-md-1">
+                <label class="form-label" for="pos-@categoria.Id">@_L["Posizione"]</label>
+                <input class="form-control" id="pos-@categoria.Id" name="Posizione" inputmode="numeric" maxlength="4" value="@(valori?.Posizione ?? categoria.Posizione.ToString(System.Globalization.CultureInfo.InvariantCulture))" />
+            </div>
+            <div class="col-md-2 d-flex gap-2 align-items-end">
+                <button type="submit" class="btn btn-primary">@_L["Salva"]</button>
+                <button type="submit" class="btn btn-outline-danger" asp-page-handler="Elimina" asp-route-id="@categoria.Id" formnovalidate>@_L["Elimina"]</button>
+            </div>
+            <div class="col-12 text-secondary small">@_L["Prodotti"]: @categoria.Prodotti</div>
+        </div>
+    </form>
+}
+
+<form method="post" asp-page-handler="Salva" class="card">
+    @{
+        var nuova = Model.Errato(null) ? Model.ModuloErrato : null;
+    }
+    <div class="card-header"><h3 class="card-title">@_L["Nuova categoria"]</h3></div>
+    <div class="card-body row g-3 align-items-end">
+        @foreach (var lingua in Model.Lingue)
+        {
+            <div class="col-md-3">
+                <label class="form-label" for="nuova-@lingua.Codice">@_L["Nome"] (@lingua.Codice)@(lingua.Predefinita ? " · " + _L["predefinita"] : null)</label>
+                <input class="form-control" id="nuova-@lingua.Codice" name="Nomi[@lingua.Codice]" maxlength="@Categoria.LunghezzaMassimaNome" value="@nuova?.Nomi.GetValueOrDefault(lingua.Codice)" />
+            </div>
+        }
+        <div class="col-md-1">
+            <label class="form-label" for="nuova-pos">@_L["Posizione"]</label>
+            <input class="form-control" id="nuova-pos" name="Posizione" inputmode="numeric" maxlength="4" value="@nuova?.Posizione" />
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-primary">@_L["Aggiungi"]</button>
+        </div>
+    </div>
+</form>

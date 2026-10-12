@@ -46,6 +46,9 @@ public sealed class ModuloProdotto
 
     /// <summary>Posizione scelta per ogni immagine della libreria (identificativo → numero); vuoto = non usata.</summary>
     public Dictionary<Guid, string> Immagini { get; set; } = [];
+
+    /// <summary>Categorie a cui appartiene il prodotto.</summary>
+    public List<Guid> Categorie { get; set; } = [];
 }
 
 /// <summary>
@@ -58,13 +61,22 @@ public class ModificaModel : PaginaAdmin
 
     private readonly IServizioCatalogo _catalogo;
     private readonly IServizioMedia _media;
+    private readonly IServizioCategorie _categorie;
 
-    public ModificaModel(IServizioCatalogo catalogo, IServizioMedia media, ILocalizzatore localizzatore)
+    public ModificaModel(IServizioCatalogo catalogo, IServizioMedia media, IServizioCategorie categorie, ILocalizzatore localizzatore)
         : base(localizzatore)
     {
         _catalogo = catalogo;
         _media = media;
+        _categorie = categorie;
     }
+
+    /// <summary>Le categorie del sito fra cui scegliere.</summary>
+    public IReadOnlyList<CategoriaVista> CategorieDisponibili { get; private set; } = [];
+
+    /// <summary>Nome di una categoria nella lingua predefinita del sito (o nella prima disponibile).</summary>
+    public string NomeCategoria(CategoriaVista categoria) =>
+        (categoria.Nomi.FirstOrDefault(n => Lingue.Any(l => l.Predefinita && l.Codice == n.CodiceLingua)) ?? (categoria.Nomi.Count > 0 ? categoria.Nomi[0] : null))?.Nome ?? "—";
 
     /// <summary>Le immagini pubbliche della libreria fra cui scegliere.</summary>
     public IReadOnlyList<RiepilogoMedia> ImmaginiDisponibili { get; private set; } = [];
@@ -169,6 +181,7 @@ public class ModificaModel : PaginaAdmin
         "Descrizione" => Localizzatore.Traduci("Descrizione"),
         "Traduzioni" => Localizzatore.Traduci("Traduzioni"),
         "Stato" => Localizzatore.Traduci("Stato"),
+        "Categorie" => Localizzatore.Traduci("Categorie"),
         "Immagini" => Localizzatore.Traduci("Immagini (al più 8, senza ripetizioni, pubbliche)"),
         "Etichetta" => Localizzatore.Traduci("Etichetta della variante (obbligatoria nella lingua predefinita se ci sono più varianti)"),
         _ => campo,
@@ -181,6 +194,7 @@ public class ModificaModel : PaginaAdmin
         Token = dettaglio.TokenConcorrenza,
         Stato = dettaglio.Stato,
         Aliquota = dettaglio.AliquotaIva.ToString("0.##", CultureInfo.InvariantCulture),
+        Categorie = [.. dettaglio.Categorie],
         Immagini = dettaglio.Immagini.Select((id, indice) => (id, indice)).ToDictionary(x => x.id, x => (x.indice + 1).ToString(CultureInfo.InvariantCulture)),
         Traduzioni = [.. dettaglio.Traduzioni.Select(t => new ModuloTraduzione { Codice = t.CodiceLingua, Nome = t.Nome, Descrizione = t.Descrizione })],
         Varianti =
@@ -199,6 +213,7 @@ public class ModificaModel : PaginaAdmin
     /// <summary>Un riga per lingua e qualche riga vuota per le varianti nuove (il modulo non usa JavaScript).</summary>
     private async Task CaricaImmaginiAsync(CancellationToken annullamento)
     {
+        CategorieDisponibili = await _categorie.ElencaAsync(IdAttore, annullamento);
         ImmaginiDisponibili = [.. (await _media.ElencaAsync(IdAttore, annullamento))
             .Where(r => r.TipoContenuto.StartsWith("image/", StringComparison.Ordinal) && r.Visibilita == Domain.Media.VisibilitaMedia.Pubblica)];
     }
@@ -274,6 +289,7 @@ public class ModificaModel : PaginaAdmin
             aliquota,
             [.. Modulo.Traduzioni.Where(t => !string.IsNullOrWhiteSpace(t.Nome) || !string.IsNullOrWhiteSpace(t.Descrizione)).Select(t => new TraduzioneProdottoDati(t.Codice, t.Nome ?? string.Empty, t.Descrizione))],
             varianti,
-            [.. scelte.OrderBy(x => x.Posizione).ThenBy(x => x.Id).Select(x => x.Id)]);
+            [.. scelte.OrderBy(x => x.Posizione).ThenBy(x => x.Id).Select(x => x.Id)],
+            [.. Modulo.Categorie.Distinct()]);
     }
 }

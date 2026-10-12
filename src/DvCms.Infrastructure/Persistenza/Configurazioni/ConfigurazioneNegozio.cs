@@ -58,6 +58,62 @@ internal sealed class ConfigurazioneVarianteProdotto : IEntityTypeConfiguration<
     }
 }
 
+internal sealed class ConfigurazioneCategoria : IEntityTypeConfiguration<Categoria>
+{
+    public void Configure(EntityTypeBuilder<Categoria> entita)
+    {
+        entita.ToTable("Categorie");
+        entita.HasKey(categoria => categoria.Id);
+        entita.Property(categoria => categoria.Id).ValueGeneratedNever();
+
+        entita.HasOne<Sito>()
+            .WithMany()
+            .HasForeignKey(categoria => new { categoria.IdTenant, categoria.IdSito })
+            .HasPrincipalKey(sito => new { sito.IdTenant, sito.Id })
+            .OnDelete(DeleteBehavior.Restrict);
+        entita.HasAlternateKey(categoria => new { categoria.IdTenant, categoria.IdSito, categoria.Id });
+        entita.HasIndex(categoria => new { categoria.IdSito, categoria.Posizione });
+    }
+}
+
+internal sealed class ConfigurazioneTraduzioneCategoria : IEntityTypeConfiguration<TraduzioneCategoria>
+{
+    public void Configure(EntityTypeBuilder<TraduzioneCategoria> entita)
+    {
+        entita.ToTable("TraduzioniCategoria");
+        entita.HasKey(traduzione => new { traduzione.IdCategoria, traduzione.IdLingua });
+        entita.Property(traduzione => traduzione.Nome).HasMaxLength(Categoria.LunghezzaMassimaNome).IsRequired();
+
+        entita.HasOne<Categoria>()
+            .WithMany()
+            .HasForeignKey(traduzione => new { traduzione.IdTenant, traduzione.IdSito, traduzione.IdCategoria })
+            .HasPrincipalKey(categoria => new { categoria.IdTenant, categoria.IdSito, categoria.Id })
+            .OnDelete(DeleteBehavior.Restrict);
+        entita.HasOne<Lingua>().WithMany().HasForeignKey(traduzione => traduzione.IdLingua).OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
+internal sealed class ConfigurazioneProdottoCategoria : IEntityTypeConfiguration<ProdottoCategoria>
+{
+    public void Configure(EntityTypeBuilder<ProdottoCategoria> entita)
+    {
+        entita.ToTable("ProdottiCategoria");
+        entita.HasKey(appartenenza => new { appartenenza.IdProdotto, appartenenza.IdCategoria });
+
+        entita.HasOne<Prodotto>()
+            .WithMany()
+            .HasForeignKey(appartenenza => new { appartenenza.IdTenant, appartenenza.IdSito, appartenenza.IdProdotto })
+            .HasPrincipalKey(prodotto => new { prodotto.IdTenant, prodotto.IdSito, prodotto.Id })
+            .OnDelete(DeleteBehavior.Restrict);
+        entita.HasOne<Categoria>()
+            .WithMany()
+            .HasForeignKey(appartenenza => new { appartenenza.IdTenant, appartenenza.IdSito, appartenenza.IdCategoria })
+            .HasPrincipalKey(categoria => new { categoria.IdTenant, categoria.IdSito, categoria.Id })
+            .OnDelete(DeleteBehavior.Restrict);
+        entita.HasIndex(appartenenza => appartenenza.IdCategoria);
+    }
+}
+
 internal sealed class ConfigurazioneImmagineProdotto : IEntityTypeConfiguration<ImmagineProdotto>
 {
     public void Configure(EntityTypeBuilder<ImmagineProdotto> entita)

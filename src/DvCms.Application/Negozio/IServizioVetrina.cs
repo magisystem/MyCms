@@ -4,6 +4,9 @@ namespace DvCms.Application.Negozio;
 public sealed record ProdottoInVetrina(Guid Id, string Nome, decimal PrezzoDa, string Valuta, bool Disponibile, ImmagineVetrina? Immagine = null);
 
 /// <summary>Un'immagine di prodotto servita da <c>/media/{id}</c>; <c>Testo</c> è il testo alternativo predefinito della risorsa, se c'è.</summary>
+/// <summary>Una categoria della vetrina con almeno un prodotto visibile; <c>Prodotti</c> è quanti ne ha di visibili.</summary>
+public sealed record CategoriaInVetrina(Guid Id, string Nome, int Prodotti);
+
 public sealed record ImmagineVetrina(Guid Id, string? Testo);
 
 /// <summary>
@@ -22,6 +25,12 @@ public interface IServizioVetrina
 {
     /// <param name="codiceLingua">Lingua preferita; se manca la traduzione si ripiega sulla lingua predefinita del sito.</param>
     Task<IReadOnlyList<ProdottoInVetrina>> ElencaAsync(string codiceLingua, CancellationToken annullamento);
+
+    /// <summary>Come <see cref="ElencaAsync"/>, ma solo i prodotti della categoria. Vuoto se la categoria non esiste o non ha prodotti visibili.</summary>
+    Task<IReadOnlyList<ProdottoInVetrina>> ElencaPerCategoriaAsync(string codiceLingua, Guid idCategoria, CancellationToken annullamento);
+
+    /// <summary>Le categorie del sito che hanno almeno un prodotto visibile, nell'ordine di presentazione. Nome nella lingua richiesta, con ripiego sulla predefinita.</summary>
+    Task<IReadOnlyList<CategoriaInVetrina>> CategorieAsync(string codiceLingua, CancellationToken annullamento);
 
     /// <summary><c>null</c> se il prodotto non esiste, non è pubblicato o il negozio non è attivo.</summary>
     Task<ProdottoPubblico?> LeggiAsync(Guid idProdotto, string codiceLingua, CancellationToken annullamento);
