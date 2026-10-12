@@ -14,6 +14,10 @@ else
         @foreach (var prodotto in Model.Prodotti)
         {
             <li class="dv-prodotto @(prodotto.Disponibile ? null : "dv-esaurito")">
+                @if (prodotto.Immagine is { } immagine)
+                {
+                    <a href="/negozio/@prodotto.Id" tabindex="-1" aria-hidden="true"><img class="dv-prodotto-immagine" src="/media/@immagine.Id" alt="" loading="lazy" /></a>
+                }
                 <a href="/negozio/@prodotto.Id">@(prodotto.Nome.Length > 0 ? prodotto.Nome : "—")</a>
                 <p class="dv-prodotto-prezzo">@_L["da"] @prodotto.PrezzoDa.ToString("N2", Model.Cultura) @prodotto.Valuta</p>
                 @if (!prodotto.Disponibile)

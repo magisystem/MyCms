@@ -98,6 +98,26 @@ public partial class VarianteProdotto
     private static partial Regex FormatoSku();
 }
 
+/// <summary>
+/// Immagine di un prodotto: riferimento a una risorsa della libreria media del sito, in ordine (la prima è la principale). Senza
+/// chiave esterna verso i media — come per le immagini dei componenti del builder — perché una risorsa tolta dalla libreria non deve
+/// bloccare né rompere il prodotto: la vetrina mostra solo le risorse ancora pubbliche.
+/// </summary>
+public class ImmagineProdotto
+{
+    public const int NumeroMassimo = 8;
+
+    public Guid IdTenant { get; set; }
+
+    public Guid IdSito { get; set; }
+
+    public Guid IdProdotto { get; set; }
+
+    public Guid IdRisorsa { get; set; }
+
+    public int Posizione { get; set; }
+}
+
 public class TraduzioneProdotto
 {
     public Guid IdTenant { get; set; }

@@ -58,6 +58,22 @@ internal sealed class ConfigurazioneVarianteProdotto : IEntityTypeConfiguration<
     }
 }
 
+internal sealed class ConfigurazioneImmagineProdotto : IEntityTypeConfiguration<ImmagineProdotto>
+{
+    public void Configure(EntityTypeBuilder<ImmagineProdotto> entita)
+    {
+        entita.ToTable("ImmaginiProdotto");
+        entita.HasKey(immagine => new { immagine.IdProdotto, immagine.IdRisorsa });
+
+        entita.HasOne<Prodotto>()
+            .WithMany()
+            .HasForeignKey(immagine => new { immagine.IdTenant, immagine.IdSito, immagine.IdProdotto })
+            .HasPrincipalKey(prodotto => new { prodotto.IdTenant, prodotto.IdSito, prodotto.Id })
+            .OnDelete(DeleteBehavior.Restrict);
+        entita.HasIndex(immagine => new { immagine.IdProdotto, immagine.Posizione });
+    }
+}
+
 internal sealed class ConfigurazioneTraduzioneProdotto : IEntityTypeConfiguration<TraduzioneProdotto>
 {
     public void Configure(EntityTypeBuilder<TraduzioneProdotto> entita)

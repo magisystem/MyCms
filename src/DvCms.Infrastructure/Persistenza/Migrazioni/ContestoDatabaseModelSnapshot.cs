@@ -948,6 +948,32 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                         });
                 });
 
+            modelBuilder.Entity("DvCms.Domain.Negozio.ImmagineProdotto", b =>
+                {
+                    b.Property<Guid>("IdProdotto")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdRisorsa")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdSito")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdTenant")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Posizione")
+                        .HasColumnType("int");
+
+                    b.HasKey("IdProdotto", "IdRisorsa");
+
+                    b.HasIndex("IdProdotto", "Posizione");
+
+                    b.HasIndex("IdTenant", "IdSito", "IdProdotto");
+
+                    b.ToTable("ImmaginiProdotto", (string)null);
+                });
+
             modelBuilder.Entity("DvCms.Domain.Negozio.ImpostazioniPagamentoSito", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2247,6 +2273,16 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.HasOne("DvCms.Domain.Negozio.VarianteProdotto", null)
                         .WithMany()
                         .HasForeignKey("IdTenant", "IdSito", "IdVariante")
+                        .HasPrincipalKey("IdTenant", "IdSito", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DvCms.Domain.Negozio.ImmagineProdotto", b =>
+                {
+                    b.HasOne("DvCms.Domain.Negozio.Prodotto", null)
+                        .WithMany()
+                        .HasForeignKey("IdTenant", "IdSito", "IdProdotto")
                         .HasPrincipalKey("IdTenant", "IdSito", "Id")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();

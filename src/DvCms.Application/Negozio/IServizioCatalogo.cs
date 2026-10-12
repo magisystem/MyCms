@@ -10,7 +10,7 @@ public sealed record TraduzioneProdottoDati(string CodiceLingua, string Nome, st
 public sealed record VarianteDati(Guid? Id, string? Sku, decimal PrezzoLordo, string? Valuta, bool Attiva, IReadOnlyDictionary<string, string>? Etichette);
 
 /// <summary>
-/// Il prodotto da salvare. Senza <see cref="Id"/> si crea; con <see cref="Id"/> si modifica e <see cref="TokenConcorrenza"/> (quello letto
+/// Il prodotto da salvare. <c>Immagini</c> sono risorse della libreria media (immagini pubbliche del sito) in ordine, la prima è la principale; se nullo non si toccano. Senza <see cref="Id"/> si crea; con <see cref="Id"/> si modifica e <see cref="TokenConcorrenza"/> (quello letto
 /// con il dettaglio) deve coincidere. Le varianti non elencate vengono tolte: si salva sempre lo stato completo.
 /// </summary>
 public sealed record DatiProdotto(
@@ -19,7 +19,8 @@ public sealed record DatiProdotto(
     StatoProdotto Stato,
     decimal AliquotaIva,
     IReadOnlyList<TraduzioneProdottoDati> Traduzioni,
-    IReadOnlyList<VarianteDati> Varianti);
+    IReadOnlyList<VarianteDati> Varianti,
+    IReadOnlyList<Guid>? Immagini = null);
 
 public sealed record RiepilogoProdotto(Guid Id, string Nome, StatoProdotto Stato, int Varianti, decimal? PrezzoDa, string Valuta, DateTime AggiornatoIlUtc);
 
@@ -33,7 +34,8 @@ public sealed record DettaglioProdotto(
     decimal AliquotaIva,
     string TokenConcorrenza,
     IReadOnlyList<TraduzioneProdottoDati> Traduzioni,
-    IReadOnlyList<VarianteDettaglio> Varianti);
+    IReadOnlyList<VarianteDettaglio> Varianti,
+    IReadOnlyList<Guid> Immagini);
 
 /// <summary>
 /// Catalogo del negozio del sito dell'host (F-001, F-006). Riservato agli amministratori del tenant (ruolo riverificato sul database a

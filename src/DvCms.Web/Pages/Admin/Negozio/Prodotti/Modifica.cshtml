@@ -119,6 +119,28 @@
         </div>
     </div>
 
+    <div class="card mb-3">
+        <div class="card-header"><h3 class="card-title">@_L["Immagini"]</h3></div>
+        <div class="card-body">
+            @if (Model.ImmaginiDisponibili.Count == 0)
+            {
+                <p class="text-secondary">@_L["Nessuna immagine pubblica nella libreria media: caricane una da Media."]</p>
+            }
+            else
+            {
+                <p class="text-secondary">@_L["Scrivi un numero accanto alle immagini da usare: l'ordine è quello dei numeri e la prima è l'immagine principale. Lascia vuoto per non usarla (al più 8)."]</p>
+                @foreach (var immagine in Model.ImmaginiDisponibili)
+                {
+                    <div class="d-flex align-items-center gap-3 mb-2">
+                        <img src="/admin/media/@immagine.Id?handler=File" alt="" width="64" height="64" style="object-fit: cover" loading="lazy" />
+                        <label class="form-label mb-0 flex-grow-1" for="img-@immagine.Id">@immagine.NomeOriginale</label>
+                        <input class="form-control w-auto" style="max-width: 6rem" id="img-@immagine.Id" name="Modulo.Immagini[@immagine.Id]" value="@Model.Modulo.Immagini.GetValueOrDefault(immagine.Id)" inputmode="numeric" maxlength="2" />
+                    </div>
+                }
+            }
+        </div>
+    </div>
+
     <div class="d-flex">
         <a class="btn btn-outline-secondary" href="/admin/negozio/prodotti">@_L["Torna ai prodotti"]</a>
         <button type="submit" class="btn btn-primary ms-auto">@_L["Salva"]</button>

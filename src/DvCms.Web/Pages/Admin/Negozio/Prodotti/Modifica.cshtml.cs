@@ -1,5 +1,6 @@
 using System.Globalization;
 using DvCms.Application.Localizzazione;
+using DvCms.Application.Media;
 using DvCms.Application.Negozio;
 using DvCms.Application.Piattaforma;
 using DvCms.Domain.Negozio;
@@ -42,6 +43,9 @@ public sealed class ModuloProdotto
     public List<ModuloTraduzione> Traduzioni { get; set; } = [];
 
     public List<ModuloVariante> Varianti { get; set; } = [];
+
+    /// <summary>Posizione scelta per ogni immagine della libreria (identificativo → numero); vuoto = non usata.</summary>
+    public Dictionary<Guid, string> Immagini { get; set; } = [];
 }
 
 /// <summary>
@@ -53,12 +57,17 @@ public class ModificaModel : PaginaAdmin
     private const int RigheVuoteAggiuntive = 3;
 
     private readonly IServizioCatalogo _catalogo;
+    private readonly IServizioMedia _media;
 
-    public ModificaModel(IServizioCatalogo catalogo, ILocalizzatore localizzatore)
+    public ModificaModel(IServizioCatalogo catalogo, IServizioMedia media, ILocalizzatore localizzatore)
         : base(localizzatore)
     {
         _catalogo = catalogo;
+        _media = media;
     }
+
+    /// <summary>Le immagini pubbliche della libreria fra cui scegliere.</summary>
+    public IReadOnlyList<RiepilogoMedia> ImmaginiDisponibili { get; private set; } = [];
 
     [BindProperty]
     public ModuloProdotto Modulo { get; set; } = new();
@@ -94,6 +103,7 @@ public class ModificaModel : PaginaAdmin
             Modulo = Da(dettaglio);
         }
 
+        await CaricaImmaginiAsync(annullamento);
         Completa();
         return Page();
     }
@@ -124,6 +134,7 @@ public class ModificaModel : PaginaAdmin
         {
             CampiNonValidi = campiPrezzo;
             Errore = TestoErrore(CodiceEsito.DatiNonValidi);
+            await CaricaImmaginiAsync(annullamento);
             Completa();
             return Page();
         }
@@ -142,6 +153,7 @@ public class ModificaModel : PaginaAdmin
             CodiceEsito.NonTrovato => Localizzatore.Traduci("Prodotto non trovato."),
             _ => TestoErrore(esito.Codice),
         };
+        await CaricaImmaginiAsync(annullamento);
         Completa();
         return Page();
     }
@@ -157,6 +169,7 @@ public class ModificaModel : PaginaAdmin
         "Descrizione" => Localizzatore.Traduci("Descrizione"),
         "Traduzioni" => Localizzatore.Traduci("Traduzioni"),
         "Stato" => Localizzatore.Traduci("Stato"),
+        "Immagini" => Localizzatore.Traduci("Immagini (al più 8, senza ripetizioni, pubbliche)"),
         "Etichetta" => Localizzatore.Traduci("Etichetta della variante (obbligatoria nella lingua predefinita se ci sono più varianti)"),
         _ => campo,
     };
@@ -168,6 +181,7 @@ public class ModificaModel : PaginaAdmin
         Token = dettaglio.TokenConcorrenza,
         Stato = dettaglio.Stato,
         Aliquota = dettaglio.AliquotaIva.ToString("0.##", CultureInfo.InvariantCulture),
+        Immagini = dettaglio.Immagini.Select((id, indice) => (id, indice)).ToDictionary(x => x.id, x => (x.indice + 1).ToString(CultureInfo.InvariantCulture)),
         Traduzioni = [.. dettaglio.Traduzioni.Select(t => new ModuloTraduzione { Codice = t.CodiceLingua, Nome = t.Nome, Descrizione = t.Descrizione })],
         Varianti =
         [
@@ -183,6 +197,12 @@ public class ModificaModel : PaginaAdmin
     };
 
     /// <summary>Un riga per lingua e qualche riga vuota per le varianti nuove (il modulo non usa JavaScript).</summary>
+    private async Task CaricaImmaginiAsync(CancellationToken annullamento)
+    {
+        ImmaginiDisponibili = [.. (await _media.ElencaAsync(IdAttore, annullamento))
+            .Where(r => r.TipoContenuto.StartsWith("image/", StringComparison.Ordinal) && r.Visibilita == Domain.Media.VisibilitaMedia.Pubblica)];
+    }
+
     private void Completa()
     {
         foreach (var lingua in Lingue.Where(l => Modulo.Traduzioni.All(t => t.Codice != l.Codice)))
@@ -229,6 +249,19 @@ public class ModificaModel : PaginaAdmin
             varianti.Add(new VarianteDati(variante.Id, variante.Sku, prezzo, null, variante.Attiva, variante.Etichette));
         }
 
+        // Immagini: ogni riga con un numero è scelta, in ordine di numero (a parità, l'ordine della libreria); la prima è la principale.
+        var scelte = new List<(int Posizione, Guid Id)>();
+        foreach (var (idRisorsa, testo) in Modulo.Immagini.Where(i => !string.IsNullOrWhiteSpace(i.Value)))
+        {
+            if (!int.TryParse(testo.Trim(), NumberStyles.None, CultureInfo.InvariantCulture, out var posizione) || posizione is < 1 or > 99)
+            {
+                campiNonValidi.Add("Immagini");
+                break;
+            }
+
+            scelte.Add((posizione, idRisorsa));
+        }
+
         if (campiNonValidi.Count > 0)
         {
             return null;
@@ -240,6 +273,7 @@ public class ModificaModel : PaginaAdmin
             Modulo.Stato,
             aliquota,
             [.. Modulo.Traduzioni.Where(t => !string.IsNullOrWhiteSpace(t.Nome) || !string.IsNullOrWhiteSpace(t.Descrizione)).Select(t => new TraduzioneProdottoDati(t.Codice, t.Nome ?? string.Empty, t.Descrizione))],
-            varianti);
+            varianti,
+            [.. scelte.OrderBy(x => x.Posizione).ThenBy(x => x.Id).Select(x => x.Id)]);
     }
 }

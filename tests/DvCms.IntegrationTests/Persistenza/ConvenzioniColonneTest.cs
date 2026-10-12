@@ -103,6 +103,7 @@ public class ConvenzioniColonneTest
             // proprietà "Id" per convenzione, non hanno chiave e vanno escluse.
             modelBuilder.Ignore<DvCms.Domain.Media.TraduzioneRisorsaMedia>();
             modelBuilder.Ignore<DvCms.Domain.Negozio.TraduzioneProdotto>();
+            modelBuilder.Ignore<DvCms.Domain.Negozio.ImmagineProdotto>();
             modelBuilder.Ignore<DvCms.Domain.Negozio.TraduzioneVarianteProdotto>();
             modelBuilder.Ignore<DvCms.Domain.Negozio.RigaCarrello>();
             modelBuilder.Ignore<DvCms.Domain.Negozio.GiacenzaVariante>();

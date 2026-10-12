@@ -4,6 +4,7 @@ using DvCms.Application.Piattaforma;
 using DvCms.Application.Tenancy;
 using DvCms.Domain;
 using DvCms.Domain.Accessi;
+using DvCms.Domain.Media;
 using DvCms.Domain.Negozio;
 using DvCms.Infrastructure.Cms;
 using DvCms.Infrastructure.Persistenza;
@@ -91,6 +92,7 @@ public sealed class ServizioCatalogo : IServizioCatalogo
         var varianti = await _contesto.VariantiProdotto.AsNoTracking().Where(v => v.IdProdotto == idProdotto).OrderBy(v => v.Posizione).ToListAsync(annullamento);
         var idVarianti = varianti.Select(v => v.Id).ToList();
         var etichette = await _contesto.TraduzioniVarianteProdotto.AsNoTracking().Where(t => idVarianti.Contains(t.IdVariante)).ToListAsync(annullamento);
+        var immagini = await _contesto.ImmaginiProdotto.AsNoTracking().Where(i => i.IdProdotto == idProdotto).OrderBy(i => i.Posizione).Select(i => i.IdRisorsa).ToListAsync(annullamento);
 
         return new DettaglioProdotto(
             prodotto.Id,
@@ -104,7 +106,8 @@ public sealed class ServizioCatalogo : IServizioCatalogo
                 v.PrezzoLordo,
                 v.Valuta,
                 v.Attiva,
-                etichette.Where(e => e.IdVariante == v.Id).ToDictionary(e => lingue.GetValueOrDefault(e.IdLingua) ?? string.Empty, e => e.Etichetta)))]);
+                etichette.Where(e => e.IdVariante == v.Id).ToDictionary(e => lingue.GetValueOrDefault(e.IdLingua) ?? string.Empty, e => e.Etichetta)))],
+            immagini);
     }
 
     public async Task<EsitoOperazione> SalvaAsync(Guid idAttore, DatiProdotto dati, CancellationToken annullamento)
@@ -133,6 +136,11 @@ public sealed class ServizioCatalogo : IServizioCatalogo
         if (validazione.Errori.Count > 0)
         {
             return new EsitoOperazione(CodiceEsito.DatiNonValidi, null, validazione.Errori);
+        }
+
+        if (dati.Immagini is { Count: > 0 } richieste && !await ImmaginiValideAsync(richieste, annullamento))
+        {
+            return new EsitoOperazione(CodiceEsito.DatiNonValidi, null, ["Immagini"]);
         }
 
         var adesso = _orologio.GetUtcNow().UtcDateTime;
@@ -165,6 +173,11 @@ public sealed class ServizioCatalogo : IServizioCatalogo
         prodotto.AggiornatoIlUtc = adesso;
 
         await SincronizzaTraduzioniAsync(prodotto, dati, perCodice, annullamento);
+        if (dati.Immagini is not null)
+        {
+            await SincronizzaImmaginiAsync(prodotto, dati.Immagini, nuovo, annullamento);
+        }
+
         var esitoVarianti = await SincronizzaVariantiAsync(prodotto, dati, perCodice, nuovo, annullamento);
         if (esitoVarianti is not null)
         {
@@ -220,6 +233,40 @@ public sealed class ServizioCatalogo : IServizioCatalogo
             {
                 attuale.Nome = voluta.Nome.Trim();
                 attuale.Descrizione = testo;
+            }
+        }
+    }
+
+    /// <summary>Le immagini devono essere diverse fra loro, al più <see cref="ImmagineProdotto.NumeroMassimo"/>, e risorse pubbliche e pulite del sito che siano davvero immagini.</summary>
+    private async Task<bool> ImmaginiValideAsync(IReadOnlyList<Guid> richieste, CancellationToken annullamento)
+    {
+        if (richieste.Count > ImmagineProdotto.NumeroMassimo || richieste.Distinct().Count() != richieste.Count)
+        {
+            return false;
+        }
+
+        var idSito = _tenant.IdSito;
+        var valide = await _contesto.RisorseMedia.AsNoTracking().CountAsync(
+            r => richieste.Contains(r.Id) && r.IdSito == idSito && r.Visibilita == VisibilitaMedia.Pubblica
+                && r.StatoScansione != StatoScansioneMedia.InQuarantena && r.TipoContenuto.StartsWith("image/"),
+            annullamento);
+        return valide == richieste.Count;
+    }
+
+    private async Task SincronizzaImmaginiAsync(Prodotto prodotto, IReadOnlyList<Guid> volute, bool nuovo, CancellationToken annullamento)
+    {
+        var esistenti = nuovo ? [] : await _contesto.ImmaginiProdotto.Where(i => i.IdProdotto == prodotto.Id).ToListAsync(annullamento);
+        _contesto.ImmaginiProdotto.RemoveRange(esistenti.Where(i => !volute.Contains(i.IdRisorsa)));
+        for (var posizione = 0; posizione < volute.Count; posizione++)
+        {
+            var attuale = esistenti.SingleOrDefault(i => i.IdRisorsa == volute[posizione]);
+            if (attuale is null)
+            {
+                _contesto.ImmaginiProdotto.Add(new ImmagineProdotto { IdTenant = prodotto.IdTenant, IdSito = prodotto.IdSito, IdProdotto = prodotto.Id, IdRisorsa = volute[posizione], Posizione = posizione });
+            }
+            else
+            {
+                attuale.Posizione = posizione;
             }
         }
     }

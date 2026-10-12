@@ -1,5 +1,6 @@
 using DvCms.Application.Negozio;
 using DvCms.Application.Tenancy;
+using DvCms.Domain.Media;
 using DvCms.Domain.Negozio;
 using DvCms.Infrastructure.Cms;
 using DvCms.Infrastructure.Persistenza;
@@ -33,6 +34,7 @@ public sealed class ServizioVetrina : IServizioVetrina
         var varianti = await _contesto.VariantiProdotto.AsNoTracking().Where(v => v.IdSito == idSito && v.Attiva && idProdotti.Contains(v.IdProdotto)).ToListAsync(annullamento);
         var nomi = await _contesto.TraduzioniProdotto.AsNoTracking().Where(t => t.IdSito == idSito && idProdotti.Contains(t.IdProdotto)).ToListAsync(annullamento);
         var massimi = await MassimiAsync(idSito, varianti.Select(v => v.Id).ToList(), annullamento);
+        var immagini = await ImmaginiAsync(idSito, idProdotti, idRichiesta, idPredefinita, annullamento);
 
         return [.. prodotti
             .Select(p => (Prodotto: p, Varianti: varianti.Where(v => v.IdProdotto == p.Id).ToList()))
@@ -42,7 +44,8 @@ public sealed class ServizioVetrina : IServizioVetrina
                 Scegli(nomi.Where(t => t.IdProdotto == x.Prodotto.Id), t => t.IdLingua, t => t.Nome, idRichiesta, idPredefinita) ?? string.Empty,
                 x.Varianti.Min(v => v.PrezzoLordo),
                 VarianteProdotto.ValutaPredefinita,
-                x.Varianti.Any(v => massimi[v.Id] > 0)))
+                x.Varianti.Any(v => massimi[v.Id] > 0),
+                immagini.GetValueOrDefault(x.Prodotto.Id)?.FirstOrDefault()))
             .OrderBy(p => p.Nome, StringComparer.CurrentCultureIgnoreCase)
             .ThenBy(p => p.Id)];
     }
@@ -72,6 +75,7 @@ public sealed class ServizioVetrina : IServizioVetrina
         var idVarianti = varianti.Select(v => v.Id).ToList();
         var etichette = await _contesto.TraduzioniVarianteProdotto.AsNoTracking().Where(t => idVarianti.Contains(t.IdVariante)).ToListAsync(annullamento);
         var massimi = await MassimiAsync(idSito, idVarianti, annullamento);
+        var immagini = await ImmaginiAsync(idSito, [idProdotto], idRichiesta, idPredefinita, annullamento);
 
         return new ProdottoPubblico(
             prodotto.Id,
@@ -83,7 +87,29 @@ public sealed class ServizioVetrina : IServizioVetrina
                 Scegli(etichette.Where(e => e.IdVariante == v.Id), e => e.IdLingua, e => e.Etichetta, idRichiesta, idPredefinita),
                 v.PrezzoLordo,
                 v.Valuta,
-                massimi[v.Id]))]);
+                massimi[v.Id]))],
+            immagini.GetValueOrDefault(idProdotto) ?? []);
+    }
+
+    /// <summary>Le immagini dei prodotti in ordine, limitate alle risorse ancora pubbliche, pulite e davvero immagini del sito: una risorsa tolta o resa privata sparisce senza rompere il prodotto.</summary>
+    private async Task<Dictionary<Guid, List<ImmagineVetrina>>> ImmaginiAsync(Guid idSito, List<Guid> idProdotti, Guid? idRichiesta, Guid? idPredefinita, CancellationToken annullamento)
+    {
+        var collegamenti = await _contesto.ImmaginiProdotto.AsNoTracking().Where(i => i.IdSito == idSito && idProdotti.Contains(i.IdProdotto)).OrderBy(i => i.Posizione).ToListAsync(annullamento);
+        if (collegamenti.Count == 0)
+        {
+            return [];
+        }
+
+        var idRisorse = collegamenti.Select(i => i.IdRisorsa).Distinct().ToList();
+        var risorse = await _contesto.RisorseMedia.AsNoTracking()
+            .Where(r => r.IdSito == idSito && idRisorse.Contains(r.Id) && r.Visibilita == VisibilitaMedia.Pubblica
+                && r.StatoScansione != StatoScansioneMedia.InQuarantena && r.TipoContenuto.StartsWith("image/"))
+            .ToDictionaryAsync(r => r.Id, annullamento);
+        var testi = await _contesto.TraduzioniRisorseMedia.AsNoTracking().Where(t => idRisorse.Contains(t.IdRisorsa)).ToListAsync(annullamento);
+        return collegamenti
+            .Where(i => risorse.ContainsKey(i.IdRisorsa))
+            .GroupBy(i => i.IdProdotto)
+            .ToDictionary(g => g.Key, g => g.Select(i => new ImmagineVetrina(i.IdRisorsa, Scegli(testi.Where(t => t.IdRisorsa == i.IdRisorsa), t => t.IdLingua, t => t.TestoAlternativo, idRichiesta, idPredefinita) is { Length: > 0 } alt ? alt : null)).ToList());
     }
 
     private Task<bool> NegozioAttivoAsync(Guid idSito, CancellationToken annullamento) =>

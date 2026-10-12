@@ -243,6 +243,27 @@ internal sealed class ContestoNegozio : IAsyncDisposable
         return await ambito.ServiceProvider.GetRequiredService<ContestoDatabase>().Ordini.IgnoreQueryFilters().AsNoTracking().Where(o => o.Id == idOrdine).Select(o => o.Stato).SingleAsync(Ct);
     }
 
+    /// <summary>Carica un'immagine PNG nella libreria media del tenant (con le credenziali del suo amministratore).</summary>
+    public async Task<Guid> CaricaImmagineAsync(DatiProva.TenantCreato tenant, DvCms.Domain.Media.VisibilitaMedia visibilita = DvCms.Domain.Media.VisibilitaMedia.Pubblica)
+    {
+        return await InAsync<DvCms.Application.Media.IServizioMedia, Guid>(tenant, async media =>
+        {
+            var esito = await media.CaricaAsync(Attore(tenant), new DvCms.Application.Media.FileDaCaricare(new MemoryStream(ImmaginiProva.Png(8, 8)), "foto.png", "image/png"), Ct);
+            Assert.True(esito.Riuscito, esito.Codice.ToString());
+            if (visibilita != DvCms.Domain.Media.VisibilitaMedia.Pubblica)
+            {
+                Assert.True((await media.ImpostaVisibilitaAsync(Attore(tenant), esito.Id!.Value, visibilita, Ct)).Riuscito);
+            }
+
+            return esito.Id!.Value;
+        });
+    }
+
+    public Task<EsitoOperazione> EliminaMediaAsync(DatiProva.TenantCreato tenant, Guid idRisorsa) =>
+        InAsync<DvCms.Application.Media.IServizioMedia, EsitoOperazione>(tenant, media => media.EliminaAsync(Attore(tenant), idRisorsa, Ct));
+
+    public Task<T> ComeCatalogoAsync<T>(DatiProva.TenantCreato tenant, Func<IServizioCatalogo, Task<T>> operazione) => InAsync<IServizioCatalogo, T>(tenant, operazione);
+
     public Task<T> ComeDatiPersonaliAsync<T>(DatiProva.TenantCreato tenant, Func<IServizioDatiPersonali, Task<T>> operazione) => InAsync<IServizioDatiPersonali, T>(tenant, operazione);
 
     public async Task InvecchiaOrdineAsync(Guid idOrdine, DateTime aggiornatoIlUtc)

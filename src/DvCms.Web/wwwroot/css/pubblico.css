@@ -77,6 +77,9 @@ h1 {
 .dv-prodotti { display: grid; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); gap: 1rem; list-style: none; margin: 0; padding: 0; }
 .dv-prodotto { border: 1px solid currentColor; border-radius: 0.5rem; padding: 1rem; }
 .dv-prodotto a { font-weight: 700; }
+.dv-prodotto-immagine { display: block; width: 100%; height: 12rem; object-fit: cover; border-radius: 0.35rem; margin-bottom: 0.5rem; }
+.dv-prodotto-galleria { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 14rem), 1fr)); gap: 0.75rem; margin: 0 0 1rem; }
+.dv-prodotto-galleria img { display: block; width: 100%; height: auto; border-radius: 0.35rem; }
 .dv-prodotto-prezzo { margin: 0.5rem 0 0; }
 .dv-esaurito { opacity: 0.7; }
 .dv-variante { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1rem; padding: 0.75rem 0; border-top: 1px solid currentColor; }

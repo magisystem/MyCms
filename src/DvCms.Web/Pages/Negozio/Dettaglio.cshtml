@@ -4,6 +4,15 @@
     ViewData["Titolo"] = Model.Prodotto.Nome;
 }
 <h1>@Model.Prodotto.Nome</h1>
+@if (Model.Prodotto.Immagini is { Count: > 0 } immagini)
+{
+    <div class="dv-prodotto-galleria">
+        @foreach (var immagine in immagini)
+        {
+            <img src="/media/@immagine.Id" alt="@(immagine.Testo is { Length: > 0 } testo ? testo : Model.Prodotto.Nome)" loading="lazy" />
+        }
+    </div>
+}
 @foreach (var riga in Model.Prodotto.Descrizione.Split('\n', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries))
 {
     <p>@riga</p>

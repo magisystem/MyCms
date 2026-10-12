@@ -261,6 +261,10 @@
                     @foreach (var prodotto in prodotti)
                     {
                         <li class="dv-griglia-prodotto@(prodotto.Disponibile ? string.Empty : " dv-esaurito")">
+                            @if (prodotto.Immagine is { } immagine)
+                            {
+                                <a href="/negozio/@prodotto.Id.ToString("D")" tabindex="-1" aria-hidden="true"><img class="dv-griglia-prodotto-immagine" src="/media/@immagine.Id.ToString("D")" alt="" loading="lazy" /></a>
+                            }
                             <a href="/negozio/@prodotto.Id.ToString("D")">@(prodotto.Nome.Length > 0 ? prodotto.Nome : "—")</a>
                             <p>@_L["da"] @prodotto.PrezzoDa.ToString("N2", cultura) @prodotto.Valuta</p>
                             @if (!prodotto.Disponibile)
@@ -285,6 +289,10 @@
                 var cultura = System.Globalization.CultureInfo.GetCultureInfo("it-IT");
                 var disponibile = scelto.Varianti.Any(v => v.Massimo > 0);
                 <article class="@("dv-scheda-prodotto" + Animazione(Model.Stili))">
+                    @if (scelto.Immagini?.FirstOrDefault() is { } principale)
+                    {
+                        <img class="dv-scheda-prodotto-immagine" src="/media/@principale.Id.ToString("D")" alt="@(principale.Testo is { Length: > 0 } testo ? testo : scelto.Nome)" loading="lazy" />
+                    }
                     <h3 class="dv-scheda-prodotto-nome">@(scelto.Nome.Length > 0 ? scelto.Nome : "—")</h3>
                     @foreach (var paragrafo in scelto.Descrizione.Split("\n\n", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
                     {
