@@ -41,7 +41,7 @@ jobs:
       # Checkout parziale: la cartella admin-theme (kit grafico, centinaia di MB) non serve alla build.
       # frontend/page-builder/test contiene i vettori del testo formattato condivisi con i test .NET.
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           filter: blob:none
           sparse-checkout: |
@@ -50,7 +50,7 @@ jobs:
             frontend/page-builder/test
 
       - name: Installa .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 10.0.x
 
@@ -83,14 +83,14 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           sparse-checkout: |
             frontend/page-builder
             src/DvCms.Web/wwwroot/lib/page-builder
 
       - name: Installa Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 22
 
