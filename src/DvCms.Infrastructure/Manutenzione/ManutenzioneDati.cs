@@ -118,6 +118,9 @@ public sealed partial class ManutenzioneDati
         // Fine conservazione degli ordini (A7): si cancella la copia dei dati personali, restano importi e righe.
         totale += await ambito.ServiceProvider.GetRequiredService<IServizioDatiPersonali>().AnonimizzaOrdiniScadutiAsync(annullamento);
 
+        // Incassi mai notificati (ritorno del cliente perso, webhook non arrivato): si rilegge lo stato presso il provider. Non incassa nulla.
+        totale += await ambito.ServiceProvider.GetRequiredService<Pagamenti.RiconciliazionePagamenti>().EseguiAsync(annullamento);
+
         if (totale > 0)
         {
             RegistraRipulitura(_logger, totale);

@@ -230,6 +230,7 @@ public static class EstensioniServizi
         servizi.TryAddSingleton(new OpzioniDatiPersonali(LeggiIntero(configurazione, "Negozio:ConservazioneOrdiniAnni", OpzioniDatiPersonali.Predefinite.ConservazioneOrdiniAnni, 1, 30)));
         servizi.TryAddScoped<IServizioDatiPersonali, ServizioDatiPersonali>();
         servizi.TryAddScoped<IServizioPagamenti, ServizioPagamenti>();
+        servizi.TryAddScoped<RiconciliazionePagamenti>();
         servizi.TryAddScoped<ServizioImpostazioniPagamento>();
         servizi.TryAddScoped<IServizioImpostazioniPagamento>(f => f.GetRequiredService<ServizioImpostazioniPagamento>());
         servizi.TryAddScoped<IArchivioCredenzialiPagamento>(f => f.GetRequiredService<ServizioImpostazioniPagamento>());

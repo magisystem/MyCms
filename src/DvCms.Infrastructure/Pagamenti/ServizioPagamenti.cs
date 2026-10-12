@@ -172,6 +172,34 @@ public sealed partial class ServizioPagamenti : IServizioPagamenti
         return idTentativo is null ? RisultatoPagamento.NonTrovato : await ElaboraTentativoAsync(idTentativo.Value, cattura: true, annullamento);
     }
 
+    public async Task<int> RiconciliaAsync(CancellationToken annullamento)
+    {
+        var idSito = _tenant.IdSito;
+        var adesso = _orologio.GetUtcNow().UtcDateTime;
+        var fino = adesso - RiconciliazioneEta.Minima;
+        var da = adesso - RiconciliazioneEta.Massima;
+        var aperti = await _contesto.TentativiPagamento.AsNoTracking()
+            .Where(t => t.IdSito == idSito && t.Provider == NomeProvider
+                && (t.Stato == StatoTentativoPagamento.Creato || t.Stato == StatoTentativoPagamento.InSospeso)
+                && t.CreatoIlUtc < fino && t.CreatoIlUtc > da)
+            .OrderBy(t => t.CreatoIlUtc)
+            .Select(t => t.Id)
+            .Take(RiconciliazioneEta.Lotto)
+            .ToListAsync(annullamento);
+
+        var conclusi = 0;
+        foreach (var id in aperti)
+        {
+            var esito = await ElaboraTentativoAsync(id, cattura: false, annullamento);
+            if (esito is not (RisultatoPagamento.NonApprovato or RisultatoPagamento.ErroreProvider or RisultatoPagamento.NonConfigurato or RisultatoPagamento.InSospeso))
+            {
+                conclusi++;
+            }
+        }
+
+        return conclusi;
+    }
+
     public async Task<EsitoWebhook> ElaboraWebhookAsync(IntestazioniWebhook intestazioni, string corpo, CancellationToken annullamento)
     {
         ArgumentNullException.ThrowIfNull(intestazioni);
@@ -353,17 +381,19 @@ public sealed partial class ServizioPagamenti : IServizioPagamenti
 
         await _giacenze.RilasciaScaduteAsync(annullamento);
         var ordine = await _contesto.Ordini.AsNoTracking().SingleAsync(o => o.Id == tentativo.IdOrdine, annullamento);
-        if (ordine.Stato == StatoOrdine.Pagato)
+        if (ordine.Stato == StatoOrdine.Pagato || ordine.Stato is not (StatoOrdine.InAttesaDiPagamento or StatoOrdine.PagamentoFallito))
         {
-            // Pagato con un altro tentativo: questo non incassa nulla.
-            await ImpostaTentativoAsync(tentativo.Id, StatoTentativoPagamento.Annullato, null, [StatoTentativoPagamento.Creato, StatoTentativoPagamento.InSospeso, StatoTentativoPagamento.Fallito], annullamento);
-            return RisultatoPagamento.Pagato;
-        }
+            // Pagato con un altro tentativo, o ordine chiuso: questo tentativo non deve incassare nulla (la cattura non parte). Ma se si sta
+            // solo leggendo (webhook, riconciliazione) il provider può aver già incassato — una cattura andata a buon fine di cui non si è
+            // saputo nulla: in quel caso il denaro va restituito, non dimenticato.
+            var chiuso = ordine.Stato == StatoOrdine.Pagato ? RisultatoPagamento.Pagato : RisultatoPagamento.OrdineChiuso;
+            if (!cattura && await LeggiIncassoOrfanoAsync(tentativo, ordine, annullamento) is { } orfano)
+            {
+                return orfano;
+            }
 
-        if (ordine.Stato is not (StatoOrdine.InAttesaDiPagamento or StatoOrdine.PagamentoFallito))
-        {
             await ImpostaTentativoAsync(tentativo.Id, StatoTentativoPagamento.Annullato, null, [StatoTentativoPagamento.Creato, StatoTentativoPagamento.InSospeso, StatoTentativoPagamento.Fallito], annullamento);
-            return RisultatoPagamento.OrdineChiuso;
+            return chiuso;
         }
 
         var credenziali = await _credenziali.OttieniAsync(_tenant.IdTenant, _tenant.IdSito, annullamento);
@@ -386,6 +416,40 @@ public sealed partial class ServizioPagamenti : IServizioPagamenti
         }
 
         return await ApplicaEsitoAsync(tentativo, ordine, esito, annullamento);
+    }
+
+    /// <summary>
+    /// Per un tentativo che non dovrebbe incassare (ordine già pagato o chiuso): chiede al provider com'è andata. Se ha incassato, il
+    /// tentativo diventa «da rimborsare» (con l'importo davvero incassato) e restituisce quell'esito; altrimenti <c>null</c>. Un errore del
+    /// provider non cambia nulla: la lettura si ripete alla prossima riconciliazione.
+    /// </summary>
+    private async Task<RisultatoPagamento?> LeggiIncassoOrfanoAsync(TentativoPagamento tentativo, Ordine ordine, CancellationToken annullamento)
+    {
+        var credenziali = await _credenziali.OttieniAsync(_tenant.IdTenant, _tenant.IdSito, annullamento);
+        if (credenziali is null)
+        {
+            return null;
+        }
+
+        EsitoCatturaProvider esito;
+        try
+        {
+            esito = await _provider.LeggiOrdineAsync(credenziali, tentativo.IdProvider, annullamento);
+        }
+        catch (ProviderPagamentoException eccezione)
+        {
+            RegistraErroreProvider(_logger, ordine.Id, eccezione.Message);
+            return RisultatoPagamento.ErroreProvider;
+        }
+
+        if (esito.Stato != StatoCatturaProvider.Completata)
+        {
+            return null;
+        }
+
+        await ImpostaTentativoAsync(tentativo.Id, StatoTentativoPagamento.DaRimborsare, esito.IdCattura, _incassabili, annullamento, esito.Importo);
+        await _audit.RegistraAsync(AzioniAudit.PagamentoDaRimborsare, $"Ordine:{ordine.Id}", RegistroAudit.EsitoNegato, _tenant.IdTenant, null, $"ordine {ordine.Numero}: incasso arrivato dopo la chiusura dell'ordine o su un ordine già pagato", annullamento);
+        return RisultatoPagamento.DaRimborsare;
     }
 
     private async Task<RisultatoPagamento> ApplicaEsitoAsync(TentativoPagamento tentativo, Ordine ordine, EsitoCatturaProvider esito, CancellationToken annullamento)
@@ -484,4 +548,14 @@ public sealed partial class ServizioPagamenti : IServizioPagamenti
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Webhook di pagamento: verifica della firma non riuscita per un errore del provider ({Dettaglio})")]
     private static partial void RegistraErroreWebhook(ILogger logger, string dettaglio);
+}
+
+/// <summary>Finestra della riconciliazione: un tentativo si rilegge dopo la scadenza della prenotazione (15 minuti, più un margine) e non oltre due settimane.</summary>
+internal static class RiconciliazioneEta
+{
+    public static readonly TimeSpan Minima = TimeSpan.FromMinutes(20);
+
+    public static readonly TimeSpan Massima = TimeSpan.FromDays(14);
+
+    public const int Lotto = 50;
 }

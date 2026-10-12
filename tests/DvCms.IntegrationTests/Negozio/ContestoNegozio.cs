@@ -273,6 +273,21 @@ internal sealed class ContestoNegozio : IAsyncDisposable
             .ExecuteUpdateAsync(x => x.SetProperty(o => o.AggiornatoIlUtc, aggiornatoIlUtc), Ct);
     }
 
+    /// <summary>Porta indietro nel tempo i tentativi di pagamento di un ordine (i test non possono far correre il tempo).</summary>
+    public async Task InvecchiaTentativiAsync(Guid idOrdine, TimeSpan eta)
+    {
+        await using var ambito = Web.Fabbrica.Services.CreateAsyncScope();
+        var passato = DateTime.UtcNow - eta;
+        await ambito.ServiceProvider.GetRequiredService<ContestoDatabase>().TentativiPagamento.IgnoreQueryFilters().Where(t => t.IdOrdine == idOrdine)
+            .ExecuteUpdateAsync(x => x.SetProperty(t => t.CreatoIlUtc, passato), Ct);
+    }
+
+    public async Task<int> RiconciliaAsync()
+    {
+        await using var ambito = Web.Fabbrica.Services.CreateAsyncScope();
+        return await ambito.ServiceProvider.GetRequiredService<DvCms.Infrastructure.Pagamenti.RiconciliazionePagamenti>().EseguiAsync(Ct);
+    }
+
     public async Task<Ordine> OrdineAsync(Guid idOrdine)
     {
         await using var ambito = Web.Fabbrica.Services.CreateAsyncScope();

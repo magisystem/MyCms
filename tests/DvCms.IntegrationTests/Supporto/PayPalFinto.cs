@@ -85,6 +85,19 @@ public sealed class PayPalFinto : HttpMessageHandler
         }
     }
 
+    /// <summary>Il cliente ha pagato e PayPal ha incassato, ma l'applicazione non l'ha saputo (ritorno perso, webhook non arrivato).</summary>
+    public void IncassaSenzaAvvisare(string id)
+    {
+        lock (_blocco)
+        {
+            var ordine = _ordini[id];
+            ordine.Approvato = true;
+            ordine.Catturato = true;
+            ordine.StatoCattura = "COMPLETED";
+            ordine.ImportoCatturato = ordine.Importo;
+        }
+    }
+
     /// <summary>Il cliente approva il pagamento sulla pagina di PayPal.</summary>
     public void Approva(string id)
     {

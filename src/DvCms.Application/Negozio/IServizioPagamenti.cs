@@ -92,6 +92,12 @@ public interface IServizioPagamenti
     /// <summary>Elabora un webhook del provider arrivato sul dominio del sito: verifica la firma, scarta i duplicati e applica l'esito.</summary>
     Task<EsitoWebhook> ElaboraWebhookAsync(IntestazioniWebhook intestazioni, string corpo, CancellationToken annullamento);
 
+    /// <summary>
+    /// Riconciliazione con il provider per il sito dell'host: rilegge (senza incassare) i tentativi rimasti aperti da più di venti minuti,
+    /// per recuperare incassi mai notificati (ritorno del cliente perso, webhook non arrivato). Restituisce quanti tentativi ha concluso.
+    /// </summary>
+    Task<int> RiconciliaAsync(CancellationToken annullamento);
+
     /// <summary>Tentativi di pagamento di un ordine del sito (amministrazione).</summary>
     Task<IReadOnlyList<TentativoPagamentoVista>> ElencaTentativiAsync(Guid idAttore, Guid idOrdine, CancellationToken annullamento);
 }
