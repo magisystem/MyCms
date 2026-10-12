@@ -28,6 +28,16 @@ Le voci sono candidate a issue GitHub. Ogni issue deve essere piccola, verificab
 ### A-008: Adapter SendGrid
 **Accettazione:** invio tramite SendGrid; test con fake; documentata la configurazione dell'account e del dominio mittente.
 
+### A-010: Canali email Microsoft 365 e Google Mail con le loro API (richiesta del committente, 2026-10-12)
+**Stato:** richiesta registrata, da dettagliare. Gli adapter **Microsoft Graph** (credenziali applicative, permesso `Mail.Send`) e **Gmail API** (account di servizio con delega di dominio) esistono già (A-006, A-007, ADR-0015) e sono provati solo con servizi HTTP finti, mai contro Microsoft 365 o Google reali.
+**Richiesta:** i tenant devono poter inviare le email dalla propria casella **Microsoft 365** o **Google Mail** tramite le rispettive API.
+**Lacune da chiudere (ipotesi, da confermare):**
+- Gmail con account di servizio funziona solo per caselle di un dominio **Google Workspace** con delega di dominio; una casella `@gmail.com` (o un Workspace senza delega) richiede il **consenso OAuth dell'utente** con *refresh token*.
+- Microsoft Graph con permesso applicativo dà all'app il diritto di inviare da *qualunque* casella del tenant Microsoft, se non limitata (*Application Access Policy*/RBAC for Applications); un'alternativa è il consenso **delegato** dell'utente, con refresh token.
+- Flusso «Connetti Microsoft 365» / «Connetti Google» nella scheda email del tenant: autorizzazione OAuth con `state` anti-CSRF e PKCE, scope minimi (`Mail.Send` / `gmail.send`), refresh token cifrati come gli altri segreti, rinnovo automatico dei token, revoca e stato della connessione visibili al `PlatformAdmin`, avviso prima della scadenza di segreti e consensi.
+- Prova reale di invio contro entrambi i servizi (oggi solo fake) e documentazione delle attività manuali aggiornata (registrazione delle app, consenso, verifica Google per gli scope sensibili se l'app è pubblica).
+**Accettazione (provvisoria):** un tenant sceglie «Microsoft 365» o «Google Mail», completa il consenso e l'invio di prova riesce; le email partono dall'outbox con il canale scelto; token e segreti mai nei log; revoca del consenso gestita (invio in errore visibile, nessun ciclo infinito di tentativi); test con fake dei servizi di autorizzazione e di invio, incluso il rinnovo del token.
+
 ### A-009: Localizzatore dei testi statici
 **Accettazione:** tabelle `Lingue` (italiano e inglese, seeding) e `TestiStatici`; localizzatore (`ILocalizzatore`) disponibile in Razor come `@_L["TESTO"]` e nel codice, con lingua esplicita per i processi in background; algoritmo di ADR-0018 (riga presente: testo della lingua; riga mancante: creata con il testo italiano e `DaTradurre` vero; chiave nuova: righe per tutte le lingue attive); creazione concorrente sicura; cache in memoria per lingua con invalidazione; output codificato in HTML; controllo automatico che gli argomenti siano costanti letterali; lingua dell'admin dalla preferenza dell'account (predefinita italiano); tutti i testi del layout admin passano da `_L`; test.
 
