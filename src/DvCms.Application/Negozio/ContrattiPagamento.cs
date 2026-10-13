@@ -177,6 +177,15 @@ public sealed class ProviderPagamentoException : Exception
         : base(message, innerException)
     {
     }
+
+    public ProviderPagamentoException(string message, int codiceHttp)
+        : base(message)
+    {
+        CodiceHttp = codiceHttp;
+    }
+
+    /// <summary>Codice HTTP della risposta del provider, quando l'errore viene da una risposta.</summary>
+    public int? CodiceHttp { get; }
 }
 
 /// <summary>

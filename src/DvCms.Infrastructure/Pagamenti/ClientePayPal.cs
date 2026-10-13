@@ -320,7 +320,7 @@ public sealed partial class ClientePayPal : IProviderPagamento
     {
         var diagnosi = risposta.Headers.TryGetValues("PayPal-Debug-Id", out var valori) ? valori.FirstOrDefault() : null;
         var sicura = diagnosi is not null && Diagnosi().IsMatch(diagnosi) ? $", diagnosi {diagnosi}" : string.Empty;
-        return new ProviderPagamentoException($"PayPal ha risposto con HTTP {(int)risposta.StatusCode}{sicura}.");
+        return new ProviderPagamentoException($"PayPal ha risposto con HTTP {(int)risposta.StatusCode}{sicura}.", (int)risposta.StatusCode);
     }
 
     private static HashSet<string> Problemi(JsonElement json)

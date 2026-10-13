@@ -294,6 +294,11 @@ public sealed partial class ServizioRimborsi : IServizioRimborsi
         {
             esito = await _provider.LeggiRimborsoAsync(credenziali, idRimborsoProvider, annullamento);
         }
+        catch (ProviderPagamentoException eccezione) when (eccezione.CodiceHttp == 404)
+        {
+            // Rimborso che il provider non conosce per questo conto: non è nostro, nessun motivo di far ritentare la notifica.
+            return false;
+        }
         catch (ProviderPagamentoException eccezione)
         {
             RegistraErroreProvider(_logger, Guid.Empty, eccezione.Message);
