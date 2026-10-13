@@ -40,12 +40,18 @@ docker run -d --name sqldvcms -e ACCEPT_EULA=Y -e 'MSSQL_SA_PASSWORD=<password-l
   -p 14330:1433 mcr.microsoft.com/mssql/server:2022-latest
 ```
 
-**Applicazione.** La stringa di connessione `ConnectionStrings:Predefinita` non sta mai nel repository (`appsettings.json` la lascia vuota e l'applicazione non parte se manca). In sviluppo:
+**Applicazione.** La stringa di connessione `ConnectionStrings:Predefinita` non sta nei file del repository (`appsettings.json` la lascia vuota e l'applicazione non parte se manca). Il modo più comodo, in sviluppo e in produzione, è un file **`appsettings.Local.json`** accanto ad `appsettings.json` (in `src/DvCms.Web/` in sviluppo, nella cartella dell'applicazione sul server): è facoltativo, **ignorato da git** e **escluso dalla pubblicazione**, quindi non si committa per errore e un nuovo rilascio non lo sovrascrive.
 
-```bash
-dotnet user-secrets set "ConnectionStrings:Predefinita" "Server=localhost,14330;Database=DvCms;User Id=sa;Password=<password-locale>;TrustServerCertificate=True" --project src/DvCms.Web
-# oppure la variabile d'ambiente ConnectionStrings__Predefinita
+```json
+{
+  "ConnectionStrings": {
+    "Predefinita": "Server=localhost,14330;Database=DvCms;User Id=sa;Password=<password-locale>;TrustServerCertificate=True"
+  },
+  "Sicurezza": { "ChiaveSegreti": "<base64 di 32 byte>" }
+}
 ```
+
+Ordine di precedenza (vince l'ultimo): `appsettings.json` → `appsettings.{Ambiente}.json` → user-secrets (solo in sviluppo) → variabili d'ambiente → **`appsettings.Local.json`** → variabili d'ambiente e riga di comando di nuovo (restano le più forti). In alternativa al file valgono ancora `dotnet user-secrets set "ConnectionStrings:Predefinita" "..." --project src/DvCms.Web` e la variabile d'ambiente `ConnectionStrings__Predefinita`. Il file contiene segreti: tenerlo fuori dai backup condivisi e con permessi di lettura limitati all'utente del servizio.
 
 **Migrazioni.** Si applicano solo con il comando esplicito, mai in automatico all'avvio:
 

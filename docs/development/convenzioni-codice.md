@@ -38,7 +38,7 @@ Gli identificatori delle entità sono `Guid` generati dall'applicazione con `Ide
 
 ## Configurazione e segreti
 
-Le chiavi di configurazione sono in italiano (`ConnectionStrings:Predefinita`). I valori con segreti non stanno in `appsettings.json`: user-secrets in sviluppo, variabili d'ambiente o file di ambiente non versionati altrove. L'applicazione non parte se manca la stringa di connessione.
+Le chiavi di configurazione sono in italiano (`ConnectionStrings:Predefinita`). I valori con segreti non stanno in `appsettings.json`: `appsettings.Local.json` (non versionato, escluso dalla pubblicazione), user-secrets in sviluppo, variabili d'ambiente o file di ambiente non versionati altrove. L'applicazione non parte se manca la stringa di connessione.
 
 ## Database e migrazioni
 

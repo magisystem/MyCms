@@ -2,6 +2,7 @@ using DvCms.Application.Localizzazione;
 using DvCms.Infrastructure;
 using DvCms.Web.Accessi;
 using DvCms.Web.Comandi;
+using DvCms.Web.Configurazione;
 using DvCms.Web.Localizzazione;
 using DvCms.Web.Middleware;
 using DvCms.Web.Pagamenti;
@@ -9,6 +10,9 @@ using DvCms.Web.Pubblico;
 using DvCms.Web.Salute;
 
 var costruttore = WebApplication.CreateBuilder(args);
+
+// appsettings.Local.json (non versionato, facoltativo): stringa di connessione e valori dell'installazione.
+ConfigurazioneLocale.Aggiungi(costruttore.Configuration, args);
 
 costruttore.Services.AddRazorPages(opzioni =>
 {

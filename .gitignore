@@ -436,3 +436,6 @@ secrets.json
 *.pfx
 *.p12
 *.snk
+
+# Configurazione locale dell'installazione (stringa di connessione, segreti): mai nel repository
+appsettings.Local.json

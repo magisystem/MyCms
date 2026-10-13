@@ -5,6 +5,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Configurazione locale non versionata: mai nel pacchetto pubblicato (resta sul server, o sul computer di sviluppo). -->
+    <Content Update="appsettings.Local.json" CopyToOutputDirectory="Never" CopyToPublishDirectory="Never" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\DvCms.Application\DvCms.Application.csproj" />
     <ProjectReference Include="..\DvCms.Infrastructure\DvCms.Infrastructure.csproj" />
   </ItemGroup>
