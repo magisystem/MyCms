@@ -1,6 +1,7 @@
 using DvCms.Application.Negozio;
 using DvCms.Domain.Negozio;
 using DvCms.IntegrationTests.Supporto;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
@@ -89,6 +90,51 @@ public class ProntezzaNegozioTest
         Assert.DoesNotContain(live.Controlli, x => x.Codice == "AmbienteProva");
         Assert.Equal(StatoControllo.Attenzione, Stato(prova, "AmbienteProva"));
         Assert.DoesNotContain(prova.Controlli, x => x.Codice == "InterruttoreProduzione");
+    }
+
+    [Fact]
+    public async Task IPagamentiManualiContanoComeMetodoProntoESenzaProviderOnlineNonCeAmbienteDiProva()
+    {
+        await using var c = await ContestoNegozio.CreaAsync();
+        await c.CreaProdottoAsync(c.A, "Libro", 4m, ("LIB-1", 10m, null));
+        await c.CreaRitiroAsync(c.A);
+
+        var nessuno = (await VerificaAsync(c, c.Platform, c.A))!;
+        Assert.Equal(StatoControllo.Bloccante, Stato(nessuno, "CredenzialiPayPal"));
+        Assert.DoesNotContain(nessuno.Controlli, x => x.Codice == "PagamentiManuali");
+
+        await c.ConfiguraOfflineAsync(c.A, ContestoNegozio.ImpostazioniOffline with { ContrassegnoAttivo = false });
+        var bonifico = (await VerificaAsync(c, c.Platform, c.A))!;
+        Assert.Equal(StatoControllo.Attenzione, Stato(bonifico, "CredenzialiPayPal"));
+        Assert.Equal(StatoControllo.Ok, Stato(bonifico, "PagamentiManuali"));
+        Assert.Equal("bonifico", bonifico.Controlli.Single(x => x.Codice == "PagamentiManuali").Dettaglio);
+        Assert.DoesNotContain(bonifico.Controlli, x => x.Codice is "AmbienteProva" or "InterruttoreProduzione" or "BonificoIncompleto");
+
+        await c.ConfiguraOfflineAsync(c.A, ContestoNegozio.ImpostazioniOffline);
+        Assert.Equal("bonifico, contrassegno", (await VerificaAsync(c, c.Platform, c.A))!.Controlli.Single(x => x.Codice == "PagamentiManuali").Dettaglio);
+
+        // Con un provider online accanto, l'ambiente di prova torna a contare.
+        await c.ConfiguraPagamentoAsync(c.A);
+        Assert.Equal(StatoControllo.Attenzione, Stato((await VerificaAsync(c, c.Platform, c.A))!, "AmbienteProva"));
+    }
+
+    [Fact]
+    public async Task UnBonificoAttivoSenzaCoordinateNonRendePronto()
+    {
+        await using var c = await ContestoNegozio.CreaAsync();
+        await c.ConfiguraOfflineAsync(c.A, ImpostazioniPagamentoOffline.Spente with { ContrassegnoAttivo = true });
+        await using (var ambito = c.Web.Fabbrica.Services.CreateAsyncScope())
+        {
+            // Aggira il servizio, che non lo permetterebbe: bonifico attivo ma senza IBAN.
+            var db = ambito.ServiceProvider.GetRequiredService<DvCms.Infrastructure.Persistenza.ContestoDatabase>();
+            await db.ImpostazioniPagamentoOfflineSiti.IgnoreQueryFilters().ExecuteUpdateAsync(x => x.SetProperty(i => i.BonificoAttivo, true), Ct);
+        }
+
+        var rapporto = (await VerificaAsync(c, c.Platform, c.A))!;
+
+        Assert.Equal(StatoControllo.Bloccante, Stato(rapporto, "BonificoIncompleto"));
+        Assert.Equal("contrassegno", rapporto.Controlli.Single(x => x.Codice == "PagamentiManuali").Dettaglio);
+        Assert.False(rapporto.Pronto);
     }
 
     [Fact]

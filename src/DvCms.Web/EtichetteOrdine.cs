@@ -18,7 +18,20 @@ public static class EtichetteOrdine
             StatoOrdine.Ritirato => localizzatore.Traduci("Ritirato"),
             StatoOrdine.Annullato => localizzatore.Traduci("Annullato"),
             StatoOrdine.Rimborsato => localizzatore.Traduci("Rimborsato"),
+            StatoOrdine.DaSpedireContrassegno => localizzatore.Traduci("Da spedire (pagamento alla consegna)"),
             _ => stato.ToString(),
+        };
+    }
+
+    public static string Modalita(ILocalizzatore localizzatore, DvCms.Domain.Negozio.ModalitaPagamento modalita)
+    {
+        ArgumentNullException.ThrowIfNull(localizzatore);
+        return modalita switch
+        {
+            DvCms.Domain.Negozio.ModalitaPagamento.Online => localizzatore.Traduci("Pagamento online"),
+            DvCms.Domain.Negozio.ModalitaPagamento.Bonifico => localizzatore.Traduci("Bonifico bancario"),
+            DvCms.Domain.Negozio.ModalitaPagamento.Contrassegno => localizzatore.Traduci("Contrassegno"),
+            _ => modalita.ToString(),
         };
     }
 }

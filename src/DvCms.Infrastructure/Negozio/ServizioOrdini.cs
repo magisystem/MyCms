@@ -22,15 +22,19 @@ public sealed partial class ServizioOrdini : IServizioOrdini
     private readonly IServizioCarrello _carrello;
     private readonly IServizioGiacenze _giacenze;
     private readonly IServizioAudit _audit;
+    private readonly NotificheOrdine _notifiche;
+    private readonly OpzioniNegozio _opzioni;
     private readonly TimeProvider _orologio;
 
-    public ServizioOrdini(ContestoDatabase contesto, IContestoTenant tenant, IServizioCarrello carrello, IServizioGiacenze giacenze, IServizioAudit audit, TimeProvider orologio)
+    public ServizioOrdini(ContestoDatabase contesto, IContestoTenant tenant, IServizioCarrello carrello, IServizioGiacenze giacenze, IServizioAudit audit, NotificheOrdine notifiche, OpzioniNegozio opzioni, TimeProvider orologio)
     {
         _contesto = contesto;
         _tenant = tenant;
         _carrello = carrello;
         _giacenze = giacenze;
         _audit = audit;
+        _notifiche = notifiche;
+        _opzioni = opzioni;
         _orologio = orologio;
     }
 
@@ -84,9 +88,26 @@ public sealed partial class ServizioOrdini : IServizioOrdini
             return new EsitoOperazione(CodiceEsito.Conflitto, null, ["Carrello"]);
         }
 
+        var modalita = dati.ModalitaPagamento;
+        if (!Enum.IsDefined(modalita))
+        {
+            return new EsitoOperazione(CodiceEsito.DatiNonValidi, null, ["ModalitaPagamento"]);
+        }
+
         var spedizione = CalcolatoreTotali.CalcolaSpedizione(metodo.TariffaLorda);
-        var totali = CalcolatoreTotali.Somma(
-            [.. vista.Righe.Select(r => CalcolatoreTotali.CalcolaRiga(r.PrezzoUnitarioLordo, r.Quantita, r.Aliquota)), spedizione]);
+        var righeCalcolate = vista.Righe.Select(r => CalcolatoreTotali.CalcolaRiga(r.PrezzoUnitarioLordo, r.Quantita, r.Aliquota)).ToList();
+        var senzaCommissione = CalcolatoreTotali.Somma([.. righeCalcolate, spedizione]);
+
+        // Bonifico e contrassegno solo se il tenant li offre; il contrassegno aggiunge la sua commissione ai totali (calcolata qui, mai dal cliente).
+        var offline = await LeggiPagamentiOfflineAsync(idSito, annullamento);
+        var preventivo = PreventivoPagamento.Calcola(offline, modalita, metodo.Tipo, metodo.Area, senzaCommissione.Lordo);
+        if (!preventivo.Disponibile)
+        {
+            return new EsitoOperazione(CodiceEsito.DatiNonValidi, null, ["ModalitaPagamento"]);
+        }
+
+        var commissione = CalcolatoreTotali.CalcolaCommissione(preventivo.Commissione);
+        var totali = CalcolatoreTotali.Somma([.. righeCalcolate, spedizione, commissione]);
         if (totali.Lordo != dati.TotaleAtteso)
         {
             return new EsitoOperazione(CodiceEsito.Conflitto, null, ["Totale"]);
@@ -100,7 +121,8 @@ public sealed partial class ServizioOrdini : IServizioOrdini
             IdTenant = idTenant,
             IdSito = idSito,
             IdUtenza = account.Id,
-            Stato = StatoOrdine.InAttesaDiPagamento,
+            Stato = modalita == ModalitaPagamento.Contrassegno ? StatoOrdine.DaSpedireContrassegno : StatoOrdine.InAttesaDiPagamento,
+            ModalitaPagamento = modalita,
             CodiceLingua = lingueSito.FirstOrDefault(l => string.Equals(l.Codice, codiceLingua, StringComparison.OrdinalIgnoreCase))?.Codice
                 ?? lingueSito.FirstOrDefault(l => l.Predefinita)?.Codice
                 ?? "it",
@@ -114,6 +136,9 @@ public sealed partial class ServizioOrdini : IServizioOrdini
             SpedizioneLorda = spedizione.Lordo,
             SpedizioneImponibile = spedizione.Imponibile,
             SpedizioneIva = spedizione.Iva,
+            CommissioneLorda = commissione.Lordo,
+            CommissioneImponibile = commissione.Imponibile,
+            CommissioneIva = commissione.Iva,
             EmailAcquirente = account.Email,
             NomeAcquirente = account.NomeVisualizzato,
             Destinatario = indirizzo?.Destinatario,
@@ -142,8 +167,14 @@ public sealed partial class ServizioOrdini : IServizioOrdini
         await _contesto.Siti.Where(s => s.Id == idSito).ExecuteUpdateAsync(s => s.SetProperty(x => x.UltimoNumeroOrdine, x => x.UltimoNumeroOrdine + 1), annullamento);
         ordine.Numero = await _contesto.Siti.AsNoTracking().Where(s => s.Id == idSito).Select(s => s.UltimoNumeroOrdine).SingleAsync(annullamento);
 
-        // Prenotazione atomica della giacenza gestita (15 minuti). Se manca anche una sola quantità non nasce nessun ordine.
-        var scade = adesso.AddMinutes(PrenotazioneGiacenza.DurataMinuti);
+        // Prenotazione atomica della giacenza gestita. Dura 15 minuti per il pagamento online, i giorni impostati dal tenant per il bonifico,
+        // e finché l'ordine non si spedisce o si annulla per il contrassegno. Se manca anche una sola quantità non nasce nessun ordine.
+        var scade = modalita switch
+        {
+            ModalitaPagamento.Bonifico => adesso.AddDays(offline.GiorniPerPagare),
+            ModalitaPagamento.Contrassegno => PrenotazioneGiacenza.SenzaScadenza,
+            _ => adesso.AddMinutes(PrenotazioneGiacenza.DurataMinuti),
+        };
         var prenotazione = await OperazioniGiacenza.PrenotaAsync(
             _contesto,
             ordine,
@@ -160,7 +191,7 @@ public sealed partial class ServizioOrdini : IServizioOrdini
             return new EsitoOperazione(CodiceEsito.Conflitto, null, [.. mancanti]);
         }
 
-        ordine.PrenotazioneScadeIlUtc = prenotazione.Prenotate > 0 ? scade : null;
+        ordine.PrenotazioneScadeIlUtc = prenotazione.Prenotate > 0 && modalita != ModalitaPagamento.Contrassegno ? scade : null;
         _contesto.Ordini.Add(ordine);
         var posizione = 0;
         foreach (var (vistaRiga, calcolata) in vista.Righe.Zip(totali.Righe))
@@ -186,6 +217,19 @@ public sealed partial class ServizioOrdini : IServizioOrdini
         }
 
         await _contesto.SaveChangesAsync(annullamento);
+
+        // Con un pagamento manuale il cliente riceve subito le istruzioni e il tenant l'avviso: nella stessa transazione dell'ordine (o tutto o niente).
+        if (modalita != ModalitaPagamento.Online)
+        {
+            await _notifiche.AccodaOrdineRicevutoAsync(ordine, offline, annullamento);
+            if (_opzioni.AvvisoNuovoOrdineAmministratori)
+            {
+                await _notifiche.AccodaAvvisoAmministratoriAsync(ordine, annullamento);
+            }
+
+            await _contesto.SaveChangesAsync(annullamento);
+        }
+
         await transazione.CommitAsync(annullamento);
 
         await _audit.RegistraAsync(
@@ -194,7 +238,7 @@ public sealed partial class ServizioOrdini : IServizioOrdini
             RegistroAudit.EsitoRiuscito,
             idTenant,
             account.Id,
-            $"numero {ordine.Numero}, {vista.Righe.Count} righe, totale {ordine.TotaleLordo:0.00} {ordine.Valuta}",
+            $"numero {ordine.Numero}, {vista.Righe.Count} righe, totale {ordine.TotaleLordo:0.00} {ordine.Valuta}, pagamento {modalita}",
             annullamento);
         return new EsitoOperazione(CodiceEsito.Riuscito, ordine.Id);
     }
@@ -237,7 +281,7 @@ public sealed partial class ServizioOrdini : IServizioOrdini
             return new EsitoOperazione(CodiceEsito.NonTrovato);
         }
 
-        if (!TransizioniOrdine.AnnullabileDalCliente(ordine.Stato) || !TransizioniOrdine.Consentita(ordine.Stato, StatoOrdine.Annullato, ordine.TipoSpedizione))
+        if (!TransizioniOrdine.AnnullabileDalCliente(ordine.Stato) || !TransizioniOrdine.Consentita(ordine.Stato, StatoOrdine.Annullato, ordine.TipoSpedizione, ordine.ModalitaPagamento))
         {
             return new EsitoOperazione(CodiceEsito.NonConsentito);
         }
@@ -287,12 +331,143 @@ public sealed partial class ServizioOrdini : IServizioOrdini
 
     public async Task<EsitoOperazione> SegnaEvasoAsync(Guid idAttore, Guid idOrdine, CancellationToken annullamento)
     {
+        var attore = await TrovaAttoreAmministrazioneAsync(idAttore, annullamento);
+        if (attore is null)
+        {
+            return new EsitoOperazione(CodiceEsito.NonAutorizzato);
+        }
+
         var idTenant = _tenant.IdTenant;
-        var attore = await _contesto.Utenze.IgnoreQueryFilters().AsNoTracking().SingleOrDefaultAsync(
-            candidata => candidata.Id == idAttore
-                && candidata.Stato == StatoUtenza.Attiva
-                && (candidata.Ruolo == RuoloUtenza.PlatformAdmin || (candidata.Ruolo == RuoloUtenza.TenantAdmin && candidata.IdTenant == idTenant)),
-            annullamento);
+        var idSito = _tenant.IdSito;
+        var ordine = await _contesto.Ordini.AsNoTracking().SingleOrDefaultAsync(o => o.Id == idOrdine && o.IdSito == idSito, annullamento);
+        if (ordine is null)
+        {
+            return new EsitoOperazione(CodiceEsito.NonTrovato);
+        }
+
+        var destinazione = ordine.TipoSpedizione == TipoMetodoSpedizione.Zona ? StatoOrdine.Spedito : StatoOrdine.Ritirato;
+        var daContrassegno = ordine.Stato == StatoOrdine.DaSpedireContrassegno;
+        if ((ordine.Stato != StatoOrdine.Pagato && !daContrassegno) || !TransizioniOrdine.Consentita(ordine.Stato, destinazione, ordine.TipoSpedizione, ordine.ModalitaPagamento))
+        {
+            return new EsitoOperazione(CodiceEsito.NonConsentito);
+        }
+
+        var adesso = _orologio.GetUtcNow().UtcDateTime;
+        var partenza = ordine.Stato;
+        await using var transazione = await _contesto.Database.BeginTransactionAsync(annullamento);
+        var cambiati = await _contesto.Ordini
+            .Where(o => o.Id == idOrdine && o.Stato == partenza)
+            .ExecuteUpdateAsync(s => s.SetProperty(o => o.Stato, destinazione).SetProperty(o => o.AggiornatoIlUtc, adesso), annullamento);
+        if (cambiati == 0)
+        {
+            return new EsitoOperazione(CodiceEsito.Conflitto);
+        }
+
+        // Il contrassegno trattiene la merce fino alla spedizione: ora esce dal magazzino.
+        if (daContrassegno && !await OperazioniGiacenza.ConfermaAsync(_contesto, idTenant, idSito, idOrdine, adesso, () => Identificativi.Nuovo(_orologio), annullamento))
+        {
+            await transazione.RollbackAsync(annullamento);
+            _contesto.ChangeTracker.Clear();
+            return new EsitoOperazione(CodiceEsito.Conflitto);
+        }
+
+        await _contesto.SaveChangesAsync(annullamento);
+        await transazione.CommitAsync(annullamento);
+        await _audit.RegistraAsync(AzioniAudit.EvasioneOrdine, $"Ordine:{idOrdine}", RegistroAudit.EsitoRiuscito, idTenant, attore.Id, $"numero {ordine.Numero}: {destinazione}", annullamento);
+        return new EsitoOperazione(CodiceEsito.Riuscito, idOrdine);
+    }
+
+    public async Task<EsitoOperazione> SegnaPagatoAsync(Guid idAttore, Guid idOrdine, CancellationToken annullamento)
+    {
+        var attore = await TrovaAttoreAmministrazioneAsync(idAttore, annullamento);
+        if (attore is null)
+        {
+            return new EsitoOperazione(CodiceEsito.NonAutorizzato);
+        }
+
+        var idTenant = _tenant.IdTenant;
+        var idSito = _tenant.IdSito;
+        var ordine = await _contesto.Ordini.AsNoTracking().SingleOrDefaultAsync(o => o.Id == idOrdine && o.IdSito == idSito, annullamento);
+        if (ordine is null)
+        {
+            return new EsitoOperazione(CodiceEsito.NonTrovato);
+        }
+
+        if (ordine.ModalitaPagamento != ModalitaPagamento.Bonifico || !TransizioniOrdine.Consentita(ordine.Stato, StatoOrdine.Pagato, ordine.TipoSpedizione, ordine.ModalitaPagamento))
+        {
+            return new EsitoOperazione(CodiceEsito.NonConsentito);
+        }
+
+        var adesso = _orologio.GetUtcNow().UtcDateTime;
+        await using var transazione = await _contesto.Database.BeginTransactionAsync(annullamento);
+        var cambiati = await _contesto.Ordini
+            .Where(o => o.Id == idOrdine && o.Stato == StatoOrdine.InAttesaDiPagamento && o.ModalitaPagamento == ModalitaPagamento.Bonifico)
+            .ExecuteUpdateAsync(s => s.SetProperty(o => o.Stato, StatoOrdine.Pagato).SetProperty(o => o.AggiornatoIlUtc, adesso), annullamento);
+        if (cambiati == 0)
+        {
+            return new EsitoOperazione(CodiceEsito.Conflitto);
+        }
+
+        // La merce prenotata esce dal magazzino; se non è più garantita (prenotazione rilasciata) l'ordine non risulta pagato.
+        if (!await OperazioniGiacenza.ConfermaAsync(_contesto, idTenant, idSito, idOrdine, adesso, () => Identificativi.Nuovo(_orologio), annullamento))
+        {
+            await transazione.RollbackAsync(annullamento);
+            _contesto.ChangeTracker.Clear();
+            return new EsitoOperazione(CodiceEsito.Conflitto);
+        }
+
+        await _notifiche.AccodaConfermaPagamentoAsync(ordine, annullamento);
+        await _contesto.SaveChangesAsync(annullamento);
+        await transazione.CommitAsync(annullamento);
+        await _audit.RegistraAsync(AzioniAudit.PagamentoOfflineRicevuto, $"Ordine:{idOrdine}", RegistroAudit.EsitoRiuscito, idTenant, attore.Id, $"numero {ordine.Numero}: bonifico ricevuto", annullamento);
+        return new EsitoOperazione(CodiceEsito.Riuscito, idOrdine);
+    }
+
+    public async Task<EsitoOperazione> AnnullaAsync(Guid idAttore, Guid idOrdine, CancellationToken annullamento)
+    {
+        var attore = await TrovaAttoreAmministrazioneAsync(idAttore, annullamento);
+        if (attore is null)
+        {
+            return new EsitoOperazione(CodiceEsito.NonAutorizzato);
+        }
+
+        var idTenant = _tenant.IdTenant;
+        var idSito = _tenant.IdSito;
+        var ordine = await _contesto.Ordini.AsNoTracking().SingleOrDefaultAsync(o => o.Id == idOrdine && o.IdSito == idSito, annullamento);
+        if (ordine is null)
+        {
+            return new EsitoOperazione(CodiceEsito.NonTrovato);
+        }
+
+        // Solo i pagamenti manuali non ancora incassati: un ordine online ha un provider che può aver incassato, e si chiude da solo.
+        var annullabile = ordine.ModalitaPagamento != ModalitaPagamento.Online
+            && ordine.Stato is StatoOrdine.InAttesaDiPagamento or StatoOrdine.DaSpedireContrassegno
+            && TransizioniOrdine.Consentita(ordine.Stato, StatoOrdine.Annullato, ordine.TipoSpedizione, ordine.ModalitaPagamento);
+        if (!annullabile)
+        {
+            return new EsitoOperazione(CodiceEsito.NonConsentito);
+        }
+
+        var adesso = _orologio.GetUtcNow().UtcDateTime;
+        var partenza = ordine.Stato;
+        await using var transazione = await _contesto.Database.BeginTransactionAsync(annullamento);
+        var cambiati = await _contesto.Ordini
+            .Where(o => o.Id == idOrdine && o.Stato == partenza)
+            .ExecuteUpdateAsync(s => s.SetProperty(o => o.Stato, StatoOrdine.Annullato).SetProperty(o => o.AggiornatoIlUtc, adesso), annullamento);
+        if (cambiati == 0)
+        {
+            return new EsitoOperazione(CodiceEsito.Conflitto);
+        }
+
+        await OperazioniGiacenza.RilasciaAsync(_contesto, idTenant, idOrdine, adesso, annullamento);
+        await transazione.CommitAsync(annullamento);
+        await _audit.RegistraAsync(AzioniAudit.AnnullamentoOrdineAmministrazione, $"Ordine:{idOrdine}", RegistroAudit.EsitoRiuscito, idTenant, attore.Id, $"numero {ordine.Numero}, da {partenza}", annullamento);
+        return new EsitoOperazione(CodiceEsito.Riuscito, idOrdine);
+    }
+
+    public async Task<EsitoOperazione> SegnaConsegnaNonRiuscitaAsync(Guid idAttore, Guid idOrdine, CancellationToken annullamento)
+    {
+        var attore = await TrovaAttoreAmministrazioneAsync(idAttore, annullamento);
         if (attore is null)
         {
             return new EsitoOperazione(CodiceEsito.NonAutorizzato);
@@ -305,27 +480,42 @@ public sealed partial class ServizioOrdini : IServizioOrdini
             return new EsitoOperazione(CodiceEsito.NonTrovato);
         }
 
-        var destinazione = ordine.TipoSpedizione == TipoMetodoSpedizione.Zona ? StatoOrdine.Spedito : StatoOrdine.Ritirato;
-        if (!TransizioniOrdine.Consentita(ordine.Stato, destinazione, ordine.TipoSpedizione))
+        if (ordine.ModalitaPagamento != ModalitaPagamento.Contrassegno || ordine.Stato != StatoOrdine.Spedito || !TransizioniOrdine.Consentita(ordine.Stato, StatoOrdine.Annullato, ordine.TipoSpedizione, ordine.ModalitaPagamento))
         {
             return new EsitoOperazione(CodiceEsito.NonConsentito);
         }
 
         var adesso = _orologio.GetUtcNow().UtcDateTime;
         var cambiati = await _contesto.Ordini
-            .Where(o => o.Id == idOrdine && o.Stato == StatoOrdine.Pagato)
-            .ExecuteUpdateAsync(s => s.SetProperty(o => o.Stato, destinazione).SetProperty(o => o.AggiornatoIlUtc, adesso), annullamento);
+            .Where(o => o.Id == idOrdine && o.Stato == StatoOrdine.Spedito && o.ModalitaPagamento == ModalitaPagamento.Contrassegno)
+            .ExecuteUpdateAsync(s => s.SetProperty(o => o.Stato, StatoOrdine.Annullato).SetProperty(o => o.AggiornatoIlUtc, adesso), annullamento);
         if (cambiati == 0)
         {
             return new EsitoOperazione(CodiceEsito.Conflitto);
         }
 
-        await _audit.RegistraAsync(AzioniAudit.EvasioneOrdine, $"Ordine:{idOrdine}", RegistroAudit.EsitoRiuscito, idTenant, attore.Id, $"numero {ordine.Numero}: {destinazione}", annullamento);
+        await _audit.RegistraAsync(AzioniAudit.ConsegnaNonRiuscita, $"Ordine:{idOrdine}", RegistroAudit.EsitoRiuscito, _tenant.IdTenant, attore.Id, $"numero {ordine.Numero}: consegna in contrassegno non riuscita", annullamento);
         return new EsitoOperazione(CodiceEsito.Riuscito, idOrdine);
     }
 
+    private Task<Utenza?> TrovaAttoreAmministrazioneAsync(Guid idAttore, CancellationToken annullamento)
+    {
+        var idTenant = _tenant.IdTenant;
+        return _contesto.Utenze.IgnoreQueryFilters().AsNoTracking().SingleOrDefaultAsync(
+            candidata => candidata.Id == idAttore
+                && candidata.Stato == StatoUtenza.Attiva
+                && (candidata.Ruolo == RuoloUtenza.PlatformAdmin || (candidata.Ruolo == RuoloUtenza.TenantAdmin && candidata.IdTenant == idTenant)),
+            annullamento);
+    }
+
+    private async Task<ImpostazioniPagamentoOffline> LeggiPagamentiOfflineAsync(Guid idSito, CancellationToken annullamento)
+    {
+        var riga = await _contesto.ImpostazioniPagamentoOfflineSiti.AsNoTracking().SingleOrDefaultAsync(i => i.IdSito == idSito, annullamento);
+        return riga is null ? ImpostazioniPagamentoOffline.Spente : ServizioPagamentiOffline.Vista(riga);
+    }
+
     private static IQueryable<RiepilogoOrdine> Riepiloghi(IQueryable<Ordine> ordini) =>
-        ordini.OrderByDescending(o => o.Numero).Select(o => new RiepilogoOrdine(o.Id, o.Numero, o.Stato, o.TotaleLordo, o.Valuta, o.CreatoIlUtc, o.EmailAcquirente));
+        ordini.OrderByDescending(o => o.Numero).Select(o => new RiepilogoOrdine(o.Id, o.Numero, o.Stato, o.TotaleLordo, o.Valuta, o.CreatoIlUtc, o.EmailAcquirente, o.ModalitaPagamento));
 
     private async Task<OrdineVista> VistaAsync(Ordine o, CancellationToken annullamento)
     {
@@ -357,7 +547,11 @@ public sealed partial class ServizioOrdini : IServizioOrdini
             o.AggiornatoIlUtc,
             o.PrenotazioneScadeIlUtc,
             [.. righe.Select(r => new RigaOrdineVista(r.Posizione, r.Sku, r.NomeProdotto, r.EtichettaVariante, r.Quantita, r.PrezzoUnitarioLordo, r.AliquotaIva, r.Lordo, r.Imponibile, r.Iva))],
-            o.GiacenzaReinseritaIlUtc);
+            o.GiacenzaReinseritaIlUtc,
+            o.ModalitaPagamento,
+            o.CommissioneLorda,
+            o.CommissioneImponibile,
+            o.CommissioneIva);
     }
 
     private sealed record Indirizzo(string Destinatario, string Riga1, string? Riga2, string Cap, string Citta, string Paese);

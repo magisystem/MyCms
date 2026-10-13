@@ -1,0 +1,114 @@
+@page "/admin/negozio/pagamenti"
+@model DvCms.Web.Pages.Admin.Negozio.Pagamenti.IndexModel
+@using DvCms.Domain.Negozio
+@{
+    ViewData["Titolo"] = _L["Pagamenti manuali"];
+    var m = Model.Modulo;
+}
+@if (Model.Messaggio is not null)
+{
+    <div class="alert alert-success" role="status">@Model.Messaggio</div>
+}
+@if (Model.ErroreDaMostrare is not null)
+{
+    <div class="alert alert-danger" role="alert">
+        @Model.ErroreDaMostrare
+        @if (Model.CampiNonValidi.Count > 0)
+        {
+            <ul class="mb-0">
+                @foreach (var campo in Model.CampiNonValidi)
+                {
+                    <li>@Model.NomeCampo(campo)</li>
+                }
+            </ul>
+        }
+    </div>
+}
+<p class="text-secondary">@_L["Oltre ai pagamenti online (PayPal, Nexi) puoi offrire il bonifico bancario e il contrassegno. Il cliente sceglie alla cassa tra quelli attivi."]</p>
+
+<form method="post" asp-page-handler="Salva" autocomplete="off" novalidate>
+    <input type="hidden" name="TokenConcorrenza" value="@m.TokenConcorrenza" />
+
+    <div class="card mb-3">
+        <div class="card-header">
+            <h3 class="card-title">@_L["Bonifico bancario"]</h3>
+            <div class="card-actions">
+                <label class="form-check form-switch m-0">
+                    <input type="hidden" name="BonificoAttivo" value="false" />
+                    <input class="form-check-input" type="checkbox" name="BonificoAttivo" value="true" checked="@m.BonificoAttivo" />
+                    <span class="form-check-label">@_L["Attivo"]</span>
+                </label>
+            </div>
+        </div>
+        <div class="card-body row g-3">
+            <p class="text-secondary mb-0">@_L["L'ordine resta in attesa: quando il bonifico arriva lo segni come pagato dal dettaglio dell'ordine. Passati i giorni indicati l'ordine si annulla e la merce prenotata torna disponibile (solo per gli articoli con giacenza gestita)."]</p>
+            <div class="col-md-6">
+                <label class="form-label" for="intestatario">@_L["Intestatario del conto"]</label>
+                <input class="form-control @(Model.NonValido("Intestatario") ? "is-invalid" : null)" id="intestatario" name="Intestatario" maxlength="@ImpostazioniPagamentoOfflineSito.LunghezzaMassimaIntestatario" value="@m.Intestatario" />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="iban">@_L["IBAN"]</label>
+                <input class="form-control @(Model.NonValido("Iban") ? "is-invalid" : null)" id="iban" name="Iban" maxlength="42" value="@m.Iban" autocapitalize="characters" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" for="bic">@_L["BIC/SWIFT (facoltativo)"]</label>
+                <input class="form-control @(Model.NonValido("Bic") ? "is-invalid" : null)" id="bic" name="Bic" maxlength="11" value="@m.Bic" autocapitalize="characters" />
+            </div>
+            <div class="col-md-5">
+                <label class="form-label" for="banca">@_L["Nome della banca (facoltativo)"]</label>
+                <input class="form-control @(Model.NonValido("NomeBanca") ? "is-invalid" : null)" id="banca" name="NomeBanca" maxlength="@ImpostazioniPagamentoOfflineSito.LunghezzaMassimaBanca" value="@m.NomeBanca" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" for="giorni">@_L["Giorni per pagare"]</label>
+                <input class="form-control @(Model.NonValido("GiorniPerPagare") ? "is-invalid" : null)" id="giorni" name="GiorniPerPagare" inputmode="numeric" value="@m.GiorniPerPagare" />
+            </div>
+            <div class="col-12">
+                <label class="form-label" for="istruzioniBonifico">@_L["Istruzioni per il cliente (facoltative)"]</label>
+                <textarea class="form-control @(Model.NonValido("IstruzioniBonifico") ? "is-invalid" : null)" id="istruzioniBonifico" name="IstruzioniBonifico" rows="3" maxlength="@ImpostazioniPagamentoOfflineSito.LunghezzaMassimaIstruzioni">@m.IstruzioniBonifico</textarea>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header">
+            <h3 class="card-title">@_L["Contrassegno"]</h3>
+            <div class="card-actions">
+                <label class="form-check form-switch m-0">
+                    <input type="hidden" name="ContrassegnoAttivo" value="false" />
+                    <input class="form-check-input" type="checkbox" name="ContrassegnoAttivo" value="true" checked="@m.ContrassegnoAttivo" />
+                    <span class="form-check-label">@_L["Attivo"]</span>
+                </label>
+            </div>
+        </div>
+        <div class="card-body row g-3">
+            <p class="text-secondary mb-0">@_L["Il cliente paga al corriere alla consegna. Si offre solo per le consegne in Italia, non per il ritiro in sede. La commissione si somma al totale dell'ordine, comprende l'IVA con l'aliquota ordinaria ed è: parte fissa + percentuale del totale (articoli e spedizione); zero se il totale raggiunge la soglia di gratuità. Fuori dai limiti di totale il contrassegno non è offerto."]</p>
+            <div class="col-md-3">
+                <label class="form-label" for="fissa">@_L["Commissione fissa (EUR, IVA inclusa)"]</label>
+                <input class="form-control @(Model.NonValido("CommissioneFissa") ? "is-invalid" : null)" id="fissa" name="CommissioneFissa" inputmode="decimal" value="@m.CommissioneFissa" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" for="percentuale">@_L["Commissione percentuale (%)"]</label>
+                <input class="form-control @(Model.NonValido("CommissionePercentuale") ? "is-invalid" : null)" id="percentuale" name="CommissionePercentuale" inputmode="decimal" value="@m.CommissionePercentuale" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" for="gratis">@_L["Gratis dal totale di (EUR, facoltativo)"]</label>
+                <input class="form-control @(Model.NonValido("CommissioneGratisSopra") ? "is-invalid" : null)" id="gratis" name="CommissioneGratisSopra" inputmode="decimal" value="@m.CommissioneGratisSopra" />
+            </div>
+            <div class="col-md-3"></div>
+            <div class="col-md-3">
+                <label class="form-label" for="minimo">@_L["Totale minimo (EUR, facoltativo)"]</label>
+                <input class="form-control @(Model.NonValido("OrdineMinimo") ? "is-invalid" : null)" id="minimo" name="OrdineMinimo" inputmode="decimal" value="@m.OrdineMinimo" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" for="massimo">@_L["Totale massimo (EUR, facoltativo)"]</label>
+                <input class="form-control @(Model.NonValido("OrdineMassimo") ? "is-invalid" : null)" id="massimo" name="OrdineMassimo" inputmode="decimal" value="@m.OrdineMassimo" />
+            </div>
+            <div class="col-12">
+                <label class="form-label" for="istruzioniContrassegno">@_L["Istruzioni per il cliente (facoltative)"]</label>
+                <textarea class="form-control @(Model.NonValido("IstruzioniContrassegno") ? "is-invalid" : null)" id="istruzioniContrassegno" name="IstruzioniContrassegno" rows="3" maxlength="@ImpostazioniPagamentoOfflineSito.LunghezzaMassimaIstruzioni">@m.IstruzioniContrassegno</textarea>
+            </div>
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary">@_L["Salva"]</button>
+</form>

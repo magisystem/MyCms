@@ -21,6 +21,12 @@ public enum StatoOrdine
 
     /// <summary>Interamente rimborsato (A5): la somma dei rimborsi completati è pari al totale. Finale. I rimborsi parziali lasciano lo stato com'è.</summary>
     Rimborsato = 7,
+
+    /// <summary>
+    /// Ordine con pagamento alla consegna (contrassegno, ADR-0023): accettato, merce trattenuta, da spedire. L'incasso lo fa il corriere alla
+    /// consegna e non passa da noi.
+    /// </summary>
+    DaSpedireContrassegno = 8,
 }
 
 /// <summary>
@@ -34,14 +40,27 @@ public static class TransizioniOrdine
         StatoOrdine.InAttesaDiPagamento => [StatoOrdine.Pagato, StatoOrdine.PagamentoFallito, StatoOrdine.Annullato],
         StatoOrdine.PagamentoFallito => [StatoOrdine.InAttesaDiPagamento, StatoOrdine.Annullato],
         StatoOrdine.Pagato => [StatoOrdine.Spedito, StatoOrdine.Ritirato, StatoOrdine.Rimborsato],
-        StatoOrdine.Spedito or StatoOrdine.Ritirato => [StatoOrdine.Rimborsato],
+        StatoOrdine.DaSpedireContrassegno => [StatoOrdine.Spedito, StatoOrdine.Annullato],
+
+        // Annullato da Spedito vale solo per il contrassegno (consegna non riuscita): vedi Consentita.
+        StatoOrdine.Spedito => [StatoOrdine.Rimborsato, StatoOrdine.Annullato],
+        StatoOrdine.Ritirato => [StatoOrdine.Rimborsato],
         _ => [],
     };
 
-    /// <summary>Vero se il passaggio è previsto. <paramref name="tipoSpedizione"/> distingue <c>Spedito</c> (solo a zona) da <c>Ritirato</c> (solo ritiro).</summary>
-    public static bool Consentita(StatoOrdine da, StatoOrdine a, TipoMetodoSpedizione tipoSpedizione)
+    /// <summary>
+    /// Vero se il passaggio è previsto. <paramref name="tipoSpedizione"/> distingue <c>Spedito</c> (solo a zona) da <c>Ritirato</c> (solo ritiro);
+    /// <paramref name="modalita"/> riserva al contrassegno lo stato <c>DaSpedireContrassegno</c> e la consegna non riuscita (<c>Spedito</c> → <c>Annullato</c>),
+    /// e ai pagamenti online il <c>PagamentoFallito</c>.
+    /// </summary>
+    public static bool Consentita(StatoOrdine da, StatoOrdine a, TipoMetodoSpedizione tipoSpedizione, ModalitaPagamento modalita = ModalitaPagamento.Online)
     {
         if (!Successivi(da).Contains(a))
+        {
+            return false;
+        }
+
+        if (da == StatoOrdine.DaSpedireContrassegno && modalita != ModalitaPagamento.Contrassegno)
         {
             return false;
         }
@@ -50,6 +69,8 @@ public static class TransizioniOrdine
         {
             StatoOrdine.Spedito => tipoSpedizione == TipoMetodoSpedizione.Zona,
             StatoOrdine.Ritirato => tipoSpedizione == TipoMetodoSpedizione.Ritiro,
+            StatoOrdine.PagamentoFallito => modalita == ModalitaPagamento.Online,
+            StatoOrdine.Annullato when da == StatoOrdine.Spedito => modalita == ModalitaPagamento.Contrassegno,
             _ => true,
         };
     }
@@ -57,7 +78,7 @@ public static class TransizioniOrdine
     public static bool EFinale(StatoOrdine stato) => Successivi(stato).Count == 0;
 
     /// <summary>Stati in cui il cliente può ancora annullare l'ordine da solo (nessun pagamento incassato).</summary>
-    public static bool AnnullabileDalCliente(StatoOrdine stato) => stato is StatoOrdine.InAttesaDiPagamento or StatoOrdine.PagamentoFallito;
+    public static bool AnnullabileDalCliente(StatoOrdine stato) => stato is StatoOrdine.InAttesaDiPagamento or StatoOrdine.PagamentoFallito or StatoOrdine.DaSpedireContrassegno;
 }
 
 /// <summary>
@@ -86,6 +107,9 @@ public class Ordine
 
     public StatoOrdine Stato { get; set; } = StatoOrdine.InAttesaDiPagamento;
 
+    /// <summary>Come paga il cliente (ADR-0023): online con un provider, bonifico o contrassegno. Si sceglie alla cassa e non cambia.</summary>
+    public ModalitaPagamento ModalitaPagamento { get; set; } = ModalitaPagamento.Online;
+
     /// <summary>Lingua in cui il cliente ha acquistato (di una lingua abilitata del sito): è quella dei nomi nello snapshot e delle email sull'ordine.</summary>
     public string CodiceLingua { get; set; } = "it";
 
@@ -112,6 +136,13 @@ public class Ordine
     public decimal SpedizioneImponibile { get; set; }
 
     public decimal SpedizioneIva { get; set; }
+
+    /// <summary>Commissione del contrassegno (ADR-0023), IVA ordinaria scorporata come la spedizione; zero per gli altri pagamenti. Fa parte dei totali.</summary>
+    public decimal CommissioneLorda { get; set; }
+
+    public decimal CommissioneImponibile { get; set; }
+
+    public decimal CommissioneIva { get; set; }
 
     // Copia di chi ordina.
     public string EmailAcquirente { get; set; } = string.Empty;

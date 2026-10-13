@@ -187,6 +187,29 @@ internal sealed class ContestoNegozio : IAsyncDisposable
     }
 
 
+    public const string IbanProva = "IT60X0542811101000000123456";
+
+    public Task<T> ComeOfflineAsync<T>(DatiProva.TenantCreato tenant, Func<IServizioPagamentiOffline, Task<T>> operazione) => InAsync<IServizioPagamentiOffline, T>(tenant, operazione);
+
+    /// <summary>Impostazioni valide con bonifico (7 giorni) e contrassegno (4,00 fissi) attivi; le variazioni si passano con <c>with</c>.</summary>
+    public static ImpostazioniPagamentoOffline ImpostazioniOffline { get; } = new(
+        true, "Negozio Srl", IbanProva, "BCITITMM", "Banca di Prova", 7, "Indica l'ordine nella causale.",
+        true, 4.00m, 0m, null, null, null, "Tieni pronto il contante.");
+
+    /// <summary>Salva le impostazioni dei pagamenti manuali come amministratore del tenant e verifica che siano accettate.</summary>
+    public async Task ConfiguraOfflineAsync(DatiProva.TenantCreato tenant, ImpostazioniPagamentoOffline? dati = null)
+    {
+        var scheda = await InAsync<IServizioPagamentiOffline, SchedaPagamentoOffline>(tenant, s => s.LeggiAsync(Attore(tenant), Ct));
+        var esito = await InAsync<IServizioPagamentiOffline, EsitoOperazione>(tenant, s => s.SalvaAsync(Attore(tenant), dati ?? ImpostazioniOffline, scheda.TokenConcorrenza, Ct));
+        Assert.True(esito.Riuscito, $"{esito.Codice} {string.Join(',', esito.CampiNonValidi ?? [])}");
+    }
+
+    public async Task<List<DvCms.Domain.Accessi.RegistroAudit>> AuditAsync(string azione)
+    {
+        await using var ambito = Web.Fabbrica.Services.CreateAsyncScope();
+        return await ambito.ServiceProvider.GetRequiredService<ContestoDatabase>().RegistroAudit.IgnoreQueryFilters().AsNoTracking().Where(v => v.Azione == azione).ToListAsync(Ct);
+    }
+
     public Task<T> ComeGiacenzeAsync<T>(DatiProva.TenantCreato tenant, Func<IServizioGiacenze, Task<T>> operazione) => InAsync<IServizioGiacenze, T>(tenant, operazione);
 
     public async Task ImpostaGiacenzaAsync(DatiProva.TenantCreato tenant, Guid idVariante, int quantita)

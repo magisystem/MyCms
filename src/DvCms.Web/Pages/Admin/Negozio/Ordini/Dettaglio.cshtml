@@ -42,6 +42,14 @@
                             <td>22%</td>
                             <td>@Importo(o.SpedizioneLorda)</td>
                         </tr>
+                        @if (o.CommissioneLorda > 0)
+                        {
+                            <tr>
+                                <td colspan="3">@_L["Commissione contrassegno"]</td>
+                                <td>22%</td>
+                                <td>@Importo(o.CommissioneLorda)</td>
+                            </tr>
+                        }
                     </tbody>
                     <tfoot>
                         <tr><td colspan="4">@_L["Imponibile"]</td><td>@Importo(o.TotaleImponibile)</td></tr>
@@ -56,6 +64,7 @@
         <div class="card">
             <div class="card-body">
                 <p><strong>@_L["Stato"]</strong><br />@Model.Stato(o.Stato)</p>
+                <p><strong>@_L["Pagamento"]</strong><br />@Model.Modalita(o.ModalitaPagamento)</p>
                 <p><strong>@_L["Cliente"]</strong><br />@o.NomeAcquirente<br />@o.EmailAcquirente</p>
                 <details>
                     <summary class="text-secondary">@_L["Dati personali dell'acquirente"]</summary>
@@ -85,11 +94,47 @@
                 }
             </div>
         </div>
-        @if (o.Stato == StatoOrdine.Pagato)
+        @if (o.Stato is StatoOrdine.Pagato or StatoOrdine.DaSpedireContrassegno)
         {
             <form method="post" asp-page-handler="Evaso" asp-route-id="@o.Id" class="mt-3">
                 <button type="submit" class="btn btn-primary">@(o.TipoSpedizione == TipoMetodoSpedizione.Ritiro ? _L["Segna come ritirato"] : _L["Segna come spedito"])</button>
             </form>
+        }
+        @if (o.ModalitaPagamento == ModalitaPagamento.Bonifico && o.Stato == StatoOrdine.InAttesaDiPagamento)
+        {
+            <div class="alert alert-info mt-3" role="status">
+                @_L["In attesa del bonifico del cliente."]
+                @if (o.PrenotazioneScadeIlUtc is { } scadenzaBonifico)
+                {
+                    @:@_L["Scade il"] @scadenzaBonifico.ToString("yyyy-MM-dd") UTC.
+                }
+                <form method="post" asp-page-handler="Pagato" asp-route-id="@o.Id" class="mt-2">
+                    <button type="submit" class="btn btn-primary">@_L["Bonifico ricevuto: segna come pagato"]</button>
+                </form>
+            </div>
+        }
+        @if (o.ModalitaPagamento == ModalitaPagamento.Contrassegno && o.Stato == StatoOrdine.DaSpedireContrassegno)
+        {
+            <div class="alert alert-info mt-3" role="status">@_L["Contrassegno: il cliente paga al corriere alla consegna. La merce resta prenotata finché segni l'ordine come spedito."]</div>
+        }
+        @if (o.ModalitaPagamento != ModalitaPagamento.Online && o.Stato is StatoOrdine.InAttesaDiPagamento or StatoOrdine.DaSpedireContrassegno)
+        {
+            <form method="post" asp-page-handler="AnnullaOrdine" asp-route-id="@o.Id" class="mt-2">
+                <button type="submit" class="btn btn-outline-danger">@_L["Annulla l'ordine"]</button>
+            </form>
+        }
+        @if (o.ModalitaPagamento == ModalitaPagamento.Contrassegno && o.Stato == StatoOrdine.Spedito)
+        {
+            <div class="alert alert-info mt-3" role="status">
+                @_L["Contrassegno: l'incasso lo fa il corriere e non passa dal sistema. Se la consegna non riesce (rifiutata, mai ritirata) annulla l'ordine."]
+                <form method="post" asp-page-handler="ConsegnaNonRiuscita" asp-route-id="@o.Id" class="mt-2">
+                    <button type="submit" class="btn btn-outline-danger">@_L["Consegna non riuscita"]</button>
+                </form>
+            </div>
+        }
+        @if (Model.PagamentoManuale && o.Stato is StatoOrdine.Pagato or StatoOrdine.Spedito or StatoOrdine.Ritirato)
+        {
+            <div class="alert alert-secondary mt-3" role="status">@_L["Pagamento fuori dal sistema: gli eventuali rimborsi vanno fatti a mano."]</div>
         }
         @if (Model.Tentativi.Count > 0)
         {

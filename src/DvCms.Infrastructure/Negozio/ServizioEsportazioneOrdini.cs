@@ -103,7 +103,7 @@ public sealed class ServizioEsportazioneOrdini : IServizioEsportazioneOrdini
 
     private static int ScriviOrdini(StringBuilder s, List<Ordine> ordini)
     {
-        Riga(s, "Numero", "DataUtc", "Stato", "Valuta", "TotaleLordo", "TotaleImponibile", "TotaleIva", "Rimborsato", "Spedizione", "SpedizioneLorda", "Email", "Nome", "Destinatario", "Indirizzo1", "Indirizzo2", "Cap", "Citta", "Paese");
+        Riga(s, "Numero", "DataUtc", "Stato", "Valuta", "TotaleLordo", "TotaleImponibile", "TotaleIva", "Rimborsato", "Spedizione", "SpedizioneLorda", "Email", "Nome", "Destinatario", "Indirizzo1", "Indirizzo2", "Cap", "Citta", "Paese", "Pagamento", "CommissioneLorda");
         foreach (var o in ordini)
         {
             Riga(
@@ -125,7 +125,9 @@ public sealed class ServizioEsportazioneOrdini : IServizioEsportazioneOrdini
                 Testo(o.IndirizzoRiga2),
                 Testo(o.Cap),
                 Testo(o.Citta),
-                Testo(o.Paese));
+                Testo(o.Paese),
+                o.ModalitaPagamento.ToString(),
+                Dec(o.CommissioneLorda));
         }
 
         return ordini.Count;
@@ -159,6 +161,13 @@ public sealed class ServizioEsportazioneOrdini : IServizioEsportazioneOrdini
             if (o.SpedizioneLorda > 0)
             {
                 Riga(s, Num(o.Numero), Data(o.CreatoIlUtc), o.Stato.ToString(), "Spedizione", string.Empty, Testo(o.NomeSpedizione), string.Empty, Num(1), Dec(o.SpedizioneLorda), string.Empty, Dec(o.SpedizioneLorda), Dec(o.SpedizioneImponibile), Dec(o.SpedizioneIva), Testo(o.EmailAcquirente));
+                scritte++;
+            }
+
+            // La commissione del contrassegno è una riga a sé, così le righe sommano al totale dell'ordine.
+            if (o.CommissioneLorda > 0)
+            {
+                Riga(s, Num(o.Numero), Data(o.CreatoIlUtc), o.Stato.ToString(), "Commissione", string.Empty, "Contrassegno", string.Empty, Num(1), Dec(o.CommissioneLorda), string.Empty, Dec(o.CommissioneLorda), Dec(o.CommissioneImponibile), Dec(o.CommissioneIva), Testo(o.EmailAcquirente));
                 scritte++;
             }
         }

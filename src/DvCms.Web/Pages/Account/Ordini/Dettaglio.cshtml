@@ -16,6 +16,7 @@
     <p class="errore" role="alert">@Model.Errore</p>
 }
 <p>@_L["Stato"]: <strong>@DvCms.Web.EtichetteOrdine.Stato(Model.Localizzatore, o.Stato)</strong> — @o.CreatoIlUtc.ToString("yyyy-MM-dd HH:mm") UTC</p>
+<p>@_L["Pagamento"]: @DvCms.Web.EtichetteOrdine.Modalita(Model.Localizzatore, o.ModalitaPagamento)</p>
 <table>
     <thead>
         <tr><th>@_L["Articolo"]</th><th>@_L["Prezzo"]</th><th>@_L["Quantità"]</th><th>@_L["Totale"]</th></tr>
@@ -34,6 +35,13 @@
             <td colspan="3">@o.NomeSpedizione</td>
             <td>@Importo(o.SpedizioneLorda)</td>
         </tr>
+        @if (o.CommissioneLorda > 0)
+        {
+            <tr>
+                <td colspan="3">@_L["Commissione contrassegno"]</td>
+                <td>@Importo(o.CommissioneLorda)</td>
+            </tr>
+        }
     </tbody>
     <tfoot>
         <tr><td colspan="3">@_L["Imponibile"]</td><td>@Importo(o.TotaleImponibile)</td></tr>
@@ -61,9 +69,48 @@ else
         @o.Cap @o.Citta (@o.Paese)
     </address>
 }
-@if (o.PrenotazioneScadeIlUtc is { } scade && o.Stato == StatoOrdine.InAttesaDiPagamento)
+@if (o.PrenotazioneScadeIlUtc is { } scade && o.Stato == StatoOrdine.InAttesaDiPagamento && o.ModalitaPagamento == ModalitaPagamento.Online)
 {
     <p>@_L["La merce è riservata per te fino alle"] @scade.ToString("HH:mm") UTC.</p>
+}
+@if (Model.AttendeBonifico)
+{
+    <section>
+        <h2>@_L["Come pagare con bonifico"]</h2>
+        <dl>
+            <dt>@_L["Importo"]</dt><dd>@Importo(o.TotaleLordo)</dd>
+            <dt>@_L["Intestatario"]</dt><dd>@Model.Offline.Intestatario</dd>
+            <dt>IBAN</dt><dd>@(Model.Offline.Iban is null ? null : DvCms.Domain.Negozio.Iban.Formatta(Model.Offline.Iban))</dd>
+            @if (!string.IsNullOrEmpty(Model.Offline.Bic))
+            {
+                <dt>BIC/SWIFT</dt><dd>@Model.Offline.Bic</dd>
+            }
+            @if (!string.IsNullOrEmpty(Model.Offline.NomeBanca))
+            {
+                <dt>@_L["Banca"]</dt><dd>@Model.Offline.NomeBanca</dd>
+            }
+            <dt>@_L["Causale"]</dt><dd>@Model.Causale</dd>
+        </dl>
+        @if (o.PrenotazioneScadeIlUtc is { } entro)
+        {
+            <p>@_L["Effettua il bonifico entro il"] @entro.ToString("yyyy-MM-dd"): @_L["dopo questa data l'ordine viene annullato."]</p>
+        }
+
+        @if (!string.IsNullOrEmpty(Model.Offline.IstruzioniBonifico))
+        {
+            <p>@Model.Offline.IstruzioniBonifico</p>
+        }
+
+        <p>@_L["Appena riceviamo il pagamento l'ordine risulta pagato e ti scriviamo per confermarlo."]</p>
+    </section>
+}
+@if (o.ModalitaPagamento == ModalitaPagamento.Contrassegno && o.Stato is StatoOrdine.DaSpedireContrassegno or StatoOrdine.Spedito)
+{
+    <p>@_L["Pagherai"] <strong>@Importo(o.TotaleLordo)</strong> @_L["al corriere alla consegna."]</p>
+    @if (!string.IsNullOrEmpty(Model.Offline.IstruzioniContrassegno))
+    {
+        <p>@Model.Offline.IstruzioniContrassegno</p>
+    }
 }
 @if (Model.UrlPagamento is not null)
 {

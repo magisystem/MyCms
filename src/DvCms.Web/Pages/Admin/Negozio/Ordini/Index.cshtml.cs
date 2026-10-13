@@ -79,5 +79,7 @@ public class IndexModel : PaginaAdmin
         return File(esportazione.Contenuto, "text/csv; charset=utf-8", esportazione.NomeFile);
     }
 
+    public string Modalita(DvCms.Domain.Negozio.ModalitaPagamento modalita) => EtichetteOrdine.Modalita(Localizzatore, modalita);
+
     public string Stato(DvCms.Domain.Negozio.StatoOrdine stato) => EtichetteOrdine.Stato(Localizzatore, stato);
 }

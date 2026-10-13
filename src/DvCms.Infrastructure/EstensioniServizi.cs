@@ -223,6 +223,7 @@ public static class EstensioniServizi
         servizi.TryAddScoped<IServizioMedia, ServizioMedia>();
         servizi.TryAddScoped<IServizioCatalogo, ServizioCatalogo>();
         servizi.TryAddScoped<IServizioSpedizioni, ServizioSpedizioni>();
+        servizi.TryAddScoped<IServizioPagamentiOffline, ServizioPagamentiOffline>();
         servizi.TryAddScoped<IServizioCarrello, ServizioCarrello>();
         servizi.TryAddScoped<IServizioVetrina, ServizioVetrina>();
         servizi.TryAddScoped<IServizioCategorie, ServizioCategorie>();

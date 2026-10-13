@@ -39,6 +39,8 @@ public class PagamentiModel : PaginaPiattaforma
         "CredenzialiPayPal" => Localizzatore.Traduci("Credenziali PayPal complete e leggibili"),
         "WebhookPayPal" => Localizzatore.Traduci("Identificativo del webhook impostato"),
         "CredenzialiNexi" => Localizzatore.Traduci("Credenziali Nexi XPay (chiave API) complete e leggibili"),
+        "PagamentiManuali" => Localizzatore.Traduci("Pagamenti manuali attivi (bonifico, contrassegno)"),
+        "BonificoIncompleto" => Localizzatore.Traduci("Bonifico attivo ma senza intestatario e IBAN"),
         "InterruttoreProduzione" => Localizzatore.Traduci("Interruttore di produzione acceso (Negozio:CheckoutProduzione)"),
         "AmbienteProva" => Localizzatore.Traduci("Ambiente di prova (nessun denaro reale)"),
         "ProdottiPubblicati" => Localizzatore.Traduci("Almeno un prodotto pubblicato con una variante attiva"),

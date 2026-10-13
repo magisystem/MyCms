@@ -45,6 +45,9 @@ public class PrenotazioneGiacenza
 {
     public const int DurataMinuti = 15;
 
+    /// <summary>Scadenza delle prenotazioni che non scadono (contrassegno, ADR-0023): la merce resta trattenuta finché l'ordine non si spedisce o si annulla.</summary>
+    public static readonly DateTime SenzaScadenza = new(9999, 12, 31, 0, 0, 0, DateTimeKind.Utc);
+
     public Guid Id { get; set; }
 
     public Guid IdTenant { get; set; }

@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Text;
 using DvCms.Application.Email;
 using DvCms.Application.Localizzazione;
+using DvCms.Application.Negozio;
 using DvCms.Application.Tenancy;
 using DvCms.Domain.Negozio;
 using DvCms.Infrastructure.Persistenza;
@@ -49,14 +50,121 @@ public sealed class NotificheOrdine
         var testo = new StringBuilder();
         testo.AppendLine(_localizzatore.TraduciIn(lingua, "Grazie per il tuo ordine n. {0} su {1}: abbiamo ricevuto il pagamento.", ordine.Numero, nomeSito));
         testo.AppendLine();
+        ScriviDettaglio(testo, ordine, righe, lingua, Importo);
+        testo.AppendLine();
+        testo.AppendLine(_localizzatore.TraduciIn(lingua, "Puoi consultare l'ordine qui: {0}", $"https://{_tenant.Host}/account/ordini/{ordine.Id:D}"));
+
+        _email.Accoda(
+            idTenant,
+            new MessaggioEmail(
+                ordine.EmailAcquirente,
+                ordine.NomeAcquirente,
+                _localizzatore.TraduciIn(lingua, "Ordine n. {0} confermato - {1}", ordine.Numero, nomeSito),
+                testo.ToString()),
+            chiaveIdempotenza: $"ordine-pagato:{ordine.Id:D}",
+            riservato: true);
+        return true;
+    }
+
+    /// <summary>
+    /// Accoda al cliente la ricezione di un ordine con pagamento manuale (ADR-0023): per il bonifico le coordinate, l'importo, la causale e il termine;
+    /// per il contrassegno l'importo da pagare alla consegna. Non salva: lo fa chi chiama, nella sua transazione. Vero se l'ha accodata.
+    /// </summary>
+    public async Task<bool> AccodaOrdineRicevutoAsync(Ordine ordine, ImpostazioniPagamentoOffline impostazioni, CancellationToken annullamento)
+    {
+        ArgumentNullException.ThrowIfNull(ordine);
+        ArgumentNullException.ThrowIfNull(impostazioni);
+
+        var idTenant = _tenant.IdTenant;
+        if (ordine.ModalitaPagamento == ModalitaPagamento.Online
+            || !await _contesto.ImpostazioniEmailTenant.IgnoreQueryFilters().AsNoTracking().AnyAsync(i => i.IdTenant == idTenant, annullamento))
+        {
+            return false;
+        }
+
+        var righe = await _contesto.RigheOrdine.AsNoTracking().Where(r => r.IdOrdine == ordine.Id).OrderBy(r => r.Posizione).ToListAsync(annullamento);
+        var nomeSito = await _contesto.Siti.AsNoTracking().Where(s => s.Id == ordine.IdSito).Select(s => s.Nome).SingleAsync(annullamento);
+        var lingua = ordine.CodiceLingua;
+        var cultura = Cultura(lingua);
+        string Importo(decimal valore) => $"{valore.ToString("N2", cultura)} {ordine.Valuta}";
+
+        var testo = new StringBuilder();
+        if (ordine.ModalitaPagamento == ModalitaPagamento.Bonifico)
+        {
+            testo.AppendLine(_localizzatore.TraduciIn(lingua, "Grazie per il tuo ordine n. {0} su {1}. Per completarlo, effettua un bonifico con questi dati:", ordine.Numero, nomeSito));
+            testo.AppendLine();
+            testo.AppendLine(_localizzatore.TraduciIn(lingua, "Importo: {0}", Importo(ordine.TotaleLordo)));
+            testo.AppendLine(_localizzatore.TraduciIn(lingua, "Intestatario: {0}", impostazioni.Intestatario ?? string.Empty));
+            testo.AppendLine(_localizzatore.TraduciIn(lingua, "IBAN: {0}", impostazioni.Iban is null ? string.Empty : Iban.Formatta(impostazioni.Iban)));
+            if (!string.IsNullOrEmpty(impostazioni.Bic))
+            {
+                testo.AppendLine(_localizzatore.TraduciIn(lingua, "BIC/SWIFT: {0}", impostazioni.Bic));
+            }
+
+            if (!string.IsNullOrEmpty(impostazioni.NomeBanca))
+            {
+                testo.AppendLine(_localizzatore.TraduciIn(lingua, "Banca: {0}", impostazioni.NomeBanca));
+            }
+
+            testo.AppendLine(_localizzatore.TraduciIn(lingua, "Causale: {0}", CausaleBonifico.Per(ordine.Numero)));
+            if (ordine.PrenotazioneScadeIlUtc is { } scadenza)
+            {
+                testo.AppendLine(_localizzatore.TraduciIn(lingua, "Effettua il bonifico entro il {0}: dopo questa data l'ordine viene annullato.", scadenza.ToString("d", cultura)));
+            }
+
+            if (!string.IsNullOrEmpty(impostazioni.IstruzioniBonifico))
+            {
+                testo.AppendLine();
+                testo.AppendLine(impostazioni.IstruzioniBonifico);
+            }
+
+            testo.AppendLine();
+            testo.AppendLine(_localizzatore.TraduciIn(lingua, "Appena riceviamo il pagamento ti scriviamo per confermare l'ordine."));
+        }
+        else
+        {
+            testo.AppendLine(_localizzatore.TraduciIn(lingua, "Grazie per il tuo ordine n. {0} su {1}: lo abbiamo ricevuto e lo prepariamo per la spedizione.", ordine.Numero, nomeSito));
+            testo.AppendLine(_localizzatore.TraduciIn(lingua, "Pagherai {0} alla consegna (contrassegno).", Importo(ordine.TotaleLordo)));
+            if (!string.IsNullOrEmpty(impostazioni.IstruzioniContrassegno))
+            {
+                testo.AppendLine(impostazioni.IstruzioniContrassegno);
+            }
+        }
+
+        testo.AppendLine();
+        ScriviDettaglio(testo, ordine, righe, lingua, Importo);
+        testo.AppendLine();
+        testo.AppendLine(_localizzatore.TraduciIn(lingua, "Puoi consultare l'ordine qui: {0}", $"https://{_tenant.Host}/account/ordini/{ordine.Id:D}"));
+
+        _email.Accoda(
+            idTenant,
+            new MessaggioEmail(
+                ordine.EmailAcquirente,
+                ordine.NomeAcquirente,
+                ordine.ModalitaPagamento == ModalitaPagamento.Bonifico
+                    ? _localizzatore.TraduciIn(lingua, "Ordine n. {0} ricevuto: istruzioni per il bonifico - {1}", ordine.Numero, nomeSito)
+                    : _localizzatore.TraduciIn(lingua, "Ordine n. {0} ricevuto - {1}", ordine.Numero, nomeSito),
+                testo.ToString()),
+            chiaveIdempotenza: $"ordine-ricevuto:{ordine.Id:D}",
+            riservato: true);
+        return true;
+    }
+
+    private void ScriviDettaglio(StringBuilder testo, Ordine ordine, IReadOnlyList<RigaOrdine> righe, string lingua, Func<decimal, string> importo)
+    {
         foreach (var riga in righe)
         {
             var nome = string.IsNullOrEmpty(riga.EtichettaVariante) ? riga.NomeProdotto : $"{riga.NomeProdotto} — {riga.EtichettaVariante}";
-            testo.AppendLine(_localizzatore.TraduciIn(lingua, "- {0} (codice {1}) × {2}: {3}", nome, riga.Sku, riga.Quantita, Importo(riga.Lordo)));
+            testo.AppendLine(_localizzatore.TraduciIn(lingua, "- {0} (codice {1}) × {2}: {3}", nome, riga.Sku, riga.Quantita, importo(riga.Lordo)));
         }
 
-        testo.AppendLine(_localizzatore.TraduciIn(lingua, "Consegna ({0}): {1}", ordine.NomeSpedizione, Importo(ordine.SpedizioneLorda)));
-        testo.AppendLine(_localizzatore.TraduciIn(lingua, "Totale (IVA inclusa): {0}", Importo(ordine.TotaleLordo)));
+        testo.AppendLine(_localizzatore.TraduciIn(lingua, "Consegna ({0}): {1}", ordine.NomeSpedizione, importo(ordine.SpedizioneLorda)));
+        if (ordine.CommissioneLorda > 0)
+        {
+            testo.AppendLine(_localizzatore.TraduciIn(lingua, "Commissione contrassegno: {0}", importo(ordine.CommissioneLorda)));
+        }
+
+        testo.AppendLine(_localizzatore.TraduciIn(lingua, "Totale (IVA inclusa): {0}", importo(ordine.TotaleLordo)));
         testo.AppendLine();
         if (ordine.TipoSpedizione == TipoMetodoSpedizione.Ritiro)
         {
@@ -74,20 +182,6 @@ public sealed class NotificheOrdine
 
             testo.AppendLine(string.Create(CultureInfo.InvariantCulture, $"{ordine.Cap} {ordine.Citta} ({ordine.Paese})"));
         }
-
-        testo.AppendLine();
-        testo.AppendLine(_localizzatore.TraduciIn(lingua, "Puoi consultare l'ordine qui: {0}", $"https://{_tenant.Host}/account/ordini/{ordine.Id:D}"));
-
-        _email.Accoda(
-            idTenant,
-            new MessaggioEmail(
-                ordine.EmailAcquirente,
-                ordine.NomeAcquirente,
-                _localizzatore.TraduciIn(lingua, "Ordine n. {0} confermato - {1}", ordine.Numero, nomeSito),
-                testo.ToString()),
-            chiaveIdempotenza: $"ordine-pagato:{ordine.Id:D}",
-            riservato: true);
-        return true;
     }
 
     /// <summary>
@@ -121,7 +215,13 @@ public sealed class NotificheOrdine
         var importo = $"{ordine.TotaleLordo.ToString("N2", Cultura(lingua))} {ordine.Valuta}";
 
         var testo = new StringBuilder();
-        testo.AppendLine(_localizzatore.TraduciIn(lingua, "Nuovo ordine pagato n. {0} su {1}: {2}, {3} articoli.", ordine.Numero, nomeSito, importo, articoli));
+        var avviso = ordine.ModalitaPagamento switch
+        {
+            ModalitaPagamento.Bonifico => _localizzatore.TraduciIn(lingua, "Nuovo ordine n. {0} su {1} in attesa di bonifico: {2}, {3} articoli.", ordine.Numero, nomeSito, importo, articoli),
+            ModalitaPagamento.Contrassegno => _localizzatore.TraduciIn(lingua, "Nuovo ordine n. {0} su {1} in contrassegno, da spedire: {2}, {3} articoli.", ordine.Numero, nomeSito, importo, articoli),
+            _ => _localizzatore.TraduciIn(lingua, "Nuovo ordine pagato n. {0} su {1}: {2}, {3} articoli.", ordine.Numero, nomeSito, importo, articoli),
+        };
+        testo.AppendLine(avviso);
         testo.AppendLine(_localizzatore.TraduciIn(lingua, "Cliente: {0} ({1})", ordine.NomeAcquirente, ordine.EmailAcquirente));
         testo.AppendLine(_localizzatore.TraduciIn(lingua, "Consegna: {0}", ordine.NomeSpedizione));
         testo.AppendLine(_localizzatore.TraduciIn(lingua, "Gestisci l'ordine qui: {0}", $"https://{_tenant.Host}/admin/negozio/ordini/{ordine.Id:D}"));

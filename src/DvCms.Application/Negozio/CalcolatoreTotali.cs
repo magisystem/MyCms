@@ -56,6 +56,19 @@ public static class CalcolatoreTotali
             : CalcolaRiga(tariffaLorda, 1, AliquoteIva.Predefinita);
     }
 
+    /// <summary>Commissione del contrassegno (ADR-0023): importo IVA inclusa con l'aliquota ordinaria, scorporato come la spedizione; zero dà una riga a zero.</summary>
+    public static RigaCalcolata CalcolaCommissione(decimal commissioneLorda)
+    {
+        if (!ImpostazioniPagamentoOfflineSito.ImportoValido(commissioneLorda))
+        {
+            throw new ArgumentOutOfRangeException(nameof(commissioneLorda), "Commissione non valida.");
+        }
+
+        return commissioneLorda == 0m
+            ? new RigaCalcolata(0m, 1, AliquoteIva.Predefinita, 0m, 0m, 0m)
+            : CalcolaRiga(commissioneLorda, 1, AliquoteIva.Predefinita);
+    }
+
     public static TotaliCalcolati Somma(IEnumerable<RigaCalcolata> righe)
     {
         ArgumentNullException.ThrowIfNull(righe);

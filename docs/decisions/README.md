@@ -28,5 +28,6 @@ Stato: `Proposed`, `Accepted`, `Superseded`, `Deprecated`.
 - [ADR-0020 — Politiche commerciali e PayPal](ADR-0020-commerce-policies-and-paypal.md)
 - [ADR-0021 — Email con consenso OAuth, app OAuth del tenant](ADR-0021-email-oauth-per-tenant.md)
 - [ADR-0022 — Nexi XPay come secondo provider di pagamento](ADR-0022-nexi-xpay.md)
+- [ADR-0023 — Pagamenti manuali: bonifico bancario e contrassegno](ADR-0023-pagamenti-manuali.md)
 
 Per le regole operative della persistenza, vedere [`docs/architecture/database.md`](../architecture/database.md).

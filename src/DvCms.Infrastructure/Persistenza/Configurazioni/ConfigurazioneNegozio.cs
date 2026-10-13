@@ -258,7 +258,8 @@ internal sealed class ConfigurazioneOrdine : IEntityTypeConfiguration<Ordine>
     {
         entita.ToTable("Ordini", tabella =>
         {
-            tabella.HasCheckConstraint("CK_Ordini_Totali", "[TotaleLordo] = [TotaleImponibile] + [TotaleIva] AND [SpedizioneLorda] = [SpedizioneImponibile] + [SpedizioneIva] AND [TotaleLordo] >= [SpedizioneLorda]");
+            tabella.HasCheckConstraint("CK_Ordini_Totali", "[TotaleLordo] = [TotaleImponibile] + [TotaleIva] AND [SpedizioneLorda] = [SpedizioneImponibile] + [SpedizioneIva] AND [CommissioneLorda] = [CommissioneImponibile] + [CommissioneIva] AND [TotaleLordo] >= [SpedizioneLorda] + [CommissioneLorda]");
+            tabella.HasCheckConstraint("CK_Ordini_Commissione", "[CommissioneLorda] = 0 OR [ModalitaPagamento] = 'Contrassegno'");
             tabella.HasCheckConstraint("CK_Ordini_Rimborsato", "[TotaleRimborsato] >= 0 AND [TotaleRimborsato] <= [TotaleLordo]");
             tabella.HasCheckConstraint("CK_Ordini_Consegna", "([TipoSpedizione] = 'Ritiro' AND [Paese] IS NULL AND [AreaSpedizione] IS NULL AND [SpedizioneLorda] = 0) OR ([TipoSpedizione] = 'Zona' AND [Paese] IS NOT NULL AND [AreaSpedizione] IS NOT NULL)");
         });
@@ -266,6 +267,7 @@ internal sealed class ConfigurazioneOrdine : IEntityTypeConfiguration<Ordine>
         entita.Property(ordine => ordine.Id).ValueGeneratedNever();
         entita.Property(ordine => ordine.TokenConcorrenza).IsRowVersion();
         entita.Property(ordine => ordine.Stato).HasConversion<string>().HasMaxLength(30).IsRequired();
+        entita.Property(ordine => ordine.ModalitaPagamento).HasConversion<string>().HasMaxLength(20).IsRequired();
         entita.Property(ordine => ordine.CodiceLingua).HasMaxLength(10).IsRequired();
         entita.Property(ordine => ordine.Valuta).HasMaxLength(3).IsFixedLength().IsRequired();
         entita.Property(ordine => ordine.TotaleLordo).HasPrecision(18, 2);
@@ -278,6 +280,9 @@ internal sealed class ConfigurazioneOrdine : IEntityTypeConfiguration<Ordine>
         entita.Property(ordine => ordine.SpedizioneLorda).HasPrecision(18, 2);
         entita.Property(ordine => ordine.SpedizioneImponibile).HasPrecision(18, 2);
         entita.Property(ordine => ordine.SpedizioneIva).HasPrecision(18, 2);
+        entita.Property(ordine => ordine.CommissioneLorda).HasPrecision(18, 2);
+        entita.Property(ordine => ordine.CommissioneImponibile).HasPrecision(18, 2);
+        entita.Property(ordine => ordine.CommissioneIva).HasPrecision(18, 2);
         entita.Property(ordine => ordine.EmailAcquirente).HasMaxLength(320).IsRequired();
         entita.Property(ordine => ordine.NomeAcquirente).HasMaxLength(200).IsRequired();
         entita.Property(ordine => ordine.Destinatario).HasMaxLength(Ordine.LunghezzaMassimaDestinatario);
@@ -416,6 +421,41 @@ internal sealed class ConfigurazioneImpostazioniNexiSito : IEntityTypeConfigurat
         entita.HasKey(impostazioni => impostazioni.Id);
         entita.Property(impostazioni => impostazioni.Id).ValueGeneratedNever();
         entita.Property(impostazioni => impostazioni.Ambiente).HasConversion<string>().HasMaxLength(20).IsRequired();
+        entita.Property(impostazioni => impostazioni.TokenConcorrenza).IsRowVersion();
+
+        entita.HasOne<Sito>()
+            .WithMany()
+            .HasForeignKey(impostazioni => new { impostazioni.IdTenant, impostazioni.IdSito })
+            .HasPrincipalKey(sito => new { sito.IdTenant, sito.Id })
+            .OnDelete(DeleteBehavior.Restrict);
+        entita.HasOne<DvCms.Domain.Accessi.Utenza>().WithMany().HasForeignKey(impostazioni => impostazioni.AggiornatoDaIdUtenza).OnDelete(DeleteBehavior.Restrict);
+        entita.HasIndex(impostazioni => impostazioni.IdSito).IsUnique();
+    }
+}
+
+internal sealed class ConfigurazioneImpostazioniPagamentoOfflineSito : IEntityTypeConfiguration<ImpostazioniPagamentoOfflineSito>
+{
+    public void Configure(EntityTypeBuilder<ImpostazioniPagamentoOfflineSito> entita)
+    {
+        entita.ToTable("ImpostazioniPagamentoOfflineSiti", tabella =>
+        {
+            tabella.HasCheckConstraint("CK_ImpostazioniPagamentoOfflineSiti_Giorni", "[GiorniPerPagare] BETWEEN 1 AND 60");
+            tabella.HasCheckConstraint("CK_ImpostazioniPagamentoOfflineSiti_Commissione", "[CommissioneFissa] BETWEEN 0 AND 100000 AND [CommissionePercentuale] BETWEEN 0 AND 100");
+            tabella.HasCheckConstraint("CK_ImpostazioniPagamentoOfflineSiti_Limiti", "([OrdineMinimo] IS NULL OR [OrdineMinimo] >= 0) AND ([OrdineMassimo] IS NULL OR [OrdineMassimo] >= 0) AND ([OrdineMinimo] IS NULL OR [OrdineMassimo] IS NULL OR [OrdineMinimo] <= [OrdineMassimo]) AND ([CommissioneGratisSopra] IS NULL OR [CommissioneGratisSopra] >= 0)");
+        });
+        entita.HasKey(impostazioni => impostazioni.Id);
+        entita.Property(impostazioni => impostazioni.Id).ValueGeneratedNever();
+        entita.Property(impostazioni => impostazioni.Intestatario).HasMaxLength(ImpostazioniPagamentoOfflineSito.LunghezzaMassimaIntestatario);
+        entita.Property(impostazioni => impostazioni.Iban).HasMaxLength(34);
+        entita.Property(impostazioni => impostazioni.Bic).HasMaxLength(11);
+        entita.Property(impostazioni => impostazioni.NomeBanca).HasMaxLength(ImpostazioniPagamentoOfflineSito.LunghezzaMassimaBanca);
+        entita.Property(impostazioni => impostazioni.IstruzioniBonifico).HasMaxLength(ImpostazioniPagamentoOfflineSito.LunghezzaMassimaIstruzioni);
+        entita.Property(impostazioni => impostazioni.IstruzioniContrassegno).HasMaxLength(ImpostazioniPagamentoOfflineSito.LunghezzaMassimaIstruzioni);
+        entita.Property(impostazioni => impostazioni.CommissioneFissa).HasPrecision(18, 2);
+        entita.Property(impostazioni => impostazioni.CommissionePercentuale).HasPrecision(5, 2);
+        entita.Property(impostazioni => impostazioni.CommissioneGratisSopra).HasPrecision(18, 2);
+        entita.Property(impostazioni => impostazioni.OrdineMinimo).HasPrecision(18, 2);
+        entita.Property(impostazioni => impostazioni.OrdineMassimo).HasPrecision(18, 2);
         entita.Property(impostazioni => impostazioni.TokenConcorrenza).IsRowVersion();
 
         entita.HasOne<Sito>()

@@ -46,6 +46,10 @@ public static class AzioniAudit
     public const string ConfermaAcquirente = "ConfermaAcquirente";
     public const string ImpostazioneRegistrazioneAcquirenti = "ImpostazioneRegistrazioneAcquirenti";
     public const string ModificaMetodoSpedizione = "ModificaMetodoSpedizione";
+    public const string ModificaPagamentiOffline = "ModificaPagamentiOffline";
+    public const string PagamentoOfflineRicevuto = "PagamentoOfflineRicevuto";
+    public const string AnnullamentoOrdineAmministrazione = "AnnullamentoOrdineAmministrazione";
+    public const string ConsegnaNonRiuscita = "ConsegnaNonRiuscita";
     public const string CreazioneOrdine = "CreazioneOrdine";
     public const string AnnullamentoOrdine = "AnnullamentoOrdine";
     public const string ScadenzaOrdine = "ScadenzaOrdine";

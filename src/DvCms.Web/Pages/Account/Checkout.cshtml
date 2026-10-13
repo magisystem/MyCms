@@ -70,7 +70,65 @@ else
                             <span>— @Importo(m.TariffaLorda) (@_L["totale"] @Importo(opzione.Totale))</span>
                         }
                     </label>
-                    <input type="hidden" name="Modulo.Atteso[@m.Id]" value="@opzione.Totale.ToString("0.00", CultureInfo.InvariantCulture)" />
+                    @foreach (var pagamento in opzione.Pagamenti.Where(p => p.Preventivo.Disponibile))
+                    {
+                        <input type="hidden" name="Modulo.Atteso[@m.Id:@pagamento.Modalita]" value="@pagamento.Preventivo.Totale.ToString("0.00", CultureInfo.InvariantCulture)" />
+                    }
+                </div>
+            }
+        </fieldset>
+        <fieldset>
+            <legend>@_L["Metodo di pagamento"]</legend>
+            @foreach (var modalita in Model.ModalitaOfferte)
+            {
+                <div>
+                    <label>
+                        <input type="radio" name="Modulo.Modalita" value="@modalita" checked="@((Model.Modulo.Modalita ?? Model.ModalitaOfferte[0]) == modalita)" />
+                        @switch (modalita)
+                        {
+                            case ModalitaPagamento.Online:
+                                @_L["Pagamento online (carta o PayPal): scegli alla pagina dell'ordine"]
+                                break;
+                            case ModalitaPagamento.Bonifico:
+                                @_L["Bonifico bancario: l'ordine si conferma quando riceviamo il pagamento"]
+                                break;
+                            default:
+                                @_L["Contrassegno: paghi al corriere alla consegna (solo consegna in Italia)"]
+                                break;
+                        }
+                    </label>
+                    @if (modalita == ModalitaPagamento.Contrassegno)
+                    {
+                        <ul>
+                            @foreach (var opzione in Model.Opzioni)
+                            {
+                                var preventivo = opzione.Pagamenti.First(p => p.Modalita == ModalitaPagamento.Contrassegno).Preventivo;
+                                <li>
+                                    @opzione.Metodo.Nome:
+                                    @if (!preventivo.Disponibile)
+                                    {
+                                        @_L["non disponibile"]
+                                    }
+                                    else if (preventivo.Commissione > 0)
+                                    {
+                                        @:@_L["commissione"] @Importo(preventivo.Commissione) <span>(@_L["totale"] @Importo(preventivo.Totale))</span>
+                                    }
+                                    else
+                                    {
+                                        @_L["nessuna commissione"]
+                                    }
+                                </li>
+                            }
+                        </ul>
+                        @if (!string.IsNullOrEmpty(Model.Offline.IstruzioniContrassegno))
+                        {
+                            <p>@Model.Offline.IstruzioniContrassegno</p>
+                        }
+                    }
+                    @if (modalita == ModalitaPagamento.Bonifico && !string.IsNullOrEmpty(Model.Offline.IstruzioniBonifico))
+                    {
+                        <p>@Model.Offline.IstruzioniBonifico</p>
+                    }
                 </div>
             }
         </fieldset>

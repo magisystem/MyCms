@@ -248,14 +248,14 @@ public sealed class ServizioDatiPersonali : IServizioDatiPersonali
         // Ordini non ancora pagati: si annullano e la giacenza torna disponibile. Gli altri restano, con la copia dei dati.
         var daAnnullare = await _contesto.Ordini.IgnoreQueryFilters().AsNoTracking()
             .Where(o => o.IdTenant == idTenant && o.IdUtenza == idAcquirente
-                && (o.Stato == StatoOrdine.InAttesaDiPagamento || o.Stato == StatoOrdine.PagamentoFallito))
+                && (o.Stato == StatoOrdine.InAttesaDiPagamento || o.Stato == StatoOrdine.PagamentoFallito || o.Stato == StatoOrdine.DaSpedireContrassegno))
             .Select(o => o.Id)
             .ToListAsync(annullamento);
         var annullati = 0;
         foreach (var idOrdine in daAnnullare)
         {
             var cambiati = await _contesto.Ordini.IgnoreQueryFilters()
-                .Where(o => o.Id == idOrdine && o.IdTenant == idTenant && (o.Stato == StatoOrdine.InAttesaDiPagamento || o.Stato == StatoOrdine.PagamentoFallito))
+                .Where(o => o.Id == idOrdine && o.IdTenant == idTenant && (o.Stato == StatoOrdine.InAttesaDiPagamento || o.Stato == StatoOrdine.PagamentoFallito || o.Stato == StatoOrdine.DaSpedireContrassegno))
                 .ExecuteUpdateAsync(s => s.SetProperty(o => o.Stato, StatoOrdine.Annullato).SetProperty(o => o.AggiornatoIlUtc, adesso), annullamento);
             if (cambiati > 0)
             {

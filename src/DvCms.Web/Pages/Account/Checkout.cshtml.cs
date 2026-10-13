@@ -25,11 +25,17 @@ public sealed class ModuloCheckout
 
     public string? Paese { get; set; }
 
-    /// <summary>Totale visto dal cliente per ciascun metodo (solo per accorgersi di cambiamenti: il server ricalcola sempre).</summary>
-    public Dictionary<Guid, string> Atteso { get; set; } = [];
+    /// <summary>Come paga il cliente; vuoto = pagamento online (come prima dell'arrivo di bonifico e contrassegno).</summary>
+    public ModalitaPagamento? Modalita { get; set; }
+
+    /// <summary>Totale visto dal cliente per ciascuna combinazione consegna e pagamento, con chiave <c>idMetodo:modalità</c> (solo per accorgersi di cambiamenti: il server ricalcola sempre).</summary>
+    public Dictionary<string, string> Atteso { get; set; } = [];
 }
 
-public sealed record OpzioneConsegna(MetodoSpedizioneVista Metodo, decimal Totale);
+/// <summary>Un pagamento scelto per un metodo di consegna: se si offre e quanto si pagherebbe (commissione compresa).</summary>
+public sealed record OpzionePagamento(ModalitaPagamento Modalita, PreventivoPagamento Preventivo);
+
+public sealed record OpzioneConsegna(MetodoSpedizioneVista Metodo, decimal Totale, IReadOnlyList<OpzionePagamento> Pagamenti);
 
 /// <summary>
 /// Cassa (F-003). Il cliente sceglie il metodo di consegna e, se serve, l'indirizzo; non invia mai importi da usare. I totali che
@@ -41,14 +47,25 @@ public class CheckoutModel : PageModel
     private readonly IServizioCarrello _carrello;
     private readonly IServizioSpedizioni _spedizioni;
     private readonly IServizioOrdini _ordini;
+    private readonly IServizioPagamentiOffline _offline;
+    private readonly IServizioPagamenti _pagamenti;
     private readonly IContestoLingua _lingua;
     private readonly ILocalizzatore _localizzatore;
 
-    public CheckoutModel(IServizioCarrello carrello, IServizioSpedizioni spedizioni, IServizioOrdini ordini, IContestoLingua lingua, ILocalizzatore localizzatore)
+    public CheckoutModel(
+        IServizioCarrello carrello,
+        IServizioSpedizioni spedizioni,
+        IServizioOrdini ordini,
+        IServizioPagamentiOffline offline,
+        IServizioPagamenti pagamenti,
+        IContestoLingua lingua,
+        ILocalizzatore localizzatore)
     {
         _carrello = carrello;
         _spedizioni = spedizioni;
         _ordini = ordini;
+        _offline = offline;
+        _pagamenti = pagamenti;
         _lingua = lingua;
         _localizzatore = localizzatore;
     }
@@ -66,6 +83,11 @@ public class CheckoutModel : PageModel
     public CarrelloVista Vista { get; private set; } = new([], [], 0m, 0m, 0m, "EUR");
 
     public IReadOnlyList<OpzioneConsegna> Opzioni { get; private set; } = [];
+
+    /// <summary>I pagamenti che il sito offre, nell'ordine di presentazione (online, bonifico, contrassegno).</summary>
+    public IReadOnlyList<ModalitaPagamento> ModalitaOfferte { get; private set; } = [ModalitaPagamento.Online];
+
+    public ImpostazioniPagamentoOffline Offline { get; private set; } = ImpostazioniPagamentoOffline.Spente;
 
     public CultureInfo Cultura { get; } = CultureInfo.GetCultureInfo("it-IT");
 
@@ -88,11 +110,12 @@ public class CheckoutModel : PageModel
         }
 
         // Il totale visto è un controllo di coerenza; se manca o è illeggibile si usa uno impossibile e l'ordine non si crea.
-        var atteso = Modulo.Atteso.TryGetValue(metodo, out var testo)
+        var modalita = Modulo.Modalita ?? ModalitaPagamento.Online;
+        var atteso = Modulo.Atteso.TryGetValue(string.Create(CultureInfo.InvariantCulture, $"{metodo:D}:{modalita}"), out var testo)
             && decimal.TryParse(testo, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var letto)
             ? letto
             : -1m;
-        var dati = new DatiOrdine(metodo, Modulo.Destinatario, Modulo.IndirizzoRiga1, Modulo.IndirizzoRiga2, Modulo.Cap, Modulo.Citta, Modulo.Paese, atteso);
+        var dati = new DatiOrdine(metodo, Modulo.Destinatario, Modulo.IndirizzoRiga1, Modulo.IndirizzoRiga2, Modulo.Cap, Modulo.Citta, Modulo.Paese, atteso, modalita);
         var esito = await _ordini.CreaDaCarrelloAsync(IdAccount, _lingua.CodiceLingua, dati, annullamento);
         if (esito.Riuscito)
         {
@@ -112,6 +135,7 @@ public class CheckoutModel : PageModel
             CodiceEsito.Conflitto when Mancanti.Count > 0 => _localizzatore.Traduci("Alcuni articoli non sono disponibili nella quantità richiesta: riduci la quantità o toglili dal carrello."),
             CodiceEsito.Conflitto => _localizzatore.Traduci("Il carrello, i prezzi o le tariffe sono cambiati: controlla il riepilogo e conferma di nuovo."),
             CodiceEsito.NonTrovato => _localizzatore.Traduci("Il metodo di consegna scelto non è più disponibile."),
+            CodiceEsito.DatiNonValidi when CampiNonValidi.Contains("ModalitaPagamento") => _localizzatore.Traduci("Il metodo di pagamento scelto non è disponibile per questo ordine."),
             CodiceEsito.DatiNonValidi => _localizzatore.Traduci("Controlla i dati inseriti."),
             CodiceEsito.NonConsentito => _localizzatore.Traduci("Il negozio non è disponibile."),
             _ => _localizzatore.Traduci("Operazione non riuscita."),
@@ -123,6 +147,7 @@ public class CheckoutModel : PageModel
     {
         _ when campo.StartsWith("Giacenza:", StringComparison.Ordinal) => campo["Giacenza:".Length..],
         "IdMetodo" => _localizzatore.Traduci("Metodo di consegna"),
+        "ModalitaPagamento" => _localizzatore.Traduci("Metodo di pagamento"),
         "Destinatario" => _localizzatore.Traduci("Destinatario"),
         "IndirizzoRiga1" => _localizzatore.Traduci("Indirizzo"),
         "IndirizzoRiga2" => _localizzatore.Traduci("Indirizzo (seconda riga)"),
@@ -138,6 +163,34 @@ public class CheckoutModel : PageModel
     {
         Vista = await _carrello.LeggiAsync(IdAccount, _lingua.CodiceLingua, annullamento);
         var metodi = await _spedizioni.ElencaAttiviAsync(IdAccount, annullamento);
-        Opzioni = [.. metodi.Select(m => new OpzioneConsegna(m, Vista.TotaleLordo + m.TariffaLorda))];
+        Offline = await _offline.LeggiPerClienteAsync(IdAccount, annullamento);
+
+        // Il pagamento online si offre se c'è un provider pronto, o se non c'è alcun pagamento manuale (la pagina dell'ordine spiega cosa manca).
+        var providerOnline = await _pagamenti.ProviderDisponibiliAsync(annullamento);
+        var offerte = new List<ModalitaPagamento>();
+        if (providerOnline.Count > 0 || !(Offline.BonificoAttivo || Offline.ContrassegnoAttivo))
+        {
+            offerte.Add(ModalitaPagamento.Online);
+        }
+
+        if (Offline.BonificoAttivo)
+        {
+            offerte.Add(ModalitaPagamento.Bonifico);
+        }
+
+        if (Offline.ContrassegnoAttivo)
+        {
+            offerte.Add(ModalitaPagamento.Contrassegno);
+        }
+
+        ModalitaOfferte = offerte;
+        Opzioni = [.. metodi.Select(m =>
+        {
+            var base_ = Vista.TotaleLordo + m.TariffaLorda;
+            return new OpzioneConsegna(
+                m,
+                base_,
+                [.. offerte.Select(modalita => new OpzionePagamento(modalita, PreventivoPagamento.Calcola(Offline, modalita, m.Tipo, m.Area, base_)))]);
+        })];
     }
 }

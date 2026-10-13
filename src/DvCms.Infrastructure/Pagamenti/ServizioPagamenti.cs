@@ -98,7 +98,8 @@ public sealed partial class ServizioPagamenti : IServizioPagamenti
             return new EsitoAvvioPagamento(RisultatoPagamento.NonTrovato, null);
         }
 
-        if (ordine.Stato is not (StatoOrdine.InAttesaDiPagamento or StatoOrdine.PagamentoFallito))
+        // Un ordine pagato a bonifico o in contrassegno (ADR-0023) non passa da un provider.
+        if (ordine.ModalitaPagamento != ModalitaPagamento.Online || ordine.Stato is not (StatoOrdine.InAttesaDiPagamento or StatoOrdine.PagamentoFallito))
         {
             return new EsitoAvvioPagamento(RisultatoPagamento.OrdineChiuso, null);
         }

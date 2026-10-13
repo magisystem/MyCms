@@ -1114,6 +1114,101 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.ToTable("ImpostazioniNexiSiti", (string)null);
                 });
 
+            modelBuilder.Entity("DvCms.Domain.Negozio.ImpostazioniPagamentoOfflineSito", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("AggiornatoDaIdUtenza")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("AggiornatoIlUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Bic")
+                        .HasMaxLength(11)
+                        .HasColumnType("nvarchar(11)");
+
+                    b.Property<bool>("BonificoAttivo")
+                        .HasColumnType("bit");
+
+                    b.Property<decimal>("CommissioneFissa")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("CommissioneGratisSopra")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("CommissionePercentuale")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<bool>("ContrassegnoAttivo")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("GiorniPerPagare")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Iban")
+                        .HasMaxLength(34)
+                        .HasColumnType("nvarchar(34)");
+
+                    b.Property<Guid>("IdSito")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdTenant")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Intestatario")
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<string>("IstruzioniBonifico")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("IstruzioniContrassegno")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("NomeBanca")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<decimal?>("OrdineMassimo")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("OrdineMinimo")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<byte[]>("TokenConcorrenza")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AggiornatoDaIdUtenza");
+
+                    b.HasIndex("IdSito")
+                        .IsUnique();
+
+                    b.HasIndex("IdTenant", "IdSito");
+
+                    b.ToTable("ImpostazioniPagamentoOfflineSiti", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_ImpostazioniPagamentoOfflineSiti_Commissione", "[CommissioneFissa] BETWEEN 0 AND 100000 AND [CommissionePercentuale] BETWEEN 0 AND 100");
+
+                            t.HasCheckConstraint("CK_ImpostazioniPagamentoOfflineSiti_Giorni", "[GiorniPerPagare] BETWEEN 1 AND 60");
+
+                            t.HasCheckConstraint("CK_ImpostazioniPagamentoOfflineSiti_Limiti", "([OrdineMinimo] IS NULL OR [OrdineMinimo] >= 0) AND ([OrdineMassimo] IS NULL OR [OrdineMassimo] >= 0) AND ([OrdineMinimo] IS NULL OR [OrdineMassimo] IS NULL OR [OrdineMinimo] <= [OrdineMassimo]) AND ([CommissioneGratisSopra] IS NULL OR [CommissioneGratisSopra] >= 0)");
+                        });
+                });
+
             modelBuilder.Entity("DvCms.Domain.Negozio.ImpostazioniPagamentoSito", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1280,6 +1375,18 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                         .HasMaxLength(10)
                         .HasColumnType("nvarchar(10)");
 
+                    b.Property<decimal>("CommissioneImponibile")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("CommissioneIva")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("CommissioneLorda")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<DateTime>("CreatoIlUtc")
                         .HasColumnType("datetime2");
 
@@ -1311,6 +1418,11 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.Property<string>("IndirizzoRiga2")
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("ModalitaPagamento")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<string>("NomeAcquirente")
                         .IsRequired()
@@ -1397,11 +1509,13 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
 
                     b.ToTable("Ordini", null, t =>
                         {
+                            t.HasCheckConstraint("CK_Ordini_Commissione", "[CommissioneLorda] = 0 OR [ModalitaPagamento] = 'Contrassegno'");
+
                             t.HasCheckConstraint("CK_Ordini_Consegna", "([TipoSpedizione] = 'Ritiro' AND [Paese] IS NULL AND [AreaSpedizione] IS NULL AND [SpedizioneLorda] = 0) OR ([TipoSpedizione] = 'Zona' AND [Paese] IS NOT NULL AND [AreaSpedizione] IS NOT NULL)");
 
                             t.HasCheckConstraint("CK_Ordini_Rimborsato", "[TotaleRimborsato] >= 0 AND [TotaleRimborsato] <= [TotaleLordo]");
 
-                            t.HasCheckConstraint("CK_Ordini_Totali", "[TotaleLordo] = [TotaleImponibile] + [TotaleIva] AND [SpedizioneLorda] = [SpedizioneImponibile] + [SpedizioneIva] AND [TotaleLordo] >= [SpedizioneLorda]");
+                            t.HasCheckConstraint("CK_Ordini_Totali", "[TotaleLordo] = [TotaleImponibile] + [TotaleIva] AND [SpedizioneLorda] = [SpedizioneImponibile] + [SpedizioneIva] AND [CommissioneLorda] = [CommissioneImponibile] + [CommissioneIva] AND [TotaleLordo] >= [SpedizioneLorda] + [CommissioneLorda]");
                         });
                 });
 
@@ -2551,6 +2665,21 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                 });
 
             modelBuilder.Entity("DvCms.Domain.Negozio.ImpostazioniNexiSito", b =>
+                {
+                    b.HasOne("DvCms.Domain.Accessi.Utenza", null)
+                        .WithMany()
+                        .HasForeignKey("AggiornatoDaIdUtenza")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("DvCms.Domain.Tenancy.Sito", null)
+                        .WithMany()
+                        .HasForeignKey("IdTenant", "IdSito")
+                        .HasPrincipalKey("IdTenant", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DvCms.Domain.Negozio.ImpostazioniPagamentoOfflineSito", b =>
                 {
                     b.HasOne("DvCms.Domain.Accessi.Utenza", null)
                         .WithMany()

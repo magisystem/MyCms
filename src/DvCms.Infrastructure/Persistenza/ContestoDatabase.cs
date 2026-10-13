@@ -126,6 +126,8 @@ public class ContestoDatabase : DbContext
 
     public DbSet<ImpostazioniNexiSito> ImpostazioniNexiSiti => Set<ImpostazioniNexiSito>();
 
+    public DbSet<ImpostazioniPagamentoOfflineSito> ImpostazioniPagamentoOfflineSiti => Set<ImpostazioniPagamentoOfflineSito>();
+
     public DbSet<GiacenzaVariante> GiacenzeVarianti => Set<GiacenzaVariante>();
 
     public DbSet<PrenotazioneGiacenza> PrenotazioniGiacenza => Set<PrenotazioneGiacenza>();
@@ -177,6 +179,7 @@ public class ContestoDatabase : DbContext
         modelBuilder.Entity<EventoWebhook>().HasQueryFilter(evento => evento.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<ImpostazioniPagamentoSito>().HasQueryFilter(impostazioni => impostazioni.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<ImpostazioniNexiSito>().HasQueryFilter(impostazioni => impostazioni.IdTenant == IdTenantCorrente);
+        modelBuilder.Entity<ImpostazioniPagamentoOfflineSito>().HasQueryFilter(impostazioni => impostazioni.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<GiacenzaVariante>().HasQueryFilter(giacenza => giacenza.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<PrenotazioneGiacenza>().HasQueryFilter(prenotazione => prenotazione.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<MovimentoGiacenza>().HasQueryFilter(movimento => movimento.IdTenant == IdTenantCorrente);

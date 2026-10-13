@@ -39,6 +39,15 @@ Un sito può accettare anche carte con **Nexi** (il cliente sceglie alla cassa).
 
 La «Verifica di esercizio» considera pronto un sito con almeno un provider configurato.
 
+### 2 ter. Bonifico e contrassegno (a cura del TenantAdmin, ADR-0023)
+
+Non servono credenziali né webhook: il `TenantAdmin` li attiva da **Admin → Pagamenti** (`/admin/negozio/pagamenti`).
+
+1. **Bonifico:** intestatario, IBAN (verificato), giorni per pagare (la merce è trattenuta fino ad allora, poi l'ordine si annulla da solo se ha articoli con giacenza gestita), istruzioni. Quando arriva un ordine il cliente riceve le coordinate e la causale `Ordine <numero>`: **controllare l'estratto conto** e, a ogni bonifico arrivato, aprire l'ordine e premere «Bonifico ricevuto: segna come pagato». Un bonifico arrivato dopo la scadenza non si registra su un ordine annullato: restituirlo o far rifare l'ordine.
+2. **Contrassegno:** commissione fissa e/o percentuale (IVA inclusa, aliquota ordinaria), eventuale soglia oltre la quale è gratis e limiti di totale (usare il massimo assicurato dal corriere). Si offre solo per le consegne in Italia a domicilio. Gli ordini arrivano «Da spedire (pagamento alla consegna)»: spedirli con un corriere che offre il contrassegno e premere «Segna come spedito»; se la consegna non riesce premere «Consegna non riuscita» e, quando la merce rientra, rimetterla in giacenza dalla pagina delle giacenze. L'incasso e il rendiconto del corriere restano fuori dal sistema.
+3. **Rimborsi:** per i pagamenti manuali non c'è il pulsante: si restituisce con un bonifico e il dettaglio ordine lo ricorda.
+4. La «Verifica di esercizio» considera pronto un sito con almeno un metodo di pagamento tra provider online, bonifico (con intestatario e IBAN) e contrassegno; il vincolo dell'interruttore di produzione (sotto) riguarda solo i provider online.
+
 ## 3. Interruttore di produzione
 
 Con ambiente Produzione il pagamento non parte finché la configurazione dell'installazione non ha `Negozio:CheckoutProduzione=true` (predefinito falso). Impostarlo come variabile d'ambiente `Negozio__CheckoutProduzione=true` e riavviare. Altre opzioni utili:

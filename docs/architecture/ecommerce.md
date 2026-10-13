@@ -79,6 +79,8 @@ Gli stati sono un'enumerazione chiusa (`StatoOrdine`) e **ogni passaggio** passa
 | `Pagato` | `Ritirato` | il tenant segna il ritiro (solo metodo ritiro) |
 | `Pagato`, `Spedito`, `Ritirato` | `Rimborsato` | i rimborsi completati coprono il totale (A5); i rimborsi parziali non cambiano lo stato |
 
+Con i pagamenti manuali (ADR-0023) si aggiungono: `InAttesaDiPagamento` → `Pagato` anche per il bonifico ricevuto (registrato dal tenant); lo stato **`DaSpedireContrassegno`** → `Spedito` o `Annullato` (contrassegno accettato, da spedire); `Spedito` → `Annullato` **solo per il contrassegno** (consegna non riuscita). `PagamentoFallito` esiste solo per i pagamenti online.
+
 `Annullato` e `Rimborsato` sono **finali**; `Spedito` e `Ritirato` possono ancora diventare `Rimborsato`. Un ordine pagato non si annulla: si rimborsa (sezione Rimborsi). Un tentativo di pagamento è un'entità a parte (`TentativoPagamento`, M7.7); l'ordine cambia stato solo in risposta a esiti verificati (cattura lato server o webhook firmato e deduplicato), mai su dichiarazione del browser. Ogni transizione è una scrittura con controllo di concorrenza (`TokenConcorrenza`) e finisce nell'audit.
 
 **Approvata** dal committente il 2026-10-11 (A5: rimborsi). Ogni transizione è una scrittura condizionale e finisce nell'audit.
@@ -162,6 +164,15 @@ Gli stati sono un'enumerazione chiusa (`StatoOrdine`) e **ogni passaggio** passa
 - **Credenziali:** tabella `ImpostazioniNexiSiti` (ambiente + chiave API cifrata), gestite dal `PlatformAdmin` nella pagina «Pagamenti» del tenant.
 - **Rimborsi:** non dal pannello per Nexi (si fanno dal back office Nexi); il dettaglio ordine lo indica. **Un rimborso fatto a mano dal pannello di PayPal o di Nexi aggiorna l'ordine**: lo si riconosce dalla notifica del provider (webhook di rimborso PayPal, notifica `REFUND` di Nexi), si rilegge dal provider e si registra come rimborso «esterno» (importo sommato al rimborsato, ordine «Rimborsato» a copertura del totale, email al cliente, audit `RimborsoEsterno`); la stessa notifica ripetuta non conta due volte e un importo oltre il residuo non si registra (anomalia nell'audit).
 - **Riconciliazione:** ora vale per tutti i provider (rilegge i tentativi aperti oltre venti minuti).
+
+## Bonifico e contrassegno (M7.26, ADR-0023)
+
+- **Scelta alla cassa.** `DatiOrdine.ModalitaPagamento` (`Online` predefinita, `Bonifico`, `Contrassegno`) salvata sull'ordine. La cassa mostra i pagamenti attivi del sito; per ogni combinazione consegna + pagamento il server calcola il totale (`PreventivoPagamento`) e il totale visto torna indietro solo come controllo (`Modulo.Atteso[idMetodo:modalità]`). Un pagamento non attivo, o il contrassegno per ritiro/estero o fuori dai limiti, dà `DatiNonValidi` (`ModalitaPagamento`) e non crea l'ordine.
+- **Impostazioni (TenantAdmin):** `/admin/negozio/pagamenti` (404 senza negozio attivo, voce di menu «Pagamenti»), tabella `ImpostazioniPagamentoOfflineSiti`. *Bonifico:* attivo, intestatario, IBAN (controllo formale e modulo 97), BIC, banca, giorni per pagare (1–60, 7), istruzioni. *Contrassegno:* attivo, commissione **fissa** + **percentuale** (sul totale articoli + spedizione), **gratis dal totale**, **totale minimo e massimo**, istruzioni; solo consegna a domicilio in Italia. Servizio `IServizioPagamentiOffline`: gli amministratori leggono e salvano (ruolo riverificato, token di concorrenza, audit), l'account che ordina legge solo ciò che è attivo.
+- **Commissione:** fissa + `round(totale × % / 100, 2)`, zero dalla soglia di gratuità; IVA ordinaria scorporata (`CalcolatoreTotali.CalcolaCommissione`) in `CommissioneLorda/Imponibile/Iva` dell'ordine e nei totali.
+- **Bonifico:** ordine `InAttesaDiPagamento`, prenotazione fino alla scadenza (giorni impostati); email al cliente (coordinate, importo, causale `Ordine <numero>`, termine) e avviso al tenant nella stessa transazione dell'ordine; il dettaglio ordine del cliente mostra le coordinate. Admin: «Bonifico ricevuto: segna come pagato» (`SegnaPagatoAsync`: conferma la merce, accoda la conferma al cliente) e «Annulla l'ordine» (`AnnullaAsync`, libera la merce).
+- **Contrassegno:** ordine `DaSpedireContrassegno`, prenotazione `SenzaScadenza` (il job di scadenza non lo tocca); email al cliente e avviso al tenant. Admin: «Segna come spedito» (la merce esce dal magazzino), «Annulla l'ordine» prima della spedizione (anche il cliente), «Consegna non riuscita» dopo (`Spedito` → `Annullato`; la merce rientrata si rimette in giacenza a mano dalle giacenze). L'incasso non passa dal sistema.
+- **Fuori dai provider:** `AvviaAsync` rifiuta un ordine non `Online`; nessun rimborso dal pannello (il dettaglio avvisa); `ServizioDatiPersonali` annulla anche i contrassegni da spedire all'anonimizzazione dell'acquirente. CSV: colonne `Pagamento` e `CommissioneLorda` e riga «Commissione» nel formato per articolo.
 
 ## Esportazione degli ordini (M7.23)
 

@@ -38,7 +38,10 @@ public class DettaglioModel : PaginaAdmin
     /// <summary>Incassato con Nexi: il rimborso dal pannello non c'è, si fa dal back office Nexi (ADR-0022).</summary>
     public bool PagatoConNexi => Tentativi.Any(t => t.Provider == NomiProviderPagamento.Nexi && t.Stato is DvCms.Domain.Negozio.StatoTentativoPagamento.Catturato or DvCms.Domain.Negozio.StatoTentativoPagamento.DaRimborsare);
 
-    public bool PuoRimborsare => Ordine.Stato is DvCms.Domain.Negozio.StatoOrdine.Pagato or DvCms.Domain.Negozio.StatoOrdine.Spedito or DvCms.Domain.Negozio.StatoOrdine.Ritirato && Residuo > 0 && !PagatoConNexi;
+    /// <summary>Pagamento manuale (bonifico, contrassegno): non passa da un provider, quindi nessun rimborso dal pannello (ADR-0023).</summary>
+    public bool PagamentoManuale => Ordine.ModalitaPagamento != DvCms.Domain.Negozio.ModalitaPagamento.Online;
+
+    public bool PuoRimborsare => !PagamentoManuale && Ordine.Stato is DvCms.Domain.Negozio.StatoOrdine.Pagato or DvCms.Domain.Negozio.StatoOrdine.Spedito or DvCms.Domain.Negozio.StatoOrdine.Ritirato && Residuo > 0 && !PagatoConNexi;
 
     public bool DaRimborsare => Tentativi.Any(t => t.Stato == DvCms.Domain.Negozio.StatoTentativoPagamento.DaRimborsare);
 
@@ -77,8 +80,69 @@ public class DettaglioModel : PaginaAdmin
         else
         {
             MessaggioErrore = esito.Codice == CodiceEsito.NonConsentito
-                ? Localizzatore.Traduci("Solo un ordine pagato si può segnare come spedito o ritirato.")
+                ? Localizzatore.Traduci("Solo un ordine pagato, o in contrassegno da spedire, si può segnare come spedito o ritirato.")
                 : TestoErrore(esito.Codice);
+        }
+
+        return RedirectToPage(new { id });
+    }
+
+    public async Task<IActionResult> OnPostPagatoAsync(Guid id, CancellationToken annullamento)
+    {
+        if (!await _catalogo.CommercioAttivoAsync(annullamento))
+        {
+            return NotFound();
+        }
+
+        return EsitoAzione(
+            await _ordini.SegnaPagatoAsync(IdAttore, id, annullamento),
+            id,
+            Localizzatore.Traduci("Pagamento registrato: il cliente riceve la conferma."),
+            Localizzatore.Traduci("Solo un ordine con bonifico ancora in attesa si può segnare come pagato."));
+    }
+
+    public async Task<IActionResult> OnPostAnnullaOrdineAsync(Guid id, CancellationToken annullamento)
+    {
+        if (!await _catalogo.CommercioAttivoAsync(annullamento))
+        {
+            return NotFound();
+        }
+
+        return EsitoAzione(
+            await _ordini.AnnullaAsync(IdAttore, id, annullamento),
+            id,
+            Localizzatore.Traduci("Ordine annullato: la merce prenotata è di nuovo disponibile."),
+            Localizzatore.Traduci("Si possono annullare da qui solo gli ordini con pagamento manuale non ancora incassato."));
+    }
+
+    public async Task<IActionResult> OnPostConsegnaNonRiuscitaAsync(Guid id, CancellationToken annullamento)
+    {
+        if (!await _catalogo.CommercioAttivoAsync(annullamento))
+        {
+            return NotFound();
+        }
+
+        return EsitoAzione(
+            await _ordini.SegnaConsegnaNonRiuscitaAsync(IdAttore, id, annullamento),
+            id,
+            Localizzatore.Traduci("Ordine annullato. Quando la merce rientra, rimettila in giacenza dalla pagina delle giacenze."),
+            Localizzatore.Traduci("Solo un ordine in contrassegno già spedito può risultare non consegnato."));
+    }
+
+    private IActionResult EsitoAzione(EsitoOperazione esito, Guid id, string messaggioRiuscito, string messaggioNonConsentito)
+    {
+        if (esito.Codice == CodiceEsito.NonTrovato)
+        {
+            return NotFound();
+        }
+
+        if (esito.Riuscito)
+        {
+            Messaggio = messaggioRiuscito;
+        }
+        else
+        {
+            MessaggioErrore = esito.Codice == CodiceEsito.NonConsentito ? messaggioNonConsentito : TestoErrore(esito.Codice);
         }
 
         return RedirectToPage(new { id });
@@ -228,6 +292,8 @@ public class DettaglioModel : PaginaAdmin
         DvCms.Domain.Negozio.StatoTentativoPagamento.Rimborsato => Localizzatore.Traduci("Rimborsato"),
         _ => stato.ToString(),
     };
+
+    public string Modalita(DvCms.Domain.Negozio.ModalitaPagamento modalita) => EtichetteOrdine.Modalita(Localizzatore, modalita);
 
     public string Stato(DvCms.Domain.Negozio.StatoOrdine stato) => EtichetteOrdine.Stato(Localizzatore, stato);
 }

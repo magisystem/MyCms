@@ -52,8 +52,13 @@ public sealed class ServizioProntezzaNegozio : IServizioProntezzaNegozio
         var credenziali = await _credenziali.OttieniAsync(idTenant, idSito, annullamento);
         var credenzialiNexi = await _credenzialiNexi.OttieniAsync(idTenant, idSito, annullamento);
 
-        // Basta un provider pronto: quello non ancora configurato è solo un'attenzione, a meno che non ce ne sia nessuno.
-        var mancaPayPal = credenzialiNexi is null ? StatoControllo.Bloccante : StatoControllo.Attenzione;
+        // Basta un metodo di pagamento pronto: quello non ancora configurato è solo un'attenzione, a meno che non ce ne sia nessuno.
+        // I pagamenti manuali (bonifico, contrassegno; ADR-0023) contano come metodi pronti se attivi e completi.
+        var offline = await _contesto.ImpostazioniPagamentoOfflineSiti.IgnoreQueryFilters().AsNoTracking().SingleOrDefaultAsync(i => i.IdSito == idSito && i.IdTenant == idTenant, annullamento);
+        var bonificoPronto = offline is { BonificoAttivo: true, Intestatario: { Length: > 0 }, Iban: { Length: > 0 } };
+        var contrassegnoPronto = offline is { ContrassegnoAttivo: true };
+        var manualePronto = bonificoPronto || contrassegnoPronto;
+        var mancaPayPal = credenzialiNexi is null && !manualePronto ? StatoControllo.Bloccante : StatoControllo.Attenzione;
         var ambientePayPal = impostazioni?.Ambiente ?? AmbientePagamento.Sandbox;
         Aggiungi("CredenzialiPayPal", credenziali is not null, mancaPayPal, ambientePayPal.ToString());
 
@@ -64,14 +69,27 @@ public sealed class ServizioProntezzaNegozio : IServizioProntezzaNegozio
             Aggiungi("CredenzialiNexi", credenzialiNexi is not null, StatoControllo.Attenzione, credenzialiNexi?.Ambiente.ToString());
         }
 
-        // L'ambiente che conta è quello dei provider configurati: se uno è in produzione serve l'interruttore.
+        if (offline is { BonificoAttivo: true } && !bonificoPronto)
+        {
+            controlli.Add(new ControlloProntezza("BonificoIncompleto", StatoControllo.Bloccante));
+        }
+
+        if (manualePronto)
+        {
+            var attivi = string.Join(", ", new[] { bonificoPronto ? "bonifico" : null, contrassegnoPronto ? "contrassegno" : null }.Where(n => n is not null));
+            controlli.Add(new ControlloProntezza("PagamentiManuali", StatoControllo.Ok, attivi));
+        }
+
+        // L'ambiente che conta è quello dei provider online configurati: se uno è in produzione serve l'interruttore. Senza provider online
+        // (solo pagamenti manuali) non c'è ambiente di prova né interruttore.
         var ambiente = impostazioni is not null ? ambientePayPal : credenzialiNexi?.Ambiente ?? AmbientePagamento.Sandbox;
         var inProduzione = impostazioni?.Ambiente == AmbientePagamento.Live || credenzialiNexi?.Ambiente == AmbientePagamento.Live;
+        var haProviderOnline = credenziali is not null || credenzialiNexi is not null;
         if (inProduzione)
         {
             Aggiungi("InterruttoreProduzione", _opzioni.CheckoutProduzioneAbilitato, StatoControllo.Bloccante);
         }
-        else
+        else if (haProviderOnline || !manualePronto)
         {
             controlli.Add(new ControlloProntezza("AmbienteProva", StatoControllo.Attenzione, ambiente.ToString()));
         }

@@ -15,12 +15,14 @@ public class DettaglioModel : PageModel
 {
     private readonly IServizioOrdini _ordini;
     private readonly IServizioPagamenti _pagamenti;
+    private readonly IServizioPagamentiOffline _offline;
     private readonly ILocalizzatore _localizzatore;
 
-    public DettaglioModel(IServizioOrdini ordini, IServizioPagamenti pagamenti, ILocalizzatore localizzatore)
+    public DettaglioModel(IServizioOrdini ordini, IServizioPagamenti pagamenti, IServizioPagamentiOffline offline, ILocalizzatore localizzatore)
     {
         _ordini = ordini;
         _pagamenti = pagamenti;
+        _offline = offline;
         _localizzatore = localizzatore;
     }
 
@@ -41,7 +43,15 @@ public class DettaglioModel : PageModel
     /// <summary>I provider con cui questo sito fa pagare adesso: un pulsante ciascuno.</summary>
     public IReadOnlyList<string> ProviderDisponibili { get; private set; } = [];
 
-    public bool PuoPagare => Ordine.Stato is StatoOrdine.InAttesaDiPagamento or StatoOrdine.PagamentoFallito && Ordine.TotaleLordo > 0;
+    /// <summary>Coordinate del bonifico e istruzioni del contrassegno (ADR-0023), lette solo per gli ordini con pagamento manuale.</summary>
+    public ImpostazioniPagamentoOffline Offline { get; private set; } = ImpostazioniPagamentoOffline.Spente;
+
+    public bool PuoPagare => Ordine.ModalitaPagamento == ModalitaPagamento.Online && Ordine.Stato is StatoOrdine.InAttesaDiPagamento or StatoOrdine.PagamentoFallito && Ordine.TotaleLordo > 0;
+
+    /// <summary>Il bonifico è ancora atteso: si mostrano coordinate, importo e causale.</summary>
+    public bool AttendeBonifico => Ordine.ModalitaPagamento == ModalitaPagamento.Bonifico && Ordine.Stato == StatoOrdine.InAttesaDiPagamento;
+
+    public string Causale => CausaleBonifico.Per(Ordine.Numero);
 
     public ILocalizzatore Localizzatore => _localizzatore;
 
@@ -60,6 +70,11 @@ public class DettaglioModel : PageModel
 
         Ordine = ordine;
         ProviderDisponibili = await _pagamenti.ProviderDisponibiliAsync(annullamento);
+        if (ordine.ModalitaPagamento != ModalitaPagamento.Online)
+        {
+            Offline = await _offline.LeggiPerClienteAsync(IdAccount, annullamento);
+        }
+
         return Page();
     }
 
