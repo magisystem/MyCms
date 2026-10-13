@@ -68,6 +68,17 @@ public sealed class NexiFinto : HttpMessageHandler
 
     public void Rifiuta(string idOrdine) => Aggiungi(idOrdine, ("AUTHORIZATION", "DECLINED", null));
 
+    /// <summary>Un rimborso fatto dal pannello Nexi del commerciante (importo in euro, dopo un incasso): restituisce l'identificativo dell'operazione.</summary>
+    public string RimborsaEsternamente(string idOrdine, decimal importo)
+    {
+        lock (_blocco)
+        {
+            var progressivo = _ordini[idOrdine].Operazioni.Count + 1;
+            _ordini[idOrdine].Operazioni.Add(("REFUND", "REFUNDED", decimal.Round(importo * 100m, 0).ToString("0", CultureInfo.InvariantCulture)));
+            return $"OP-{progressivo}-{idOrdine}";
+        }
+    }
+
     public void Annulla(string idOrdine) => Aggiungi(idOrdine, ("AUTHORIZATION", "CANCELED", null));
 
     public void MettiInSospeso(string idOrdine) => Aggiungi(idOrdine, ("AUTHORIZATION", "PENDING", null));
@@ -153,7 +164,7 @@ public sealed class NexiFinto : HttpMessageHandler
             _ordini[idOrdine] = new OrdineNexi(importo, $"token-nexi-{numero}-{Guid.NewGuid():N}", corpo);
             return Json(HttpStatusCode.OK, new JsonObject
             {
-                ["hostedPage"] = $"https://pay.nexi-finto.example/hpp/{idOrdine}",
+                ["hostedPage"] = $"https://xpaysandbox.nexigroup.com/hpp/nexi/{idOrdine}?operationId=1",
                 ["securityToken"] = _ordini[idOrdine].Token,
             });
         }
@@ -184,11 +195,17 @@ public sealed class NexiFinto : HttpMessageHandler
                 });
             }
 
-            return Json(HttpStatusCode.OK, new JsonObject
+            // Come il gateway vero: finché non ci sono operazioni la chiave «operations» non c'è.
+            var risposta = new JsonObject
             {
-                ["orderStatus"] = new JsonObject { ["order"] = new JsonObject { ["orderId"] = idOrdine, ["amount"] = ordine.Importo, ["currency"] = "EUR" } },
-                ["operations"] = operazioni,
-            });
+                ["orderStatus"] = new JsonObject { ["authorizedAmount"] = "0", ["capturedAmount"] = "0", ["order"] = new JsonObject { ["orderId"] = idOrdine, ["amount"] = ordine.Importo, ["currency"] = "EUR" } },
+            };
+            if (operazioni.Count > 0)
+            {
+                risposta["operations"] = operazioni;
+            }
+
+            return Json(HttpStatusCode.OK, risposta);
         }
     }
 

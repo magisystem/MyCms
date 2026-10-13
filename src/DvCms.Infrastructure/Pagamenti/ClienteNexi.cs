@@ -112,7 +112,14 @@ public sealed class ClienteNexi
         return new PagamentoNexiCreato(url, token);
     }
 
-    public async Task<EsitoCatturaProvider> LeggiOrdineAsync(CredenzialiNexi credenziali, string idOrdineNexi, CancellationToken annullamento)
+    public async Task<EsitoCatturaProvider> LeggiOrdineAsync(CredenzialiNexi credenziali, string idOrdineNexi, CancellationToken annullamento) =>
+        Interpreta(await LeggiGiornaleOrdineAsync(credenziali, idOrdineNexi, annullamento));
+
+    /// <summary>I rimborsi eseguiti per l'ordine (anche dal pannello di Nexi): operazioni <c>REFUND</c> con risultato <c>REFUNDED</c>.</summary>
+    public async Task<IReadOnlyList<RimborsoDelProvider>> LeggiRimborsiAsync(CredenzialiNexi credenziali, string idOrdineNexi, CancellationToken annullamento) =>
+        Rimborsi(await LeggiGiornaleOrdineAsync(credenziali, idOrdineNexi, annullamento));
+
+    private async Task<JsonElement> LeggiGiornaleOrdineAsync(CredenzialiNexi credenziali, string idOrdineNexi, CancellationToken annullamento)
     {
         ArgumentNullException.ThrowIfNull(credenziali);
         ControllaIdOrdine(idOrdineNexi);
@@ -123,17 +130,20 @@ public sealed class ClienteNexi
         var json = await LeggiGiornaleAsync(risposta, annullamento);
         if (risposta.StatusCode == HttpStatusCode.NotFound)
         {
-            // Il cliente non è mai arrivato alla pagina di pagamento: per Nexi l'ordine non esiste ancora.
-            return new EsitoCatturaProvider(StatoCatturaProvider.NonApprovata, null, null, null);
+            // Il cliente non è mai arrivato alla pagina di pagamento: per Nexi l'ordine non esiste ancora (nessuna operazione).
+            using var vuoto = JsonDocument.Parse("{}");
+            return vuoto.RootElement.Clone();
         }
 
-        if (!risposta.IsSuccessStatusCode)
-        {
-            throw Errore(risposta, json);
-        }
-
-        return Interpreta(json);
+        return risposta.IsSuccessStatusCode ? json : throw Errore(risposta, json);
     }
+
+    public static IReadOnlyList<RimborsoDelProvider> Rimborsi(JsonElement json) =>
+        [.. Operazioni(json)
+            .Where(o => Testo(o, "operationType") == "REFUND" && Testo(o, "operationResult") == "REFUNDED")
+            .Select(o => (Id: Testo(o, "operationId"), Importo: LeggiImporto(Testo(o, "operationAmount")), Valuta: Testo(o, "operationCurrency")))
+            .Where(r => r.Id is { Length: > 0 and <= 64 } && r.Importo is > 0 && r.Valuta is { Length: 3 })
+            .Select(r => new RimborsoDelProvider(r.Id!, r.Importo!.Value, r.Valuta!))];
 
     /// <summary>
     /// Da operazioni e importi dell'ordine all'esito. Pagato solo con un'operazione <c>CAPTURE</c> eseguita (incasso confermato); in
@@ -203,14 +213,13 @@ public sealed class ClienteNexi
         }
     }
 
-    /// <summary>La pagina di pagamento deve essere HTTPS su un nome di dominio (mai un indirizzo IP né una porta insolita né credenziali nell'indirizzo).</summary>
+    /// <summary>La pagina di pagamento deve essere HTTPS su un dominio di Nexi (<c>xpay.nexigroup.com</c>, <c>xpaysandbox.nexigroup.com</c>), senza porta insolita né credenziali nell'indirizzo.</summary>
     private static bool PaginaFidata(Uri uri) =>
         uri.Scheme == Uri.UriSchemeHttps
         && string.IsNullOrEmpty(uri.UserInfo)
         && uri.IsDefaultPort
         && uri.HostNameType == UriHostNameType.Dns
-        && uri.Host.Contains('.', StringComparison.Ordinal)
-        && !uri.Host.EndsWith(".local", StringComparison.OrdinalIgnoreCase);
+        && uri.Host.EndsWith(".nexigroup.com", StringComparison.OrdinalIgnoreCase);
 
     private static HttpRequestMessage Costruisci(HttpMethod metodo, CredenzialiNexi credenziali, string percorso, Guid idCorrelazione, string? corpo)
     {

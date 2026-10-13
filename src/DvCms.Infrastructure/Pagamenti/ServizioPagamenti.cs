@@ -340,12 +340,14 @@ public sealed partial class ServizioPagamenti : IServizioPagamenti
                 esito = EventoWebhook.EsitoElaborato;
                 break;
             case "PAYMENT.CAPTURE.REFUNDED" or "PAYMENT.REFUND.COMPLETED" or "PAYMENT.REFUND.FAILED" or "PAYMENT.REFUND.CANCELLED":
-                // Il contenuto dell'evento non decide nulla: il rimborso si rilegge dal provider. Uno non richiesto da qui (ad esempio fatto
-                // direttamente dal conto PayPal) non si conosce e si ignora.
+                // Il contenuto dell'evento non decide nulla: il rimborso si rilegge dal provider. Se è uno richiesto da qui, ne applica l'esito;
+                // se è uno fatto direttamente dal pannello PayPal e concluso, lo si registra e si aggiorna l'ordine.
                 bool conosciuto;
                 try
                 {
-                    conosciuto = idRisorsa is not null && await _rimborsi.AllineaDaProviderAsync(idRisorsa, annullamento);
+                    conosciuto = idRisorsa is not null
+                        && (await _rimborsi.AllineaDaProviderAsync(idRisorsa, annullamento)
+                            || (tipo is "PAYMENT.CAPTURE.REFUNDED" or "PAYMENT.REFUND.COMPLETED" && await _rimborsi.RegistraRimborsoEsternoPayPalAsync(idRisorsa, annullamento)));
                 }
                 catch (ProviderPagamentoException)
                 {
@@ -444,6 +446,19 @@ public sealed partial class ServizioPagamenti : IServizioPagamenti
         if (applicato == RisultatoPagamento.ErroreProvider)
         {
             return EsitoWebhook.ErroreProvider;
+        }
+
+        // Un rimborso fatto dal pannello di Nexi: si rilegge dal gateway l'elenco dei rimborsi e si registrano quelli che il negozio non conosce.
+        if (tipo.Contains("REFUND", StringComparison.Ordinal))
+        {
+            try
+            {
+                await _rimborsi.RegistraRimborsiEsterniAsync(tentativo.Id, annullamento);
+            }
+            catch (ProviderPagamentoException)
+            {
+                return EsitoWebhook.ErroreProvider;
+            }
         }
 
         if (applicato == RisultatoPagamento.NonConfigurato)

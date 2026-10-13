@@ -1634,6 +1634,9 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.Property<DateTime>("CreatoIlUtc")
                         .HasColumnType("datetime2");
 
+                    b.Property<bool>("Esterno")
+                        .HasColumnType("bit");
+
                     b.Property<Guid>("IdOrdine")
                         .HasColumnType("uniqueidentifier");
 
@@ -1650,7 +1653,7 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.Property<Guid>("IdTentativo")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("IdUtenzaRichiedente")
+                    b.Property<Guid?>("IdUtenzaRichiedente")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<decimal>("Importo")
@@ -1684,6 +1687,7 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.HasIndex("IdUtenzaRichiedente");
 
                     b.HasIndex("IdSito", "IdProvider")
+                        .IsUnique()
                         .HasFilter("[IdProvider] IS NOT NULL");
 
                     b.HasIndex("IdTenant", "IdSito", "IdOrdine");
@@ -2687,8 +2691,7 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.HasOne("DvCms.Domain.Accessi.Utenza", null)
                         .WithMany()
                         .HasForeignKey("IdUtenzaRichiedente")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("DvCms.Domain.Negozio.Ordine", null)
                         .WithMany()

@@ -146,7 +146,14 @@ public class Rimborso
     /// <summary>Identificativo del rimborso presso il provider, quando c'è.</summary>
     public string? IdProvider { get; set; }
 
-    public Guid IdUtenzaRichiedente { get; set; }
+    /// <summary>Chi l'ha richiesto dal pannello; nullo per un rimborso fatto fuori dal sistema (<see cref="Esterno"/>).</summary>
+    public Guid? IdUtenzaRichiedente { get; set; }
+
+    /// <summary>
+    /// Vero se il rimborso è stato eseguito direttamente dal pannello del provider (PayPal, Nexi) e il negozio l'ha riconosciuto da una
+    /// notifica: nasce già concluso e aggiorna l'ordine come un rimborso richiesto da qui.
+    /// </summary>
+    public bool Esterno { get; set; }
 
     public DateTime CreatoIlUtc { get; set; }
 

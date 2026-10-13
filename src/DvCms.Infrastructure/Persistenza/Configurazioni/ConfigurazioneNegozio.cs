@@ -497,6 +497,8 @@ internal sealed class ConfigurazioneRimborso : IEntityTypeConfiguration<Rimborso
         entita.HasOne<TentativoPagamento>().WithMany().HasForeignKey(rimborso => rimborso.IdTentativo).OnDelete(DeleteBehavior.Restrict);
         entita.HasOne<DvCms.Domain.Accessi.Utenza>().WithMany().HasForeignKey(rimborso => rimborso.IdUtenzaRichiedente).OnDelete(DeleteBehavior.Restrict);
         entita.HasIndex(rimborso => rimborso.IdOrdine);
-        entita.HasIndex(rimborso => new { rimborso.IdSito, rimborso.IdProvider }).HasFilter("[IdProvider] IS NOT NULL");
+
+        // Un rimborso del provider si registra una volta sola, anche se la notifica arriva due volte insieme.
+        entita.HasIndex(rimborso => new { rimborso.IdSito, rimborso.IdProvider }).IsUnique().HasFilter("[IdProvider] IS NOT NULL");
     }
 }

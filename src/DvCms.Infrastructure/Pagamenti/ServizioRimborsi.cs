@@ -20,6 +20,7 @@ public sealed partial class ServizioRimborsi : IServizioRimborsi
     private readonly IContestoTenant _tenant;
     private readonly IProviderPagamento _provider;
     private readonly IArchivioCredenzialiPagamento _credenziali;
+    private readonly Dictionary<string, IGatewayPagamento> _gateway;
     private readonly IServizioAudit _audit;
     private readonly NotificheOrdine _notifiche;
     private readonly TimeProvider _orologio;
@@ -30,6 +31,7 @@ public sealed partial class ServizioRimborsi : IServizioRimborsi
         IContestoTenant tenant,
         IProviderPagamento provider,
         IArchivioCredenzialiPagamento credenziali,
+        IEnumerable<IGatewayPagamento> gateway,
         IServizioAudit audit,
         NotificheOrdine notifiche,
         TimeProvider orologio,
@@ -39,6 +41,7 @@ public sealed partial class ServizioRimborsi : IServizioRimborsi
         _tenant = tenant;
         _provider = provider;
         _credenziali = credenziali;
+        _gateway = gateway.ToDictionary(g => g.Nome, StringComparer.Ordinal);
         _audit = audit;
         _notifiche = notifiche;
         _orologio = orologio;
@@ -269,6 +272,202 @@ public sealed partial class ServizioRimborsi : IServizioRimborsi
         return true;
     }
 
+    public async Task<bool> RegistraRimborsoEsternoPayPalAsync(string idRimborsoProvider, CancellationToken annullamento)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(idRimborsoProvider);
+
+        var idSito = _tenant.IdSito;
+        if (await _contesto.Rimborsi.AsNoTracking().AnyAsync(r => r.IdSito == idSito && r.IdProvider == idRimborsoProvider, annullamento))
+        {
+            return true;
+        }
+
+        var credenziali = await _credenziali.OttieniAsync(_tenant.IdTenant, idSito, annullamento);
+        if (credenziali is null)
+        {
+            return false;
+        }
+
+        // Il contenuto del webhook non decide nulla: importo, esito e incasso si rileggono dal provider.
+        EsitoRimborsoProvider esito;
+        try
+        {
+            esito = await _provider.LeggiRimborsoAsync(credenziali, idRimborsoProvider, annullamento);
+        }
+        catch (ProviderPagamentoException eccezione)
+        {
+            RegistraErroreProvider(_logger, Guid.Empty, eccezione.Message);
+            throw;
+        }
+
+        if (esito.Stato != StatoRimborsoProvider.Completato || esito.IdCattura is null || esito.Importo is not > 0 || esito.Valuta is null)
+        {
+            return false;
+        }
+
+        var tentativo = await _contesto.TentativiPagamento.AsNoTracking()
+            .SingleOrDefaultAsync(t => t.IdSito == idSito && t.Provider == NomiProviderPagamento.PayPal && t.IdCattura == esito.IdCattura, annullamento);
+        return tentativo is not null && await RegistraEsternoAsync(tentativo, idRimborsoProvider, esito.Importo.Value, esito.Valuta, annullamento);
+    }
+
+    public async Task<int> RegistraRimborsiEsterniAsync(Guid idTentativo, CancellationToken annullamento)
+    {
+        var idSito = _tenant.IdSito;
+        var tentativo = await _contesto.TentativiPagamento.AsNoTracking().SingleOrDefaultAsync(t => t.Id == idTentativo && t.IdSito == idSito, annullamento);
+        if (tentativo is null
+            || !_gateway.TryGetValue(tentativo.Provider, out var gateway)
+            || await gateway.OttieniCredenzialiAsync(_tenant.IdTenant, idSito, annullamento) is not { } credenziali)
+        {
+            return 0;
+        }
+
+        IReadOnlyList<RimborsoDelProvider> rimborsi;
+        try
+        {
+            rimborsi = await gateway.LeggiRimborsiAsync(credenziali, tentativo.IdProvider, annullamento);
+        }
+        catch (ProviderPagamentoException eccezione)
+        {
+            RegistraErroreProvider(_logger, Guid.Empty, eccezione.Message);
+            throw;
+        }
+
+        var registrati = 0;
+        foreach (var rimborso in rimborsi)
+        {
+            if (await _contesto.Rimborsi.AsNoTracking().AnyAsync(r => r.IdSito == idSito && r.IdProvider == rimborso.IdRimborso, annullamento))
+            {
+                continue;
+            }
+
+            // Il tentativo si rilegge a ogni giro: un rimborso precedente può averne cambiato lo stato.
+            var attuale = await _contesto.TentativiPagamento.AsNoTracking().SingleAsync(t => t.Id == idTentativo, annullamento);
+            if (await RegistraEsternoAsync(attuale, rimborso.IdRimborso, rimborso.Importo, rimborso.Valuta, annullamento))
+            {
+                registrati++;
+            }
+        }
+
+        return registrati;
+    }
+
+    /// <summary>
+    /// Registra un rimborso già eseguito presso il provider (dal suo pannello) e ne applica l'effetto come per uno richiesto da qui. Vero se
+    /// il rimborso è ora noto o va ignorato senza errore; falso mai per un errore transitorio (quello solleva).
+    /// </summary>
+    private Task<bool> RegistraEsternoAsync(TentativoPagamento tentativo, string idRimborsoProvider, decimal importo, string valuta, CancellationToken annullamento) =>
+        RiprovaSuDeadlock.EseguiAsync(_contesto, () => RegistraEsternoUnaVoltaAsync(tentativo, idRimborsoProvider, importo, valuta, annullamento));
+
+    private async Task<bool> RegistraEsternoUnaVoltaAsync(TentativoPagamento tentativo, string idRimborsoProvider, decimal importo, string valuta, CancellationToken annullamento)
+    {
+        var idTenant = _tenant.IdTenant;
+        var idSito = _tenant.IdSito;
+        if (importo <= 0 || decimal.Round(importo, 2) != importo || !string.Equals(valuta, tentativo.Valuta, StringComparison.Ordinal))
+        {
+            await _audit.RegistraAsync(AzioniAudit.RimborsoEsterno, $"Ordine:{tentativo.IdOrdine}", RegistroAudit.EsitoNegato, idTenant, null, "rimborso del provider con importo o valuta non validi: ignorato", annullamento);
+            return true;
+        }
+
+        if (await _contesto.Rimborsi.AsNoTracking().AnyAsync(r => r.IdSito == idSito && r.IdProvider == idRimborsoProvider, annullamento))
+        {
+            return true;
+        }
+
+        // Un rimborso chiesto da qui la cui risposta non è ancora arrivata è lo stesso rimborso, non un secondo: lo si fa concludere.
+        var inVolo = await _contesto.Rimborsi.AsNoTracking()
+            .Where(r => r.IdTentativo == tentativo.Id && r.Stato == StatoRimborso.InCorso && r.IdProvider == null && r.Importo == importo)
+            .OrderBy(r => r.CreatoIlUtc)
+            .FirstOrDefaultAsync(annullamento);
+        if (inVolo is not null)
+        {
+            await ApplicaEsitoUnaVoltaAsync(inVolo, new EsitoRimborsoProvider(StatoRimborsoProvider.Completato, idRimborsoProvider), annullamento);
+            return true;
+        }
+
+        var orfano = tentativo.Stato is StatoTentativoPagamento.DaRimborsare or StatoTentativoPagamento.RimborsoInCorso;
+        if (!orfano && tentativo.Stato != StatoTentativoPagamento.Catturato)
+        {
+            // Incasso già restituito per intero o mai concluso: nulla da aggiornare.
+            return true;
+        }
+
+        var adesso = _orologio.GetUtcNow().UtcDateTime;
+        var rimborso = new Rimborso
+        {
+            Id = Identificativi.Nuovo(_orologio),
+            IdTenant = idTenant,
+            IdSito = idSito,
+            IdOrdine = tentativo.IdOrdine,
+            IdTentativo = tentativo.Id,
+            IncassoOrfano = orfano,
+            Importo = importo,
+            Valuta = valuta,
+            Stato = StatoRimborso.Completato,
+            IdProvider = idRimborsoProvider,
+            IdUtenzaRichiedente = null,
+            Esterno = true,
+            CreatoIlUtc = adesso,
+            AggiornatoIlUtc = adesso,
+        };
+
+        await using var transazione = await _contesto.Database.BeginTransactionAsync(annullamento);
+        if (!orfano)
+        {
+            // L'importo si somma al rimborsato solo se resta entro il totale dell'ordine: oltre, il conto non torna e va guardato a mano.
+            var applicato = await _contesto.Ordini
+                .Where(o => o.Id == tentativo.IdOrdine && o.TotaleRimborsato + importo <= o.TotaleLordo)
+                .ExecuteUpdateAsync(s => s.SetProperty(o => o.TotaleRimborsato, o => o.TotaleRimborsato + importo).SetProperty(o => o.AggiornatoIlUtc, adesso), annullamento);
+            if (applicato == 0)
+            {
+                await transazione.RollbackAsync(annullamento);
+                await _audit.RegistraAsync(AzioniAudit.RimborsoEsterno, $"Ordine:{tentativo.IdOrdine}", RegistroAudit.EsitoNegato, idTenant, null, $"rimborso del provider di {importo:0.00} {valuta} oltre il residuo dell'ordine: non registrato", annullamento);
+                return true;
+            }
+        }
+
+        _contesto.Rimborsi.Add(rimborso);
+        try
+        {
+            await _contesto.SaveChangesAsync(annullamento);
+        }
+        catch (DbUpdateException)
+        {
+            // Registrato nel frattempo da un'altra notifica uguale (indice unico sul rimborso del provider).
+            await transazione.RollbackAsync(annullamento);
+            _contesto.ChangeTracker.Clear();
+            return true;
+        }
+
+        if (orfano)
+        {
+            // Incasso che non era diventato un ordine pagato: restituito per intero → chiuso.
+            var restituito = await _contesto.Rimborsi.Where(r => r.IdTentativo == tentativo.Id && r.IncassoOrfano && r.Stato == StatoRimborso.Completato).SumAsync(r => r.Importo, annullamento);
+            if (restituito >= (tentativo.ImportoIncassato ?? tentativo.Importo))
+            {
+                await _contesto.TentativiPagamento.Where(t => t.Id == tentativo.Id && (t.Stato == StatoTentativoPagamento.DaRimborsare || t.Stato == StatoTentativoPagamento.RimborsoInCorso))
+                    .ExecuteUpdateAsync(s => s.SetProperty(t => t.Stato, StatoTentativoPagamento.Rimborsato).SetProperty(t => t.AggiornatoIlUtc, adesso), annullamento);
+            }
+        }
+        else
+        {
+            var ordine = await _contesto.Ordini.AsNoTracking().SingleAsync(o => o.Id == tentativo.IdOrdine, annullamento);
+            var completati = await _contesto.Rimborsi.Where(r => r.IdOrdine == tentativo.IdOrdine && !r.IncassoOrfano && r.Stato == StatoRimborso.Completato).SumAsync(r => r.Importo, annullamento);
+            var totale = completati >= ordine.TotaleLordo;
+            if (totale)
+            {
+                await _contesto.Ordini.Where(o => o.Id == tentativo.IdOrdine && _rimborsabili.Contains(o.Stato))
+                    .ExecuteUpdateAsync(s => s.SetProperty(o => o.Stato, StatoOrdine.Rimborsato).SetProperty(o => o.AggiornatoIlUtc, adesso), annullamento);
+            }
+
+            await _notifiche.AccodaRimborsoAsync(ordine, rimborso, totale, annullamento);
+            await _contesto.SaveChangesAsync(annullamento);
+        }
+
+        await transazione.CommitAsync(annullamento);
+        await _audit.RegistraAsync(AzioniAudit.RimborsoEsterno, $"Ordine:{tentativo.IdOrdine}", RegistroAudit.EsitoRiuscito, idTenant, null, $"rimborso {importo:0.00} {valuta} eseguito dal pannello del provider ({tentativo.Provider})", annullamento);
+        return true;
+    }
+
     public async Task<IReadOnlyList<RimborsoVista>> ElencaAsync(Guid idAttore, Guid idOrdine, CancellationToken annullamento)
     {
         if (await TrovaAttoreAsync(idAttore, annullamento) is null)
@@ -280,7 +479,7 @@ public sealed partial class ServizioRimborsi : IServizioRimborsi
         return await _contesto.Rimborsi.AsNoTracking()
             .Where(r => r.IdOrdine == idOrdine && r.IdSito == idSito)
             .OrderBy(r => r.CreatoIlUtc)
-            .Select(r => new RimborsoVista(r.Id, r.Importo, r.Valuta, r.Motivo, r.Stato, r.IncassoOrfano, r.CreatoIlUtc))
+            .Select(r => new RimborsoVista(r.Id, r.Importo, r.Valuta, r.Motivo, r.Stato, r.IncassoOrfano, r.CreatoIlUtc, r.Esterno))
             .ToListAsync(annullamento);
     }
 

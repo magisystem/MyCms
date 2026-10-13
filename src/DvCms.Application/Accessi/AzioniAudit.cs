@@ -64,6 +64,7 @@ public static class AzioniAudit
     public const string RichiestaRimborso = "RichiestaRimborso";
     public const string RimborsoCompletato = "RimborsoCompletato";
     public const string RimborsoRifiutato = "RimborsoRifiutato";
+    public const string RimborsoEsterno = "RimborsoEsterno";
     public const string ImpostazioneGiacenza = "ImpostazioneGiacenza";
     public const string ImpostazioneCommercio = "ImpostazioneCommercio";
     public const string CreazioneProdotto = "CreazioneProdotto";

@@ -400,7 +400,28 @@ public sealed partial class ClientePayPal : IProviderPagamento
             "FAILED" or "CANCELLED" => StatoRimborsoProvider.Fallito,
             _ => StatoRimborsoProvider.InSospeso,
         };
-        return new EsitoRimborsoProvider(risultato, IdProviderValido(id) ? id : null);
+
+        decimal? importo = null;
+        string? valuta = null;
+        if (json.TryGetProperty("amount", out var quantita) && quantita.ValueKind == JsonValueKind.Object)
+        {
+            importo = quantita.TryGetProperty("value", out var valore) && decimal.TryParse(valore.GetString(), NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var letto) ? letto : null;
+            valuta = quantita.TryGetProperty("currency_code", out var codice) ? codice.GetString() : null;
+        }
+
+        // L'incasso a cui si riferisce è nel collegamento «up» (.../v2/payments/captures/{id}).
+        string? idCattura = null;
+        if (json.TryGetProperty("links", out var collegamenti) && collegamenti.ValueKind == JsonValueKind.Array)
+        {
+            var su = collegamenti.EnumerateArray()
+                .Where(l => l.ValueKind == JsonValueKind.Object && l.TryGetProperty("rel", out var rel) && rel.GetString() == "up" && l.TryGetProperty("href", out _))
+                .Select(l => l.GetProperty("href").GetString())
+                .FirstOrDefault(h => h is not null);
+            var corrispondenza = su is null ? null : CollegamentoCattura().Match(su);
+            idCattura = corrispondenza is { Success: true } ? corrispondenza.Groups[1].Value : null;
+        }
+
+        return new EsitoRimborsoProvider(risultato, IdProviderValido(id) ? id : null, importo, valuta, idCattura);
     }
 
     private static bool OspiteFidato(Uri uri) =>
@@ -418,6 +439,9 @@ public sealed partial class ClientePayPal : IProviderPagamento
     }
 
     private static string Tronca(string testo, int massimo) => testo.Length <= massimo ? testo : testo[..massimo];
+
+    [GeneratedRegex("/captures/([A-Za-z0-9-]{1,64})(?:$|[/?#])", RegexOptions.CultureInvariant)]
+    private static partial Regex CollegamentoCattura();
 
     [GeneratedRegex("^[A-Za-z0-9-]{1,64}$", RegexOptions.CultureInvariant)]
     private static partial Regex IdProvider();

@@ -151,7 +151,12 @@ public enum StatoRimborsoProvider
     Fallito = 3,
 }
 
-public sealed record EsitoRimborsoProvider(StatoRimborsoProvider Stato, string? IdRimborso);
+/// <param name="Importo">Importo del rimborso, quando il provider lo comunica (letto per i rimborsi fatti dal suo pannello).</param>
+/// <param name="IdCattura">Incasso a cui si riferisce, quando il provider lo comunica.</param>
+public sealed record EsitoRimborsoProvider(StatoRimborsoProvider Stato, string? IdRimborso, decimal? Importo = null, string? Valuta = null, string? IdCattura = null);
+
+/// <summary>Un rimborso già eseguito presso il provider (letto dall'ordine, ad esempio uno fatto dal suo pannello).</summary>
+public sealed record RimborsoDelProvider(string IdRimborso, decimal Importo, string Valuta);
 
 /// <summary>Intestazioni con cui il provider firma un webhook.</summary>
 public sealed record IntestazioniWebhook(string AuthAlgo, string CertUrl, string TransmissionId, string TransmissionSig, string TransmissionTime);
@@ -219,4 +224,10 @@ public interface IGatewayPagamento
 
     /// <summary>Stato attuale presso il provider, senza incassare (riconciliazione, notifiche, incassi orfani).</summary>
     Task<EsitoCatturaProvider> LeggiOrdineAsync(CredenzialiGateway credenziali, string idProvider, CancellationToken annullamento);
+
+    /// <summary>
+    /// I rimborsi già eseguiti presso il provider per quel pagamento, completati (anche quelli fatti dal suo pannello). Per PayPal è vuoto:
+    /// i suoi rimborsi arrivano uno per uno dai webhook.
+    /// </summary>
+    Task<IReadOnlyList<RimborsoDelProvider>> LeggiRimborsiAsync(CredenzialiGateway credenziali, string idProvider, CancellationToken annullamento);
 }

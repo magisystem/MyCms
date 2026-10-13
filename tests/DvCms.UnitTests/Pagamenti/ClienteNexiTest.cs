@@ -96,6 +96,24 @@ public class ClienteNexiTest
     }
 
     [Fact]
+    public void ISoloRimborsiEseguitiConImportoEIdentificativoValidiSiLeggonoDalleOperazioni()
+    {
+        var rimborsi = ClienteNexi.Rimborsi(Json("""
+            {"operations":[
+              {"operationId":"2","operationType":"CAPTURE","operationResult":"EXECUTED","operationAmount":"1000","operationCurrency":"EUR"},
+              {"operationId":"3","operationType":"REFUND","operationResult":"REFUNDED","operationAmount":"400","operationCurrency":"EUR"},
+              {"operationId":"4","operationType":"REFUND","operationResult":"PENDING","operationAmount":"100","operationCurrency":"EUR"},
+              {"operationId":"5","operationType":"REFUND","operationResult":"REFUNDED","operationAmount":"0","operationCurrency":"EUR"},
+              {"operationType":"REFUND","operationResult":"REFUNDED","operationAmount":"100","operationCurrency":"EUR"},
+              {"operationId":"7","operationType":"REFUND","operationResult":"REFUNDED","operationAmount":"abc","operationCurrency":"EUR"}]}
+            """));
+
+        var unico = Assert.Single(rimborsi);
+        Assert.Equal(("3", 4m, "EUR"), (unico.IdRimborso, unico.Importo, unico.Valuta));
+        Assert.Empty(ClienteNexi.Rimborsi(Json("{}")));
+    }
+
+    [Fact]
     public async Task ImportoOValutaNonValidiNonPartonoMentreUnaPaginaNonFidataERifiutata()
     {
         var cliente = new ClienteNexi(new FabbricaFinta(new GestoreFinto(_ => new HttpResponseMessage(HttpStatusCode.OK))));
@@ -105,7 +123,7 @@ public class ClienteNexiTest
         await Assert.ThrowsAsync<ArgumentException>(() => cliente.CreaPagamentoAsync(_credenziali, "ordine con spazi!", Richiesta(), Ct));
         await Assert.ThrowsAsync<ArgumentException>(() => cliente.CreaPagamentoAsync(_credenziali, new string('A', 28), Richiesta(), Ct));
 
-        foreach (var pagina in new[] { "http://pay.nexi.example/x", "https://127.0.0.1/x", "https://user:pw@pay.nexi.example/x", "https://pay.nexi.example:8443/x", "https://localhost/x", "javascript:alert(1)" })
+        foreach (var pagina in new[] { "http://xpay.nexigroup.com/x", "https://127.0.0.1/x", "https://user:pw@xpay.nexigroup.com/x", "https://xpay.nexigroup.com:8443/x", "https://localhost/x", "javascript:alert(1)", "https://pay.altro.example/x", "https://nexigroup.com.evil.example/x" })
         {
             var finto = new GestoreFinto(_ => Risposta(HttpStatusCode.OK, $$"""{"hostedPage":"{{pagina}}","securityToken":"t"}"""));
             await Assert.ThrowsAsync<ProviderPagamentoException>(() => new ClienteNexi(new FabbricaFinta(finto)).CreaPagamentoAsync(_credenziali, "NX1-abcdef0123", Richiesta(), Ct));
@@ -142,7 +160,7 @@ public class ClienteNexiTest
     [Fact]
     public async Task LaRichiestaVaAlGatewayGiustoPerAmbienteConChiaveECorrelazione()
     {
-        var finto = new GestoreFinto(_ => Risposta(HttpStatusCode.OK, """{"hostedPage":"https://pay.nexi.example/x","securityToken":"tok"}"""));
+        var finto = new GestoreFinto(_ => Risposta(HttpStatusCode.OK, """{"hostedPage":"https://xpaysandbox.nexigroup.com/hpp/nexi/x","securityToken":"tok"}"""));
         var cliente = new ClienteNexi(new FabbricaFinta(finto));
 
         var creato = await cliente.CreaPagamentoAsync(_credenziali, "NX1-abcdef0123", Richiesta(), Ct);

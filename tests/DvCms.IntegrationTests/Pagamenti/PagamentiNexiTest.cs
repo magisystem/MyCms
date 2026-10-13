@@ -57,7 +57,7 @@ public class PagamentiNexiTest
         Assert.Equal(("Nexi", StatoTentativoPagamento.Creato, 10m), (tentativo.Provider, tentativo.Stato, tentativo.Importo));
         Assert.StartsWith("NX1-", tentativo.IdProvider, StringComparison.Ordinal);
         Assert.InRange(tentativo.IdProvider.Length, 5, 27);
-        Assert.Equal($"https://pay.nexi-finto.example/hpp/{tentativo.IdProvider}", avvio.UrlApprovazione!.AbsoluteUri);
+        Assert.Equal($"https://xpaysandbox.nexigroup.com/hpp/nexi/{tentativo.IdProvider}?operationId=1", avvio.UrlApprovazione!.AbsoluteUri);
 
         var richiesta = Assert.Single(nexi.Richieste, r => r.Metodo == HttpMethod.Post);
         Assert.Equal(NexiFinto.ChiaveValida, richiesta.ChiaveApi);

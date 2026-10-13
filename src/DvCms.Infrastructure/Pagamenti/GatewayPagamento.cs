@@ -28,6 +28,9 @@ public sealed class GatewayPayPal : IGatewayPagamento
     public Task<EsitoCatturaProvider> LeggiOrdineAsync(CredenzialiGateway credenziali, string idProvider, CancellationToken annullamento) =>
         _provider.LeggiOrdineAsync(Paypal(credenziali), idProvider, annullamento);
 
+    public Task<IReadOnlyList<RimborsoDelProvider>> LeggiRimborsiAsync(CredenzialiGateway credenziali, string idProvider, CancellationToken annullamento) =>
+        Task.FromResult<IReadOnlyList<RimborsoDelProvider>>([]);
+
     private static CredenzialiPayPal Paypal(CredenzialiGateway credenziali) =>
         credenziali as CredenzialiPayPal ?? throw new ArgumentException("Le credenziali non sono quelle di PayPal.", nameof(credenziali));
 }
@@ -65,6 +68,9 @@ public sealed class GatewayNexi : IGatewayPagamento
 
     public Task<EsitoCatturaProvider> LeggiOrdineAsync(CredenzialiGateway credenziali, string idProvider, CancellationToken annullamento) =>
         _cliente.LeggiOrdineAsync(Nexi(credenziali), idProvider, annullamento);
+
+    public Task<IReadOnlyList<RimborsoDelProvider>> LeggiRimborsiAsync(CredenzialiGateway credenziali, string idProvider, CancellationToken annullamento) =>
+        _cliente.LeggiRimborsiAsync(Nexi(credenziali), idProvider, annullamento);
 
     private static CredenzialiNexi Nexi(CredenzialiGateway credenziali) =>
         credenziali as CredenzialiNexi ?? throw new ArgumentException("Le credenziali non sono quelle di Nexi.", nameof(credenziali));

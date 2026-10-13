@@ -27,7 +27,7 @@ public enum RisultatoRimborso
     NonAutorizzato = 9,
 }
 
-public sealed record RimborsoVista(Guid Id, decimal Importo, string Valuta, string? Motivo, StatoRimborso Stato, bool IncassoOrfano, DateTime CreatoIlUtc);
+public sealed record RimborsoVista(Guid Id, decimal Importo, string Valuta, string? Motivo, StatoRimborso Stato, bool IncassoOrfano, DateTime CreatoIlUtc, bool Esterno = false);
 
 /// <summary>
 /// Rimborsi totali o parziali dal pannello del tenant (A5, ADR-0020), eseguiti dal provider con richieste idempotenti. L'importo di
@@ -51,4 +51,17 @@ public interface IServizioRimborsi
     Task<bool> AllineaDaProviderAsync(string idRimborsoProvider, CancellationToken annullamento);
 
     Task<IReadOnlyList<RimborsoVista>> ElencaAsync(Guid idAttore, Guid idOrdine, CancellationToken annullamento);
+
+    /// <summary>
+    /// Per un webhook PayPal di rimborso completato che il negozio non conosce (fatto dal pannello PayPal): lo rilegge dal provider e lo
+    /// registra come rimborso «esterno», aggiornando l'ordine. Vero se il rimborso è ora noto (registrato adesso o già prima); falso se non si riferisce
+    /// a un incasso di questo sito.
+    /// </summary>
+    Task<bool> RegistraRimborsoEsternoPayPalAsync(string idRimborsoProvider, CancellationToken annullamento);
+
+    /// <summary>
+    /// Per una notifica di rimborso di un provider che non li notifica uno a uno (Nexi): rilegge dal provider i rimborsi del pagamento e registra
+    /// come «esterni» quelli che il negozio non conosce. Restituisce quanti ne ha registrati.
+    /// </summary>
+    Task<int> RegistraRimborsiEsterniAsync(Guid idTentativo, CancellationToken annullamento);
 }

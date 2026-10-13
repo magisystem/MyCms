@@ -35,7 +35,7 @@ Un sito può accettare anche carte con **Nexi** (il cliente sceglie alla cassa).
 2. Nell'amministrazione di piattaforma: tenant → **Pagamenti** → riquadro **Nexi XPay** → ambiente e chiave API. La chiave si cifra e non si rivede.
 3. **Nessun webhook da registrare**: l'indirizzo delle notifiche (`https://<dominio del sito>/webhooks/nexi`) viene inviato a Nexi a ogni pagamento. Deve essere raggiungibile da Internet (HTTPS, nessun filtro che blocchi Nexi); Nexi non ripete le notifiche perse, ma il ritorno del cliente e la riconciliazione periodica recuperano gli incassi.
 4. Prima provare in ambiente **Sandbox** con la chiave di prova e le carte di prova della documentazione Nexi (*Test environment*): una carta che va a buon fine e una che viene rifiutata. Verificare che l'ordine diventi «Pagato» sia al ritorno sia con la sola notifica (chiudere la scheda prima del ritorno).
-5. **Rimborsi:** si fanno dal back office Nexi (e per PayPal dal pannello PayPal), non dal nostro pannello. Il dettaglio ordine lo ricorda. Lo stato dell'ordine nel nostro sistema non cambia da solo: annotarlo fuori dal sistema.
+5. **Rimborsi:** si fanno dal back office Nexi (e per PayPal, volendo, dal pannello PayPal), non dal nostro pannello per Nexi. Il rimborso fatto lì **aggiorna l'ordine da solo** quando arriva la notifica del provider (webhook di rimborso PayPal; notifica `REFUND` di Nexi): l'ordine mostra il rimborso con l'etichetta «Eseguito dal pannello del provider» e, a rimborso completo, diventa «Rimborsato». Se la notifica non arriva (sito non raggiungibile in quel momento), l'ordine resta com'era: per PayPal si può far reinviare il webhook dal portale sviluppatori, per Nexi la notifica non viene ripetuta e lo stato va corretto annotando il rimborso fuori dal sistema. Dopo un rimborso completo, se la merce rientra, usare «Rimetti in giacenza» dal dettaglio ordine.
 
 La «Verifica di esercizio» considera pronto un sito con almeno un provider configurato.
 
@@ -71,4 +71,4 @@ Nella stessa pagina **Pagamenti** del tenant, sotto il modulo, la **Verifica di 
 
 ## Cosa non c'è ancora
 
-Rimborsi per singolo articolo, fatturazione, più valute, altri provider oltre a PayPal e Nexi (il contratto `IGatewayPagamento` li ammette), il riconoscimento dei rimborsi fatti a mano dai pannelli dei provider.
+Rimborsi per singolo articolo, fatturazione, più valute, altri provider oltre a PayPal e Nexi (il contratto `IGatewayPagamento` li ammette), il recupero dei rimborsi fatti a mano mentre il sito non era raggiungibile (oggi servono la notifica o l'annotazione manuale).

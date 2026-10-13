@@ -69,7 +69,7 @@ public class PagamentiNexiWebTest
         Assert.Contains("Paga con PayPal", htmlPrima, StringComparison.Ordinal);
         Assert.Contains("Paga con carta (Nexi)", htmlPrima, StringComparison.Ordinal);
         Assert.Equal(HttpStatusCode.OK, paga.StatusCode);
-        Assert.Contains($"href=\"https://pay.nexi-finto.example/hpp/{idProvider}\"", await paga.Content.ReadAsStringAsync(Ct), StringComparison.Ordinal);
+        Assert.Contains($"href=\"https://xpaysandbox.nexigroup.com/hpp/nexi/{idProvider}?operationId=1\"", await paga.Content.ReadAsStringAsync(Ct), StringComparison.Ordinal);
         Assert.True(SessioneProva.EReindirizzamento(ritorno));
         Assert.Equal(pagina, SessioneProva.Destinazione(ritorno));
         Assert.Contains("Pagamento ricevuto", WebUtility.HtmlDecode(await dopo.Content.ReadAsStringAsync(Ct)), StringComparison.Ordinal);

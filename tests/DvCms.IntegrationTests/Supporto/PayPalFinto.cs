@@ -152,7 +152,17 @@ public sealed class PayPalFinto : HttpMessageHandler
             lock (_blocco)
             {
                 return _rimborsi.TryGetValue(percorso[prefissoRimborsi.Length..], out var rimborso)
-                    ? Risposta(HttpStatusCode.OK, new JsonObject { ["id"] = percorso[prefissoRimborsi.Length..], ["status"] = rimborso.Stato })
+                    ? Risposta(HttpStatusCode.OK, new JsonObject
+                    {
+                        ["id"] = percorso[prefissoRimborsi.Length..],
+                        ["status"] = rimborso.Stato,
+                        ["amount"] = new JsonObject { ["value"] = rimborso.Importo.ToString("0.00", CultureInfo.InvariantCulture), ["currency_code"] = "EUR" },
+                        ["links"] = new JsonArray
+                        {
+                            new JsonObject { ["rel"] = "self", ["href"] = $"https://api-m.sandbox.paypal.com/v2/payments/refunds/{percorso[prefissoRimborsi.Length..]}" },
+                            new JsonObject { ["rel"] = "up", ["href"] = $"https://api-m.sandbox.paypal.com/v2/payments/captures/{rimborso.IdCattura}" },
+                        },
+                    })
                     : Risposta(HttpStatusCode.NotFound, new JsonObject { ["name"] = "RESOURCE_NOT_FOUND" });
             }
         }
@@ -253,6 +263,19 @@ public sealed class PayPalFinto : HttpMessageHandler
         }
     }
 
+    /// <summary>Un rimborso fatto direttamente dal pannello PayPal del commerciante (non richiesto dal negozio): restituisce il suo identificativo.</summary>
+    public string RimborsaEsternamente(string idOrdineProvider, decimal importo)
+    {
+        lock (_blocco)
+        {
+            var ordine = _ordini[idOrdineProvider];
+            var id = $"REF-{Interlocked.Increment(ref _contatoreRimborsi):D4}";
+            ordine.Rimborsato += importo;
+            _rimborsi[id] = new RimborsoFinto { Stato = "COMPLETED", Importo = importo, IdCattura = $"CAP-{idOrdineProvider}" };
+            return id;
+        }
+    }
+
     private HttpResponseMessage Rimborsa(string idCattura, string corpo, string? idRichiesta)
     {
         lock (_blocco)
@@ -277,7 +300,7 @@ public sealed class PayPalFinto : HttpMessageHandler
 
             var id = $"REF-{Interlocked.Increment(ref _contatoreRimborsi):D4}";
             ordine.Rimborsato += importo;
-            _rimborsi[id] = new RimborsoFinto { Stato = EsitoRimborso };
+            _rimborsi[id] = new RimborsoFinto { Stato = EsitoRimborso, Importo = importo, IdCattura = idCattura };
             if (idRichiesta is not null)
             {
                 _rimborsiPerRichiesta[idRichiesta] = id;
@@ -359,6 +382,10 @@ public sealed class PayPalFinto : HttpMessageHandler
     private sealed class RimborsoFinto
     {
         public string Stato { get; set; } = "COMPLETED";
+
+        public decimal Importo { get; set; }
+
+        public string? IdCattura { get; set; }
     }
 }
 
