@@ -1,4 +1,4 @@
-using DvCms.Infrastructure.Media;
+using DvCms.Services.Cms.Media;
 
 namespace DvCms.Web.Comandi;
 

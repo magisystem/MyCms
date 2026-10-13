@@ -3,7 +3,7 @@ using DvCms.Contracts.Cms;
 using DvCms.Core.Tenancy;
 using DvCms.DTO.Cms;
 using DvCms.DTO.Tenancy;
-using DvCms.Infrastructure.Cache;
+
 using DvCms.IntegrationTests.Negozio;
 using DvCms.IntegrationTests.Supporto;
 using DvCms.Models.Accessi;

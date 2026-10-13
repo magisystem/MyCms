@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DvCms.Core\DvCms.Core.csproj" />
+    <ProjectReference Include="..\DvCms.Data\DvCms.Data.csproj" />
+  </ItemGroup>
+
+</Project>

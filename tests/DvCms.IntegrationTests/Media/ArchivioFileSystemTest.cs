@@ -1,5 +1,5 @@
 using DvCms.Core.Media;
-using DvCms.Infrastructure.Media;
+using DvCms.Services.Cms.Media;
 using Xunit;
 
 namespace DvCms.IntegrationTests.Media;

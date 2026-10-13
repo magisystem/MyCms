@@ -3,8 +3,8 @@ using System.Net;
 using System.Text.Json;
 using DvCms.Contracts.Negozio;
 using DvCms.DTO.Negozio;
-using DvCms.Infrastructure.Pagamenti;
 using DvCms.Models.Negozio;
+using DvCms.Services.Negozio.Pagamenti;
 using Xunit;
 
 namespace DvCms.UnitTests.Pagamenti;

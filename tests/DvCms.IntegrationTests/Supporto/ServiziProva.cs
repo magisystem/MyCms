@@ -1,6 +1,8 @@
 using DvCms.Data;
 using DvCms.Emails;
-using DvCms.Infrastructure;
+using DvCms.Services;
+using DvCms.Services.Cms;
+using DvCms.Services.Negozio;
 using DvCms.SqlServer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -78,7 +80,9 @@ public static class ServiziProva
 
         servizi.AggiungiSqlServer(configurazione);
         servizi.AggiungiData(configurazione);
-        servizi.AggiungiInfrastruttura(configurazione);
+        servizi.AggiungiServizi(configurazione);
+        servizi.AggiungiServiziCms(configurazione);
+        servizi.AggiungiServiziNegozio(configurazione);
         servizi.AggiungiEmails();
         configura?.Invoke(servizi);
         return servizi.BuildServiceProvider();

@@ -37,9 +37,6 @@ public class RegoleDipendenzaProgettiTest
         ["DvCms.Services"] = [.. _basso, "DvCms.Data"],
         ["DvCms.Services.Cms"] = [.. _basso, "DvCms.Data"],
         ["DvCms.Services.Negozio"] = [.. _basso, "DvCms.Data"],
-
-        // Provvisorio, finché i servizi non sono stati spostati nei progetti definitivi.
-        ["DvCms.Infrastructure"] = [.. _basso, "DvCms.Data"],
     };
 
     private static string Radice

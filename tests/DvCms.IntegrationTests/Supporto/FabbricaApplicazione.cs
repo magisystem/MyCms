@@ -211,13 +211,13 @@ public sealed class FabbricaApplicazioneConConnessione : FabbricaApplicazione
         if (_payPal is not null)
         {
             // Il client PayPal vero parla con il PayPal finto: nessuna richiesta esce dal processo.
-            servizi.AddHttpClient(DvCms.Infrastructure.Pagamenti.ClientePayPal.NomeClientHttp).ConfigurePrimaryHttpMessageHandler(() => _payPal);
+            servizi.AddHttpClient(DvCms.Services.Negozio.Pagamenti.ClientePayPal.NomeClientHttp).ConfigurePrimaryHttpMessageHandler(() => _payPal);
         }
 
         if (_nexi is not null)
         {
             // Il client Nexi vero parla con il Nexi finto: nessuna richiesta esce dal processo.
-            servizi.AddHttpClient(DvCms.Infrastructure.Pagamenti.ClienteNexi.NomeClientHttp).ConfigurePrimaryHttpMessageHandler(() => _nexi);
+            servizi.AddHttpClient(DvCms.Services.Negozio.Pagamenti.ClienteNexi.NomeClientHttp).ConfigurePrimaryHttpMessageHandler(() => _nexi);
         }
 
         if (_oauthEmail is not null)

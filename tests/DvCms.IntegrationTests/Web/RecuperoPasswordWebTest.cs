@@ -1,8 +1,8 @@
 using System.Net;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
-using DvCms.Infrastructure.Outbox;
 using DvCms.IntegrationTests.Supporto;
+using DvCms.Services.Outbox;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 

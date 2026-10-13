@@ -320,7 +320,7 @@ internal sealed class ContestoNegozio : IAsyncDisposable
     public async Task<int> RiconciliaAsync()
     {
         await using var ambito = Web.Fabbrica.Services.CreateAsyncScope();
-        return await ambito.ServiceProvider.GetRequiredService<DvCms.Infrastructure.Pagamenti.RiconciliazionePagamenti>().EseguiAsync(Ct);
+        return await ambito.ServiceProvider.GetRequiredService<DvCms.Services.Negozio.Pagamenti.RiconciliazionePagamenti>().EseguiAsync(Ct);
     }
 
     public async Task<Ordine> OrdineAsync(Guid idOrdine)
@@ -374,7 +374,7 @@ internal sealed class ContestoNegozio : IAsyncDisposable
     public async Task<IReadOnlyList<EmailRicevuta>> ElaboraEmailAsync()
     {
         var prima = Server!.Ricevute.Count;
-        while (await Web.Fabbrica.Services.GetRequiredService<DvCms.Infrastructure.Outbox.ElaboratoreOutbox>().ElaboraLottoAsync(Ct) > 0)
+        while (await Web.Fabbrica.Services.GetRequiredService<DvCms.Services.Outbox.ElaboratoreOutbox>().ElaboraLottoAsync(Ct) > 0)
         {
         }
 

@@ -112,7 +112,7 @@ public class ArchivioTestiStaticiTest
             Id = Guid.NewGuid(),
             IdLingua = Lingua.IdItaliano,
             Chiave = "Duplicato",
-            HashChiave = Infrastructure.Localizzazione.ArchivioTestiStatici.CalcolaHash("Duplicato"),
+            HashChiave = DvCms.Services.Localizzazione.ArchivioTestiStatici.CalcolaHash("Duplicato"),
             Testo = "Duplicato",
             AggiornatoIlUtc = DateTime.UtcNow,
         });

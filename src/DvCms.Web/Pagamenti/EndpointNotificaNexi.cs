@@ -16,7 +16,7 @@ public static class EndpointNotificaNexi
     public static void MapNotificaNexi(this IEndpointRouteBuilder rotte)
     {
         ArgumentNullException.ThrowIfNull(rotte);
-        rotte.MapPost(Infrastructure.Pagamenti.ServizioPagamenti.PercorsoNotificaNexi, GestisciAsync).AllowAnonymous().DisableAntiforgery();
+        rotte.MapPost(DvCms.Services.Negozio.Pagamenti.ServizioPagamenti.PercorsoNotificaNexi, GestisciAsync).AllowAnonymous().DisableAntiforgery();
     }
 
     private static async Task<IResult> GestisciAsync(HttpContext contesto, IServizioPagamenti pagamenti, CancellationToken annullamento)

@@ -1,10 +1,10 @@
 using System.Net;
 using System.Security.Cryptography;
 using DvCms.Data;
-using DvCms.Infrastructure.Outbox;
 using DvCms.IntegrationTests.Supporto;
 using DvCms.Models.Accessi;
 using DvCms.Models.Outbox;
+using DvCms.Services.Outbox;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;

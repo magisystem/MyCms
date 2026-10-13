@@ -1,7 +1,7 @@
 using System.Diagnostics.Metrics;
 using DvCms.Core.Cache;
 using DvCms.DTO.Cache;
-using DvCms.Infrastructure.Cache;
+
 using Xunit;
 
 namespace DvCms.UnitTests.Cache;
