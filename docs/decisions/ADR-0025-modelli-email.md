@@ -26,6 +26,7 @@ I testi delle email stavano nel codice, frase per frase, tradotti con il catalog
 - Le email di recupero password, conferma registrazione, invito, ordine (confermato, ricevuto con bonifico o contrassegno, avviso agli amministratori), rimborso e prova partono dai modelli. Il testo di fabbrica italiano riprende le frasi di prima; in più c'è l'HTML.
 - Le traduzioni di quelle frasi nel catalogo dei testi statici non si usano più per le email: la lingua del destinatario sceglie il modello. Le voci restano nel catalogo e si possono ripulire.
 - Un tenant che scrive un modello in una lingua è responsabile del contenuto; la piattaforma garantisce che non possa eseguire codice né togliere il codice o il link dalle email critiche.
+- Nomi e descrizioni dei modelli e delle variabili vengono dal catalogo in codice e si mostrano in italiano: il localizzatore accetta solo testi letterali (convenzione verificata da `ConvenzioniCodiceTest`).
 - Nuova migrazione `ModelliEmail`.
 
 ## Alternative scartate

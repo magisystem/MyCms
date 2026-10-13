@@ -30,13 +30,13 @@
                 {
                     <tr>
                         <td>
-                            @_L[voce.Definizione.Nome]
+                            @voce.Definizione.Nome
                             @if (voce.Definizione.Critico)
                             {
                                 <span class="badge bg-yellow-lt ms-1" title="@_L["Contiene un codice o un link indispensabile: non si può togliere."]">@_L["Critico"]</span>
                             }
                         </td>
-                        <td class="text-secondary">@_L[voce.Definizione.Descrizione]</td>
+                        <td class="text-secondary">@voce.Definizione.Descrizione</td>
                         <td>
                             @foreach (var lingua in Model.Lingue)
                             {

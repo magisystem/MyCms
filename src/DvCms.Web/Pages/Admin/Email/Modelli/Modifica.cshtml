@@ -3,7 +3,7 @@
 @using DvCms.DTO.Email
 @{
     var scheda = Model.Scheda;
-    ViewData["Titolo"] = _L[scheda.Definizione.Nome];
+    ViewData["Titolo"] = scheda.Definizione.Nome;
 }
 @if (Model.Messaggio is not null)
 {
@@ -28,7 +28,7 @@
     <div class="col-lg-8">
         <div class="card">
             <div class="card-header">
-                <h3 class="card-title">@_L[scheda.Definizione.Nome] — @scheda.Lingua</h3>
+                <h3 class="card-title">@scheda.Definizione.Nome — @scheda.Lingua</h3>
                 <div class="card-actions">
                     @foreach (var lingua in scheda.LingueDisponibili)
                     {
@@ -37,7 +37,7 @@
                 </div>
             </div>
             <div class="card-body">
-                <p class="text-secondary">@_L[scheda.Definizione.Descrizione]</p>
+                <p class="text-secondary">@scheda.Definizione.Descrizione</p>
                 <p class="text-secondary">
                     @switch (scheda.Origine)
                     {
@@ -112,7 +112,7 @@
                                 <span class="badge bg-yellow-lt ms-1">@_L["Obbligatoria"]</span>
                             }
                         </dt>
-                        <dd class="text-secondary">@_L[variabile.Descrizione]</dd>
+                        <dd class="text-secondary">@variabile.Descrizione</dd>
                     }
                 </dl>
             </div>
