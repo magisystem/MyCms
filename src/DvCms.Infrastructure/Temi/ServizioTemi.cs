@@ -1,9 +1,12 @@
 using System.Text.Json;
-using DvCms.Application.Accessi;
-using DvCms.Application.Cms;
-using DvCms.Application.Piattaforma;
-using DvCms.Application.Temi;
-using DvCms.Application.Tenancy;
+using DvCms.Contracts.Accessi;
+using DvCms.Contracts.Cms;
+using DvCms.Contracts.Temi;
+using DvCms.Contracts.Tenancy;
+using DvCms.Core.Accessi;
+using DvCms.Core.Temi;
+using DvCms.DTO.Piattaforma;
+using DvCms.DTO.Temi;
 using DvCms.Extender;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.Models;

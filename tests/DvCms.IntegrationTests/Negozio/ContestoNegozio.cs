@@ -1,6 +1,11 @@
-using DvCms.Application.Negozio;
-using DvCms.Application.Piattaforma;
-using DvCms.Application.Tenancy;
+using DvCms.Contracts.Media;
+using DvCms.Contracts.Negozio;
+using DvCms.Contracts.Piattaforma;
+using DvCms.Core.Tenancy;
+using DvCms.DTO.Media;
+using DvCms.DTO.Negozio;
+using DvCms.DTO.Piattaforma;
+using DvCms.DTO.Tenancy;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Supporto;
 using DvCms.IntegrationTests.Web;
@@ -270,9 +275,9 @@ internal sealed class ContestoNegozio : IAsyncDisposable
     /// <summary>Carica un'immagine PNG nella libreria media del tenant (con le credenziali del suo amministratore).</summary>
     public async Task<Guid> CaricaImmagineAsync(DatiProva.TenantCreato tenant, DvCms.Models.Media.VisibilitaMedia visibilita = DvCms.Models.Media.VisibilitaMedia.Pubblica)
     {
-        return await InAsync<DvCms.Application.Media.IServizioMedia, Guid>(tenant, async media =>
+        return await InAsync<DvCms.Contracts.Media.IServizioMedia, Guid>(tenant, async media =>
         {
-            var esito = await media.CaricaAsync(Attore(tenant), new DvCms.Application.Media.FileDaCaricare(new MemoryStream(ImmaginiProva.Png(8, 8)), "foto.png", "image/png"), Ct);
+            var esito = await media.CaricaAsync(Attore(tenant), new DvCms.DTO.Media.FileDaCaricare(new MemoryStream(ImmaginiProva.Png(8, 8)), "foto.png", "image/png"), Ct);
             Assert.True(esito.Riuscito, esito.Codice.ToString());
             if (visibilita != DvCms.Models.Media.VisibilitaMedia.Pubblica)
             {
@@ -284,7 +289,7 @@ internal sealed class ContestoNegozio : IAsyncDisposable
     }
 
     public Task<EsitoOperazione> EliminaMediaAsync(DatiProva.TenantCreato tenant, Guid idRisorsa) =>
-        InAsync<DvCms.Application.Media.IServizioMedia, EsitoOperazione>(tenant, media => media.EliminaAsync(Attore(tenant), idRisorsa, Ct));
+        InAsync<DvCms.Contracts.Media.IServizioMedia, EsitoOperazione>(tenant, media => media.EliminaAsync(Attore(tenant), idRisorsa, Ct));
 
     public Task<T> ComeEsportazioneAsync<T>(DatiProva.TenantCreato tenant, Func<IServizioEsportazioneOrdini, Task<T>> operazione) => InAsync<IServizioEsportazioneOrdini, T>(tenant, operazione);
 

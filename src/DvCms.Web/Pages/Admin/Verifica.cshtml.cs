@@ -1,5 +1,5 @@
-using DvCms.Application.Accessi.DueFattori;
-using DvCms.Application.Tenancy;
+using DvCms.Contracts.Accessi.DueFattori;
+using DvCms.Contracts.Tenancy;
 using DvCms.Web.Accessi;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;

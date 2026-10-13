@@ -1,4 +1,4 @@
-using DvCms.Application.Cms;
+using DvCms.Core.Cms;
 using DvCms.Web.Pubblico;
 using Xunit;
 

@@ -1,4 +1,4 @@
-using DvCms.Application.Accessi;
+using DvCms.Contracts.Accessi;
 using DvCms.Web.Accessi;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;

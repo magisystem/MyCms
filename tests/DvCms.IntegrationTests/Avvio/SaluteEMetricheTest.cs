@@ -1,6 +1,6 @@
 using System.Diagnostics.Metrics;
 using System.Text.Json;
-using DvCms.Application.Media;
+using DvCms.Contracts.Media;
 using DvCms.IntegrationTests.Supporto;
 using DvCms.Web.Middleware;
 using Microsoft.AspNetCore.Http;

@@ -1,6 +1,6 @@
-using DvCms.Application.Accessi;
-using DvCms.Application.Negozio;
-using DvCms.Application.Tenancy;
+using DvCms.Contracts.Accessi;
+using DvCms.Contracts.Negozio;
+using DvCms.Contracts.Tenancy;
 using DvCms.Web.Accessi;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;

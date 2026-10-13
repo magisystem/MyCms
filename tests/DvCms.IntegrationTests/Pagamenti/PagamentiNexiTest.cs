@@ -1,6 +1,8 @@
 using System.Text.Json.Nodes;
-using DvCms.Application.Negozio;
-using DvCms.Application.Piattaforma;
+using DvCms.Contracts.Negozio;
+using DvCms.Core.Accessi;
+using DvCms.DTO.Negozio;
+using DvCms.DTO.Piattaforma;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Negozio;
 using DvCms.IntegrationTests.Supporto;
@@ -334,7 +336,7 @@ public class PagamentiNexiTest
         var contesto = ambito.ServiceProvider.GetRequiredService<ContestoDatabase>();
         var riga = await contesto.ImpostazioniNexiSiti.IgnoreQueryFilters().SingleAsync(Ct);
         Assert.DoesNotContain("CHIAVE-SEGRETISSIMA", riga.SegretiProtetti, StringComparison.Ordinal);
-        var audit = await contesto.RegistroAudit.IgnoreQueryFilters().Where(a => a.Azione == DvCms.Application.Accessi.AzioniAudit.ModificaImpostazioniPagamento).ToListAsync(Ct);
+        var audit = await contesto.RegistroAudit.IgnoreQueryFilters().Where(a => a.Azione == DvCms.Core.Accessi.AzioniAudit.ModificaImpostazioniPagamento).ToListAsync(Ct);
         Assert.All(audit, a => Assert.DoesNotContain("CHIAVE-SEGRETISSIMA", a.Dettagli, StringComparison.Ordinal));
 
         // Una chiave vuota mantiene quella salvata.

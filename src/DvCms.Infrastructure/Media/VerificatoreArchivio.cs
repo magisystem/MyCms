@@ -1,5 +1,5 @@
 using System.Security.Cryptography;
-using DvCms.Application.Media;
+using DvCms.Contracts.Media;
 using DvCms.Infrastructure.Persistenza;
 using Microsoft.EntityFrameworkCore;
 

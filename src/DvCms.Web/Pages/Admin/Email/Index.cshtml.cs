@@ -1,6 +1,9 @@
-using DvCms.Application.Email;
-using DvCms.Application.Localizzazione;
-using DvCms.Application.Piattaforma;
+using DvCms.Contracts.Email;
+using DvCms.Contracts.Localizzazione;
+using DvCms.Core.Localizzazione;
+using DvCms.DTO.Email;
+using DvCms.DTO.Piattaforma;
+using DvCms.Emails;
 using DvCms.Models.Email;
 using DvCms.Web.Accessi;
 using Microsoft.AspNetCore.Mvc;

@@ -1,6 +1,6 @@
-using DvCms.Application.Accessi;
-using DvCms.Application.Negozio;
-using DvCms.Application.Piattaforma;
+using DvCms.Core.Accessi;
+using DvCms.DTO.Negozio;
+using DvCms.DTO.Piattaforma;
 using DvCms.IntegrationTests.Supporto;
 using DvCms.Models.Negozio;
 using Xunit;

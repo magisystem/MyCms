@@ -1,6 +1,8 @@
-using DvCms.Application.Cms;
-using DvCms.Application.Temi;
-using DvCms.Application.Tenancy;
+using DvCms.Contracts.Cms;
+using DvCms.Contracts.Temi;
+using DvCms.Contracts.Tenancy;
+using DvCms.DTO.Cms;
+using DvCms.DTO.Temi;
 using DvCms.Extender;
 using DvCms.Models.Cms;
 

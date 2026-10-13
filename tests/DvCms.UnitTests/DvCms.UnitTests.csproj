@@ -11,7 +11,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\DvCms.Models\DvCms.Models.csproj" />
-    <ProjectReference Include="..\..\src\DvCms.Application\DvCms.Application.csproj" />
+    <ProjectReference Include="..\..\src\DvCms.Contracts\DvCms.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\DvCms.DTO\DvCms.DTO.csproj" />
+    <ProjectReference Include="..\..\src\DvCms.Core\DvCms.Core.csproj" />
+    <ProjectReference Include="..\..\src\DvCms.Emails\DvCms.Emails.csproj" />
     <ProjectReference Include="..\..\src\DvCms.Infrastructure\DvCms.Infrastructure.csproj" />
   </ItemGroup>
 

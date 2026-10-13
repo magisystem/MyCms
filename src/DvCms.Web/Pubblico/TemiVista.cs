@@ -1,4 +1,5 @@
-using DvCms.Application.Temi;
+using DvCms.Core.Temi;
+using DvCms.DTO.Temi;
 
 namespace DvCms.Web.Pubblico;
 

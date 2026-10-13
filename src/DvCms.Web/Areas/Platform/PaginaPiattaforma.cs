@@ -1,4 +1,4 @@
-using DvCms.Application.Localizzazione;
+using DvCms.Contracts.Localizzazione;
 
 namespace DvCms.Web.Areas.Platform;
 

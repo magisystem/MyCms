@@ -1,6 +1,6 @@
 using System.Text.Json.Nodes;
-using DvCms.Application.Accessi;
-using DvCms.Application.Negozio;
+using DvCms.Core.Accessi;
+using DvCms.DTO.Negozio;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Negozio;
 using DvCms.IntegrationTests.Supporto;

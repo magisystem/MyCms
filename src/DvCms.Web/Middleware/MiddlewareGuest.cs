@@ -1,5 +1,5 @@
 using System.Security.Claims;
-using DvCms.Application.Tenancy;
+using DvCms.Contracts.Tenancy;
 using DvCms.Web.Accessi;
 
 namespace DvCms.Web.Middleware;

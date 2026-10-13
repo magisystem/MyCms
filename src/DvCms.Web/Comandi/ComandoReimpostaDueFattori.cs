@@ -1,4 +1,4 @@
-using DvCms.Application.Accessi.DueFattori;
+using DvCms.Contracts.Accessi.DueFattori;
 
 namespace DvCms.Web.Comandi;
 

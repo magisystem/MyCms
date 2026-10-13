@@ -1,8 +1,11 @@
-using DvCms.Application.Accessi;
-using DvCms.Application.Builder;
-using DvCms.Application.Cms;
-using DvCms.Application.Piattaforma;
-using DvCms.Application.Tenancy;
+using DvCms.Contracts.Accessi;
+using DvCms.Contracts.Builder;
+using DvCms.Contracts.Tenancy;
+using DvCms.Core.Accessi;
+using DvCms.Core.Builder;
+using DvCms.Core.Cms;
+using DvCms.DTO.Builder;
+using DvCms.DTO.Piattaforma;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.Models.Accessi;
 using DvCms.Models.Cms;

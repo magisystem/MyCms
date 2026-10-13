@@ -1,5 +1,5 @@
-using DvCms.Application.Negozio;
-using DvCms.Application.Piattaforma;
+using DvCms.DTO.Negozio;
+using DvCms.DTO.Piattaforma;
 using DvCms.Infrastructure.Manutenzione;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Supporto;

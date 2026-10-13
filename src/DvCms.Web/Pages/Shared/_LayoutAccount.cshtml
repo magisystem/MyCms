@@ -1,5 +1,5 @@
-@inject DvCms.Application.Temi.IRisolutoreTema Temi
-@inject DvCms.Application.Localizzazione.IContestoLingua ContestoLingua
+@inject DvCms.Contracts.Temi.IRisolutoreTema Temi
+@inject DvCms.Contracts.Localizzazione.IContestoLingua ContestoLingua
 @{
     var tema = await Temi.RisolviAsync(Context.RequestAborted);
 }

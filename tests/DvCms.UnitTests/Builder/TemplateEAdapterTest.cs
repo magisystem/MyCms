@@ -1,4 +1,5 @@
-using DvCms.Application.Builder;
+using DvCms.Core.Builder;
+using DvCms.DTO.Builder;
 using Xunit;
 using static DvCms.UnitTests.Builder.DocumentoCmsTest;
 

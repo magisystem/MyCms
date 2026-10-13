@@ -1,4 +1,4 @@
-@inject DvCms.Application.Negozio.IServizioCatalogo Catalogo
+@inject DvCms.Contracts.Negozio.IServizioCatalogo Catalogo
 @* Barra del negozio sopra il tema: le versioni di tema rilasciate sono immutabili, quindi il collegamento sta qui e non nelle loro viste. Compare solo se il sito ha il negozio attivo. *@
 @if (await Catalogo.CommercioAttivoAsync(Context.RequestAborted))
 {

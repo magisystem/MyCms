@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\DvCms.DTO\DvCms.DTO.csproj" />
+  </ItemGroup>
+
+</Project>

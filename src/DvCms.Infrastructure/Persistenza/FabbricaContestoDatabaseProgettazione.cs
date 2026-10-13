@@ -1,4 +1,4 @@
-using DvCms.Application.Tenancy;
+using DvCms.Core.Tenancy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 

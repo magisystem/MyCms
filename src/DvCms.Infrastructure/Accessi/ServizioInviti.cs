@@ -1,7 +1,9 @@
 using System.Security.Cryptography;
 using System.Text;
-using DvCms.Application.Accessi;
-using DvCms.Application.Tenancy;
+using DvCms.Contracts.Accessi;
+using DvCms.Contracts.Tenancy;
+using DvCms.Core.Accessi;
+using DvCms.DTO.Accessi;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.Models.Accessi;
 using Microsoft.EntityFrameworkCore;

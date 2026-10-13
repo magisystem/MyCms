@@ -1,7 +1,9 @@
 using System.Globalization;
 using System.Security.Claims;
-using DvCms.Application.Localizzazione;
-using DvCms.Application.Negozio;
+using DvCms.Contracts.Localizzazione;
+using DvCms.Contracts.Negozio;
+using DvCms.Core.Localizzazione;
+using DvCms.DTO.Negozio;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 

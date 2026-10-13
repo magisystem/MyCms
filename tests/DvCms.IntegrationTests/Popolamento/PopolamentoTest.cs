@@ -1,4 +1,5 @@
-using DvCms.Application.Accessi;
+using DvCms.Contracts.Accessi;
+using DvCms.Core.Accessi;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.Infrastructure.Popolamento;
 using DvCms.IntegrationTests.Supporto;

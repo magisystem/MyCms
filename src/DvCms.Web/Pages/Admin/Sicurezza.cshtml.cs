@@ -1,7 +1,9 @@
 using System.Security.Claims;
-using DvCms.Application.Accessi.DueFattori;
-using DvCms.Application.Localizzazione;
-using DvCms.Application.Tenancy;
+using DvCms.Contracts.Accessi.DueFattori;
+using DvCms.Contracts.Localizzazione;
+using DvCms.Contracts.Tenancy;
+using DvCms.Core.Accessi.DueFattori;
+using DvCms.DTO.Accessi.DueFattori;
 using DvCms.Infrastructure.Accessi;
 using DvCms.Web.Accessi;
 using Microsoft.AspNetCore.Authentication;

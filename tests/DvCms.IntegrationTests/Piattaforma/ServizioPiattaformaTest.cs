@@ -1,6 +1,12 @@
-using DvCms.Application.Accessi;
-using DvCms.Application.Piattaforma;
-using DvCms.Application.Tenancy;
+using DvCms.Contracts.Accessi;
+using DvCms.Contracts.Cms;
+using DvCms.Contracts.Piattaforma;
+using DvCms.Contracts.Tenancy;
+using DvCms.Core.Accessi;
+using DvCms.Core.Tenancy;
+using DvCms.DTO.Cms;
+using DvCms.DTO.Piattaforma;
+using DvCms.DTO.Tenancy;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Supporto;
 using DvCms.Models.Accessi;
@@ -465,8 +471,8 @@ public class ServizioPiattaformaTest
         await using (var ambito = s.Fornitore.CreateAsyncScope())
         {
             ambito.ServiceProvider.GetRequiredService<ContestoTenant>().Imposta(new DatiTenantRisolto(idTenant, idSito, Guid.NewGuid(), "cliente.esempio.it", false));
-            var pagine = ambito.ServiceProvider.GetRequiredService<DvCms.Application.Cms.IServizioPagine>();
-            Assert.True((await pagine.CreaAsync(admin, new DvCms.Application.Cms.DatiNuovaPagina("page", "Page", "x", "en", false), TestContext.Current.CancellationToken)).Riuscito);
+            var pagine = ambito.ServiceProvider.GetRequiredService<DvCms.Contracts.Cms.IServizioPagine>();
+            Assert.True((await pagine.CreaAsync(admin, new DvCms.DTO.Cms.DatiNuovaPagina("page", "Page", "x", "en", false), TestContext.Current.CancellationToken)).Riuscito);
         }
 
         var conPagine = await s.ChiamaAsync(servizio => servizio.DisabilitaLinguaAsync(s.IdPlatformAdmin, idTenant, idSito, "en", TestContext.Current.CancellationToken));
@@ -497,8 +503,8 @@ public class ServizioPiattaformaTest
         await using (var ambito = s.Fornitore.CreateAsyncScope())
         {
             ambito.ServiceProvider.GetRequiredService<ContestoTenant>().Imposta(new DatiTenantRisolto(idTenant, idSito, Guid.NewGuid(), "cliente.esempio.it", false));
-            var pagine = ambito.ServiceProvider.GetRequiredService<DvCms.Application.Cms.IServizioPagine>();
-            var id = (await pagine.CreaAsync(admin, new DvCms.Application.Cms.DatiNuovaPagina("page", "Page", "x", null, false), TestContext.Current.CancellationToken)).Id!.Value;
+            var pagine = ambito.ServiceProvider.GetRequiredService<DvCms.Contracts.Cms.IServizioPagine>();
+            var id = (await pagine.CreaAsync(admin, new DvCms.DTO.Cms.DatiNuovaPagina("page", "Page", "x", null, false), TestContext.Current.CancellationToken)).Id!.Value;
             var letta = (await pagine.LeggiAsync(admin, id, TestContext.Current.CancellationToken))!;
             Assert.True((await pagine.PubblicaAsync(admin, id, letta.TokenConcorrenza, TestContext.Current.CancellationToken)).Riuscito);
         }

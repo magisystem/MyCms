@@ -1,6 +1,6 @@
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
-using DvCms.Application.Piattaforma;
+using DvCms.Contracts.Piattaforma;
 using DvCms.Infrastructure.Outbox;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Supporto;

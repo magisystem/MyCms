@@ -56,14 +56,14 @@
                     {
                         <div class="mb-3">
                             <label class="form-label @(campo.Obbligatorio ? "required" : null)" for="m_@campo.Nome">@DvCms.Web.Cms.EtichetteModelli.Campo(_L, campo.Nome)</label>
-                            @if (campo.Tipo == DvCms.Application.Cms.TipoCampoModello.TestoLungo)
+                            @if (campo.Tipo == DvCms.DTO.Cms.TipoCampoModello.TestoLungo)
                             {
                                 <textarea class="form-control @(Model.CampiNonValidi.Contains(campo.Nome) ? "is-invalid" : null)" id="m_@campo.Nome" name="m_@campo.Nome" rows="3" maxlength="@campo.LunghezzaMassima">@Model.Valori.GetValueOrDefault(campo.Nome)</textarea>
                             }
                             else
                             {
                                 <input class="form-control @(Model.CampiNonValidi.Contains(campo.Nome) ? "is-invalid" : null)" id="m_@campo.Nome" name="m_@campo.Nome" value="@Model.Valori.GetValueOrDefault(campo.Nome)" maxlength="@campo.LunghezzaMassima"
-                                       placeholder="@(campo.Tipo == DvCms.Application.Cms.TipoCampoModello.Url ? "/pagina oppure https://..." : null)" />
+                                       placeholder="@(campo.Tipo == DvCms.DTO.Cms.TipoCampoModello.Url ? "/pagina oppure https://..." : null)" />
                             }
                         </div>
                     }

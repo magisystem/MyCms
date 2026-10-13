@@ -1,5 +1,6 @@
 using System.Text;
-using DvCms.Application.Negozio;
+using DvCms.Contracts.Negozio;
+using DvCms.DTO.Negozio;
 
 namespace DvCms.Web.Pagamenti;
 

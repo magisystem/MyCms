@@ -1,4 +1,6 @@
-using DvCms.Application.Accessi;
+using DvCms.Contracts.Accessi;
+using DvCms.Contracts.Email;
+using DvCms.Core.Accessi.DueFattori;
 using DvCms.Extender;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.Models.Accessi;
@@ -112,11 +114,11 @@ public static class DatiProva
         Guid idUtenza,
         CancellationToken annullamento = default)
     {
-        var segreto = DvCms.Application.Accessi.DueFattori.Totp.GeneraSegreto();
-        var codici = DvCms.Application.Accessi.DueFattori.CodiciRecupero.Genera();
+        var segreto = DvCms.Core.Accessi.DueFattori.Totp.GeneraSegreto();
+        var codici = DvCms.Core.Accessi.DueFattori.CodiciRecupero.Genera();
         await using var ambito = fornitore.CreateAsyncScope();
         var contesto = ambito.ServiceProvider.GetRequiredService<ContestoDatabase>();
-        var protettore = ambito.ServiceProvider.GetRequiredService<DvCms.Application.Email.IProtettoreSegreti>();
+        var protettore = ambito.ServiceProvider.GetRequiredService<DvCms.Contracts.Email.IProtettoreSegreti>();
         var protetto = protettore.Proteggi(DvCms.Extender.Base32.Codifica(segreto));
         var adesso = DateTime.UtcNow;
         await contesto.Utenze.IgnoreQueryFilters().Where(u => u.Id == idUtenza).ExecuteUpdateAsync(
@@ -131,7 +133,7 @@ public static class DatiProva
             {
                 Id = Guid.NewGuid(),
                 IdUtenza = idUtenza,
-                HashCodice = DvCms.Application.Accessi.DueFattori.CodiciRecupero.Hash(DvCms.Application.Accessi.DueFattori.CodiciRecupero.Normalizza(codice)!),
+                HashCodice = DvCms.Core.Accessi.DueFattori.CodiciRecupero.Hash(DvCms.Core.Accessi.DueFattori.CodiciRecupero.Normalizza(codice)!),
                 CreatoIlUtc = adesso,
             });
         }

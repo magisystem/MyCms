@@ -1,8 +1,11 @@
 using System.Text.RegularExpressions;
-using DvCms.Application.Accessi;
-using DvCms.Application.Negozio;
-using DvCms.Application.Piattaforma;
-using DvCms.Application.Tenancy;
+using DvCms.Contracts.Accessi;
+using DvCms.Contracts.Negozio;
+using DvCms.Contracts.Tenancy;
+using DvCms.Core.Accessi;
+using DvCms.Core.Negozio;
+using DvCms.DTO.Negozio;
+using DvCms.DTO.Piattaforma;
 using DvCms.Extender;
 using DvCms.Infrastructure.Cms;
 using DvCms.Infrastructure.Persistenza;

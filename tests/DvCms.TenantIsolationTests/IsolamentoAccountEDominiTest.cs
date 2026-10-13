@@ -1,6 +1,8 @@
 using System.Net;
-using DvCms.Application.Accessi;
-using DvCms.Application.Piattaforma;
+using DvCms.Contracts.Piattaforma;
+using DvCms.Core.Tenancy;
+using DvCms.DTO.Piattaforma;
+using DvCms.DTO.Tenancy;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Supporto;
 using DvCms.Models.Accessi;
@@ -154,8 +156,8 @@ public class IsolamentoAccountEDominiTest
         }
 
         await using var comeA = d.Web.Fabbrica.Services.CreateAsyncScope();
-        comeA.ServiceProvider.GetRequiredService<DvCms.Application.Tenancy.ContestoTenant>()
-            .Imposta(new DvCms.Application.Tenancy.DatiTenantRisolto(d.A.IdTenant, d.A.IdSito, d.A.IdDominio, d.A.Host, false));
+        comeA.ServiceProvider.GetRequiredService<DvCms.Core.Tenancy.ContestoTenant>()
+            .Imposta(new DvCms.DTO.Tenancy.DatiTenantRisolto(d.A.IdTenant, d.A.IdSito, d.A.IdDominio, d.A.Host, false));
         var contesto = comeA.ServiceProvider.GetRequiredService<ContestoDatabase>();
 
         Assert.Empty(await contesto.RegistroAudit.ToListAsync(Ct));

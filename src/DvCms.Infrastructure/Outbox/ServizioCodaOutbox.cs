@@ -1,6 +1,8 @@
-using DvCms.Application.Accessi;
-using DvCms.Application.Outbox;
-using DvCms.Application.Piattaforma;
+using DvCms.Contracts.Accessi;
+using DvCms.Contracts.Outbox;
+using DvCms.Core.Accessi;
+using DvCms.DTO.Outbox;
+using DvCms.DTO.Piattaforma;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.Models.Accessi;
 using DvCms.Models.Outbox;

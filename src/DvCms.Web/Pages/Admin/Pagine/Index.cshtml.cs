@@ -1,5 +1,6 @@
-using DvCms.Application.Cms;
-using DvCms.Application.Localizzazione;
+using DvCms.Contracts.Cms;
+using DvCms.Contracts.Localizzazione;
+using DvCms.DTO.Cms;
 
 namespace DvCms.Web.Pages.Admin.Pagine;
 

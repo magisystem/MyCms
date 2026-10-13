@@ -1,4 +1,6 @@
-using DvCms.Application.Localizzazione;
+using DvCms.Contracts.Localizzazione;
+using DvCms.Core.Localizzazione;
+using DvCms.DTO.Localizzazione;
 using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 

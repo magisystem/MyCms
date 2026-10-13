@@ -1,5 +1,5 @@
-using DvCms.Application.Cms;
-using DvCms.Application.Temi;
+using DvCms.Contracts.Cms;
+using DvCms.Contracts.Temi;
 using DvCms.Web.Localizzazione;
 using DvCms.Web.Pubblico;
 using Microsoft.AspNetCore.Mvc;

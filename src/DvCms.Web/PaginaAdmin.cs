@@ -1,6 +1,7 @@
 using System.Security.Claims;
-using DvCms.Application.Localizzazione;
-using DvCms.Application.Piattaforma;
+using DvCms.Contracts.Localizzazione;
+using DvCms.Core.Localizzazione;
+using DvCms.DTO.Piattaforma;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 

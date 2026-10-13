@@ -1,4 +1,4 @@
-using DvCms.Application.Media;
+using DvCms.Contracts.Media;
 using Microsoft.Net.Http.Headers;
 
 namespace DvCms.Web.Pubblico;

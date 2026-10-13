@@ -1,6 +1,8 @@
-using DvCms.Application.Negozio;
-using DvCms.Application.Piattaforma;
-using DvCms.Application.Tenancy;
+using DvCms.Contracts.Negozio;
+using DvCms.Contracts.Tenancy;
+using DvCms.Core.Negozio;
+using DvCms.DTO.Negozio;
+using DvCms.DTO.Piattaforma;
 using DvCms.Extender;
 using DvCms.Infrastructure.Cms;
 using DvCms.Infrastructure.Persistenza;

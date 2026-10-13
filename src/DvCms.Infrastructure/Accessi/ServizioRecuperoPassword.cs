@@ -1,10 +1,13 @@
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
-using DvCms.Application.Accessi;
-using DvCms.Application.Email;
-using DvCms.Application.Localizzazione;
-using DvCms.Application.Tenancy;
+using DvCms.Contracts.Accessi;
+using DvCms.Contracts.Email;
+using DvCms.Contracts.Localizzazione;
+using DvCms.Contracts.Tenancy;
+using DvCms.Core.Accessi;
+using DvCms.DTO.Accessi;
+using DvCms.DTO.Email;
 using DvCms.Extender;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.Models.Accessi;

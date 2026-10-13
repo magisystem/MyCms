@@ -1,6 +1,6 @@
 using System.Net;
-using DvCms.Application.Negozio;
-using DvCms.Application.Piattaforma;
+using DvCms.DTO.Negozio;
+using DvCms.DTO.Piattaforma;
 using DvCms.IntegrationTests.Supporto;
 using DvCms.Models.Media;
 using DvCms.Models.Negozio;

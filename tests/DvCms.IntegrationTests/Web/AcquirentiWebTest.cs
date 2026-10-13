@@ -1,7 +1,8 @@
 using System.Net;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
-using DvCms.Application.Piattaforma;
+using DvCms.Contracts.Piattaforma;
+using DvCms.DTO.Piattaforma;
 using DvCms.Infrastructure.Manutenzione;
 using DvCms.Infrastructure.Outbox;
 using DvCms.Infrastructure.Persistenza;

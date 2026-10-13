@@ -1,7 +1,8 @@
 using System.Net;
 using System.Text;
 using System.Text.Json;
-using DvCms.Application.Builder;
+using DvCms.Core.Builder;
+using DvCms.DTO.Builder;
 using Xunit;
 
 namespace DvCms.UnitTests.Builder;

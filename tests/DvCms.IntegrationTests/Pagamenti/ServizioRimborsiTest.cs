@@ -1,6 +1,6 @@
 using System.Text.Json.Nodes;
-using DvCms.Application.Negozio;
-using DvCms.Application.Piattaforma;
+using DvCms.DTO.Negozio;
+using DvCms.DTO.Piattaforma;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Negozio;
 using DvCms.IntegrationTests.Supporto;
@@ -35,7 +35,7 @@ public class ServizioRimborsiTest
         await c.ConfiguraPagamentoAsync(c.A);
         await c.AggiungiAsync(c.Cliente, varianti[0], 1);
         var ordine = (await c.ComeAsync(c.A, s => s.CreaDaCarrelloAsync(c.Cliente, "it", new DatiOrdine(ritiro, null, null, null, null, null, null, 10m), Ct))).Id!.Value;
-        await c.ComePagamentiAsync(c.A, s => s.AvviaAsync(c.Cliente, ordine, DvCms.Application.Negozio.NomiProviderPagamento.PayPal, ContestoNegozio.Link, Ct));
+        await c.ComePagamentiAsync(c.A, s => s.AvviaAsync(c.Cliente, ordine, DvCms.Models.Negozio.NomiProviderPagamento.PayPal, ContestoNegozio.Link, Ct));
         var idProvider = (await c.TentativiAsync(ordine)).Single().IdProvider;
         finto.Approva(idProvider);
         Assert.Equal(RisultatoPagamento.Pagato, await c.ComePagamentiAsync(c.A, s => s.CompletaAsync(c.Cliente, ordine, idProvider, Ct)));
@@ -62,7 +62,7 @@ public class ServizioRimborsiTest
         await c.ConfiguraPagamentoAsync(c.A);
         await c.AggiungiAsync(c.Cliente, varianti[0], 2);
         var ordine = (await c.ComeAsync(c.A, s => s.CreaDaCarrelloAsync(c.Cliente, "it", new DatiOrdine(ritiro, null, null, null, null, null, null, 20m), Ct))).Id!.Value;
-        await c.ComePagamentiAsync(c.A, s => s.AvviaAsync(c.Cliente, ordine, DvCms.Application.Negozio.NomiProviderPagamento.PayPal, ContestoNegozio.Link, Ct));
+        await c.ComePagamentiAsync(c.A, s => s.AvviaAsync(c.Cliente, ordine, DvCms.Models.Negozio.NomiProviderPagamento.PayPal, ContestoNegozio.Link, Ct));
         var idProvider = (await c.TentativiAsync(ordine)).Single().IdProvider;
         finto.Approva(idProvider);
         await c.ComePagamentiAsync(c.A, s => s.CompletaAsync(c.Cliente, ordine, idProvider, Ct));
@@ -293,7 +293,7 @@ public class ServizioRimborsiTest
         await c.ConfiguraPagamentoAsync(c.A);
         await c.AggiungiAsync(c.Cliente, varianti[0], 1);
         var ordine = (await c.ComeAsync(c.A, s => s.CreaDaCarrelloAsync(c.Cliente, "it", new DatiOrdine(ritiro, null, null, null, null, null, null, 10m), Ct))).Id!.Value;
-        await c.ComePagamentiAsync(c.A, s => s.AvviaAsync(c.Cliente, ordine, DvCms.Application.Negozio.NomiProviderPagamento.PayPal, ContestoNegozio.Link, Ct));
+        await c.ComePagamentiAsync(c.A, s => s.AvviaAsync(c.Cliente, ordine, DvCms.Models.Negozio.NomiProviderPagamento.PayPal, ContestoNegozio.Link, Ct));
         var idProvider = (await c.TentativiAsync(ordine)).Single().IdProvider;
         finto.Approva(idProvider);
         Assert.Equal(RisultatoPagamento.DaRimborsare, await c.ComePagamentiAsync(c.A, s => s.CompletaAsync(c.Cliente, ordine, idProvider, Ct)));

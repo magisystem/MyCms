@@ -1,3 +1,5 @@
+using DvCms.Core.Tenancy;
+using DvCms.DTO.Tenancy;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Supporto;
 using DvCms.Models.Accessi;
@@ -239,8 +241,8 @@ public class ModelloCmsTest
             if (idTenant is { } id)
             {
                 var dati = idTenant == A.IdTenant ? A : B;
-                ambito.ServiceProvider.GetRequiredService<DvCms.Application.Tenancy.ContestoTenant>()
-                    .Imposta(new DvCms.Application.Tenancy.DatiTenantRisolto(id, dati.IdSito, dati.IdDominio, dati.Host, false));
+                ambito.ServiceProvider.GetRequiredService<DvCms.Core.Tenancy.ContestoTenant>()
+                    .Imposta(new DvCms.DTO.Tenancy.DatiTenantRisolto(id, dati.IdSito, dati.IdDominio, dati.Host, false));
             }
 
             return new Ambito(ambito);

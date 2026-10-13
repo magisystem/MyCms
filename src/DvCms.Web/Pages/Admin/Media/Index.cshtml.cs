@@ -1,6 +1,8 @@
-using DvCms.Application.Localizzazione;
-using DvCms.Application.Media;
-using DvCms.Application.Piattaforma;
+using DvCms.Contracts.Localizzazione;
+using DvCms.Contracts.Media;
+using DvCms.Core.Localizzazione;
+using DvCms.DTO.Media;
+using DvCms.DTO.Piattaforma;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DvCms.Web.Pages.Admin.Media;

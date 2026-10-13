@@ -1,5 +1,7 @@
-using DvCms.Application.Localizzazione;
-using DvCms.Application.Temi;
+using DvCms.Contracts.Localizzazione;
+using DvCms.Contracts.Temi;
+using DvCms.Core.Localizzazione;
+using DvCms.DTO.Temi;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DvCms.Web.Pages.Admin.Tema;

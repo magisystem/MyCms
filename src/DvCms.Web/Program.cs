@@ -1,4 +1,5 @@
-using DvCms.Application.Localizzazione;
+using DvCms.Contracts.Localizzazione;
+using DvCms.DTO.Accessi.DueFattori;
 using DvCms.Infrastructure;
 using DvCms.Web.Accessi;
 using DvCms.Web.Comandi;
@@ -79,8 +80,8 @@ if (!applicazione.Environment.IsDevelopment() && string.IsNullOrWhiteSpace(appli
 
 if (!applicazione.Environment.IsDevelopment())
 {
-    var dueFattori = applicazione.Services.GetRequiredService<DvCms.Application.Accessi.DueFattori.OpzioniDueFattori>();
-    if (dueFattori.Obbligo == DvCms.Application.Accessi.DueFattori.ObbligoDueFattori.Nessuno)
+    var dueFattori = applicazione.Services.GetRequiredService<DvCms.DTO.Accessi.DueFattori.OpzioniDueFattori>();
+    if (dueFattori.Obbligo == DvCms.DTO.Accessi.DueFattori.ObbligoDueFattori.Nessuno)
     {
         AvvisiAvvio.DueFattoriNonObbligatori(applicazione.Logger);
     }

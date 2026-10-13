@@ -1,9 +1,11 @@
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
-using DvCms.Application.Media;
-using DvCms.Application.Piattaforma;
-using DvCms.Application.Tenancy;
+using DvCms.Contracts.Media;
+using DvCms.Core.Tenancy;
+using DvCms.DTO.Media;
+using DvCms.DTO.Piattaforma;
+using DvCms.DTO.Tenancy;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Supporto;
 using DvCms.Models.Accessi;

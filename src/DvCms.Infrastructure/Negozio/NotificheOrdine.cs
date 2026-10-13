@@ -1,9 +1,10 @@
 using System.Globalization;
 using System.Text;
-using DvCms.Application.Email;
-using DvCms.Application.Localizzazione;
-using DvCms.Application.Negozio;
-using DvCms.Application.Tenancy;
+using DvCms.Contracts.Email;
+using DvCms.Contracts.Localizzazione;
+using DvCms.Contracts.Tenancy;
+using DvCms.DTO.Email;
+using DvCms.DTO.Negozio;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.Models.Negozio;
 using Microsoft.EntityFrameworkCore;

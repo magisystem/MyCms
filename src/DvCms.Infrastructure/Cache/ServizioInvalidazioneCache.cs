@@ -1,4 +1,4 @@
-using DvCms.Application.Cms;
+using DvCms.Contracts.Cms;
 using DvCms.Infrastructure.Persistenza;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;

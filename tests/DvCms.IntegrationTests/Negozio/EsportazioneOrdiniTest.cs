@@ -1,7 +1,7 @@
 using System.Net;
 using System.Text;
-using DvCms.Application.Accessi;
-using DvCms.Application.Negozio;
+using DvCms.Core.Accessi;
+using DvCms.DTO.Negozio;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Supporto;
 using DvCms.Models.Negozio;

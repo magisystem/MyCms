@@ -1,5 +1,5 @@
 using System.Text;
-using DvCms.Application.Accessi.DueFattori;
+using DvCms.Core.Accessi.DueFattori;
 using DvCms.Extender;
 using Xunit;
 

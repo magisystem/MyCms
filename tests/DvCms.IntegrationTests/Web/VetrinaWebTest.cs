@@ -1,8 +1,9 @@
 using System.Net;
 using System.Text.RegularExpressions;
-using DvCms.Application.Cms;
-using DvCms.Application.Negozio;
-using DvCms.Application.Tenancy;
+using DvCms.Contracts.Cms;
+using DvCms.Core.Tenancy;
+using DvCms.DTO.Cms;
+using DvCms.DTO.Tenancy;
 using DvCms.Infrastructure.Cache;
 using DvCms.IntegrationTests.Negozio;
 using DvCms.IntegrationTests.Supporto;

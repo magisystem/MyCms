@@ -1,6 +1,8 @@
 @page "/admin/tema"
 @model DvCms.Web.Pages.Admin.Tema.IndexModel
-@using DvCms.Application.Temi
+@using DvCms.Contracts.Temi
+@using DvCms.Core.Temi
+@using DvCms.DTO.Temi
 @{
     ViewData["Titolo"] = _L["Aspetto del sito"];
     var configurazione = Model.Configurazione!;

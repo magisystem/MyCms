@@ -1,6 +1,7 @@
-using DvCms.Application.Accessi;
-using DvCms.Application.Localizzazione;
-using DvCms.Application.Piattaforma;
+using DvCms.Contracts.Accessi;
+using DvCms.Contracts.Localizzazione;
+using DvCms.DTO.Accessi;
+using DvCms.DTO.Piattaforma;
 using DvCms.Web.Accessi;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;

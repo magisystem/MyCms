@@ -1,4 +1,5 @@
-using DvCms.Application.Outbox;
+using DvCms.Contracts.Outbox;
+using DvCms.DTO.Outbox;
 using Microsoft.Extensions.Logging;
 
 namespace DvCms.Infrastructure.Outbox;

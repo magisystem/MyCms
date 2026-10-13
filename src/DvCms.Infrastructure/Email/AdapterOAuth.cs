@@ -1,4 +1,5 @@
-using DvCms.Application.Email;
+using DvCms.Contracts.Email;
+using DvCms.DTO.Email;
 using DvCms.Models.Email;
 
 namespace DvCms.Infrastructure.Email;

@@ -1,0 +1,29 @@
+using DvCms.DTO.Negozio;
+
+namespace DvCms.Contracts.Negozio;
+
+/// <summary>
+/// Vetrina pubblica del negozio (F-001, ADR-0009): sola lettura, senza account. Mostra solo prodotti pubblicati con almeno una
+/// variante attiva, solo se il sito ha il negozio attivo, e mai bozze, archiviati, varianti disattivate o dati di altri tenant.
+/// </summary>
+public interface IServizioVetrina
+{
+    /// <param name="codiceLingua">Lingua preferita; se manca la traduzione si ripiega sulla lingua predefinita del sito.</param>
+    Task<IReadOnlyList<ProdottoInVetrina>> ElencaAsync(string codiceLingua, CancellationToken annullamento);
+
+    /// <summary>Come <see cref="ElencaAsync"/>, ma solo i prodotti della categoria. Vuoto se la categoria non esiste o non ha prodotti visibili.</summary>
+    Task<IReadOnlyList<ProdottoInVetrina>> ElencaPerCategoriaAsync(string codiceLingua, Guid idCategoria, CancellationToken annullamento);
+
+    /// <summary>
+    /// Cerca fra i prodotti visibili (opzionalmente di una categoria): ogni parola del testo (al più 5, di almeno 2 caratteri) deve comparire
+    /// nel nome, nella descrizione o nel codice articolo di una variante attiva, in una qualsiasi lingua del sito, senza distinguere
+    /// maiuscole e accenti non ASCII. Un testo vuoto equivale all'elenco intero.
+    /// </summary>
+    Task<IReadOnlyList<ProdottoInVetrina>> CercaAsync(string codiceLingua, string? testo, Guid? idCategoria, CancellationToken annullamento);
+
+    /// <summary>Le categorie del sito che hanno almeno un prodotto visibile, nell'ordine di presentazione. Nome nella lingua richiesta, con ripiego sulla predefinita.</summary>
+    Task<IReadOnlyList<CategoriaInVetrina>> CategorieAsync(string codiceLingua, CancellationToken annullamento);
+
+    /// <summary><c>null</c> se il prodotto non esiste, non è pubblicato o il negozio non è attivo.</summary>
+    Task<ProdottoPubblico?> LeggiAsync(Guid idProdotto, string codiceLingua, CancellationToken annullamento);
+}

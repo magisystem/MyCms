@@ -1,7 +1,11 @@
-using DvCms.Application.Accessi;
-using DvCms.Application.Accessi.DueFattori;
-using DvCms.Application.Email;
-using DvCms.Application.Tenancy;
+using DvCms.Contracts.Accessi;
+using DvCms.Contracts.Accessi.DueFattori;
+using DvCms.Contracts.Email;
+using DvCms.Contracts.Tenancy;
+using DvCms.Core.Accessi;
+using DvCms.Core.Accessi.DueFattori;
+using DvCms.DTO.Accessi;
+using DvCms.DTO.Accessi.DueFattori;
 using DvCms.Extender;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.Models;

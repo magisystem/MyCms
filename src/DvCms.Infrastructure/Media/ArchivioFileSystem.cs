@@ -1,5 +1,5 @@
 using System.Text.RegularExpressions;
-using DvCms.Application.Media;
+using DvCms.Contracts.Media;
 
 namespace DvCms.Infrastructure.Media;
 

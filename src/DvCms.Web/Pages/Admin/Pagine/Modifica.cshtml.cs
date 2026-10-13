@@ -1,6 +1,9 @@
-using DvCms.Application.Cms;
-using DvCms.Application.Localizzazione;
-using DvCms.Application.Piattaforma;
+using DvCms.Contracts.Cms;
+using DvCms.Contracts.Localizzazione;
+using DvCms.Core.Cms;
+using DvCms.Core.Localizzazione;
+using DvCms.DTO.Cms;
+using DvCms.DTO.Piattaforma;
 using DvCms.Models.Cms;
 using Microsoft.AspNetCore.Mvc;
 
@@ -115,7 +118,7 @@ public class ModificaModel : PaginaAdmin
         return Concludi(id, esito, Localizzatore.Traduci("Pagina ritirata dal pubblico."));
     }
 
-    private RedirectToPageResult Concludi(Guid id, DvCms.Application.Piattaforma.EsitoOperazione esito, string messaggioRiuscito)
+    private RedirectToPageResult Concludi(Guid id, DvCms.DTO.Piattaforma.EsitoOperazione esito, string messaggioRiuscito)
     {
         if (esito.Riuscito)
         {

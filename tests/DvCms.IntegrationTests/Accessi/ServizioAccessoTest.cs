@@ -1,5 +1,8 @@
-using DvCms.Application.Accessi;
-using DvCms.Application.Tenancy;
+using DvCms.Contracts.Accessi;
+using DvCms.Core.Accessi;
+using DvCms.Core.Tenancy;
+using DvCms.DTO.Accessi;
+using DvCms.DTO.Tenancy;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Supporto;
 using DvCms.Models.Accessi;

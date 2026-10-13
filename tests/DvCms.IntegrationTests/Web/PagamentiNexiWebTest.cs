@@ -1,7 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
-using DvCms.Application.Negozio;
+using DvCms.DTO.Negozio;
 using DvCms.IntegrationTests.Negozio;
 using DvCms.IntegrationTests.Supporto;
 using DvCms.Models.Negozio;

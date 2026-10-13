@@ -1,4 +1,5 @@
-using DvCms.Application.Negozio;
+using DvCms.Contracts.Negozio;
+using DvCms.DTO.Negozio;
 using DvCms.IntegrationTests.Supporto;
 using DvCms.Models.Negozio;
 using Microsoft.EntityFrameworkCore;

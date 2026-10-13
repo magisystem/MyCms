@@ -1,4 +1,4 @@
-using DvCms.Application.Media;
+using DvCms.Core.Media;
 using DvCms.IntegrationTests.Supporto;
 using Xunit;
 

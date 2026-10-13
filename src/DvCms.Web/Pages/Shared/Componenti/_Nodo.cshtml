@@ -1,8 +1,12 @@
-@using DvCms.Application.Builder
-@using DvCms.Application.Cms
+@using DvCms.Contracts.Builder
+@using DvCms.Core.Builder
+@using DvCms.DTO.Builder
+@using DvCms.Contracts.Cms
+@using DvCms.Core.Cms
+@using DvCms.DTO.Cms
 @model NodoCms
-@inject DvCms.Application.Negozio.IServizioVetrina Vetrina
-@inject DvCms.Application.Localizzazione.IContestoLingua ContestoLinguaNodo
+@inject DvCms.Contracts.Negozio.IServizioVetrina Vetrina
+@inject DvCms.Contracts.Localizzazione.IContestoLingua ContestoLinguaNodo
 @functions {
     private static string Valore(IReadOnlyDictionary<string, string> valori, string nome, string predefinito) =>
         valori.TryGetValue(nome, out var valore) && valore.Length > 0 ? valore : predefinito;

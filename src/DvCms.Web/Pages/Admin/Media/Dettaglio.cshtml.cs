@@ -1,5 +1,8 @@
-using DvCms.Application.Localizzazione;
-using DvCms.Application.Media;
+using DvCms.Contracts.Localizzazione;
+using DvCms.Contracts.Media;
+using DvCms.Core.Localizzazione;
+using DvCms.DTO.Media;
+using DvCms.DTO.Piattaforma;
 using DvCms.Models.Media;
 using Microsoft.AspNetCore.Mvc;
 
@@ -56,7 +59,7 @@ public class DettaglioModel : PaginaAdmin
         return Concludi(id, esito, string.Empty);
     }
 
-    private RedirectToPageResult Concludi(Guid id, DvCms.Application.Piattaforma.EsitoOperazione esito, string messaggioRiuscito)
+    private RedirectToPageResult Concludi(Guid id, DvCms.DTO.Piattaforma.EsitoOperazione esito, string messaggioRiuscito)
     {
         if (esito.Riuscito)
         {
@@ -64,7 +67,7 @@ public class DettaglioModel : PaginaAdmin
         }
         else
         {
-            MessaggioErrore = esito.Codice == DvCms.Application.Piattaforma.CodiceEsito.DatiNonValidi
+            MessaggioErrore = esito.Codice == DvCms.DTO.Piattaforma.CodiceEsito.DatiNonValidi
                 ? Localizzatore.Traduci("Il testo alternativo non è valido (massimo 500 caratteri, una sola riga).")
                 : TestoErrore(esito.Codice);
         }

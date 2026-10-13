@@ -1,4 +1,4 @@
-using DvCms.Application.Negozio;
+using DvCms.DTO.Negozio;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Supporto;
 using DvCms.Models.Negozio;

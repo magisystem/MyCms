@@ -68,7 +68,7 @@
                                 <input type="password" class="form-control @(invalido ? "is-invalid" : null)" id="@nome" name="@nome" autocomplete="new-password"
                                        placeholder="@(Model.SegretoImpostato ? _L["Impostato: lascia vuoto per non cambiarlo"] : string.Empty)" />
                             }
-                            else if (campo.Tipo == DvCms.Application.Email.TipoCampoEmail.Data)
+                            else if (campo.Tipo == DvCms.DTO.Email.TipoCampoEmail.Data)
                             {
                                 <input type="date" class="form-control @(invalido ? "is-invalid" : null)" id="@nome" name="@nome" value="@Model.Valori.GetValueOrDefault(campo.Nome)" />
                             }

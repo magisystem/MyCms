@@ -114,7 +114,7 @@ else
 }
 @if (Model.UrlPagamento is not null)
 {
-    <p role="status"><a href="@Model.UrlPagamento.AbsoluteUri" rel="noopener">@(Model.ProviderAvviato == DvCms.Application.Negozio.NomiProviderPagamento.Nexi ? _L["Continua su Nexi per completare il pagamento"] : _L["Continua su PayPal per completare il pagamento"])</a></p>
+    <p role="status"><a href="@Model.UrlPagamento.AbsoluteUri" rel="noopener">@(Model.ProviderAvviato == DvCms.Models.Negozio.NomiProviderPagamento.Nexi ? _L["Continua su Nexi per completare il pagamento"] : _L["Continua su PayPal per completare il pagamento"])</a></p>
 }
 else if (Model.PuoPagare)
 {
@@ -127,7 +127,7 @@ else if (Model.PuoPagare)
     {
         <form method="post" asp-page-handler="Paga" asp-route-id="@o.Id">
             <input type="hidden" name="provider" value="@provider" />
-            @if (provider == DvCms.Application.Negozio.NomiProviderPagamento.Nexi)
+            @if (provider == DvCms.Models.Negozio.NomiProviderPagamento.Nexi)
             {
                 <button type="submit">@(o.Stato == StatoOrdine.PagamentoFallito ? _L["Riprova a pagare con carta (Nexi)"] : _L["Paga con carta (Nexi)"])</button>
             }

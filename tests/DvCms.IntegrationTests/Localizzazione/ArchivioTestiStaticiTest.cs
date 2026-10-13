@@ -1,4 +1,5 @@
-using DvCms.Application.Localizzazione;
+using DvCms.Contracts.Localizzazione;
+using DvCms.Core.Localizzazione;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Supporto;
 using DvCms.Models.Localizzazione;

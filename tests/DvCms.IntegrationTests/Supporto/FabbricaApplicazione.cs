@@ -1,5 +1,6 @@
 using System.Net;
-using DvCms.Application.Tenancy;
+using DvCms.Contracts.Tenancy;
+using DvCms.DTO.Tenancy;
 using DvCms.Infrastructure.Tenancy;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;

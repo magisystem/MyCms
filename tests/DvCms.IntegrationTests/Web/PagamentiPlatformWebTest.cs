@@ -1,6 +1,6 @@
 using System.Net;
 using System.Security.Cryptography;
-using DvCms.Application.Negozio;
+using DvCms.Contracts.Negozio;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Supporto;
 using DvCms.Models.Negozio;

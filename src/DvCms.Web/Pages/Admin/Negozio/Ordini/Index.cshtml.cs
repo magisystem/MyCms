@@ -1,6 +1,8 @@
 using System.Globalization;
-using DvCms.Application.Localizzazione;
-using DvCms.Application.Negozio;
+using DvCms.Contracts.Localizzazione;
+using DvCms.Contracts.Negozio;
+using DvCms.Core.Localizzazione;
+using DvCms.DTO.Negozio;
 using DvCms.Models.Negozio;
 using Microsoft.AspNetCore.Mvc;
 

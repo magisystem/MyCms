@@ -1,4 +1,4 @@
-using DvCms.Application.Localizzazione;
+using DvCms.Contracts.Localizzazione;
 using DvCms.Models.Localizzazione;
 
 namespace DvCms.Web.Localizzazione;

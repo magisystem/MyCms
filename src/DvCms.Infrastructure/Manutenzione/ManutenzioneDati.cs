@@ -1,5 +1,5 @@
-using DvCms.Application.Accessi;
-using DvCms.Application.Negozio;
+using DvCms.Contracts.Negozio;
+using DvCms.DTO.Accessi;
 using DvCms.Infrastructure.Outbox;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.Models.Accessi;

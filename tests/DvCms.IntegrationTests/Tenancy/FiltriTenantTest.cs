@@ -1,4 +1,5 @@
-using DvCms.Application.Tenancy;
+using DvCms.Core.Tenancy;
+using DvCms.DTO.Tenancy;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Supporto;
 using DvCms.Models.Tenancy;

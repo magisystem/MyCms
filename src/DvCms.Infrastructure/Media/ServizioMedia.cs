@@ -1,8 +1,11 @@
 using System.Security.Cryptography;
-using DvCms.Application.Accessi;
-using DvCms.Application.Media;
-using DvCms.Application.Piattaforma;
-using DvCms.Application.Tenancy;
+using DvCms.Contracts.Accessi;
+using DvCms.Contracts.Media;
+using DvCms.Contracts.Tenancy;
+using DvCms.Core.Accessi;
+using DvCms.Core.Media;
+using DvCms.DTO.Media;
+using DvCms.DTO.Piattaforma;
 using DvCms.Extender;
 using DvCms.Infrastructure.Cms;
 using DvCms.Infrastructure.Persistenza;

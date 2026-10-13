@@ -1,6 +1,8 @@
 using System.Text.Json;
-using DvCms.Application.Email;
-using DvCms.Application.Outbox;
+using DvCms.Contracts.Email;
+using DvCms.Contracts.Outbox;
+using DvCms.DTO.Email;
+using DvCms.DTO.Outbox;
 
 namespace DvCms.Infrastructure.Email;
 

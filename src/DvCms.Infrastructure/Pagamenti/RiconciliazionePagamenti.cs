@@ -1,5 +1,6 @@
-using DvCms.Application.Negozio;
-using DvCms.Application.Tenancy;
+using DvCms.Contracts.Negozio;
+using DvCms.Core.Tenancy;
+using DvCms.DTO.Tenancy;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.Models.Negozio;
 using Microsoft.EntityFrameworkCore;

@@ -146,7 +146,7 @@
                         <li class="list-group-item">
                             @Model.StatoTentativo(tentativo.Stato)<br />
                             <small class="text-secondary">@tentativo.Provider · @tentativo.IdProvider · @tentativo.CreatoIlUtc.ToString("yyyy-MM-dd HH:mm")</small>
-                            @if (tentativo.Stato == StatoTentativoPagamento.DaRimborsare && tentativo.Provider != DvCms.Application.Negozio.NomiProviderPagamento.PayPal)
+                            @if (tentativo.Stato == StatoTentativoPagamento.DaRimborsare && tentativo.Provider != DvCms.Models.Negozio.NomiProviderPagamento.PayPal)
                             {
                                 <div class="small mt-2">@_L["Restituisci l'incasso dal back office Nexi."] (@Importo(tentativo.Importo))</div>
                             }

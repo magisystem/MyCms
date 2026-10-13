@@ -1,10 +1,12 @@
 using System.Text.Json;
-using DvCms.Application.Builder;
-using DvCms.Application.Localizzazione;
-using DvCms.Application.Media;
-using DvCms.Application.Negozio;
-using DvCms.Application.Piattaforma;
-using DvCms.Application.Temi;
+using DvCms.Contracts.Builder;
+using DvCms.Contracts.Localizzazione;
+using DvCms.Contracts.Media;
+using DvCms.Contracts.Negozio;
+using DvCms.Contracts.Temi;
+using DvCms.Core.Builder;
+using DvCms.Core.Localizzazione;
+using DvCms.DTO.Piattaforma;
 using DvCms.Web.Pubblico;
 using Microsoft.AspNetCore.Mvc;
 

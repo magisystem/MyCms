@@ -1,5 +1,5 @@
 using System.Text.RegularExpressions;
-using DvCms.Application.Builder;
+using DvCms.Core.Builder;
 using Xunit;
 
 namespace DvCms.UnitTests.Builder;

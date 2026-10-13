@@ -1,5 +1,4 @@
 using System.Net;
-using DvCms.Application.Negozio;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Negozio;
 using DvCms.IntegrationTests.Supporto;

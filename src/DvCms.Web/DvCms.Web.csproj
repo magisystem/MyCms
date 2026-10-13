@@ -10,7 +10,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DvCms.Application\DvCms.Application.csproj" />
+    <ProjectReference Include="..\DvCms.Contracts\DvCms.Contracts.csproj" />
+    <ProjectReference Include="..\DvCms.DTO\DvCms.DTO.csproj" />
+    <ProjectReference Include="..\DvCms.Core\DvCms.Core.csproj" />
+    <ProjectReference Include="..\DvCms.Emails\DvCms.Emails.csproj" />
     <ProjectReference Include="..\DvCms.Infrastructure\DvCms.Infrastructure.csproj" />
   </ItemGroup>
 

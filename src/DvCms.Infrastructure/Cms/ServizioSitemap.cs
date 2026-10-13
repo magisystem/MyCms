@@ -1,5 +1,6 @@
-using DvCms.Application.Cms;
-using DvCms.Application.Tenancy;
+using DvCms.Contracts.Cms;
+using DvCms.Contracts.Tenancy;
+using DvCms.DTO.Cms;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.Models.Cms;
 using Microsoft.EntityFrameworkCore;

@@ -1,4 +1,3 @@
-using DvCms.Infrastructure.Persistenza;
 using Microsoft.Data.SqlClient;
 
 namespace DvCms.Infrastructure.Persistenza;

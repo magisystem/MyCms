@@ -1,5 +1,6 @@
 using BCrypt.Net;
-using DvCms.Application.Accessi;
+using DvCms.Contracts.Accessi;
+using DvCms.DTO.Accessi;
 
 namespace DvCms.Infrastructure.Accessi;
 

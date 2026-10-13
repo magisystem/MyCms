@@ -1,7 +1,8 @@
 using System.Globalization;
 using System.Text;
 using System.Xml;
-using DvCms.Application.Cms;
+using DvCms.Contracts.Cms;
+using DvCms.DTO.Cms;
 
 namespace DvCms.Web.Pubblico;
 

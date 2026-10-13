@@ -106,10 +106,10 @@
                     </div>
                     @switch (controllo.Stato)
                     {
-                        case DvCms.Application.Negozio.StatoControllo.Ok:
+                        case DvCms.DTO.Negozio.StatoControllo.Ok:
                             <span class="badge bg-green-lt">@_L["OK"]</span>
                             break;
-                        case DvCms.Application.Negozio.StatoControllo.Attenzione:
+                        case DvCms.DTO.Negozio.StatoControllo.Attenzione:
                             <span class="badge bg-yellow-lt">@_L["Da controllare"]</span>
                             break;
                         default:

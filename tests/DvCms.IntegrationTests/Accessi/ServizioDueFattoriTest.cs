@@ -1,7 +1,11 @@
 using System.Security.Cryptography;
-using DvCms.Application.Accessi;
-using DvCms.Application.Accessi.DueFattori;
-using DvCms.Application.Tenancy;
+using DvCms.Contracts.Accessi;
+using DvCms.Contracts.Accessi.DueFattori;
+using DvCms.Core.Accessi.DueFattori;
+using DvCms.Core.Tenancy;
+using DvCms.DTO.Accessi;
+using DvCms.DTO.Accessi.DueFattori;
+using DvCms.DTO.Tenancy;
 using DvCms.Extender;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Supporto;

@@ -1,5 +1,5 @@
 using System.Runtime.CompilerServices;
-using DvCms.Application.Cms;
+using DvCms.Contracts.Cms;
 using DvCms.Models.Cms;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;

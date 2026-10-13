@@ -1,4 +1,5 @@
-using DvCms.Application.Email;
+using DvCms.DTO.Email;
+using DvCms.Emails;
 using DvCms.Models.Email;
 using Xunit;
 

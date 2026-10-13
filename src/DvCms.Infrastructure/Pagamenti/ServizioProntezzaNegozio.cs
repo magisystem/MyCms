@@ -1,4 +1,5 @@
-using DvCms.Application.Negozio;
+using DvCms.Contracts.Negozio;
+using DvCms.DTO.Negozio;
 using DvCms.Infrastructure.Manutenzione;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.Models.Accessi;

@@ -1,6 +1,6 @@
 using System.Security.Cryptography;
 using System.Xml.Linq;
-using DvCms.Application.Email;
+using DvCms.Contracts.Email;
 using DvCms.Extender;
 using DvCms.Infrastructure.Persistenza;
 using Microsoft.AspNetCore.DataProtection;

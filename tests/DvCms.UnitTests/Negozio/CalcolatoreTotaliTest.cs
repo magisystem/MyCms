@@ -1,4 +1,4 @@
-using DvCms.Application.Negozio;
+using DvCms.Core.Negozio;
 using DvCms.Models.Negozio;
 using Xunit;
 

@@ -1,5 +1,5 @@
 using System.Net;
-using DvCms.Application.Piattaforma;
+using DvCms.Contracts.Piattaforma;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Supporto;
 using DvCms.Models.Accessi;

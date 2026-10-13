@@ -1,4 +1,4 @@
-using DvCms.Application.Accessi;
+using DvCms.DTO.Accessi;
 using DvCms.Infrastructure.Persistenza;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

@@ -1,3 +1,5 @@
+using DvCms.Core.Tenancy;
+using DvCms.DTO.Tenancy;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Supporto;
 using DvCms.Models.Accessi;
@@ -77,8 +79,8 @@ public class ModelloUtenzeTest
         await DatiProva.CreaUtenzaAsync(fornitore, RuoloUtenza.PlatformAdmin, null, "root@esempio.it", annullamento: TestContext.Current.CancellationToken);
 
         await using var ambito = fornitore.CreateAsyncScope();
-        ambito.ServiceProvider.GetRequiredService<DvCms.Application.Tenancy.ContestoTenant>().Imposta(
-            new DvCms.Application.Tenancy.DatiTenantRisolto(a.IdTenant, a.IdSito, a.IdDominio, a.Host, TenantPrimario: false));
+        ambito.ServiceProvider.GetRequiredService<DvCms.Core.Tenancy.ContestoTenant>().Imposta(
+            new DvCms.DTO.Tenancy.DatiTenantRisolto(a.IdTenant, a.IdSito, a.IdDominio, a.Host, TenantPrimario: false));
         var contesto = ambito.ServiceProvider.GetRequiredService<ContestoDatabase>();
 
         var visibili = await contesto.Utenze.ToListAsync(TestContext.Current.CancellationToken);

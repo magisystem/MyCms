@@ -1,4 +1,5 @@
-using DvCms.Application.Tenancy;
+using DvCms.Contracts.Tenancy;
+using DvCms.DTO.Tenancy;
 using DvCms.IntegrationTests.Supporto;
 using DvCms.Models.Tenancy;
 using Microsoft.Extensions.DependencyInjection;

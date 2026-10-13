@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using System.Text;
-using DvCms.Application.Negozio;
-using DvCms.Application.Piattaforma;
+using DvCms.Contracts.Negozio;
+using DvCms.DTO.Piattaforma;
 using DvCms.Web.Accessi;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;

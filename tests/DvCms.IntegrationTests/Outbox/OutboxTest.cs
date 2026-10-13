@@ -1,6 +1,9 @@
-using DvCms.Application.Cms;
-using DvCms.Application.Outbox;
-using DvCms.Application.Tenancy;
+using DvCms.Contracts.Cms;
+using DvCms.Contracts.Outbox;
+using DvCms.Core.Tenancy;
+using DvCms.DTO.Cms;
+using DvCms.DTO.Outbox;
+using DvCms.DTO.Tenancy;
 using DvCms.Infrastructure.Outbox;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Supporto;

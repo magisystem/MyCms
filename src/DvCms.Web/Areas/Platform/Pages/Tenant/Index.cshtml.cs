@@ -1,5 +1,6 @@
-using DvCms.Application.Localizzazione;
-using DvCms.Application.Piattaforma;
+using DvCms.Contracts.Localizzazione;
+using DvCms.Contracts.Piattaforma;
+using DvCms.DTO.Piattaforma;
 
 namespace DvCms.Web.Areas.Platform.Pages.Tenant;
 

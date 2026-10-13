@@ -1,4 +1,4 @@
-using DvCms.Application.Localizzazione;
+using DvCms.Core.Localizzazione;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 

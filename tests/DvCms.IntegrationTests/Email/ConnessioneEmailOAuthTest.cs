@@ -1,10 +1,12 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Web;
-using DvCms.Application.Accessi;
-using DvCms.Application.Email;
-using DvCms.Application.Piattaforma;
-using DvCms.Application.Tenancy;
+using DvCms.Contracts.Email;
+using DvCms.Core.Accessi;
+using DvCms.Core.Tenancy;
+using DvCms.DTO.Email;
+using DvCms.DTO.Piattaforma;
+using DvCms.DTO.Tenancy;
 using DvCms.Infrastructure.Outbox;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Supporto;

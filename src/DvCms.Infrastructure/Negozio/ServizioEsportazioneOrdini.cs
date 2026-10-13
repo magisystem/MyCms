@@ -1,8 +1,10 @@
 using System.Globalization;
 using System.Text;
-using DvCms.Application.Accessi;
-using DvCms.Application.Negozio;
-using DvCms.Application.Tenancy;
+using DvCms.Contracts.Accessi;
+using DvCms.Contracts.Negozio;
+using DvCms.Contracts.Tenancy;
+using DvCms.Core.Accessi;
+using DvCms.DTO.Negozio;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.Models.Accessi;
 using DvCms.Models.Negozio;

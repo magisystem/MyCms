@@ -1,6 +1,8 @@
 using System.Net;
-using DvCms.Application.Cms;
-using DvCms.Application.Piattaforma;
+using DvCms.Core.Tenancy;
+using DvCms.DTO.Cms;
+using DvCms.DTO.Piattaforma;
+using DvCms.DTO.Tenancy;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Supporto;
 using DvCms.Models.Cms;
@@ -109,8 +111,8 @@ public class IsolamentoPagineTest
     {
         await using var d = await DatiIsolamento.CreaAsync();
         await using var ambito = d.Web.Fabbrica.Services.CreateAsyncScope();
-        ambito.ServiceProvider.GetRequiredService<DvCms.Application.Tenancy.ContestoTenant>()
-            .Imposta(new DvCms.Application.Tenancy.DatiTenantRisolto(d.A.IdTenant, d.A.IdSito, d.A.IdDominio, d.A.Host, false));
+        ambito.ServiceProvider.GetRequiredService<DvCms.Core.Tenancy.ContestoTenant>()
+            .Imposta(new DvCms.DTO.Tenancy.DatiTenantRisolto(d.A.IdTenant, d.A.IdSito, d.A.IdDominio, d.A.Host, false));
         var contesto = ambito.ServiceProvider.GetRequiredService<ContestoDatabase>();
 
         // Lettura.

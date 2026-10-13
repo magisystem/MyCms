@@ -1,5 +1,6 @@
-using DvCms.Application.Negozio;
-using DvCms.Application.Tenancy;
+using DvCms.Contracts.Negozio;
+using DvCms.Contracts.Tenancy;
+using DvCms.DTO.Negozio;
 using DvCms.Infrastructure.Cms;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.Models.Media;

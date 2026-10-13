@@ -1,6 +1,8 @@
 using System.Net;
-using DvCms.Application.Cms;
-using DvCms.Application.Tenancy;
+using DvCms.Contracts.Cms;
+using DvCms.Core.Tenancy;
+using DvCms.DTO.Cms;
+using DvCms.DTO.Tenancy;
 using DvCms.IntegrationTests.Supporto;
 using DvCms.Models.Accessi;
 using Microsoft.EntityFrameworkCore;

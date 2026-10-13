@@ -25,7 +25,7 @@
         </p>
     }
     @* L'indirizzo è controllato anche in uscita (percorso del sito o https), oltre che al salvataggio. *@
-    @if (etichetta.Length > 0 && DvCms.Application.Cms.RegistroModelliPagina.UrlConsentito(url))
+    @if (etichetta.Length > 0 && DvCms.Core.Cms.RegistroModelliPagina.UrlConsentito(url))
     {
         <p><a class="pulsante" href="@url">@etichetta</a></p>
     }

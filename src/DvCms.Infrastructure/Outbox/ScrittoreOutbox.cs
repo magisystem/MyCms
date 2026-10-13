@@ -1,5 +1,5 @@
 using System.Text.Json;
-using DvCms.Application.Outbox;
+using DvCms.Contracts.Outbox;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.Models.Outbox;
 

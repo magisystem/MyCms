@@ -1,7 +1,8 @@
 using System.Security.Cryptography;
 using System.Text.Json;
-using DvCms.Application.Email;
-using DvCms.Application.Outbox;
+using DvCms.Contracts.Email;
+using DvCms.DTO.Email;
+using DvCms.Emails;
 using DvCms.Extender;
 using DvCms.Infrastructure.Outbox;
 using DvCms.Infrastructure.Persistenza;

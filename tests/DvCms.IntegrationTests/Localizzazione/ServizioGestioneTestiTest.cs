@@ -1,6 +1,8 @@
-using DvCms.Application.Accessi;
-using DvCms.Application.Localizzazione;
-using DvCms.Application.Piattaforma;
+using DvCms.Contracts.Localizzazione;
+using DvCms.Core.Accessi;
+using DvCms.Core.Localizzazione;
+using DvCms.DTO.Localizzazione;
+using DvCms.DTO.Piattaforma;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Supporto;
 using DvCms.Models.Accessi;

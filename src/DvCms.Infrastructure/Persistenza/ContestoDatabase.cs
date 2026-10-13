@@ -1,4 +1,4 @@
-using DvCms.Application.Tenancy;
+using DvCms.Contracts.Tenancy;
 using DvCms.Infrastructure.Segreti;
 using DvCms.Models.Accessi;
 using DvCms.Models.Cms;

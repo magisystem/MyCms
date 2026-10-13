@@ -1,4 +1,6 @@
-using DvCms.Application.Tenancy;
+using DvCms.Contracts.Tenancy;
+using DvCms.Core.Tenancy;
+using DvCms.DTO.Tenancy;
 
 namespace DvCms.Web.Middleware;
 

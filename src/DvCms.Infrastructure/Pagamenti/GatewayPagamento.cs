@@ -1,4 +1,6 @@
-using DvCms.Application.Negozio;
+using DvCms.Contracts.Negozio;
+using DvCms.DTO.Negozio;
+using DvCms.Models.Negozio;
 
 namespace DvCms.Infrastructure.Pagamenti;
 

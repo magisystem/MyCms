@@ -1,6 +1,8 @@
 using System.Net;
 using System.Text.Json;
-using DvCms.Application.Email;
+using DvCms.Contracts.Email;
+using DvCms.DTO.Email;
+using DvCms.Emails;
 using DvCms.Infrastructure.Email;
 using DvCms.Models.Email;
 using Xunit;

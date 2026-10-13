@@ -1,5 +1,5 @@
 using System.Collections.Concurrent;
-using DvCms.Application.Cms;
+using DvCms.Contracts.Cms;
 
 namespace DvCms.Infrastructure.Cache;
 

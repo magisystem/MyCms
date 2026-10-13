@@ -1,7 +1,10 @@
-using DvCms.Application.Accessi;
-using DvCms.Application.Cms;
-using DvCms.Application.Piattaforma;
-using DvCms.Application.Tenancy;
+using DvCms.Contracts.Cms;
+using DvCms.Core.Accessi;
+using DvCms.Core.Cms;
+using DvCms.Core.Tenancy;
+using DvCms.DTO.Cms;
+using DvCms.DTO.Piattaforma;
+using DvCms.DTO.Tenancy;
 using DvCms.Infrastructure.Outbox;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Supporto;

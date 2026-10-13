@@ -1,8 +1,11 @@
 using System.Net;
-using DvCms.Application.Cms;
-using DvCms.Application.Piattaforma;
-using DvCms.Application.Temi;
-using DvCms.Application.Tenancy;
+using DvCms.Contracts.Cms;
+using DvCms.Contracts.Piattaforma;
+using DvCms.Contracts.Temi;
+using DvCms.Core.Tenancy;
+using DvCms.DTO.Cms;
+using DvCms.DTO.Piattaforma;
+using DvCms.DTO.Tenancy;
 using DvCms.Infrastructure.Cache;
 using DvCms.Infrastructure.Manutenzione;
 using DvCms.Infrastructure.Persistenza;

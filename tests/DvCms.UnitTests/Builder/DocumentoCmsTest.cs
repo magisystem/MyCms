@@ -1,4 +1,5 @@
-using DvCms.Application.Builder;
+using DvCms.Core.Builder;
+using DvCms.DTO.Builder;
 using Xunit;
 
 namespace DvCms.UnitTests.Builder;

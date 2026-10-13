@@ -1,5 +1,8 @@
-using DvCms.Application.Localizzazione;
-using DvCms.Application.Outbox;
+using DvCms.Contracts.Localizzazione;
+using DvCms.Contracts.Outbox;
+using DvCms.Core.Localizzazione;
+using DvCms.DTO.Outbox;
+using DvCms.DTO.Piattaforma;
 using DvCms.Models.Outbox;
 using Microsoft.AspNetCore.Mvc;
 
@@ -42,7 +45,7 @@ public class IndexModel : PaginaPiattaforma
     public Task<IActionResult> OnPostScartaAsync(Guid id, CancellationToken annullamento) =>
         EseguiAsync(async () => await _coda.ScartaAsync(IdAttore, id, annullamento), Localizzatore.Traduci("Messaggio scartato."));
 
-    private async Task<IActionResult> EseguiAsync(Func<Task<DvCms.Application.Piattaforma.EsitoOperazione>> operazione, string messaggioRiuscito)
+    private async Task<IActionResult> EseguiAsync(Func<Task<DvCms.DTO.Piattaforma.EsitoOperazione>> operazione, string messaggioRiuscito)
     {
         var esito = await operazione();
         if (esito.Riuscito)

@@ -52,7 +52,8 @@ public partial class ConvenzioniCodiceTest
             if (relativo.Contains($"{separatore}obj{separatore}", StringComparison.Ordinal)
                 || relativo.Contains($"{separatore}bin{separatore}", StringComparison.Ordinal)
                 || relativo.Contains($"{separatore}wwwroot{separatore}", StringComparison.Ordinal)
-                || relativo.Contains($"DvCms.Application{separatore}Localizzazione", StringComparison.Ordinal))
+                || relativo.Contains($"DvCms.Core{separatore}Localizzazione", StringComparison.Ordinal)
+                || relativo.Contains($"DvCms.Contracts{separatore}Localizzazione", StringComparison.Ordinal))
             {
                 continue;
             }

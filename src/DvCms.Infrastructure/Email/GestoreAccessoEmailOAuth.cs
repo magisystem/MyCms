@@ -1,4 +1,5 @@
-using DvCms.Application.Email;
+using DvCms.Contracts.Email;
+using DvCms.DTO.Email;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.Models.Email;
 using Microsoft.EntityFrameworkCore;

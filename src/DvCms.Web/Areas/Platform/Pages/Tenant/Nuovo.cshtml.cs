@@ -1,5 +1,7 @@
-using DvCms.Application.Localizzazione;
-using DvCms.Application.Piattaforma;
+using DvCms.Contracts.Localizzazione;
+using DvCms.Contracts.Piattaforma;
+using DvCms.Core.Localizzazione;
+using DvCms.DTO.Piattaforma;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DvCms.Web.Areas.Platform.Pages.Tenant;

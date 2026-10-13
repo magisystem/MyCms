@@ -1,5 +1,7 @@
 using System.Text.Json;
-using DvCms.Application.Email;
+using DvCms.Contracts.Email;
+using DvCms.DTO.Email;
+using DvCms.Emails;
 using DvCms.Extender;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.Models.Accessi;

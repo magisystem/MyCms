@@ -1,5 +1,6 @@
-using DvCms.Application.Localizzazione;
-using DvCms.Application.Piattaforma;
+using DvCms.Contracts.Localizzazione;
+using DvCms.Core.Localizzazione;
+using DvCms.DTO.Localizzazione;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DvCms.Web.Areas.Platform.Pages.Testi;
