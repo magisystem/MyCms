@@ -2,6 +2,7 @@ using System.Text.Json;
 using DvCms.Contracts.Accessi;
 using DvCms.Contracts.Email;
 using DvCms.Core.Accessi;
+using DvCms.Data;
 using DvCms.DTO.Email;
 using DvCms.DTO.Piattaforma;
 using DvCms.Emails;

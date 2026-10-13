@@ -1,4 +1,5 @@
 using DvCms.Contracts.Email;
+using DvCms.Data;
 using DvCms.DTO.Email;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.Models.Email;

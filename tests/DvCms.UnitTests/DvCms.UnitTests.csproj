@@ -14,6 +14,7 @@
     <ProjectReference Include="..\..\src\DvCms.Contracts\DvCms.Contracts.csproj" />
     <ProjectReference Include="..\..\src\DvCms.DTO\DvCms.DTO.csproj" />
     <ProjectReference Include="..\..\src\DvCms.Core\DvCms.Core.csproj" />
+    <ProjectReference Include="..\..\src\DvCms.Data\DvCms.Data.csproj" />
     <ProjectReference Include="..\..\src\DvCms.Emails\DvCms.Emails.csproj" />
     <ProjectReference Include="..\..\src\DvCms.Infrastructure\DvCms.Infrastructure.csproj" />
   </ItemGroup>

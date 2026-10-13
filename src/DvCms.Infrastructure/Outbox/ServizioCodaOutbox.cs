@@ -1,6 +1,7 @@
 using DvCms.Contracts.Accessi;
 using DvCms.Contracts.Outbox;
 using DvCms.Core.Accessi;
+using DvCms.Data;
 using DvCms.DTO.Outbox;
 using DvCms.DTO.Piattaforma;
 using DvCms.Infrastructure.Persistenza;

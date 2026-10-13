@@ -1,5 +1,6 @@
 using DvCms.Contracts.Negozio;
 using DvCms.Core.Outbox;
+using DvCms.Data;
 using DvCms.DTO.Accessi;
 using DvCms.DTO.Manutenzione;
 using DvCms.Infrastructure.Outbox;

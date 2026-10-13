@@ -1,4 +1,5 @@
 using System.Text.Json.Nodes;
+using DvCms.Data;
 using DvCms.DTO.Negozio;
 using DvCms.DTO.Piattaforma;
 using DvCms.IntegrationTests.Negozio;
@@ -473,9 +474,9 @@ public class ServizioPagamentiTest
         await using var _2 = altro;
 
         await using var ambito = c.Web.Fabbrica.Services.CreateAsyncScope();
-        var lingua = await ambito.ServiceProvider.GetRequiredService<DvCms.Infrastructure.Persistenza.ContestoDatabase>().Ordini.IgnoreQueryFilters().Where(o => o.Id == ordineEn).Select(o => o.CodiceLingua).SingleAsync(Ct);
+        var lingua = await ambito.ServiceProvider.GetRequiredService<DvCms.Data.ContestoDatabase>().Ordini.IgnoreQueryFilters().Where(o => o.Id == ordineEn).Select(o => o.CodiceLingua).SingleAsync(Ct);
         await using var ambito2 = altro.Web.Fabbrica.Services.CreateAsyncScope();
-        var ignota = await ambito2.ServiceProvider.GetRequiredService<DvCms.Infrastructure.Persistenza.ContestoDatabase>().Ordini.IgnoreQueryFilters().Where(o => o.Id == ordineIgnota).Select(o => o.CodiceLingua).SingleAsync(Ct);
+        var ignota = await ambito2.ServiceProvider.GetRequiredService<DvCms.Data.ContestoDatabase>().Ordini.IgnoreQueryFilters().Where(o => o.Id == ordineIgnota).Select(o => o.CodiceLingua).SingleAsync(Ct);
 
         Assert.Equal("en", lingua);
         Assert.Equal("it", ignota);

@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using DvCms.Contracts.Piattaforma;
 using DvCms.Core.Accessi;
 using DvCms.Core.Accessi.DueFattori;
+using DvCms.Data;
 using DvCms.DTO.Accessi;
 using DvCms.DTO.Accessi.DueFattori;
 using DvCms.DTO.Piattaforma;

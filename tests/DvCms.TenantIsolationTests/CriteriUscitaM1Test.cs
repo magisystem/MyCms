@@ -1,6 +1,6 @@
 using System.Net;
 using System.Text.RegularExpressions;
-using DvCms.Infrastructure.Popolamento;
+using DvCms.Data.Popolamento;
 using DvCms.IntegrationTests.Supporto;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;

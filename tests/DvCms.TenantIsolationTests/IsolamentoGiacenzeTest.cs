@@ -1,6 +1,7 @@
 using DvCms.Contracts.Negozio;
 using DvCms.Contracts.Piattaforma;
 using DvCms.Core.Tenancy;
+using DvCms.Data;
 using DvCms.DTO.Negozio;
 using DvCms.DTO.Piattaforma;
 using DvCms.DTO.Tenancy;

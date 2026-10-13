@@ -5,6 +5,8 @@ using DvCms.Contracts.Tenancy;
 using DvCms.Core.Accessi;
 using DvCms.Core.Builder;
 using DvCms.Core.Cms;
+using DvCms.Data;
+using DvCms.Data.Cms;
 using DvCms.DTO.Cms;
 using DvCms.DTO.Piattaforma;
 using DvCms.Extender;

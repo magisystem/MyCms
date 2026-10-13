@@ -3,6 +3,8 @@ using System.Text;
 using DvCms.Contracts.Email;
 using DvCms.Contracts.Localizzazione;
 using DvCms.Contracts.Tenancy;
+using DvCms.Data;
+using DvCms.Data.Cms;
 using DvCms.DTO.Email;
 using DvCms.DTO.Negozio;
 using DvCms.Infrastructure.Persistenza;
@@ -210,7 +212,7 @@ public sealed class NotificheOrdine
             return 0;
         }
 
-        var lingua = (await DvCms.Infrastructure.Cms.LingueDelSito.ElencaAsync(_contesto, ordine.IdSito, annullamento)).FirstOrDefault(l => l.Predefinita)?.Codice ?? "it";
+        var lingua = (await DvCms.Data.Cms.LingueDelSito.ElencaAsync(_contesto, ordine.IdSito, annullamento)).FirstOrDefault(l => l.Predefinita)?.Codice ?? "it";
         var nomeSito = await _contesto.Siti.AsNoTracking().Where(s => s.Id == ordine.IdSito).Select(s => s.Nome).SingleAsync(annullamento);
         var articoli = await _contesto.RigheOrdine.AsNoTracking().Where(r => r.IdOrdine == ordine.Id).SumAsync(r => r.Quantita, annullamento);
         var importo = $"{ordine.TotaleLordo.ToString("N2", Cultura(lingua))} {ordine.Valuta}";

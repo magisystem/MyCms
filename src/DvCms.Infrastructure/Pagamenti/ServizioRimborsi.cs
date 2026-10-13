@@ -2,6 +2,7 @@ using DvCms.Contracts.Accessi;
 using DvCms.Contracts.Negozio;
 using DvCms.Contracts.Tenancy;
 using DvCms.Core.Accessi;
+using DvCms.Data;
 using DvCms.DTO.Negozio;
 using DvCms.Extender;
 using DvCms.Infrastructure.Negozio;

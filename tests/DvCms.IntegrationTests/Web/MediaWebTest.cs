@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using System.Text;
 using DvCms.Contracts.Media;
 using DvCms.Core.Tenancy;
+using DvCms.Data;
 using DvCms.DTO.Media;
 using DvCms.DTO.Piattaforma;
 using DvCms.DTO.Tenancy;

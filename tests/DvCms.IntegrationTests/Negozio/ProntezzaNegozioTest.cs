@@ -1,4 +1,5 @@
 using DvCms.Contracts.Negozio;
+using DvCms.Data;
 using DvCms.DTO.Negozio;
 using DvCms.IntegrationTests.Supporto;
 using DvCms.Models.Negozio;
@@ -127,7 +128,7 @@ public class ProntezzaNegozioTest
         await using (var ambito = c.Web.Fabbrica.Services.CreateAsyncScope())
         {
             // Aggira il servizio, che non lo permetterebbe: bonifico attivo ma senza IBAN.
-            var db = ambito.ServiceProvider.GetRequiredService<DvCms.Infrastructure.Persistenza.ContestoDatabase>();
+            var db = ambito.ServiceProvider.GetRequiredService<DvCms.Data.ContestoDatabase>();
             await db.ImpostazioniPagamentoOfflineSiti.IgnoreQueryFilters().ExecuteUpdateAsync(x => x.SetProperty(i => i.BonificoAttivo, true), Ct);
         }
 

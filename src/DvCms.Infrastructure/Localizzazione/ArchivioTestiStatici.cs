@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using DvCms.Contracts.Localizzazione;
+using DvCms.Data;
 using DvCms.DTO.Localizzazione;
 using DvCms.Extender;
 using DvCms.Infrastructure.Persistenza;

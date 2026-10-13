@@ -5,6 +5,7 @@ using DvCms.Contracts.Cms;
 using DvCms.Contracts.Email;
 using DvCms.Contracts.Media;
 using DvCms.Core.Tenancy;
+using DvCms.Data;
 using DvCms.DTO.Cms;
 using DvCms.DTO.Media;
 using DvCms.DTO.Tenancy;

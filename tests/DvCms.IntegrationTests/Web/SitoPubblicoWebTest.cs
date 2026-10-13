@@ -1,6 +1,7 @@
 using System.Net;
 using DvCms.Contracts.Cms;
 using DvCms.Core.Tenancy;
+using DvCms.Data;
 using DvCms.DTO.Cms;
 using DvCms.DTO.Tenancy;
 using DvCms.IntegrationTests.Supporto;
@@ -241,7 +242,7 @@ public class SitoPubblicoWebTest
         await s.CreaPaginaAsync(s.A, "news", "News", "x", lingua: "en", pubblica: true, traduzioneDi: it);
         await using (var ambito = s.Web.Fabbrica.Services.CreateAsyncScope())
         {
-            await ambito.ServiceProvider.GetRequiredService<DvCms.Infrastructure.Persistenza.ContestoDatabase>().LingueSito.IgnoreQueryFilters()
+            await ambito.ServiceProvider.GetRequiredService<DvCms.Data.ContestoDatabase>().LingueSito.IgnoreQueryFilters()
                 .Where(ls => ls.IdSito == s.A.IdSito && !ls.Predefinita).ExecuteDeleteAsync(Ct);
         }
 

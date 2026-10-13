@@ -1,6 +1,8 @@
 using DvCms.Contracts.Negozio;
 using DvCms.Contracts.Tenancy;
 using DvCms.Core.Negozio;
+using DvCms.Data;
+using DvCms.Data.Cms;
 using DvCms.DTO.Negozio;
 using DvCms.DTO.Piattaforma;
 using DvCms.Extender;

@@ -6,6 +6,7 @@ using DvCms.Contracts.Email;
 using DvCms.Contracts.Localizzazione;
 using DvCms.Contracts.Tenancy;
 using DvCms.Core.Accessi;
+using DvCms.Data;
 using DvCms.DTO.Accessi;
 using DvCms.DTO.Email;
 using DvCms.Extender;

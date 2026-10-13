@@ -7,6 +7,7 @@ using DvCms.Contracts.Localizzazione;
 using DvCms.Contracts.Media;
 using DvCms.Contracts.Negozio;
 using DvCms.Contracts.Outbox;
+using DvCms.Contracts.Persistenza;
 using DvCms.Contracts.Piattaforma;
 using DvCms.Contracts.Temi;
 using DvCms.Contracts.Tenancy;
@@ -19,6 +20,12 @@ using DvCms.Core.Media;
 using DvCms.Core.Segreti;
 using DvCms.Core.Temi;
 using DvCms.Core.Tenancy;
+using DvCms.Data;
+using DvCms.Data.Cache;
+using DvCms.Data.Outbox;
+using DvCms.Data.Popolamento;
+using DvCms.Data.Segreti;
+using DvCms.Data.Tenancy;
 using DvCms.DTO.Accessi;
 using DvCms.DTO.Accessi.DueFattori;
 using DvCms.DTO.Cache;
@@ -38,10 +45,7 @@ using DvCms.Infrastructure.Outbox;
 using DvCms.Infrastructure.Pagamenti;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.Infrastructure.Piattaforma;
-using DvCms.Infrastructure.Popolamento;
-using DvCms.Infrastructure.Segreti;
 using DvCms.Infrastructure.Temi;
-using DvCms.Infrastructure.Tenancy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Configuration;
@@ -77,6 +81,8 @@ public static class EstensioniServizi
             .UseSqlServer(connessione, ConfiguraSqlServer)
             .AddInterceptors(fornitore.GetRequiredService<InterceptorInvalidazioneCache>()));
         servizi.TryAddSingleton(TimeProvider.System);
+        servizi.AddSingleton<IPersonalizzazioneModello, PersonalizzazioneSqlServer>();
+        servizi.AddSingleton<IRilevatoreDeadlock, RilevatoreDeadlockSqlServer>();
 
         servizi.TryAddScoped<ContestoTenant>();
         servizi.TryAddScoped<IContestoTenant>(fornitore => fornitore.GetRequiredService<ContestoTenant>());
@@ -338,5 +344,7 @@ public static class EstensioniServizi
     internal static void ConfiguraSqlServer(SqlServerDbContextOptionsBuilder opzioni)
     {
         opzioni.MigrationsHistoryTable(ContestoDatabase.NomeTabellaStoricoMigrazioni);
+        // Le migrazioni stanno in questo assembly, non in quello del contesto (DvCms.Data).
+        opzioni.MigrationsAssembly(typeof(EstensioniServizi).Assembly.GetName().Name);
     }
 }

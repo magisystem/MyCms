@@ -1,6 +1,7 @@
 using DvCms.Contracts.Accessi;
 using DvCms.Contracts.Tenancy;
 using DvCms.Core.Accessi;
+using DvCms.Data;
 using DvCms.DTO.Accessi;
 using DvCms.DTO.Accessi.DueFattori;
 using DvCms.Extender;

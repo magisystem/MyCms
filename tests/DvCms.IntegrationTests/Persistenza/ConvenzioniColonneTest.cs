@@ -1,4 +1,5 @@
 using DvCms.Core.Tenancy;
+using DvCms.Data;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Supporto;
 using Microsoft.EntityFrameworkCore;

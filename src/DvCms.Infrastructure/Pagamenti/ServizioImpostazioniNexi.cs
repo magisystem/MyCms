@@ -3,6 +3,7 @@ using DvCms.Contracts.Accessi;
 using DvCms.Contracts.Email;
 using DvCms.Contracts.Negozio;
 using DvCms.Core.Accessi;
+using DvCms.Data;
 using DvCms.DTO.Negozio;
 using DvCms.DTO.Piattaforma;
 using DvCms.Extender;

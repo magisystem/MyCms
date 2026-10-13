@@ -1,6 +1,7 @@
 using DvCms.Contracts.Localizzazione;
 using DvCms.Core.Accessi;
 using DvCms.Core.Localizzazione;
+using DvCms.Data;
 using DvCms.DTO.Localizzazione;
 using DvCms.DTO.Piattaforma;
 using DvCms.Infrastructure.Persistenza;

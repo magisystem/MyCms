@@ -1,6 +1,7 @@
 using System.Text.Json.Nodes;
 using DvCms.Contracts.Negozio;
 using DvCms.Core.Accessi;
+using DvCms.Data;
 using DvCms.DTO.Negozio;
 using DvCms.DTO.Piattaforma;
 using DvCms.Infrastructure.Persistenza;

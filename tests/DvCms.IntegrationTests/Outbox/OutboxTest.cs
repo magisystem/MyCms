@@ -1,6 +1,7 @@
 using DvCms.Contracts.Cms;
 using DvCms.Contracts.Outbox;
 using DvCms.Core.Tenancy;
+using DvCms.Data;
 using DvCms.DTO.Cms;
 using DvCms.DTO.Outbox;
 using DvCms.DTO.Tenancy;

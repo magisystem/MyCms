@@ -4,6 +4,8 @@ using DvCms.Contracts.Media;
 using DvCms.Contracts.Tenancy;
 using DvCms.Core.Accessi;
 using DvCms.Core.Media;
+using DvCms.Data;
+using DvCms.Data.Cms;
 using DvCms.DTO.Media;
 using DvCms.DTO.Piattaforma;
 using DvCms.Extender;

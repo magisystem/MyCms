@@ -1,4 +1,4 @@
-using DvCms.Infrastructure.Popolamento;
+using DvCms.Data.Popolamento;
 
 namespace DvCms.Web.Comandi;
 

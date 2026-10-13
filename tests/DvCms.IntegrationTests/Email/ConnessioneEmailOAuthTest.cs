@@ -4,6 +4,7 @@ using System.Web;
 using DvCms.Contracts.Email;
 using DvCms.Core.Accessi;
 using DvCms.Core.Tenancy;
+using DvCms.Data;
 using DvCms.DTO.Email;
 using DvCms.DTO.Piattaforma;
 using DvCms.DTO.Tenancy;
