@@ -1,0 +1,122 @@
+@page "/admin/email/modelli/{codice}"
+@model DvCms.Web.Pages.Admin.Email.Modelli.ModificaModel
+@using DvCms.DTO.Email
+@{
+    var scheda = Model.Scheda;
+    ViewData["Titolo"] = _L[scheda.Definizione.Nome];
+}
+@if (Model.Messaggio is not null)
+{
+    <div class="alert alert-success" role="status">@Model.Messaggio</div>
+}
+@if (Model.ErroreDaMostrare is not null)
+{
+    <div class="alert alert-danger" role="alert">@Model.ErroreDaMostrare</div>
+}
+@if (Model.ErroriContenuto.Count > 0)
+{
+    <div class="alert alert-danger" role="alert">
+        <ul class="mb-0">
+            @foreach (var errore in Model.ErroriContenuto)
+            {
+                <li>@errore</li>
+            }
+        </ul>
+    </div>
+}
+<div class="row row-cards">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">@_L[scheda.Definizione.Nome] — @scheda.Lingua</h3>
+                <div class="card-actions">
+                    @foreach (var lingua in scheda.LingueDisponibili)
+                    {
+                        <a class="btn btn-sm @(lingua == scheda.Lingua ? "btn-primary" : "btn-outline-secondary")" href="/admin/email/modelli/@scheda.Definizione.Codice?lingua=@lingua">@lingua</a>
+                    }
+                </div>
+            </div>
+            <div class="card-body">
+                <p class="text-secondary">@_L[scheda.Definizione.Descrizione]</p>
+                <p class="text-secondary">
+                    @switch (scheda.Origine)
+                    {
+                        case OrigineModelloEmail.TenantLingua:
+                            @_L["Stai modificando il modello personalizzato di questa lingua."]
+                            break;
+                        case OrigineModelloEmail.TenantLinguaPredefinita:
+                            @_L["Per questa lingua non c'è un modello tuo: parti da quello della lingua predefinita del tenant. Salvando ne crei uno per questa lingua."]
+                            break;
+                        case OrigineModelloEmail.FabbricaLingua:
+                            @_L["Per questa lingua si usa il modello di fabbrica. Salvando ne crei uno tuo."]
+                            break;
+                        default:
+                            @_L["Per questa lingua non c'è un modello di fabbrica: si usa quello italiano. Salvando ne crei uno tuo."]
+                            break;
+                    }
+                </p>
+                <form method="post" novalidate>
+                    <input type="hidden" asp-for="TokenConcorrenza" />
+                    <div class="mb-3">
+                        <label class="form-label required" for="Oggetto">@_L["Oggetto"]</label>
+                        <input type="text" class="form-control" id="Oggetto" name="Oggetto" value="@Model.Oggetto" maxlength="200" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label required" for="CorpoHtml">@_L["Corpo HTML"]</label>
+                        <textarea class="form-control font-monospace" id="CorpoHtml" name="CorpoHtml" rows="14" spellcheck="false">@Model.CorpoHtml</textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label required" for="CorpoTesto">@_L["Corpo testo (alternativa senza formattazione)"]</label>
+                        <textarea class="form-control font-monospace" id="CorpoTesto" name="CorpoTesto" rows="10" spellcheck="false">@Model.CorpoTesto</textarea>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary" asp-page-handler="Salva" asp-route-codice="@scheda.Definizione.Codice" asp-route-lingua="@scheda.Lingua">@_L["Salva"]</button>
+                        <button type="submit" class="btn" asp-page-handler="Anteprima" asp-route-codice="@scheda.Definizione.Codice" asp-route-lingua="@scheda.Lingua">@_L["Anteprima"]</button>
+                        @if (scheda.Personalizzato)
+                        {
+                            <button type="submit" class="btn btn-outline-danger ms-auto" asp-page-handler="Ripristina" asp-route-codice="@scheda.Definizione.Codice" asp-route-lingua="@scheda.Lingua"
+                                    formnovalidate>@_L["Ripristina quello di fabbrica"]</button>
+                        }
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        @if (Model.Anteprima is { Validazione.Valido: true } anteprima)
+        {
+            <div class="card mt-3">
+                <div class="card-header"><h3 class="card-title">@_L["Anteprima con dati d'esempio"]</h3></div>
+                <div class="card-body">
+                    <p><strong>@_L["Oggetto"]:</strong> @anteprima.Oggetto</p>
+                    @* Riquadro isolato: nessuno script, nessun modulo, nessun accesso all'admin. *@
+                    <iframe title="@_L["Anteprima HTML"]" sandbox="" srcdoc="@anteprima.CorpoHtml" class="w-100 border rounded" style="height: 22rem"></iframe>
+                    <h4 class="mt-3">@_L["Versione testo"]</h4>
+                    <pre class="border rounded p-2">@anteprima.CorpoTesto</pre>
+                </div>
+            </div>
+        }
+    </div>
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header"><h3 class="card-title">@_L["Variabili disponibili"]</h3></div>
+            <div class="card-body">
+                <p class="text-secondary">
+                    @_L["Per inserire un valore scrivi il nome fra doppie parentesi graffe, ad esempio"] <code>@("{{ nome }}")</code>.
+                    @_L["Per mostrare qualcosa solo a volte usa"] <code>@("{% if variabile %} … {% endif %}")</code>@_L[", per ripetere le righe"] <code>@("{% for riga in righe %} … {% endfor %}")</code>.
+                </p>
+                <dl class="mb-0">
+                    @foreach (var variabile in scheda.Definizione.Variabili)
+                    {
+                        <dt><code>@("{{ " + variabile.Nome + " }}")</code>@if (variabile.Obbligatoria)
+                            {
+                                <span class="badge bg-yellow-lt ms-1">@_L["Obbligatoria"]</span>
+                            }
+                        </dt>
+                        <dd class="text-secondary">@_L[variabile.Descrizione]</dd>
+                    }
+                </dl>
+            </div>
+        </div>
+        <p class="mt-3"><a href="/admin/email/modelli">@_L["Torna all'elenco dei modelli"]</a></p>
+    </div>
+</div>

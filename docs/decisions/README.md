@@ -30,5 +30,6 @@ Stato: `Proposed`, `Accepted`, `Superseded`, `Deprecated`.
 - [ADR-0022 — Nexi XPay come secondo provider di pagamento](ADR-0022-nexi-xpay.md)
 - [ADR-0023 — Pagamenti manuali: bonifico bancario e contrassegno](ADR-0023-pagamenti-manuali.md)
 - [ADR-0024 — Struttura dei progetti: un assembly per responsabilità](ADR-0024-struttura-progetti.md)
+- [ADR-0025 — Modelli email nel database con Fluid (Liquid)](ADR-0025-modelli-email.md)
 
 Per le regole operative della persistenza, vedere [`docs/architecture/database.md`](../architecture/database.md).

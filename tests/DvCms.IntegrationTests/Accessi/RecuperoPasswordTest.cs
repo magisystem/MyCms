@@ -1,10 +1,13 @@
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using DvCms.Contracts.Accessi;
+using DvCms.Contracts.Email;
 using DvCms.Core.Accessi;
 using DvCms.Core.Tenancy;
 using DvCms.Data;
 using DvCms.DTO.Accessi;
+using DvCms.DTO.Email;
+using DvCms.DTO.Piattaforma;
 using DvCms.DTO.Tenancy;
 using DvCms.IntegrationTests.Supporto;
 using DvCms.Models.Accessi;
@@ -50,6 +53,21 @@ public partial class RecuperoPasswordTest
         Assert.Contains("cambiata", notifica.Oggetto, StringComparison.Ordinal);
         Assert.False(await s.LinkValidoAsync(token));
         Assert.Equal(1, await s.ContaAuditAsync(AzioniAudit.RecuperoPasswordCompletato));
+    }
+
+    [Fact]
+    public async Task UnModelloDelTenantCambiaLEmailDelCodice()
+    {
+        await using var s = await Scenario.CreaAsync();
+        var personalizzato = new ContenutoModelloEmail("PIN {{ codice }}", "<p>{{ codice }}</p>", "Il tuo PIN è {{ codice }}, vale {{ minuti_validita }} minuti.");
+        var salvato = await s.ComeAsync(false, p => p.GetRequiredService<IServizioModelliEmail>().SalvaAsync(s.IdAnna, CodiciModelloEmail.RecuperoCodice, "it", personalizzato, null, Ct));
+        Assert.Equal(CodiceEsito.Riuscito, salvato.Codice);
+
+        await s.RichiediAsync("cliente@esempio.it");
+        var email = Assert.Single(await s.InviaEmailAsync());
+
+        Assert.Matches(@"^PIN \d{6}$", email.Oggetto);
+        Assert.Matches(@"^Il tuo PIN è \d{6}, vale 10 minuti\.", email.Testo);
     }
 
     [Fact]

@@ -22,8 +22,8 @@ Il nome del progetto resta **DvCms** (nessuna rinomina: cookie, metriche e scopi
 | `DvCms.Data` | `ContestoDatabase`, configurazioni EF, filtri di query per tenant, risolutore del tenant, interceptor di invalidazione cache, seed, helper di query condivisi. **Nessun riferimento a un provider** |
 | `DvCms.SqlServer` | provider SQL Server: `UseSqlServer`, migrazioni e snapshot, SQL grezzo specifico, rilevamento dei deadlock |
 | `DvCms.PostgreSql` | **segnaposto vuoto**: nessun pacchetto, nessun codice. Selezionarlo dà un errore esplicito |
-| `DvCms.Emails` | canali di invio (Graph, Gmail, SMTP, SendGrid, OAuth), outbox e suo elaboratore, impostazioni email, modelli delle email |
-| `DvCms.Services` | servizi di accessi, piattaforma, manutenzione, localizzazione, cache |
+| `DvCms.Emails` | canali di invio (Graph, Gmail, SMTP, SendGrid, OAuth), impostazioni email, modelli delle email ([ADR-0025](ADR-0025-modelli-email.md)) |
+| `DvCms.Services` | servizi di accessi, piattaforma, manutenzione, localizzazione, elaborazione dell'outbox, invalidazione della cache |
 | `DvCms.Services.Cms` | servizi di CMS (pagine, sitemap, builder), media, temi |
 | `DvCms.Services.Negozio` | servizi di negozio e pagamenti (client PayPal e Nexi compresi) |
 | `DvCms.Web` | interfaccia utente (Razor Pages, middleware, webhook, `Program.cs`) |
@@ -58,3 +58,13 @@ Extender ← Models ← DTO ← Contracts ← Core ← Data ← Emails
 - Migrazione per tappe, ciascuna con tutte le suite verdi (`Models` ed `Extender`, `DTO` e `Contracts`, `Core`, `Data`, provider, `Emails`, `Services*`, modelli email).
 - ADR-0012 resta valido per il supporto: SQL Server è l'unico database implementato; PostgreSQL richiede un ADR dedicato (migrazioni, token di concorrenza, SQL grezzo, test su entrambi i motori).
 - Le migrazioni si spostano nell'assembly `DvCms.SqlServer`; gli identificativi delle migrazioni non cambiano, quindi i database esistenti restano validi.
+
+## Attuazione (2026-10-13)
+
+La migrazione è completa. Scelte emerse lungo il percorso:
+
+- **Registrazione dei servizi per progetto:** `AggiungiData` (tenant, segreti, cache, scrittura dell'outbox), `AggiungiSqlServer` (contesto e provider), `AggiungiServizi`, `AggiungiServiziCms`, `AggiungiServiziNegozio`, `AggiungiEmails`. `Program.cs` le chiama in quest'ordine; `Database:Provider` sceglie il provider.
+- **`IAttivitaManutenzione`** (in `Contracts`): la manutenzione periodica vive in `Services` ma non conosce il negozio; `Services.Negozio` registra `ManutenzioneNegozio` (giacenze scadute, dati personali, riconciliazione degli incassi) e la manutenzione le esegue tutte.
+- **`ContatoreTentativi`** sta in `Data` perché lo usano sia `Services` (accesso, secondo fattore) sia `Services.Negozio` (dati personali).
+- **`LetturaConfigurazione.LeggiIntero`** (in `Core`) è l'unico punto che legge e controlla le opzioni numeriche di configurazione.
+- **Limite noto:** `Data` contiene ancora tipi e sintassi di SQL Server nelle configurazioni EF (`binary(32)`, collation BIN2, filtri con `[…]`). Vanno resi specifici del provider quando si farà il lavoro su PostgreSQL.

@@ -17,7 +17,7 @@ Implementare un CMS SaaS multi-tenant in C#/.NET, con rendering server-side Razo
 4. Implementare un **monolite modulare**. Non introdurre microservizi, broker o infrastrutture distribuite senza requisito misurabile e ADR.
 5. Ogni query e operazione su dati tenant-scoped deve derivare da un contesto tenant attendibile e applicare autorizzazione e isolamento lato server. Non fidarsi di `IdTenant` inviati dal browser.
 6. I test di isolamento tenant sono obbligatori per ogni nuova area dati multi-tenant.
-7. I contenuti salvati sono dati, mai codice eseguibile. Non consentire upload o caricamento dinamico di assembly, viste Razor, C# o JavaScript arbitrario sul server.
+7. I contenuti salvati sono dati, mai codice eseguibile. Non consentire upload o caricamento dinamico di assembly, viste Razor, C# o JavaScript arbitrario sul server. I modelli email nel database sono Liquid (Fluid) in sandbox, mai Razor ([ADR-0025](docs/decisions/ADR-0025-modelli-email.md)).
 8. Non usare HTML/CSS esportati come unica fonte di verità per il progetto editabile. Conservare i dati del progetto GrapesJS e un documento CMS di rendering tipizzato/versionato secondo `docs/architecture/page-builder.md`.
 9. I temi sono codice fidato compilato e distribuito con l'app; i tenant possono configurare impostazioni dichiarative, non caricare Razor o assembly.
 10. Non memorizzare dati carta. Non inventare comportamento di pagamento, IVA, spedizioni o rimborsi prima delle decisioni di prodotto e del provider.

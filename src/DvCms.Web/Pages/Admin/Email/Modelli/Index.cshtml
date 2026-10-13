@@ -1,0 +1,54 @@
+@page "/admin/email/modelli"
+@model DvCms.Web.Pages.Admin.Email.Modelli.IndexModel
+@{
+    ViewData["Titolo"] = _L["Modelli email"];
+}
+@if (Model.Messaggio is not null)
+{
+    <div class="alert alert-success" role="status">@Model.Messaggio</div>
+}
+@if (Model.ErroreDaMostrare is not null)
+{
+    <div class="alert alert-danger" role="alert">@Model.ErroreDaMostrare</div>
+}
+<div class="card">
+    <div class="card-header"><h3 class="card-title">@_L["Modelli delle email in uscita"]</h3></div>
+    <div class="card-body">
+        <p class="text-secondary">@_L["Ogni email che il sito invia parte da un modello. Quelli di fabbrica sono già pronti; puoi scriverne uno tuo per ogni lingua. Dove non ne scrivi uno, si usa quello di fabbrica."]</p>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table">
+            <thead>
+                <tr>
+                    <th>@_L["Modello"]</th>
+                    <th>@_L["Quando parte"]</th>
+                    <th>@_L["Lingue"]</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var voce in Model.Voci)
+                {
+                    <tr>
+                        <td>
+                            @_L[voce.Definizione.Nome]
+                            @if (voce.Definizione.Critico)
+                            {
+                                <span class="badge bg-yellow-lt ms-1" title="@_L["Contiene un codice o un link indispensabile: non si può togliere."]">@_L["Critico"]</span>
+                            }
+                        </td>
+                        <td class="text-secondary">@_L[voce.Definizione.Descrizione]</td>
+                        <td>
+                            @foreach (var lingua in Model.Lingue)
+                            {
+                                var personalizzato = voce.LinguePersonalizzate.Contains(lingua);
+                                <a class="btn btn-sm @(personalizzato ? "btn-primary" : "btn-outline-secondary") me-1" href="/admin/email/modelli/@voce.Definizione.Codice?lingua=@lingua"
+                                   title="@(personalizzato ? _L["Modello personalizzato"] : _L["Modello di fabbrica"])">@lingua</a>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+<p><a href="/admin/email">@_L["Torna alle impostazioni email"]</a></p>
