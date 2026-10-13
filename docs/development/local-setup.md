@@ -13,7 +13,7 @@ Questo file descrive il setup di sviluppo. I comandi indicati come "disponibili"
 ## Configurazione
 
 - Copiare un file di esempio non segreto in configurazione locale, oppure usare user-secrets/environment variables.
-- Non committare password, connection string reali, API key, chiavi di cifratura, certificati o dati cliente. I file di configurazione con segreti (es. `appsettings.Development.json` locale, `appsettings.Production.json`) restano fuori dal repository.
+- Non committare API key, chiavi di cifratura, certificati o dati cliente, né connection string di database condivisi, di test o di produzione. Fa eccezione la connection string del database di sviluppo locale, con valori di esempio non critici, presente in `appsettings.json` e `appsettings.Development.json`. I file con segreti veri (es. `appsettings.Local.json`, `appsettings.Production.json`) restano fuori dal repository.
 - Il tenant è deciso dall'host: per provare più tenant in locale servono host distinti registrati (vedi "Tenant di test in locale").
 - In sviluppo usare domini locali documentati oppure un middleware/test host esplicito; non introdurre bypass non sicuri nella configurazione produzione.
 - Lo storage file system è esclusivamente un adapter per lo sviluppo.
@@ -40,7 +40,7 @@ docker run -d --name sqldvcms -e ACCEPT_EULA=Y -e 'MSSQL_SA_PASSWORD=<password-l
   -p 14330:1433 mcr.microsoft.com/mssql/server:2022-latest
 ```
 
-**Applicazione.** La stringa di connessione `ConnectionStrings:Predefinita` non sta nei file del repository (`appsettings.json` la lascia vuota e l'applicazione non parte se manca). Il modo più comodo, in sviluppo e in produzione, è un file **`appsettings.Local.json`** accanto ad `appsettings.json` (in `src/DvCms.Web/` in sviluppo, nella cartella dell'applicazione sul server): è facoltativo, **ignorato da git** e **escluso dalla pubblicazione**, quindi non si committa per errore e un nuovo rilascio non lo sovrascrive.
+**Applicazione.** La stringa di connessione `ConnectionStrings:Predefinita` ha un valore di esempio (server `localhost`, utente `sa`, password segnaposto `CambiaMi`) sia in `appsettings.json` sia in `appsettings.Development.json`, entrambi versionati (decisione del titolare del progetto: in sviluppo il database è locale e la password non è riusata altrove). In sviluppo si modifica quella di `appsettings.Development.json`, che prevale su `appsettings.json`; l'applicazione non parte se la stringa risulta vuota. **Non versionare mai credenziali di un database condiviso, di test o di produzione**: per quelli si usa un file **`appsettings.Local.json`** accanto ad `appsettings.json` (nella cartella dell'applicazione sul server, o in `src/DvCms.Web/` in sviluppo), facoltativo, **ignorato da git** e **escluso dalla pubblicazione**, quindi non si committa per errore e un nuovo rilascio non lo sovrascrive. Esempio:
 
 ```json
 {
@@ -74,7 +74,7 @@ Senza la variabile i test sul database risultano saltati (non passati); con `CI=
 
 1. Ripristinare i pacchetti NuGet.
 2. Avviare SQL Server.
-3. Configurare la connection string tramite user-secrets o environment variables.
+3. Adattare la connection string di sviluppo in `src/DvCms.Web/appsettings.Development.json` (oppure sovrascriverla con `appsettings.Local.json`, user-secrets o variabili d'ambiente).
 4. Applicare le migrazioni EF Core con `dotnet run --project src/DvCms.Web -- migra`.
 5. Eseguire il popolamento (seeding) del tenant primario e del primo `PlatformAdmin` (ADR-0014) con `dotnet run --project src/DvCms.Web -- seed`. I dati non segreti stanno in `appsettings.json` (`Seed:TenantPrimario`: nome, sito, domini); email e nome del `PlatformAdmin` e la sua password non sono versionati e vanno impostati con user-secrets o variabili d'ambiente, senza credenziali predefinite:
 
