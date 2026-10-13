@@ -5,7 +5,6 @@ using System.Text.Json;
 using DvCms.Contracts.Email;
 using DvCms.DTO.Email;
 using DvCms.Emails;
-using DvCms.Infrastructure.Email;
 using DvCms.Models.Email;
 using MimeKit;
 using Xunit;

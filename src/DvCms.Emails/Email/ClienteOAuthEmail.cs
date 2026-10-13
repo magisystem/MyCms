@@ -6,7 +6,7 @@ using DvCms.Extender;
 using DvCms.Models.Accessi;
 using DvCms.Models.Email;
 
-namespace DvCms.Infrastructure.Email;
+namespace DvCms.Emails;
 
 /// <summary>Token ottenuti dal provider. <see cref="Aggiornamento"/> è nullo se il provider non ne ha emesso uno nuovo.</summary>
 public sealed record TokenOAuth(string Accesso, string? Aggiornamento, DateTime ScadenzaUtc, string Scope)

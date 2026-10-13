@@ -2,7 +2,7 @@ using DvCms.Contracts.Email;
 using DvCms.DTO.Email;
 using DvCms.Models.Email;
 
-namespace DvCms.Infrastructure.Email;
+namespace DvCms.Emails;
 
 /// <summary>
 /// Microsoft 365 con consenso dell'utente: <c>POST /me/sendMail</c> con il token delegato (permesso <c>Mail.Send</c>), che invia

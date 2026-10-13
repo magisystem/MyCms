@@ -1,4 +1,5 @@
 using DvCms.Data;
+using DvCms.Emails;
 using DvCms.Infrastructure;
 using DvCms.IntegrationTests.Supporto;
 using DvCms.SqlServer;
@@ -73,7 +74,9 @@ public class MigrazioniDatabaseTest
 
         return new ServiceCollection()
             .AggiungiSqlServer(configurazione)
+            .AggiungiData(configurazione)
             .AggiungiInfrastruttura(configurazione)
+            .AggiungiEmails()
             .BuildServiceProvider();
     }
 }

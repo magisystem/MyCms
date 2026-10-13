@@ -13,7 +13,7 @@ using DvCms.Models.Email;
 using DvCms.Models.Outbox;
 using Microsoft.EntityFrameworkCore;
 
-namespace DvCms.Infrastructure.Email;
+namespace DvCms.Emails;
 
 public sealed class ServizioImpostazioniEmail : IServizioImpostazioniEmail
 {

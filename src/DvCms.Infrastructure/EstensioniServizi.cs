@@ -36,7 +36,6 @@ using DvCms.DTO.Outbox;
 using DvCms.Infrastructure.Accessi;
 using DvCms.Infrastructure.Cache;
 using DvCms.Infrastructure.Cms;
-using DvCms.Infrastructure.Email;
 using DvCms.Infrastructure.Localizzazione;
 using DvCms.Infrastructure.Manutenzione;
 using DvCms.Infrastructure.Media;
@@ -64,16 +63,10 @@ public static class EstensioniServizi
         ArgumentNullException.ThrowIfNull(configurazione);
 
         AggiungiCache(servizi, configurazione);
-        servizi.TryAddSingleton(TimeProvider.System);
-
-        servizi.TryAddScoped<ContestoTenant>();
-        servizi.TryAddScoped<IContestoTenant>(fornitore => fornitore.GetRequiredService<ContestoTenant>());
-        servizi.TryAddScoped<IRisolutoreTenant, RisolutoreTenantDatabase>();
 
         AggiungiAccessi(servizi, configurazione);
         AggiungiLocalizzazione(servizi);
         AggiungiOutbox(servizi, configurazione);
-        AggiungiEmail(servizi, configurazione);
 
         return servizi;
     }
@@ -114,30 +107,6 @@ public static class EstensioniServizi
         servizi.TryAddScoped<IServizioPagine, ServizioPagine>();
         servizi.TryAddScoped<ServizioPaginePubbliche>();
         servizi.TryAddScoped<IServizioPaginePubbliche>(f => new ServizioPaginePubblicheConCache(f.GetRequiredService<ServizioPaginePubbliche>(), f.GetRequiredService<ICachePubblica>(), f.GetRequiredService<IContestoTenant>()));
-    }
-
-    private static void AggiungiEmail(IServiceCollection servizi, IConfiguration configurazione)
-    {
-        servizi.TryAddSingleton(new ChiaveMaestraSegreti(configurazione[ChiaveMaestraSegreti.NomeConfigurazione]));
-        servizi.TryAddSingleton<RepositoryChiaviSegrete>();
-        servizi.TryAddSingleton<IProtettoreSegreti>(fornitore => new ProtettoreSegreti(
-            fornitore.GetRequiredService<RepositoryChiaviSegrete>(),
-            fornitore.GetRequiredService<ChiaveMaestraSegreti>(),
-            fornitore.GetRequiredService<TimeProvider>()));
-        servizi.AddScoped<IAdapterEmail, AdapterSmtp>();
-        servizi.AddHttpClient(ComunicazioneEmail.NomeClientHttp, client => client.Timeout = Timeout.InfiniteTimeSpan);
-        servizi.AddScoped<IAdapterEmail, AdapterGraph>();
-        servizi.AddScoped<IAdapterEmail, AdapterGmail>();
-        servizi.AddScoped<IAdapterEmail, AdapterSendGrid>();
-        servizi.AddScoped<IAdapterEmail, AdapterMicrosoftOAuth>();
-        servizi.AddScoped<IAdapterEmail, AdapterGoogleOAuth>();
-        servizi.AddScoped<ClienteOAuthEmail>();
-        servizi.AddScoped<GestoreAccessoEmailOAuth>();
-        servizi.TryAddScoped<IServizioConnessioneEmail, ServizioConnessioneEmail>();
-        servizi.TryAddScoped<IInvioEmail, InvioEmailPerTenant>();
-        servizi.TryAddScoped<IAccodatoreEmail, AccodatoreEmail>();
-        servizi.TryAddScoped<IServizioImpostazioniEmail, ServizioImpostazioniEmail>();
-        servizi.AddScoped<IGestoreOutbox, GestoreInvioEmail>();
     }
 
     private static void AggiungiOutbox(IServiceCollection servizi, IConfiguration configurazione)

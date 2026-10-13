@@ -2,7 +2,7 @@ using DvCms.Contracts.Email;
 using DvCms.DTO.Email;
 using DvCms.Models.Email;
 
-namespace DvCms.Infrastructure.Email;
+namespace DvCms.Emails;
 
 /// <summary>Canale SendGrid (API v3 <c>mail/send</c>, chiave API). Nessuna libreria: è una sola richiesta HTTP.</summary>
 public sealed class AdapterSendGrid : IAdapterEmail

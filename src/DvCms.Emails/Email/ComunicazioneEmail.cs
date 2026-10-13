@@ -5,7 +5,7 @@ using DvCms.DTO.Email;
 using DvCms.Models.Email;
 using MimeKit;
 
-namespace DvCms.Infrastructure.Email;
+namespace DvCms.Emails;
 
 /// <summary>
 /// Il servizio esterno ha rifiutato l'invio o non ha risposto come previsto. Il messaggio riporta il canale e il codice HTTP:

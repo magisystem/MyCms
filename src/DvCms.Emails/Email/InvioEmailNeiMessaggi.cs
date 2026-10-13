@@ -4,7 +4,7 @@ using DvCms.Contracts.Outbox;
 using DvCms.DTO.Email;
 using DvCms.DTO.Outbox;
 
-namespace DvCms.Infrastructure.Email;
+namespace DvCms.Emails;
 
 public static class TipiEventoEmail
 {

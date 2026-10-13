@@ -16,7 +16,7 @@ using DvCms.Models.Email;
 using DvCms.Models.Outbox;
 using Microsoft.EntityFrameworkCore;
 
-namespace DvCms.Infrastructure.Email;
+namespace DvCms.Emails;
 
 /// <summary>
 /// Canali email con consenso OAuth (ADR-0021). Lavora solo sul tenant dell'host e solo per il suo <c>TenantAdmin</c>: il ruolo si

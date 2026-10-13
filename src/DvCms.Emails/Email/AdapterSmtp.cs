@@ -7,7 +7,7 @@ using MailKit.Net.Smtp;
 using MailKit.Security;
 using MimeKit;
 
-namespace DvCms.Infrastructure.Email;
+namespace DvCms.Emails;
 
 /// <summary>Canale SMTP (MailKit). Primo adapter, comodo anche con un catcher locale in sviluppo.</summary>
 public sealed class AdapterSmtp : IAdapterEmail

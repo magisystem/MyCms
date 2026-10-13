@@ -5,7 +5,7 @@ using DvCms.Contracts.Email;
 using DvCms.DTO.Email;
 using DvCms.Models.Email;
 
-namespace DvCms.Infrastructure.Email;
+namespace DvCms.Emails;
 
 /// <summary>
 /// Canale Gmail API con account di servizio e delega a livello di dominio: si firma un JWT (RS256) con la chiave

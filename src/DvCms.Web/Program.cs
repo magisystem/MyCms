@@ -1,5 +1,7 @@
 using DvCms.Contracts.Localizzazione;
+using DvCms.Data;
 using DvCms.DTO.Accessi.DueFattori;
+using DvCms.Emails;
 using DvCms.Infrastructure;
 using DvCms.Web.Accessi;
 using DvCms.Web.Comandi;
@@ -38,7 +40,9 @@ costruttore.Services.AddRazorPages(opzioni =>
 });
 ConfigurazioneAccessiWeb.Aggiungi(costruttore.Services, costruttore.Configuration, costruttore.Environment);
 costruttore.Services.AggiungiDatabase(costruttore.Configuration);
+costruttore.Services.AggiungiData(costruttore.Configuration);
 costruttore.Services.AggiungiInfrastruttura(costruttore.Configuration);
+costruttore.Services.AggiungiEmails();
 costruttore.Services.AddHttpContextAccessor();
 costruttore.Services.AggiungiSalute();
 var usaProxyAttendibili = ConfigurazioneProxy.Aggiungi(costruttore.Services, costruttore.Configuration);

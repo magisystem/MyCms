@@ -4,7 +4,7 @@ using DvCms.DTO.Email;
 using DvCms.Models.Email;
 using Microsoft.EntityFrameworkCore;
 
-namespace DvCms.Infrastructure.Email;
+namespace DvCms.Emails;
 
 /// <summary>Il token di accesso da usare per un invio e la casella (mittente) a cui appartiene.</summary>
 public sealed record AccessoEmailOAuth(string Token, string Casella)

@@ -8,7 +8,7 @@ using DvCms.Models.Accessi;
 using DvCms.Models.Email;
 using Microsoft.EntityFrameworkCore;
 
-namespace DvCms.Infrastructure.Email;
+namespace DvCms.Emails;
 
 /// <summary>
 /// Implementazione di <see cref="IInvioEmail"/>: legge le impostazioni del tenant (caso d'uso privilegiato, quindi
