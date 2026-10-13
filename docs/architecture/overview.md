@@ -11,9 +11,10 @@ La persistenza usa SQL Server come unico database supportato ed è descritta in 
 - **Public web:** routing host/slug, pagine pubblicate, Razor layout, componenti e SEO.
 - **Admin web:** Razor Pages con tema Tabler, form HTML, autenticazione, CRUD, workflow e configurazioni. Include l'**area di piattaforma** (solo `PlatformAdmin`) per tenant, siti, domini e utenti `TenantAdmin`.
 - **Page builder:** asset JS separato e caricato solo nelle pagine di editing visuale; comunica con endpoint ASP.NET Core.
-- **Application layer:** casi d'uso, autorizzazioni, validazioni, transizioni di stato e orchestrazione.
-- **Domain modules:** tenancy, sites, content, templates, themes, media, SEO e commerce.
-- **Infrastructure:** EF Core con SQL Server, storage, cache, email e provider esterni.
+- **Servizi** (`Services`, `Services.Cms`, `Services.Negozio`): casi d'uso, autorizzazioni, validazioni, transizioni di stato e orchestrazione, divisi in tre progetti indipendenti fra loro ([ADR-0024](../decisions/ADR-0024-struttura-progetti.md)).
+- **Modelli e contratti** (`Models`, `DTO`, `Contracts`, `Core`): entità del dominio, record di scambio, interfacce e logica pura.
+- **Persistenza** (`Data`, `SqlServer`, `PostgreSql` vuoto): contesto EF Core e configurazioni, migrazioni del provider.
+- **Email** (`Emails`): canali di invio (SMTP, Microsoft Graph, Gmail, SendGrid, OAuth) e, in seguito, template.
 - **Worker:** outbox, email, webhook asincroni, immagini e sitemap.
 
 ## Diagramma logico
@@ -31,10 +32,10 @@ Browser
 
 ## Regole di dipendenza
 
-- Domain non dipende da ASP.NET Core, EF Core o provider esterni.
-- Application dipende da Domain e definisce i contratti necessari.
-- Infrastructure implementa persistenza e integrazioni.
-- Web compone le dipendenze e rende UI/API.
+- `Extender ← Models ← DTO ← Contracts ← Core ← Data ← Emails`; `Models`, `DTO` e `Contracts` non dipendono da ASP.NET Core, EF Core o provider.
+- I tre progetti `Services*` dipendono da `Data` e dai livelli bassi, mai l'uno dall'altro né da `Emails`, dai provider o dal `Web`.
+- `SqlServer` (e il futuro `PostgreSql`) dipendono da `Data`; non il contrario.
+- Web compone le dipendenze e rende UI/API. Le regole sono verificate da `RegoleDipendenzaProgettiTest`.
 - Themes dipendono da contratti stabili del rendering, non accedono direttamente al database.
 - Il modulo Commerce non dipende dal rendering Razor; espone operazioni e modelli applicativi.
 

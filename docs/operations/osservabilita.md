@@ -1,6 +1,6 @@
 # Osservabilità: sonde di salute e metriche
 
-Stato: attuato in M6. Codice: `src/DvCms.Web/Salute`, `Middleware/MiddlewareMetriche.cs`, `Infrastructure/Cache/MetricheCache.cs`, `Infrastructure/Outbox/MetricheOutbox.cs`. Test: `tests/DvCms.IntegrationTests/Avvio/SaluteEMetricheTest.cs`.
+Stato: attuato in M6. Codice: `src/DvCms.Web/Salute`, `Middleware/MiddlewareMetriche.cs`, `DvCms.Core/Cache/MetricheCache.cs`, `DvCms.Core/Outbox/MetricheOutbox.cs`. Test: `tests/DvCms.IntegrationTests/Avvio/SaluteEMetricheTest.cs`.
 
 ## Sonde
 

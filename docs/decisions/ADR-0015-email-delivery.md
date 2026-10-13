@@ -9,8 +9,8 @@ Il progetto deve inviare email: recupero password (OTP e link monouso, ADR-0011)
 
 ## Decisione
 
-- L'applicazione dipende da un contratto unico (ad esempio `IInvioEmail`, definito in `DvCms.Application`) e non conosce il canale di invio.
-- Sono previsti quattro adapter in `DvCms.Infrastructure`: **Microsoft Graph API**, **Gmail API**, **SendGrid**, **SMTP**.
+- L'applicazione dipende da un contratto unico (ad esempio `IInvioEmail`, definito in `DvCms.Contracts`) e non conosce il canale di invio.
+- Sono previsti quattro adapter in `DvCms.Emails`: **Microsoft Graph API**, **Gmail API**, **SendGrid**, **SMTP**.
 - **Il canale è una proprietà del tenant.** Il tenant ha un campo `ProviderEmail` (`Smtp`, `Graph`, `Gmail`, `SendGrid`) e le impostazioni del canale scelto (`ImpostazioniEmailTenant`). Non esiste un ordine di priorità fra i canali: ogni tenant usa quello configurato.
 - La configurazione si modifica solo dalla schermata di configurazione del tenant nel menu "Platform" (solo `PlatformAdmin`). La UI mostra un selettore del tipo di provider e, in base alla scelta, **solo i campi necessari** a quel provider. Campi indicativi (da affinare in implementazione):
   - SMTP: host, porta, modalità TLS, utente, password, indirizzo e nome mittente.
