@@ -56,3 +56,23 @@ internal sealed class ConfigurazioneChiaveSegreta : IEntityTypeConfiguration<Chi
         entita.Property(chiave => chiave.Xml).IsRequired();
     }
 }
+
+internal sealed class ConfigurazioneModelloEmail : IEntityTypeConfiguration<ModelloEmail>
+{
+    public void Configure(EntityTypeBuilder<ModelloEmail> entita)
+    {
+        entita.ToTable("ModelliEmail");
+        entita.HasKey(modello => modello.Id);
+        entita.Property(modello => modello.Id).ValueGeneratedNever();
+        entita.Property(modello => modello.Codice).HasMaxLength(60).IsRequired();
+        entita.Property(modello => modello.Lingua).HasMaxLength(10).IsRequired();
+        entita.Property(modello => modello.Oggetto).HasMaxLength(200).IsRequired();
+        entita.Property(modello => modello.CorpoHtml).IsRequired();
+        entita.Property(modello => modello.CorpoTesto).IsRequired();
+        entita.Property(modello => modello.TokenConcorrenza).IsRowVersion();
+
+        entita.HasOne<Tenant>().WithMany().HasForeignKey(modello => modello.IdTenant).OnDelete(DeleteBehavior.Restrict);
+        entita.HasOne<Utenza>().WithMany().HasForeignKey(modello => modello.AggiornatoDaIdUtenza).OnDelete(DeleteBehavior.Restrict);
+        entita.HasIndex(modello => new { modello.IdTenant, modello.Codice, modello.Lingua }).IsUnique();
+    }
+}

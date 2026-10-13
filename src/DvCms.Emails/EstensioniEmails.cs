@@ -26,6 +26,8 @@ public static class EstensioniEmails
         servizi.TryAddScoped<IAccodatoreEmail, AccodatoreEmail>();
         servizi.TryAddScoped<IServizioImpostazioniEmail, ServizioImpostazioniEmail>();
         servizi.AddScoped<IGestoreOutbox, GestoreInvioEmail>();
+        servizi.TryAddScoped<IComponitoreEmail, ComponitoreEmail>();
+        servizi.TryAddScoped<IServizioModelliEmail, ServizioModelliEmail>();
 
         return servizi;
     }

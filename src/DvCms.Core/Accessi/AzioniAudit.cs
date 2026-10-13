@@ -38,6 +38,8 @@ public static class AzioniAudit
     public const string RitentativoMessaggio = "RitentativoMessaggio";
     public const string ScartoMessaggio = "ScartoMessaggio";
     public const string InvitoInviato = "InvitoInviato";
+    public const string ModificaModelloEmail = "ModificaModelloEmail";
+    public const string RipristinoModelloEmail = "RipristinoModelloEmail";
     public const string InvitoAccettato = "InvitoAccettato";
     public const string ModificaTestoStatico = "ModificaTestoStatico";
     public const string ModificaImpostazioniEmail = "ModificaImpostazioniEmail";

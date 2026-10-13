@@ -706,6 +706,59 @@ namespace DvCms.SqlServer.Migrazioni
                     b.ToTable("ImpostazioniEmailTenant", (string)null);
                 });
 
+            modelBuilder.Entity("DvCms.Models.Email.ModelloEmail", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("AggiornatoDaIdUtenza")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("AggiornatoIlUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Codice")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<string>("CorpoHtml")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CorpoTesto")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("IdTenant")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Lingua")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("Oggetto")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<byte[]>("TokenConcorrenza")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AggiornatoDaIdUtenza");
+
+                    b.HasIndex("IdTenant", "Codice", "Lingua")
+                        .IsUnique();
+
+                    b.ToTable("ModelliEmail", (string)null);
+                });
+
             modelBuilder.Entity("DvCms.Models.Localizzazione.Lingua", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2118,6 +2171,28 @@ namespace DvCms.SqlServer.Migrazioni
                     b.ToTable("MessaggiOutbox", (string)null);
                 });
 
+            modelBuilder.Entity("DvCms.Models.Segreti.ChiaveSegreta", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatoIlUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("NomeAmichevole")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Xml")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ChiaviSegrete", (string)null);
+                });
+
             modelBuilder.Entity("DvCms.Models.Temi.ImpostazioniTemaSito", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2368,28 +2443,6 @@ namespace DvCms.SqlServer.Migrazioni
                     b.ToTable("Tenant", (string)null);
                 });
 
-            modelBuilder.Entity("DvCms.Models.Segreti.ChiaveSegreta", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatoIlUtc")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("NomeAmichevole")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<string>("Xml")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("ChiaviSegrete", (string)null);
-                });
-
             modelBuilder.Entity("DvCms.Models.Accessi.CodiceRecuperoUtenza", b =>
                 {
                     b.HasOne("DvCms.Models.Accessi.Utenza", null)
@@ -2550,6 +2603,20 @@ namespace DvCms.SqlServer.Migrazioni
                 });
 
             modelBuilder.Entity("DvCms.Models.Email.ImpostazioniEmailTenant", b =>
+                {
+                    b.HasOne("DvCms.Models.Accessi.Utenza", null)
+                        .WithMany()
+                        .HasForeignKey("AggiornatoDaIdUtenza")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("DvCms.Models.Tenancy.Tenant", null)
+                        .WithMany()
+                        .HasForeignKey("IdTenant")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DvCms.Models.Email.ModelloEmail", b =>
                 {
                     b.HasOne("DvCms.Models.Accessi.Utenza", null)
                         .WithMany()

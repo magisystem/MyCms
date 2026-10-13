@@ -77,6 +77,8 @@ public class ContestoDatabase : DbContext
 
     public DbSet<ConnessioneEmailOAuth> ConnessioniEmailOAuth => Set<ConnessioneEmailOAuth>();
 
+    public DbSet<ModelloEmail> ModelliEmail => Set<ModelloEmail>();
+
     public DbSet<ChiaveSegreta> ChiaviSegrete => Set<ChiaveSegreta>();
 
     public DbSet<MessaggioOutbox> MessaggiOutbox => Set<MessaggioOutbox>();
@@ -164,6 +166,7 @@ public class ContestoDatabase : DbContext
         modelBuilder.Entity<ImpostazioniEmailTenant>().HasQueryFilter(impostazioni => impostazioni.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<TermineRicercaProdotto>().HasQueryFilter(termine => termine.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<ConnessioneEmailOAuth>().HasQueryFilter(connessione => connessione.IdTenant == IdTenantCorrente);
+        modelBuilder.Entity<ModelloEmail>().HasQueryFilter(modello => modello.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<RichiestaRecuperoPassword>().HasQueryFilter(richiesta => richiesta.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<RisorsaMedia>().HasQueryFilter(risorsa => risorsa.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<TraduzioneRisorsaMedia>().HasQueryFilter(traduzione => traduzione.IdTenant == IdTenantCorrente);
