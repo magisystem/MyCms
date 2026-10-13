@@ -5,7 +5,6 @@ using DvCms.Data;
 using DvCms.DTO.Negozio;
 using DvCms.DTO.Piattaforma;
 using DvCms.DTO.Tenancy;
-using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Supporto;
 using DvCms.Models.Negozio;
 using Microsoft.EntityFrameworkCore;

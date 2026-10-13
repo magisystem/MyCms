@@ -4,7 +4,6 @@ using DvCms.Core.Accessi;
 using DvCms.Data;
 using DvCms.DTO.Outbox;
 using DvCms.DTO.Piattaforma;
-using DvCms.Infrastructure.Persistenza;
 using DvCms.Models.Accessi;
 using DvCms.Models.Outbox;
 using Microsoft.EntityFrameworkCore;

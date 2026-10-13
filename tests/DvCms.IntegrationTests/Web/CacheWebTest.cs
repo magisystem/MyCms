@@ -9,7 +9,6 @@ using DvCms.DTO.Piattaforma;
 using DvCms.DTO.Tenancy;
 using DvCms.Infrastructure.Cache;
 using DvCms.Infrastructure.Manutenzione;
-using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Supporto;
 using DvCms.Models.Accessi;
 using Microsoft.EntityFrameworkCore;

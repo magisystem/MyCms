@@ -5,7 +5,6 @@ using DvCms.Data;
 using DvCms.DTO.Accessi;
 using DvCms.DTO.Accessi.DueFattori;
 using DvCms.Extender;
-using DvCms.Infrastructure.Persistenza;
 using DvCms.Models.Accessi;
 using DvCms.Models.Localizzazione;
 using Microsoft.EntityFrameworkCore;

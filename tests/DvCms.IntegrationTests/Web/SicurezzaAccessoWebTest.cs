@@ -6,7 +6,6 @@ using DvCms.Data;
 using DvCms.DTO.Cms;
 using DvCms.DTO.Tenancy;
 using DvCms.Infrastructure.Cache;
-using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Supporto;
 using DvCms.Models.Accessi;
 using Microsoft.EntityFrameworkCore;

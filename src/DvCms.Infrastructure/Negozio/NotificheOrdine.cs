@@ -7,7 +7,6 @@ using DvCms.Data;
 using DvCms.Data.Cms;
 using DvCms.DTO.Email;
 using DvCms.DTO.Negozio;
-using DvCms.Infrastructure.Persistenza;
 using DvCms.Models.Negozio;
 using Microsoft.EntityFrameworkCore;
 

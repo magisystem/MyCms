@@ -43,7 +43,6 @@ using DvCms.Infrastructure.Media;
 using DvCms.Infrastructure.Negozio;
 using DvCms.Infrastructure.Outbox;
 using DvCms.Infrastructure.Pagamenti;
-using DvCms.Infrastructure.Persistenza;
 using DvCms.Infrastructure.Piattaforma;
 using DvCms.Infrastructure.Temi;
 using Microsoft.EntityFrameworkCore;
@@ -56,33 +55,16 @@ namespace DvCms.Infrastructure;
 
 public static class EstensioniServizi
 {
-    public const string NomeConnessionePredefinita = "Predefinita";
-
     /// <summary>
-    /// Registra persistenza (SQL Server) e servizi di infrastruttura. La stringa di connessione deve arrivare da
-    /// configurazione di ambiente, user-secrets o variabile <c>ConnectionStrings__Predefinita</c>, mai dal repository:
-    /// se manca l'avvio fallisce subito.
+    /// Registra i servizi di infrastruttura. Il database lo registra il progetto del provider (<c>AggiungiSqlServer</c>, ADR-0024).
     /// </summary>
     public static IServiceCollection AggiungiInfrastruttura(this IServiceCollection servizi, IConfiguration configurazione)
     {
         ArgumentNullException.ThrowIfNull(servizi);
         ArgumentNullException.ThrowIfNull(configurazione);
 
-        var connessione = configurazione.GetConnectionString(NomeConnessionePredefinita);
-        if (string.IsNullOrWhiteSpace(connessione))
-        {
-            throw new InvalidOperationException(
-                $"Stringa di connessione 'ConnectionStrings:{NomeConnessionePredefinita}' mancante: " +
-                "impostarla con user-secrets o con la variabile d'ambiente ConnectionStrings__Predefinita.");
-        }
-
         AggiungiCache(servizi, configurazione);
-        servizi.AddDbContext<ContestoDatabase>((fornitore, opzioni) => opzioni
-            .UseSqlServer(connessione, ConfiguraSqlServer)
-            .AddInterceptors(fornitore.GetRequiredService<InterceptorInvalidazioneCache>()));
         servizi.TryAddSingleton(TimeProvider.System);
-        servizi.AddSingleton<IPersonalizzazioneModello, PersonalizzazioneSqlServer>();
-        servizi.AddSingleton<IRilevatoreDeadlock, RilevatoreDeadlockSqlServer>();
 
         servizi.TryAddScoped<ContestoTenant>();
         servizi.TryAddScoped<IContestoTenant>(fornitore => fornitore.GetRequiredService<ContestoTenant>());
@@ -341,10 +323,4 @@ public static class EstensioniServizi
         servizi.AddHostedService<ServizioTestiStatici>();
     }
 
-    internal static void ConfiguraSqlServer(SqlServerDbContextOptionsBuilder opzioni)
-    {
-        opzioni.MigrationsHistoryTable(ContestoDatabase.NomeTabellaStoricoMigrazioni);
-        // Le migrazioni stanno in questo assembly, non in quello del contesto (DvCms.Data).
-        opzioni.MigrationsAssembly(typeof(EstensioniServizi).Assembly.GetName().Name);
-    }
 }

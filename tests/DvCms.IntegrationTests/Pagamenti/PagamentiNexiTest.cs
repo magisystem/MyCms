@@ -4,7 +4,6 @@ using DvCms.Core.Accessi;
 using DvCms.Data;
 using DvCms.DTO.Negozio;
 using DvCms.DTO.Piattaforma;
-using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Negozio;
 using DvCms.IntegrationTests.Supporto;
 using DvCms.Models.Negozio;

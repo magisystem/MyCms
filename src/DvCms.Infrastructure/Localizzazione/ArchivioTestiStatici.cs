@@ -4,7 +4,6 @@ using DvCms.Contracts.Localizzazione;
 using DvCms.Data;
 using DvCms.DTO.Localizzazione;
 using DvCms.Extender;
-using DvCms.Infrastructure.Persistenza;
 using DvCms.Models;
 using DvCms.Models.Localizzazione;
 using Microsoft.EntityFrameworkCore;
@@ -90,7 +89,7 @@ public sealed class ArchivioTestiStatici : IArchivioTestiStatici
         {
             await contesto.SaveChangesAsync(annullamento);
         }
-        catch (DbUpdateException eccezione) when (EUnivocitaViolata(eccezione))
+        catch (DbUpdateException eccezione) when (contesto.RilevatoreErrori?.EViolazioneUnicita(eccezione) ?? false)
         {
             // Un'altra istanza ha creato le stesse righe nel frattempo: non è un errore, si rilegge sotto.
             contesto.ChangeTracker.Clear();
@@ -103,7 +102,4 @@ public sealed class ArchivioTestiStatici : IArchivioTestiStatici
             select new RigaTestoStatico(lingua.Codice, testo.Chiave, testo.Testo, testo.DaTradurre))
             .ToListAsync(annullamento);
     }
-
-    private static bool EUnivocitaViolata(DbUpdateException eccezione) =>
-        eccezione.InnerException is Microsoft.Data.SqlClient.SqlException { Number: 2601 or 2627 };
 }

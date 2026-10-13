@@ -4,7 +4,6 @@ using DvCms.Core.Tenancy;
 using DvCms.DTO.Negozio;
 using DvCms.DTO.Piattaforma;
 using DvCms.DTO.Tenancy;
-using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Supporto;
 using DvCms.IntegrationTests.Web;
 using DvCms.Models.Accessi;

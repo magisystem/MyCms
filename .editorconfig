@@ -46,5 +46,5 @@ dotnet_naming_style.prefisso_trattino.capitalization = camel_case
 indent_size = 4
 
 # Migrazioni EF Core generate dagli strumenti: non soggette alle regole di stile e agli analyzer.
-[**/Persistenza/Migrazioni/*.cs]
+[**/DvCms.SqlServer/Migrazioni/*.cs]
 generated_code = true

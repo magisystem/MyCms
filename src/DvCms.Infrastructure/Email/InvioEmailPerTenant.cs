@@ -4,7 +4,6 @@ using DvCms.Data;
 using DvCms.DTO.Email;
 using DvCms.Emails;
 using DvCms.Extender;
-using DvCms.Infrastructure.Persistenza;
 using DvCms.Models.Accessi;
 using DvCms.Models.Email;
 using Microsoft.EntityFrameworkCore;

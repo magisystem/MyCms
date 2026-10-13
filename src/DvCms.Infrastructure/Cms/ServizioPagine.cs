@@ -11,7 +11,6 @@ using DvCms.DTO.Cms;
 using DvCms.DTO.Piattaforma;
 using DvCms.Extender;
 using DvCms.Infrastructure.Outbox;
-using DvCms.Infrastructure.Persistenza;
 using DvCms.Models.Accessi;
 using DvCms.Models.Cms;
 using Microsoft.EntityFrameworkCore;

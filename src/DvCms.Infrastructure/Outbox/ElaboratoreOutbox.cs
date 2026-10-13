@@ -1,8 +1,8 @@
 using DvCms.Contracts.Outbox;
 using DvCms.Core.Outbox;
 using DvCms.Data;
+using DvCms.Data.Outbox;
 using DvCms.DTO.Outbox;
-using DvCms.Infrastructure.Persistenza;
 using DvCms.Models.Outbox;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,13 +22,15 @@ public sealed partial class ElaboratoreOutbox
 
     private readonly IServiceScopeFactory _fabbricaAmbiti;
     private readonly OpzioniOutbox _opzioni;
+    private readonly IPrenotatoreMessaggiOutbox _prenotatore;
     private readonly TimeProvider _orologio;
     private readonly ILogger<ElaboratoreOutbox> _logger;
 
-    public ElaboratoreOutbox(IServiceScopeFactory fabbricaAmbiti, OpzioniOutbox opzioni, TimeProvider orologio, ILogger<ElaboratoreOutbox> logger)
+    public ElaboratoreOutbox(IServiceScopeFactory fabbricaAmbiti, OpzioniOutbox opzioni, IPrenotatoreMessaggiOutbox prenotatore, TimeProvider orologio, ILogger<ElaboratoreOutbox> logger)
     {
         _fabbricaAmbiti = fabbricaAmbiti;
         _opzioni = opzioni;
+        _prenotatore = prenotatore;
         _orologio = orologio;
         _logger = logger;
     }
@@ -60,24 +62,7 @@ public sealed partial class ElaboratoreOutbox
         var adesso = _orologio.GetUtcNow().UtcDateTime;
         var scadenza = adesso + _opzioni.DurataPrenotazione;
 
-        // Prenotazione atomica con il modello classico delle code su SQL Server: UPDLOCK + READPAST fanno saltare le righe
-        // già prese da altri worker, senza attese né deadlock. Lo stato è salvato come testo (vedi la configurazione).
-        var pendente = nameof(StatoMessaggioOutbox.Pendente);
-        var dimensione = _opzioni.DimensioneLotto;
-        var prenotati = await contesto.Database.SqlQuery<Guid>(
-            $"""
-            WITH candidati AS (
-                SELECT TOP ({dimensione}) *
-                FROM MessaggiOutbox WITH (UPDLOCK, READPAST, ROWLOCK)
-                WHERE Stato = {pendente}
-                    AND ProssimoTentativoIlUtc <= {adesso}
-                    AND (BloccatoFinoAlUtc IS NULL OR BloccatoFinoAlUtc < {adesso})
-                ORDER BY ProssimoTentativoIlUtc
-            )
-            UPDATE candidati SET BloccatoDa = {worker}, BloccatoFinoAlUtc = {scadenza}
-            OUTPUT inserted.Id AS Value
-            """)
-            .ToListAsync(annullamento);
+        var prenotati = await _prenotatore.PrenotaAsync(contesto, _opzioni.DimensioneLotto, adesso, scadenza, worker, annullamento);
         if (prenotati.Count == 0)
         {
             return [];

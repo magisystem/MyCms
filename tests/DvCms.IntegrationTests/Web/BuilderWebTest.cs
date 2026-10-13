@@ -13,7 +13,6 @@ using DvCms.DTO.Builder;
 using DvCms.DTO.Media;
 using DvCms.DTO.Negozio;
 using DvCms.DTO.Tenancy;
-using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Supporto;
 using DvCms.Models.Cms;
 using DvCms.Models.Negozio;

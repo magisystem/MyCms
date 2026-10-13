@@ -10,7 +10,6 @@ using DvCms.DTO.Media;
 using DvCms.DTO.Piattaforma;
 using DvCms.Extender;
 using DvCms.Infrastructure.Cms;
-using DvCms.Infrastructure.Persistenza;
 using DvCms.Models;
 using DvCms.Models.Accessi;
 using DvCms.Models.Media;

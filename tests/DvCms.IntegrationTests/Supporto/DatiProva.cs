@@ -3,7 +3,6 @@ using DvCms.Contracts.Email;
 using DvCms.Core.Accessi.DueFattori;
 using DvCms.Data;
 using DvCms.Extender;
-using DvCms.Infrastructure.Persistenza;
 using DvCms.Models.Accessi;
 using DvCms.Models.Tenancy;
 using Microsoft.EntityFrameworkCore;

@@ -1,6 +1,6 @@
 using DvCms.Data;
 using DvCms.Infrastructure;
-using DvCms.Infrastructure.Persistenza;
+using DvCms.SqlServer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -75,6 +75,7 @@ public static class ServiziProva
             servizi.AddSingleton(orologio);
         }
 
+        servizi.AggiungiSqlServer(configurazione);
         servizi.AggiungiInfrastruttura(configurazione);
         configura?.Invoke(servizi);
         return servizi.BuildServiceProvider();

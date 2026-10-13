@@ -6,7 +6,6 @@ using DvCms.DTO.Cms;
 using DvCms.DTO.Outbox;
 using DvCms.DTO.Tenancy;
 using DvCms.Infrastructure.Outbox;
-using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Supporto;
 using DvCms.Models.Accessi;
 using DvCms.Models.Outbox;

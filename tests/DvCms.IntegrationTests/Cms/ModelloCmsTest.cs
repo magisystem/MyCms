@@ -1,7 +1,6 @@
 using DvCms.Core.Tenancy;
 using DvCms.Data;
 using DvCms.DTO.Tenancy;
-using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Supporto;
 using DvCms.Models.Accessi;
 using DvCms.Models.Cms;

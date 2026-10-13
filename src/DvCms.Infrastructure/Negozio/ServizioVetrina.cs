@@ -4,7 +4,6 @@ using DvCms.Data;
 using DvCms.Data.Cms;
 using DvCms.DTO.Negozio;
 using DvCms.Infrastructure.Cms;
-using DvCms.Infrastructure.Persistenza;
 using DvCms.Models.Media;
 using DvCms.Models.Negozio;
 using Microsoft.EntityFrameworkCore;

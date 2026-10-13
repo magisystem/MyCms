@@ -3,7 +3,6 @@ using DvCms.Contracts.Piattaforma;
 using DvCms.Data;
 using DvCms.DTO.Negozio;
 using DvCms.DTO.Piattaforma;
-using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Supporto;
 using DvCms.Models.Accessi;
 using DvCms.Models.Negozio;

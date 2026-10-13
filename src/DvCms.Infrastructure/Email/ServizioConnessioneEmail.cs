@@ -10,7 +10,6 @@ using DvCms.DTO.Email;
 using DvCms.DTO.Piattaforma;
 using DvCms.Emails;
 using DvCms.Extender;
-using DvCms.Infrastructure.Persistenza;
 using DvCms.Models;
 using DvCms.Models.Accessi;
 using DvCms.Models.Email;

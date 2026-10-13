@@ -1,7 +1,7 @@
 using DvCms.Data;
 using DvCms.Infrastructure;
-using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Supporto;
+using DvCms.SqlServer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -72,6 +72,7 @@ public class MigrazioniDatabaseTest
             .Build();
 
         return new ServiceCollection()
+            .AggiungiSqlServer(configurazione)
             .AggiungiInfrastruttura(configurazione)
             .BuildServiceProvider();
     }

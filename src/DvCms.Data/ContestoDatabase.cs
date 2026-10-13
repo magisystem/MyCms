@@ -26,13 +26,13 @@ public class ContestoDatabase : DbContext
     private readonly List<IPersonalizzazioneModello> _personalizzazioni = [];
 
     /// <summary>Riconoscimento dei deadlock del motore in uso, fornito dal progetto del provider; assente negli strumenti di progettazione.</summary>
-    public IRilevatoreDeadlock? RilevatoreDeadlock { get; }
+    public IRilevatoreErroriDatabase? RilevatoreErrori { get; }
 
-    public ContestoDatabase(DbContextOptions<ContestoDatabase> opzioni, IContestoTenant contestoTenant, IRilevatoreDeadlock? rilevatoreDeadlock = null, IEnumerable<IPersonalizzazioneModello>? personalizzazioni = null)
+    public ContestoDatabase(DbContextOptions<ContestoDatabase> opzioni, IContestoTenant contestoTenant, IRilevatoreErroriDatabase? rilevatoreErrori = null, IEnumerable<IPersonalizzazioneModello>? personalizzazioni = null)
         : base(opzioni)
     {
         _contestoTenant = contestoTenant;
-        RilevatoreDeadlock = rilevatoreDeadlock;
+        RilevatoreErrori = rilevatoreErrori;
         _personalizzazioni = personalizzazioni?.ToList() ?? [];
     }
 

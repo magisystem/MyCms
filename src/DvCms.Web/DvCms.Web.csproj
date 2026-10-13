@@ -14,6 +14,8 @@
     <ProjectReference Include="..\DvCms.DTO\DvCms.DTO.csproj" />
     <ProjectReference Include="..\DvCms.Core\DvCms.Core.csproj" />
     <ProjectReference Include="..\DvCms.Data\DvCms.Data.csproj" />
+    <ProjectReference Include="..\DvCms.SqlServer\DvCms.SqlServer.csproj" />
+    <ProjectReference Include="..\DvCms.PostgreSql\DvCms.PostgreSql.csproj" />
     <ProjectReference Include="..\DvCms.Emails\DvCms.Emails.csproj" />
     <ProjectReference Include="..\DvCms.Infrastructure\DvCms.Infrastructure.csproj" />
   </ItemGroup>

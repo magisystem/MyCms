@@ -10,7 +10,6 @@ using DvCms.DTO.Accessi;
 using DvCms.DTO.Accessi.DueFattori;
 using DvCms.DTO.Piattaforma;
 using DvCms.Extender;
-using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Supporto;
 using DvCms.Models.Accessi;
 using DvCms.Web.Comandi;

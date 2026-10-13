@@ -4,6 +4,7 @@ using DvCms.Infrastructure;
 using DvCms.Web.Accessi;
 using DvCms.Web.Comandi;
 using DvCms.Web.Configurazione;
+using DvCms.Web.Database;
 using DvCms.Web.Localizzazione;
 using DvCms.Web.Middleware;
 using DvCms.Web.Pagamenti;
@@ -36,6 +37,7 @@ costruttore.Services.AddRazorPages(opzioni =>
     opzioni.Conventions.ConfigureFilter(new FiltroDueFattoriObbligatorio());
 });
 ConfigurazioneAccessiWeb.Aggiungi(costruttore.Services, costruttore.Configuration, costruttore.Environment);
+costruttore.Services.AggiungiDatabase(costruttore.Configuration);
 costruttore.Services.AggiungiInfrastruttura(costruttore.Configuration);
 costruttore.Services.AddHttpContextAccessor();
 costruttore.Services.AggiungiSalute();

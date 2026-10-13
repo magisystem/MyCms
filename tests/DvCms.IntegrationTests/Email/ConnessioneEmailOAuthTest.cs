@@ -9,7 +9,6 @@ using DvCms.DTO.Email;
 using DvCms.DTO.Piattaforma;
 using DvCms.DTO.Tenancy;
 using DvCms.Infrastructure.Outbox;
-using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Supporto;
 using DvCms.IntegrationTests.Web;
 using DvCms.Models.Accessi;

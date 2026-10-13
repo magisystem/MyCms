@@ -2,7 +2,6 @@ using System.Net;
 using System.Security.Cryptography;
 using DvCms.Data;
 using DvCms.Infrastructure.Outbox;
-using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Supporto;
 using DvCms.Models.Accessi;
 using DvCms.Models.Outbox;

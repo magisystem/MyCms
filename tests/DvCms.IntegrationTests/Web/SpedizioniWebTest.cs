@@ -1,7 +1,6 @@
 using System.Net;
 using DvCms.Contracts.Piattaforma;
 using DvCms.Data;
-using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Supporto;
 using DvCms.Models.Accessi;
 using DvCms.Models.Negozio;

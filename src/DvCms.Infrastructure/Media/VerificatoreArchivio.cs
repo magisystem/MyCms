@@ -1,7 +1,6 @@
 using System.Security.Cryptography;
 using DvCms.Contracts.Media;
 using DvCms.Data;
-using DvCms.Infrastructure.Persistenza;
 using Microsoft.EntityFrameworkCore;
 
 namespace DvCms.Infrastructure.Media;

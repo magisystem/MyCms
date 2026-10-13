@@ -7,7 +7,6 @@ using DvCms.Data;
 using DvCms.DTO.Media;
 using DvCms.DTO.Piattaforma;
 using DvCms.DTO.Tenancy;
-using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Supporto;
 using DvCms.Models.Accessi;
 using DvCms.Models.Media;

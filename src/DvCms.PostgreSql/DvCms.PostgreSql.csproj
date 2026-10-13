@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Segnaposto vuoto (ADR-0024): il supporto a PostgreSQL non è implementato; richiede un ADR dedicato. -->
+
+</Project>

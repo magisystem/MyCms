@@ -10,8 +10,8 @@ PostgreSQL non è supportato e non va introdotto (provider, migrazioni, test o C
 
 - Un solo provider: `Microsoft.EntityFrameworkCore.SqlServer`, con versione allineata alla major di EF Core 10 e fissata in `Directory.Packages.props`.
 - Connection string in `ConnectionStrings:Predefinita`. Segreti fuori dal repository (user-secrets in sviluppo, environment variables o secret manager in produzione).
-- Una sola serie di migrazioni EF Core, con il relativo model snapshot, nel progetto Infrastructure (`Persistenza/Migrazioni`, tabella di storico `StoricoMigrazioni`), applicata con il comando `DvCms.Web migra`. Ogni PR che modifica lo schema aggiorna il modello, genera la migrazione, la revisiona a mano e verifica che si applichi a un database vuoto.
-- Il codice provider-specifico (EF Core SQL Server, migrazioni, eventuale SQL raw) resta in Infrastructure. Domain e Application non dipendono da EF Core né da tipi SQL Server.
+- Una sola serie di migrazioni EF Core, con il relativo model snapshot, nel progetto `DvCms.SqlServer` (`Migrazioni`, tabella di storico `StoricoMigrazioni`), applicata con il comando `DvCms.Web migra`. Ogni PR che modifica lo schema aggiorna il modello, genera la migrazione, la revisiona a mano e verifica che si applichi a un database vuoto.
+- Il codice provider-specifico (EF Core SQL Server, migrazioni, eventuale SQL raw) resta in `DvCms.SqlServer`, dietro interfacce di `DvCms.Contracts`; `DvCms.Data` non conosce il provider (ADR-0024). Domain e Application non dipendono da EF Core né da tipi SQL Server.
 
 ## Nomi delle tabelle
 
@@ -26,7 +26,7 @@ Tabelle e colonne in italiano, PascalCase, tabelle al plurale, con mappatura esp
 - Concorrenza ottimistica: colonna `rowversion` mappata come token di concorrenza EF Core sulle entità modificabili (`Pagina`, ecc.).
 - FK composite con `IdTenant` per impedire relazioni cross-tenant. SQL Server rifiuta cicli e percorsi di cascade multipli (ad esempio `Pagina` ↔ `RevisionePagina`): impostare `DeleteBehavior` esplicito e non usare cascade sui puntatori `IdUltimaRevisioneBozza`/`IdRevisionePubblicata`.
 - Indici univoci su colonne nullable (es. `IdLingua`): in SQL Server i NULL sono considerati uguali tra loro; decidere esplicitamente se usare una colonna non nullable, un valore sentinella o un indice filtrato.
-- Query raw SQL ammesse solo in Infrastructure, sempre parametrizzate e coperte da test (ad esempio per il claim dei messaggi outbox con `UPDLOCK, READPAST`).
+- Query raw SQL ammesse solo in `DvCms.SqlServer`, sempre parametrizzate e coperte da test (ad esempio per il claim dei messaggi outbox con `UPDLOCK, READPAST`).
 
 ### Documenti JSON
 

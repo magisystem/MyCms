@@ -3,7 +3,6 @@ using System.Text.RegularExpressions;
 using DvCms.Contracts.Piattaforma;
 using DvCms.Data;
 using DvCms.Infrastructure.Outbox;
-using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Supporto;
 using DvCms.IntegrationTests.Web;
 using DvCms.Models.Accessi;

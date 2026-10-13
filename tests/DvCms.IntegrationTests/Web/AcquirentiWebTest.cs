@@ -6,7 +6,6 @@ using DvCms.Data;
 using DvCms.DTO.Piattaforma;
 using DvCms.Infrastructure.Manutenzione;
 using DvCms.Infrastructure.Outbox;
-using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Supporto;
 using DvCms.Models.Accessi;
 using Microsoft.EntityFrameworkCore;

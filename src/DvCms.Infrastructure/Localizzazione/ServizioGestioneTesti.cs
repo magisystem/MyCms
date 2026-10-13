@@ -5,7 +5,6 @@ using DvCms.Core.Localizzazione;
 using DvCms.Data;
 using DvCms.DTO.Localizzazione;
 using DvCms.DTO.Piattaforma;
-using DvCms.Infrastructure.Persistenza;
 using DvCms.Models.Accessi;
 using DvCms.Models.Localizzazione;
 using Microsoft.EntityFrameworkCore;

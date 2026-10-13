@@ -22,7 +22,7 @@ public static class RiprovaSuDeadlock
             {
                 return await operazione();
             }
-            catch (Exception eccezione) when (tentativo < TentativiMassimi && contesto.Database.CurrentTransaction is null && (contesto.RilevatoreDeadlock?.EDeadlock(eccezione) ?? false))
+            catch (Exception eccezione) when (tentativo < TentativiMassimi && contesto.Database.CurrentTransaction is null && (contesto.RilevatoreErrori?.EDeadlock(eccezione) ?? false))
             {
                 // Lo stato in memoria può riferirsi a righe mai salvate: si riparte puliti, con una breve attesa diversa per ogni tentativo.
                 contesto.ChangeTracker.Clear();

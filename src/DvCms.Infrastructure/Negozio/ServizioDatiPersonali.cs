@@ -10,7 +10,6 @@ using DvCms.Data;
 using DvCms.DTO.Negozio;
 using DvCms.DTO.Piattaforma;
 using DvCms.Infrastructure.Accessi;
-using DvCms.Infrastructure.Persistenza;
 using DvCms.Models.Accessi;
 using DvCms.Models.Negozio;
 using Microsoft.EntityFrameworkCore;

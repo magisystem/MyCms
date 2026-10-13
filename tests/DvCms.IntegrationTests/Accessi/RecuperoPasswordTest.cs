@@ -7,7 +7,6 @@ using DvCms.Data;
 using DvCms.DTO.Accessi;
 using DvCms.DTO.Tenancy;
 using DvCms.Infrastructure.Outbox;
-using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Supporto;
 using DvCms.Models.Accessi;
 using Microsoft.EntityFrameworkCore;
