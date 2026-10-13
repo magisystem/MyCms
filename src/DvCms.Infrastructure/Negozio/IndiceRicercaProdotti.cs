@@ -1,5 +1,5 @@
-using DvCms.Domain.Negozio;
 using DvCms.Infrastructure.Persistenza;
+using DvCms.Models.Negozio;
 using Microsoft.EntityFrameworkCore;
 
 namespace DvCms.Infrastructure.Negozio;

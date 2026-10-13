@@ -1,4 +1,4 @@
-using DvCms.Domain.Cms;
+using DvCms.Models.Cms;
 using Xunit;
 
 namespace DvCms.UnitTests.Cms;

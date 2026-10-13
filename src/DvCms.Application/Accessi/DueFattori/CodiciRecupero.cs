@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using DvCms.Extender;
 
 namespace DvCms.Application.Accessi.DueFattori;
 

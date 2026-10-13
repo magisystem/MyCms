@@ -2,9 +2,10 @@ using DvCms.Application.Accessi;
 using DvCms.Application.Accessi.DueFattori;
 using DvCms.Application.Email;
 using DvCms.Application.Tenancy;
-using DvCms.Domain;
-using DvCms.Domain.Accessi;
+using DvCms.Extender;
 using DvCms.Infrastructure.Persistenza;
+using DvCms.Models;
+using DvCms.Models.Accessi;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 

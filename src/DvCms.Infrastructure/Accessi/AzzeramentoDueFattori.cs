@@ -1,5 +1,5 @@
-using DvCms.Domain.Accessi;
 using DvCms.Infrastructure.Persistenza;
+using DvCms.Models.Accessi;
 using Microsoft.EntityFrameworkCore;
 
 namespace DvCms.Infrastructure.Accessi;

@@ -1,6 +1,6 @@
 using System.Net;
-using DvCms.Domain.Accessi;
 using DvCms.IntegrationTests.Supporto;
+using DvCms.Models.Accessi;
 using Xunit;
 
 namespace DvCms.IntegrationTests.Web;

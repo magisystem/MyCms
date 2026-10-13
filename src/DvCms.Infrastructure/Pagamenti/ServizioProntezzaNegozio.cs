@@ -1,10 +1,10 @@
 using DvCms.Application.Negozio;
-using DvCms.Domain.Accessi;
-using DvCms.Domain.Cms;
-using DvCms.Domain.Email;
-using DvCms.Domain.Negozio;
 using DvCms.Infrastructure.Manutenzione;
 using DvCms.Infrastructure.Persistenza;
+using DvCms.Models.Accessi;
+using DvCms.Models.Cms;
+using DvCms.Models.Email;
+using DvCms.Models.Negozio;
 using Microsoft.EntityFrameworkCore;
 
 namespace DvCms.Infrastructure.Pagamenti;

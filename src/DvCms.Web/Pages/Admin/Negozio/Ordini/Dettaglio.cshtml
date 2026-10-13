@@ -1,6 +1,6 @@
 @page "/admin/negozio/ordini/{id:guid}"
 @model DvCms.Web.Pages.Admin.Negozio.Ordini.DettaglioModel
-@using DvCms.Domain.Negozio
+@using DvCms.Models.Negozio
 @{
     var o = Model.Ordine;
     ViewData["Titolo"] = _L["Ordine"] + " #" + o.Numero;
@@ -162,7 +162,7 @@
                 </ul>
             </div>
         }
-        @if (Model.PagatoConNexi && Model.Ordine.Stato is DvCms.Domain.Negozio.StatoOrdine.Pagato or DvCms.Domain.Negozio.StatoOrdine.Spedito or DvCms.Domain.Negozio.StatoOrdine.Ritirato)
+        @if (Model.PagatoConNexi && Model.Ordine.Stato is DvCms.Models.Negozio.StatoOrdine.Pagato or DvCms.Models.Negozio.StatoOrdine.Spedito or DvCms.Models.Negozio.StatoOrdine.Ritirato)
         {
             <div class="alert alert-info mt-3" role="status">@_L["Ordine pagato con Nexi: per rimborsare usa il back office Nexi."]</div>
         }
@@ -186,7 +186,7 @@
                 </div>
             </div>
         }
-        @if (Model.Ordine.Stato == DvCms.Domain.Negozio.StatoOrdine.Rimborsato)
+        @if (Model.Ordine.Stato == DvCms.Models.Negozio.StatoOrdine.Rimborsato)
         {
             <div class="card mt-3">
                 <div class="card-header"><h3 class="card-title">@_L["Giacenza"]</h3></div>

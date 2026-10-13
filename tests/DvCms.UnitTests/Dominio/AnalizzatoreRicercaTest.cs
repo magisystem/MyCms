@@ -1,4 +1,4 @@
-using DvCms.Domain.Negozio;
+using DvCms.Models.Negozio;
 using Xunit;
 
 namespace DvCms.UnitTests.Dominio;

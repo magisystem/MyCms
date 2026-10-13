@@ -1,7 +1,7 @@
-using DvCms.Domain.Accessi;
-using DvCms.Domain.Email;
-using DvCms.Domain.Tenancy;
 using DvCms.Infrastructure.Segreti;
+using DvCms.Models.Accessi;
+using DvCms.Models.Email;
+using DvCms.Models.Tenancy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

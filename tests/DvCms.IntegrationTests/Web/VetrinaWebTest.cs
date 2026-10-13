@@ -3,10 +3,10 @@ using System.Text.RegularExpressions;
 using DvCms.Application.Cms;
 using DvCms.Application.Negozio;
 using DvCms.Application.Tenancy;
-using DvCms.Domain.Negozio;
 using DvCms.Infrastructure.Cache;
 using DvCms.IntegrationTests.Negozio;
 using DvCms.IntegrationTests.Supporto;
+using DvCms.Models.Negozio;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 

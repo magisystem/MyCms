@@ -1,9 +1,9 @@
 using DvCms.Application.Negozio;
 using DvCms.Application.Tenancy;
-using DvCms.Domain.Media;
-using DvCms.Domain.Negozio;
 using DvCms.Infrastructure.Cms;
 using DvCms.Infrastructure.Persistenza;
+using DvCms.Models.Media;
+using DvCms.Models.Negozio;
 using Microsoft.EntityFrameworkCore;
 
 namespace DvCms.Infrastructure.Negozio;

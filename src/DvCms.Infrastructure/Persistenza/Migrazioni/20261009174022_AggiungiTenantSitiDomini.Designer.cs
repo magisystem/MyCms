@@ -25,7 +25,7 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("DvCms.Domain.Localizzazione.Lingua", b =>
+            modelBuilder.Entity("DvCms.Models.Localizzazione.Lingua", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -79,7 +79,7 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                         });
                 });
 
-            modelBuilder.Entity("DvCms.Domain.Localizzazione.TestoStatico", b =>
+            modelBuilder.Entity("DvCms.Models.Localizzazione.TestoStatico", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -118,7 +118,7 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.ToTable("TestiStatici", (string)null);
                 });
 
-            modelBuilder.Entity("DvCms.Domain.Tenancy.DominioSito", b =>
+            modelBuilder.Entity("DvCms.Models.Tenancy.DominioSito", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -171,7 +171,7 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                         });
                 });
 
-            modelBuilder.Entity("DvCms.Domain.Tenancy.ProfiloGuest", b =>
+            modelBuilder.Entity("DvCms.Models.Tenancy.ProfiloGuest", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -190,7 +190,7 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.ToTable("ProfiliGuest", (string)null);
                 });
 
-            modelBuilder.Entity("DvCms.Domain.Tenancy.Sito", b =>
+            modelBuilder.Entity("DvCms.Models.Tenancy.Sito", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -233,7 +233,7 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.ToTable("Siti", (string)null);
                 });
 
-            modelBuilder.Entity("DvCms.Domain.Tenancy.Tenant", b =>
+            modelBuilder.Entity("DvCms.Models.Tenancy.Tenant", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -273,18 +273,18 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.ToTable("Tenant", (string)null);
                 });
 
-            modelBuilder.Entity("DvCms.Domain.Localizzazione.TestoStatico", b =>
+            modelBuilder.Entity("DvCms.Models.Localizzazione.TestoStatico", b =>
                 {
-                    b.HasOne("DvCms.Domain.Localizzazione.Lingua", null)
+                    b.HasOne("DvCms.Models.Localizzazione.Lingua", null)
                         .WithMany()
                         .HasForeignKey("IdLingua")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("DvCms.Domain.Tenancy.DominioSito", b =>
+            modelBuilder.Entity("DvCms.Models.Tenancy.DominioSito", b =>
                 {
-                    b.HasOne("DvCms.Domain.Tenancy.Sito", null)
+                    b.HasOne("DvCms.Models.Tenancy.Sito", null)
                         .WithMany()
                         .HasForeignKey("IdTenant", "IdSito")
                         .HasPrincipalKey("IdTenant", "Id")
@@ -292,18 +292,18 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("DvCms.Domain.Tenancy.ProfiloGuest", b =>
+            modelBuilder.Entity("DvCms.Models.Tenancy.ProfiloGuest", b =>
                 {
-                    b.HasOne("DvCms.Domain.Tenancy.Tenant", null)
+                    b.HasOne("DvCms.Models.Tenancy.Tenant", null)
                         .WithMany()
                         .HasForeignKey("IdTenant")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("DvCms.Domain.Tenancy.Sito", b =>
+            modelBuilder.Entity("DvCms.Models.Tenancy.Sito", b =>
                 {
-                    b.HasOne("DvCms.Domain.Tenancy.Tenant", null)
+                    b.HasOne("DvCms.Models.Tenancy.Tenant", null)
                         .WithMany()
                         .HasForeignKey("IdTenant")
                         .OnDelete(DeleteBehavior.Restrict)

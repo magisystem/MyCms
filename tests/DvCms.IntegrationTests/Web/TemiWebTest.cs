@@ -3,9 +3,9 @@ using DvCms.Application.Cms;
 using DvCms.Application.Piattaforma;
 using DvCms.Application.Temi;
 using DvCms.Application.Tenancy;
-using DvCms.Domain.Accessi;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Supporto;
+using DvCms.Models.Accessi;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
@@ -293,7 +293,7 @@ public class TemiWebTest
             if (riga is null)
             {
                 var sito = await contesto.Siti.IgnoreQueryFilters().SingleAsync(s => s.Id == idSito, Ct);
-                riga = new DvCms.Domain.Temi.ImpostazioniTemaSito { Id = Guid.NewGuid(), IdTenant = sito.IdTenant, IdSito = idSito };
+                riga = new DvCms.Models.Temi.ImpostazioniTemaSito { Id = Guid.NewGuid(), IdTenant = sito.IdTenant, IdSito = idSito };
                 contesto.ImpostazioniTemaSito.Add(riga);
             }
 

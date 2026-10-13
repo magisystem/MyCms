@@ -1,6 +1,6 @@
-using DvCms.Domain.Accessi;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Supporto;
+using DvCms.Models.Accessi;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
@@ -85,7 +85,7 @@ public sealed class ScenarioWeb : IAsyncDisposable
         await using var ambito = Fabbrica.Services.CreateAsyncScope();
         var contesto = ambito.ServiceProvider.GetRequiredService<ContestoDatabase>();
         var tenant = await contesto.Tenant.IgnoreQueryFilters().SingleAsync(candidato => candidato.Id == idTenant, TestContext.Current.CancellationToken);
-        tenant.Stato = DvCms.Domain.Tenancy.StatoTenant.Sospeso;
+        tenant.Stato = DvCms.Models.Tenancy.StatoTenant.Sospeso;
         await contesto.SaveChangesAsync(TestContext.Current.CancellationToken);
     }
 

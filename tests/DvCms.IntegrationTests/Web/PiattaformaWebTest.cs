@@ -1,8 +1,8 @@
 using System.Net;
 using System.Text.RegularExpressions;
-using DvCms.Domain.Accessi;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Supporto;
+using DvCms.Models.Accessi;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;

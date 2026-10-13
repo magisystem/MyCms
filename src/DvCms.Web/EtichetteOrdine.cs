@@ -1,5 +1,5 @@
 using DvCms.Application.Localizzazione;
-using DvCms.Domain.Negozio;
+using DvCms.Models.Negozio;
 
 namespace DvCms.Web;
 
@@ -23,14 +23,14 @@ public static class EtichetteOrdine
         };
     }
 
-    public static string Modalita(ILocalizzatore localizzatore, DvCms.Domain.Negozio.ModalitaPagamento modalita)
+    public static string Modalita(ILocalizzatore localizzatore, DvCms.Models.Negozio.ModalitaPagamento modalita)
     {
         ArgumentNullException.ThrowIfNull(localizzatore);
         return modalita switch
         {
-            DvCms.Domain.Negozio.ModalitaPagamento.Online => localizzatore.Traduci("Pagamento online"),
-            DvCms.Domain.Negozio.ModalitaPagamento.Bonifico => localizzatore.Traduci("Bonifico bancario"),
-            DvCms.Domain.Negozio.ModalitaPagamento.Contrassegno => localizzatore.Traduci("Contrassegno"),
+            DvCms.Models.Negozio.ModalitaPagamento.Online => localizzatore.Traduci("Pagamento online"),
+            DvCms.Models.Negozio.ModalitaPagamento.Bonifico => localizzatore.Traduci("Bonifico bancario"),
+            DvCms.Models.Negozio.ModalitaPagamento.Contrassegno => localizzatore.Traduci("Contrassegno"),
             _ => modalita.ToString(),
         };
     }

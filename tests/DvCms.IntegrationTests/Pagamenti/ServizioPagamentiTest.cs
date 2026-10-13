@@ -1,9 +1,9 @@
 using System.Text.Json.Nodes;
 using DvCms.Application.Negozio;
 using DvCms.Application.Piattaforma;
-using DvCms.Domain.Negozio;
 using DvCms.IntegrationTests.Negozio;
 using DvCms.IntegrationTests.Supporto;
+using DvCms.Models.Negozio;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;

@@ -1,8 +1,8 @@
 using System.Net;
-using DvCms.Domain.Accessi;
-using DvCms.Domain.Outbox;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Supporto;
+using DvCms.Models.Accessi;
+using DvCms.Models.Outbox;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;

@@ -1,6 +1,6 @@
 using System.Globalization;
 using DvCms.Application.Email;
-using DvCms.Domain.Email;
+using DvCms.Models.Email;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using MimeKit;

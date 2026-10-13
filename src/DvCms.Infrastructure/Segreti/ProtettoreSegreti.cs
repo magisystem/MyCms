@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Xml.Linq;
 using DvCms.Application.Email;
+using DvCms.Extender;
 using DvCms.Infrastructure.Persistenza;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.ConfigurationModel;
@@ -149,7 +150,7 @@ internal sealed class RepositoryChiaviSegrete : IXmlRepository
         var contesto = ambito.ServiceProvider.GetRequiredService<ContestoDatabase>();
         contesto.ChiaviSegrete.Add(new ChiaveSegreta
         {
-            Id = DvCms.Domain.Identificativi.Nuovo(_orologio),
+            Id = Identificativi.Nuovo(_orologio),
             NomeAmichevole = friendlyName.Length > 200 ? friendlyName[..200] : friendlyName,
             Xml = element.ToString(SaveOptions.DisableFormatting),
             CreatoIlUtc = _orologio.GetUtcNow().UtcDateTime,

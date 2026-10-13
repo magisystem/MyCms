@@ -1,7 +1,7 @@
 using DvCms.Application.Cms;
 using DvCms.Application.Tenancy;
-using DvCms.Domain.Cms;
 using DvCms.Infrastructure.Persistenza;
+using DvCms.Models.Cms;
 using Microsoft.EntityFrameworkCore;
 
 namespace DvCms.Infrastructure.Cms;

@@ -1,6 +1,6 @@
 using DvCms.Application.Email;
-using DvCms.Domain.Email;
 using DvCms.Infrastructure.Persistenza;
+using DvCms.Models.Email;
 using Microsoft.EntityFrameworkCore;
 
 namespace DvCms.Infrastructure.Email;

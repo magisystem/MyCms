@@ -3,7 +3,7 @@ using System.Net;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using DvCms.Application.Negozio;
-using DvCms.Domain.Negozio;
+using DvCms.Models.Negozio;
 
 namespace DvCms.Infrastructure.Pagamenti;
 

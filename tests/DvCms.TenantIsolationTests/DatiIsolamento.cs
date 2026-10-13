@@ -1,8 +1,8 @@
 using DvCms.Application.Cms;
 using DvCms.Application.Tenancy;
-using DvCms.Domain.Accessi;
 using DvCms.IntegrationTests.Supporto;
 using DvCms.IntegrationTests.Web;
+using DvCms.Models.Accessi;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 

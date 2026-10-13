@@ -10,7 +10,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\DvCms.Domain\DvCms.Domain.csproj" />
+    <ProjectReference Include="..\..\src\DvCms.Models\DvCms.Models.csproj" />
     <ProjectReference Include="..\..\src\DvCms.Application\DvCms.Application.csproj" />
     <ProjectReference Include="..\..\src\DvCms.Infrastructure\DvCms.Infrastructure.csproj" />
   </ItemGroup>

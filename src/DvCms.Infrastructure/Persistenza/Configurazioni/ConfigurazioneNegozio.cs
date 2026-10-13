@@ -1,6 +1,6 @@
-using DvCms.Domain.Localizzazione;
-using DvCms.Domain.Negozio;
-using DvCms.Domain.Tenancy;
+using DvCms.Models.Localizzazione;
+using DvCms.Models.Negozio;
+using DvCms.Models.Tenancy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -200,7 +200,7 @@ internal sealed class ConfigurazioneCarrello : IEntityTypeConfiguration<Carrello
             .HasForeignKey(carrello => new { carrello.IdTenant, carrello.IdSito })
             .HasPrincipalKey(sito => new { sito.IdTenant, sito.Id })
             .OnDelete(DeleteBehavior.Restrict);
-        entita.HasOne<DvCms.Domain.Accessi.Utenza>().WithMany().HasForeignKey(carrello => carrello.IdUtenza).OnDelete(DeleteBehavior.Restrict);
+        entita.HasOne<DvCms.Models.Accessi.Utenza>().WithMany().HasForeignKey(carrello => carrello.IdUtenza).OnDelete(DeleteBehavior.Restrict);
 
         entita.HasAlternateKey(carrello => new { carrello.IdTenant, carrello.IdSito, carrello.Id });
         // Un solo carrello per account e per sito.
@@ -299,7 +299,7 @@ internal sealed class ConfigurazioneOrdine : IEntityTypeConfiguration<Ordine>
             .HasForeignKey(ordine => new { ordine.IdTenant, ordine.IdSito })
             .HasPrincipalKey(sito => new { sito.IdTenant, sito.Id })
             .OnDelete(DeleteBehavior.Restrict);
-        entita.HasOne<DvCms.Domain.Accessi.Utenza>().WithMany().HasForeignKey(ordine => ordine.IdUtenza).OnDelete(DeleteBehavior.Restrict);
+        entita.HasOne<DvCms.Models.Accessi.Utenza>().WithMany().HasForeignKey(ordine => ordine.IdUtenza).OnDelete(DeleteBehavior.Restrict);
 
         entita.HasAlternateKey(ordine => new { ordine.IdTenant, ordine.IdSito, ordine.Id });
         entita.HasIndex(ordine => new { ordine.IdSito, ordine.Numero }).IsUnique();
@@ -408,7 +408,7 @@ internal sealed class ConfigurazioneImpostazioniPagamentoSito : IEntityTypeConfi
             .HasForeignKey(impostazioni => new { impostazioni.IdTenant, impostazioni.IdSito })
             .HasPrincipalKey(sito => new { sito.IdTenant, sito.Id })
             .OnDelete(DeleteBehavior.Restrict);
-        entita.HasOne<DvCms.Domain.Accessi.Utenza>().WithMany().HasForeignKey(impostazioni => impostazioni.AggiornatoDaIdUtenza).OnDelete(DeleteBehavior.Restrict);
+        entita.HasOne<DvCms.Models.Accessi.Utenza>().WithMany().HasForeignKey(impostazioni => impostazioni.AggiornatoDaIdUtenza).OnDelete(DeleteBehavior.Restrict);
         entita.HasIndex(impostazioni => impostazioni.IdSito).IsUnique();
     }
 }
@@ -428,7 +428,7 @@ internal sealed class ConfigurazioneImpostazioniNexiSito : IEntityTypeConfigurat
             .HasForeignKey(impostazioni => new { impostazioni.IdTenant, impostazioni.IdSito })
             .HasPrincipalKey(sito => new { sito.IdTenant, sito.Id })
             .OnDelete(DeleteBehavior.Restrict);
-        entita.HasOne<DvCms.Domain.Accessi.Utenza>().WithMany().HasForeignKey(impostazioni => impostazioni.AggiornatoDaIdUtenza).OnDelete(DeleteBehavior.Restrict);
+        entita.HasOne<DvCms.Models.Accessi.Utenza>().WithMany().HasForeignKey(impostazioni => impostazioni.AggiornatoDaIdUtenza).OnDelete(DeleteBehavior.Restrict);
         entita.HasIndex(impostazioni => impostazioni.IdSito).IsUnique();
     }
 }
@@ -463,7 +463,7 @@ internal sealed class ConfigurazioneImpostazioniPagamentoOfflineSito : IEntityTy
             .HasForeignKey(impostazioni => new { impostazioni.IdTenant, impostazioni.IdSito })
             .HasPrincipalKey(sito => new { sito.IdTenant, sito.Id })
             .OnDelete(DeleteBehavior.Restrict);
-        entita.HasOne<DvCms.Domain.Accessi.Utenza>().WithMany().HasForeignKey(impostazioni => impostazioni.AggiornatoDaIdUtenza).OnDelete(DeleteBehavior.Restrict);
+        entita.HasOne<DvCms.Models.Accessi.Utenza>().WithMany().HasForeignKey(impostazioni => impostazioni.AggiornatoDaIdUtenza).OnDelete(DeleteBehavior.Restrict);
         entita.HasIndex(impostazioni => impostazioni.IdSito).IsUnique();
     }
 }
@@ -535,7 +535,7 @@ internal sealed class ConfigurazioneRimborso : IEntityTypeConfiguration<Rimborso
             .HasPrincipalKey(ordine => new { ordine.IdTenant, ordine.IdSito, ordine.Id })
             .OnDelete(DeleteBehavior.Restrict);
         entita.HasOne<TentativoPagamento>().WithMany().HasForeignKey(rimborso => rimborso.IdTentativo).OnDelete(DeleteBehavior.Restrict);
-        entita.HasOne<DvCms.Domain.Accessi.Utenza>().WithMany().HasForeignKey(rimborso => rimborso.IdUtenzaRichiedente).OnDelete(DeleteBehavior.Restrict);
+        entita.HasOne<DvCms.Models.Accessi.Utenza>().WithMany().HasForeignKey(rimborso => rimborso.IdUtenzaRichiedente).OnDelete(DeleteBehavior.Restrict);
         entita.HasIndex(rimborso => rimborso.IdOrdine);
 
         // Un rimborso del provider si registra una volta sola, anche se la notifica arriva due volte insieme.

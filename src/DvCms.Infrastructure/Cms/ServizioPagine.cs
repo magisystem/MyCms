@@ -4,10 +4,11 @@ using DvCms.Application.Cms;
 using DvCms.Application.Outbox;
 using DvCms.Application.Piattaforma;
 using DvCms.Application.Tenancy;
-using DvCms.Domain.Accessi;
-using DvCms.Domain.Cms;
+using DvCms.Extender;
 using DvCms.Infrastructure.Outbox;
 using DvCms.Infrastructure.Persistenza;
+using DvCms.Models.Accessi;
+using DvCms.Models.Cms;
 using Microsoft.EntityFrameworkCore;
 
 namespace DvCms.Infrastructure.Cms;

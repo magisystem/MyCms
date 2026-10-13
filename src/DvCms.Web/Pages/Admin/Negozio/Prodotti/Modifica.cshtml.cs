@@ -3,7 +3,7 @@ using DvCms.Application.Localizzazione;
 using DvCms.Application.Media;
 using DvCms.Application.Negozio;
 using DvCms.Application.Piattaforma;
-using DvCms.Domain.Negozio;
+using DvCms.Models.Negozio;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DvCms.Web.Pages.Admin.Negozio.Prodotti;
@@ -215,7 +215,7 @@ public class ModificaModel : PaginaAdmin
     {
         CategorieDisponibili = await _categorie.ElencaAsync(IdAttore, annullamento);
         ImmaginiDisponibili = [.. (await _media.ElencaAsync(IdAttore, annullamento))
-            .Where(r => r.TipoContenuto.StartsWith("image/", StringComparison.Ordinal) && r.Visibilita == Domain.Media.VisibilitaMedia.Pubblica)];
+            .Where(r => r.TipoContenuto.StartsWith("image/", StringComparison.Ordinal) && r.Visibilita == Models.Media.VisibilitaMedia.Pubblica)];
     }
 
     private void Completa()

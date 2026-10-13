@@ -1,8 +1,8 @@
-using DvCms.Domain.Accessi;
-using DvCms.Domain.Cms;
-using DvCms.Domain.Localizzazione;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Supporto;
+using DvCms.Models.Accessi;
+using DvCms.Models.Cms;
+using DvCms.Models.Localizzazione;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;

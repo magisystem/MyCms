@@ -1,4 +1,4 @@
-using DvCms.Domain.Accessi;
+using DvCms.Models.Accessi;
 
 namespace DvCms.Application.Accessi;
 

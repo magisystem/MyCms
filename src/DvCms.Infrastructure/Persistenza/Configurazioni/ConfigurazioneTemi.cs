@@ -1,6 +1,6 @@
-using DvCms.Domain.Accessi;
-using DvCms.Domain.Temi;
-using DvCms.Domain.Tenancy;
+using DvCms.Models.Accessi;
+using DvCms.Models.Temi;
+using DvCms.Models.Tenancy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

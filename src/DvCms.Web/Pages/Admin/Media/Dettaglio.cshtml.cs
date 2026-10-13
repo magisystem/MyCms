@@ -1,6 +1,6 @@
 using DvCms.Application.Localizzazione;
 using DvCms.Application.Media;
-using DvCms.Domain.Media;
+using DvCms.Models.Media;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DvCms.Web.Pages.Admin.Media;

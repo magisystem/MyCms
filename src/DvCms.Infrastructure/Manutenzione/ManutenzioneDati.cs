@@ -1,9 +1,9 @@
 using DvCms.Application.Accessi;
 using DvCms.Application.Negozio;
-using DvCms.Domain.Accessi;
-using DvCms.Domain.Outbox;
 using DvCms.Infrastructure.Outbox;
 using DvCms.Infrastructure.Persistenza;
+using DvCms.Models.Accessi;
+using DvCms.Models.Outbox;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;

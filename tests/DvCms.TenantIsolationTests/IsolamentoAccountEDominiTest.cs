@@ -1,9 +1,9 @@
 using System.Net;
 using DvCms.Application.Accessi;
 using DvCms.Application.Piattaforma;
-using DvCms.Domain.Accessi;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Supporto;
+using DvCms.Models.Accessi;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
@@ -84,7 +84,7 @@ public class IsolamentoAccountEDominiTest
         Assert.True((await contesto.DominiSito.IgnoreQueryFilters().SingleAsync(x => x.Id == d.B.IdDominio, Ct)).Attivo);
         Assert.Equal(StatoUtenza.Attiva, (await contesto.Utenze.IgnoreQueryFilters().SingleAsync(u => u.Id == d.AdminB, Ct)).Stato);
         Assert.Equal(2, await contesto.Utenze.IgnoreQueryFilters().CountAsync(Ct));
-        Assert.Equal(DvCms.Domain.Tenancy.StatoTenant.Attivo, (await contesto.Tenant.IgnoreQueryFilters().SingleAsync(t => t.Id == d.B.IdTenant, Ct)).Stato);
+        Assert.Equal(DvCms.Models.Tenancy.StatoTenant.Attivo, (await contesto.Tenant.IgnoreQueryFilters().SingleAsync(t => t.Id == d.B.IdTenant, Ct)).Stato);
     }
 
     [Fact]

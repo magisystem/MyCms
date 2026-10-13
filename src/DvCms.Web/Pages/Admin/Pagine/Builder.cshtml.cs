@@ -188,7 +188,7 @@ public class BuilderModel : PaginaAdmin
         TemaJson = JsonSerializer.Serialize(new { fogli, classe = TemiVista.Classe(tema), variabili = tema.VariabiliCss });
         var risorse = await _media.ElencaAsync(IdAttore, annullamento);
         RisorseJson = JsonSerializer.Serialize(risorse
-            .Where(r => r.TipoContenuto.StartsWith("image/", StringComparison.Ordinal) && r.Visibilita == Domain.Media.VisibilitaMedia.Pubblica)
+            .Where(r => r.TipoContenuto.StartsWith("image/", StringComparison.Ordinal) && r.Visibilita == Models.Media.VisibilitaMedia.Pubblica)
             .Select(r => new { id = r.Id, nome = r.NomeOriginale, alt = r.TestoAlternativoPredefinito }));
         ProdottiJson = "[]";
         CategorieJson = "[]";
@@ -200,7 +200,7 @@ public class BuilderModel : PaginaAdmin
                 .Select(c => new { id = c.Id, nome = (c.Nomi.FirstOrDefault(n => n.CodiceLingua == predefinita) ?? (c.Nomi.Count > 0 ? c.Nomi[0] : null))?.Nome ?? "—" }));
             var prodotti = await _catalogo.ElencaAsync(IdAttore, annullamento);
             ProdottiJson = JsonSerializer.Serialize(prodotti
-                .Where(p => p.Stato != Domain.Negozio.StatoProdotto.Archiviato)
+                .Where(p => p.Stato != Models.Negozio.StatoProdotto.Archiviato)
                 .Select(p => new { id = p.Id, nome = p.Nome }));
         }
 

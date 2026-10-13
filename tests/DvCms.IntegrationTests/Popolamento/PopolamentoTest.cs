@@ -1,9 +1,9 @@
 using DvCms.Application.Accessi;
-using DvCms.Domain.Accessi;
-using DvCms.Domain.Tenancy;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.Infrastructure.Popolamento;
 using DvCms.IntegrationTests.Supporto;
+using DvCms.Models.Accessi;
+using DvCms.Models.Tenancy;
 using DvCms.Web.Comandi;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;

@@ -1,7 +1,8 @@
 using DvCms.Application.Accessi;
-using DvCms.Domain.Accessi;
-using DvCms.Domain.Tenancy;
+using DvCms.Extender;
 using DvCms.Infrastructure.Persistenza;
+using DvCms.Models.Accessi;
+using DvCms.Models.Tenancy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -43,10 +44,10 @@ public static class DatiProva
         contesto.Tenant.Add(tenant);
         contesto.Siti.Add(sito);
         contesto.DominiSito.Add(dominio);
-        contesto.LingueSito.Add(LinguaSito.Crea(tenant.Id, sito.Id, DvCms.Domain.Localizzazione.Lingua.IdItaliano, predefinita: true, orologio));
+        contesto.LingueSito.Add(LinguaSito.Crea(tenant.Id, sito.Id, DvCms.Models.Localizzazione.Lingua.IdItaliano, predefinita: true, orologio));
         if (abilitaInglese)
         {
-            contesto.LingueSito.Add(LinguaSito.Crea(tenant.Id, sito.Id, DvCms.Domain.Localizzazione.Lingua.IdInglese, predefinita: false, orologio));
+            contesto.LingueSito.Add(LinguaSito.Crea(tenant.Id, sito.Id, DvCms.Models.Localizzazione.Lingua.IdInglese, predefinita: false, orologio));
         }
 
         contesto.ProfiliGuest.Add(ProfiloGuest.Crea(tenant.Id, orologio));
@@ -60,11 +61,11 @@ public static class DatiProva
     {
         await using var ambito = fornitore.CreateAsyncScope();
         var contesto = ambito.ServiceProvider.GetRequiredService<ContestoDatabase>();
-        contesto.ImpostazioniEmailTenant.Add(new DvCms.Domain.Email.ImpostazioniEmailTenant
+        contesto.ImpostazioniEmailTenant.Add(new DvCms.Models.Email.ImpostazioniEmailTenant
         {
-            Id = DvCms.Domain.Identificativi.Nuovo(TimeProvider.System),
+            Id = DvCms.Extender.Identificativi.Nuovo(TimeProvider.System),
             IdTenant = idTenant,
-            Provider = DvCms.Domain.Email.ProviderEmail.Smtp,
+            Provider = DvCms.Models.Email.ProviderEmail.Smtp,
             ValoriJson = System.Text.Json.JsonSerializer.Serialize(new Dictionary<string, string>
             {
                 ["Host"] = "127.0.0.1",
@@ -116,7 +117,7 @@ public static class DatiProva
         await using var ambito = fornitore.CreateAsyncScope();
         var contesto = ambito.ServiceProvider.GetRequiredService<ContestoDatabase>();
         var protettore = ambito.ServiceProvider.GetRequiredService<DvCms.Application.Email.IProtettoreSegreti>();
-        var protetto = protettore.Proteggi(DvCms.Application.Accessi.DueFattori.Base32.Codifica(segreto));
+        var protetto = protettore.Proteggi(DvCms.Extender.Base32.Codifica(segreto));
         var adesso = DateTime.UtcNow;
         await contesto.Utenze.IgnoreQueryFilters().Where(u => u.Id == idUtenza).ExecuteUpdateAsync(
             u => u.SetProperty(x => x.SegretoTotpProtetto, protetto)

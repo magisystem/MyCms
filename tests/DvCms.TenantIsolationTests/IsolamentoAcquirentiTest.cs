@@ -1,11 +1,11 @@
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using DvCms.Application.Piattaforma;
-using DvCms.Domain.Accessi;
 using DvCms.Infrastructure.Outbox;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Supporto;
 using DvCms.IntegrationTests.Web;
+using DvCms.Models.Accessi;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;

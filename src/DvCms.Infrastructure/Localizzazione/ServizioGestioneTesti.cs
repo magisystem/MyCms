@@ -1,9 +1,9 @@
 using DvCms.Application.Accessi;
 using DvCms.Application.Localizzazione;
 using DvCms.Application.Piattaforma;
-using DvCms.Domain.Accessi;
-using DvCms.Domain.Localizzazione;
 using DvCms.Infrastructure.Persistenza;
+using DvCms.Models.Accessi;
+using DvCms.Models.Localizzazione;
 using Microsoft.EntityFrameworkCore;
 
 namespace DvCms.Infrastructure.Localizzazione;

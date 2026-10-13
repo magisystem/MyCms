@@ -4,8 +4,8 @@ using DvCms.Application.Email;
 using DvCms.Application.Localizzazione;
 using DvCms.Application.Negozio;
 using DvCms.Application.Tenancy;
-using DvCms.Domain.Negozio;
 using DvCms.Infrastructure.Persistenza;
+using DvCms.Models.Negozio;
 using Microsoft.EntityFrameworkCore;
 
 namespace DvCms.Infrastructure.Negozio;
@@ -199,7 +199,7 @@ public sealed class NotificheOrdine
         }
 
         var destinatari = await _contesto.Utenze.IgnoreQueryFilters().AsNoTracking()
-            .Where(u => u.IdTenant == idTenant && u.Ruolo == DvCms.Domain.Accessi.RuoloUtenza.TenantAdmin && u.Stato == DvCms.Domain.Accessi.StatoUtenza.Attiva)
+            .Where(u => u.IdTenant == idTenant && u.Ruolo == DvCms.Models.Accessi.RuoloUtenza.TenantAdmin && u.Stato == DvCms.Models.Accessi.StatoUtenza.Attiva)
             .OrderBy(u => u.CreatoIlUtc)
             .Select(u => new { u.Id, u.Email, u.NomeVisualizzato })
             .Take(10)

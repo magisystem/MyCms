@@ -1,8 +1,8 @@
 using System.Net;
 using System.Text.Json;
 using DvCms.Application.Email;
-using DvCms.Domain.Email;
 using DvCms.Infrastructure.Email;
+using DvCms.Models.Email;
 using Xunit;
 
 namespace DvCms.UnitTests.Email;

@@ -1,5 +1,5 @@
 using DvCms.Application.Negozio;
-using DvCms.Domain.Negozio;
+using DvCms.Models.Negozio;
 using Xunit;
 
 namespace DvCms.UnitTests.Negozio;

@@ -1,6 +1,6 @@
 using DvCms.Application.Outbox;
-using DvCms.Domain.Outbox;
 using DvCms.Infrastructure.Persistenza;
+using DvCms.Models.Outbox;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;

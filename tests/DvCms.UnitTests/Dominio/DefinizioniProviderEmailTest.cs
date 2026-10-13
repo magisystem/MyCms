@@ -1,5 +1,5 @@
 using DvCms.Application.Email;
-using DvCms.Domain.Email;
+using DvCms.Models.Email;
 using Xunit;
 
 namespace DvCms.UnitTests.Dominio;

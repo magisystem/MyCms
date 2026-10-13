@@ -5,9 +5,10 @@ using DvCms.Application.Accessi;
 using DvCms.Application.Email;
 using DvCms.Application.Localizzazione;
 using DvCms.Application.Tenancy;
-using DvCms.Domain.Accessi;
-using DvCms.Domain.Localizzazione;
+using DvCms.Extender;
 using DvCms.Infrastructure.Persistenza;
+using DvCms.Models.Accessi;
+using DvCms.Models.Localizzazione;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -85,7 +86,7 @@ public sealed partial class ServizioRecuperoPassword : IServizioRecuperoPassword
 
         var richiesta = new RichiestaRecuperoPassword
         {
-            Id = DvCms.Domain.Identificativi.Nuovo(_orologio),
+            Id = Identificativi.Nuovo(_orologio),
             IdTenant = idTenant,
             EmailNormalizzata = emailValida ? normalizzata : string.Empty,
             IdUtenza = utenza?.Id,

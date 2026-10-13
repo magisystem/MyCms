@@ -1,4 +1,4 @@
-using DvCms.Domain.Cms;
+using DvCms.Models.Cms;
 using Microsoft.EntityFrameworkCore;
 
 namespace DvCms.Infrastructure.Persistenza;

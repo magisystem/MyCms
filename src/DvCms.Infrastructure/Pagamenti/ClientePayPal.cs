@@ -6,7 +6,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using DvCms.Application.Negozio;
-using DvCms.Domain.Negozio;
+using DvCms.Models.Negozio;
 
 namespace DvCms.Infrastructure.Pagamenti;
 

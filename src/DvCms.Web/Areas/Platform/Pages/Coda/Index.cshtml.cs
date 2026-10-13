@@ -1,6 +1,6 @@
 using DvCms.Application.Localizzazione;
 using DvCms.Application.Outbox;
-using DvCms.Domain.Outbox;
+using DvCms.Models.Outbox;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DvCms.Web.Areas.Platform.Pages.Coda;

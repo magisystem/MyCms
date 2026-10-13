@@ -1,6 +1,6 @@
 @page "/admin/pagine/{id:guid}"
 @model DvCms.Web.Pages.Admin.Pagine.ModificaModel
-@using DvCms.Domain.Cms
+@using DvCms.Models.Cms
 @{
     var pagina = Model.Pagina!;
     ViewData["Titolo"] = _L["Modifica pagina"];

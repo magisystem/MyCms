@@ -2,7 +2,7 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using DvCms.Application.Email;
-using DvCms.Domain.Email;
+using DvCms.Models.Email;
 using MimeKit;
 
 namespace DvCms.Infrastructure.Email;

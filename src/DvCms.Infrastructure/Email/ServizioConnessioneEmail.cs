@@ -5,11 +5,12 @@ using DvCms.Application.Accessi;
 using DvCms.Application.Email;
 using DvCms.Application.Piattaforma;
 using DvCms.Application.Tenancy;
-using DvCms.Domain;
-using DvCms.Domain.Accessi;
-using DvCms.Domain.Email;
-using DvCms.Domain.Outbox;
+using DvCms.Extender;
 using DvCms.Infrastructure.Persistenza;
+using DvCms.Models;
+using DvCms.Models.Accessi;
+using DvCms.Models.Email;
+using DvCms.Models.Outbox;
 using Microsoft.EntityFrameworkCore;
 
 namespace DvCms.Infrastructure.Email;

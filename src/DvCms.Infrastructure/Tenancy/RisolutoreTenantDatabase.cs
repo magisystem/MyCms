@@ -1,6 +1,7 @@
 using DvCms.Application.Tenancy;
-using DvCms.Domain.Tenancy;
+using DvCms.Extender;
 using DvCms.Infrastructure.Persistenza;
+using DvCms.Models.Tenancy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;

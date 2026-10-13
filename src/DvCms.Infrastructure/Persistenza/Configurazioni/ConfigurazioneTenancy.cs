@@ -1,5 +1,6 @@
-using DvCms.Domain.Accessi;
-using DvCms.Domain.Tenancy;
+using DvCms.Extender;
+using DvCms.Models.Accessi;
+using DvCms.Models.Tenancy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -98,7 +99,7 @@ internal sealed class ConfigurazioneLinguaSito : IEntityTypeConfiguration<Lingua
             .HasForeignKey(lingua => new { lingua.IdTenant, lingua.IdSito })
             .HasPrincipalKey(sito => new { sito.IdTenant, sito.Id })
             .OnDelete(DeleteBehavior.Restrict);
-        entita.HasOne<DvCms.Domain.Localizzazione.Lingua>().WithMany().HasForeignKey(lingua => lingua.IdLingua).OnDelete(DeleteBehavior.Restrict);
+        entita.HasOne<DvCms.Models.Localizzazione.Lingua>().WithMany().HasForeignKey(lingua => lingua.IdLingua).OnDelete(DeleteBehavior.Restrict);
 
         entita.HasIndex(lingua => new { lingua.IdSito, lingua.IdLingua }).IsUnique();
 

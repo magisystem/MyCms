@@ -1,5 +1,5 @@
-using DvCms.Domain.Outbox;
-using DvCms.Domain.Tenancy;
+using DvCms.Models.Outbox;
+using DvCms.Models.Tenancy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

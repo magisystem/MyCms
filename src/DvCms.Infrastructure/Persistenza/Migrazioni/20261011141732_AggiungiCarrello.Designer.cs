@@ -25,7 +25,7 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("DvCms.Domain.Accessi.CodiceRecuperoUtenza", b =>
+            modelBuilder.Entity("DvCms.Models.Accessi.CodiceRecuperoUtenza", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -51,7 +51,7 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.ToTable("CodiciRecuperoUtenza", (string)null);
                 });
 
-            modelBuilder.Entity("DvCms.Domain.Accessi.ConfermaEmailUtenza", b =>
+            modelBuilder.Entity("DvCms.Models.Accessi.ConfermaEmailUtenza", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -92,7 +92,7 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.ToTable("ConfermeEmailUtenza", (string)null);
                 });
 
-            modelBuilder.Entity("DvCms.Domain.Accessi.InvitoAccount", b =>
+            modelBuilder.Entity("DvCms.Models.Accessi.InvitoAccount", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -138,7 +138,7 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.ToTable("InvitiAccount", (string)null);
                 });
 
-            modelBuilder.Entity("DvCms.Domain.Accessi.RegistroAudit", b =>
+            modelBuilder.Entity("DvCms.Models.Accessi.RegistroAudit", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -180,7 +180,7 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.ToTable("RegistroAudit", (string)null);
                 });
 
-            modelBuilder.Entity("DvCms.Domain.Accessi.RichiestaRecuperoPassword", b =>
+            modelBuilder.Entity("DvCms.Models.Accessi.RichiestaRecuperoPassword", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -251,7 +251,7 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.ToTable("RichiesteRecuperoPassword", (string)null);
                 });
 
-            modelBuilder.Entity("DvCms.Domain.Accessi.Utenza", b =>
+            modelBuilder.Entity("DvCms.Models.Accessi.Utenza", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -352,7 +352,7 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                         });
                 });
 
-            modelBuilder.Entity("DvCms.Domain.Cms.InvalidazioneCache", b =>
+            modelBuilder.Entity("DvCms.Models.Cms.InvalidazioneCache", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -376,7 +376,7 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.ToTable("InvalidazioniCache", (string)null);
                 });
 
-            modelBuilder.Entity("DvCms.Domain.Cms.Pagina", b =>
+            modelBuilder.Entity("DvCms.Models.Cms.Pagina", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -462,7 +462,7 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                         });
                 });
 
-            modelBuilder.Entity("DvCms.Domain.Cms.RedirectPagina", b =>
+            modelBuilder.Entity("DvCms.Models.Cms.RedirectPagina", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -504,7 +504,7 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                         });
                 });
 
-            modelBuilder.Entity("DvCms.Domain.Cms.RevisionePagina", b =>
+            modelBuilder.Entity("DvCms.Models.Cms.RevisionePagina", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -597,7 +597,7 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.ToTable("RevisioniPagina", (string)null);
                 });
 
-            modelBuilder.Entity("DvCms.Domain.Email.ImpostazioniEmailTenant", b =>
+            modelBuilder.Entity("DvCms.Models.Email.ImpostazioniEmailTenant", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -639,7 +639,7 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.ToTable("ImpostazioniEmailTenant", (string)null);
                 });
 
-            modelBuilder.Entity("DvCms.Domain.Localizzazione.Lingua", b =>
+            modelBuilder.Entity("DvCms.Models.Localizzazione.Lingua", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -693,7 +693,7 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                         });
                 });
 
-            modelBuilder.Entity("DvCms.Domain.Localizzazione.TestoStatico", b =>
+            modelBuilder.Entity("DvCms.Models.Localizzazione.TestoStatico", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -734,7 +734,7 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.ToTable("TestiStatici", (string)null);
                 });
 
-            modelBuilder.Entity("DvCms.Domain.Media.RisorsaMedia", b =>
+            modelBuilder.Entity("DvCms.Models.Media.RisorsaMedia", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -807,7 +807,7 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.ToTable("RisorseMedia", (string)null);
                 });
 
-            modelBuilder.Entity("DvCms.Domain.Media.TraduzioneRisorsaMedia", b =>
+            modelBuilder.Entity("DvCms.Models.Media.TraduzioneRisorsaMedia", b =>
                 {
                     b.Property<Guid>("IdRisorsa")
                         .HasColumnType("uniqueidentifier");
@@ -835,7 +835,7 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.ToTable("TraduzioniRisorseMedia", (string)null);
                 });
 
-            modelBuilder.Entity("DvCms.Domain.Negozio.Carrello", b =>
+            modelBuilder.Entity("DvCms.Models.Negozio.Carrello", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -871,7 +871,7 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.ToTable("Carrelli", (string)null);
                 });
 
-            modelBuilder.Entity("DvCms.Domain.Negozio.Prodotto", b =>
+            modelBuilder.Entity("DvCms.Models.Negozio.Prodotto", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -913,7 +913,7 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                         });
                 });
 
-            modelBuilder.Entity("DvCms.Domain.Negozio.RigaCarrello", b =>
+            modelBuilder.Entity("DvCms.Models.Negozio.RigaCarrello", b =>
                 {
                     b.Property<Guid>("IdCarrello")
                         .HasColumnType("uniqueidentifier");
@@ -945,7 +945,7 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                         });
                 });
 
-            modelBuilder.Entity("DvCms.Domain.Negozio.TraduzioneProdotto", b =>
+            modelBuilder.Entity("DvCms.Models.Negozio.TraduzioneProdotto", b =>
                 {
                     b.Property<Guid>("IdProdotto")
                         .HasColumnType("uniqueidentifier");
@@ -978,7 +978,7 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.ToTable("TraduzioniProdotto", (string)null);
                 });
 
-            modelBuilder.Entity("DvCms.Domain.Negozio.TraduzioneVarianteProdotto", b =>
+            modelBuilder.Entity("DvCms.Models.Negozio.TraduzioneVarianteProdotto", b =>
                 {
                     b.Property<Guid>("IdVariante")
                         .HasColumnType("uniqueidentifier");
@@ -1006,7 +1006,7 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.ToTable("TraduzioniVarianteProdotto", (string)null);
                 });
 
-            modelBuilder.Entity("DvCms.Domain.Negozio.VarianteProdotto", b =>
+            modelBuilder.Entity("DvCms.Models.Negozio.VarianteProdotto", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -1058,7 +1058,7 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                         });
                 });
 
-            modelBuilder.Entity("DvCms.Domain.Outbox.MessaggioOutbox", b =>
+            modelBuilder.Entity("DvCms.Models.Outbox.MessaggioOutbox", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -1118,7 +1118,7 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.ToTable("MessaggiOutbox", (string)null);
                 });
 
-            modelBuilder.Entity("DvCms.Domain.Temi.ImpostazioniTemaSito", b =>
+            modelBuilder.Entity("DvCms.Models.Temi.ImpostazioniTemaSito", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -1165,7 +1165,7 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.ToTable("ImpostazioniTemaSito", (string)null);
                 });
 
-            modelBuilder.Entity("DvCms.Domain.Tenancy.DominioSito", b =>
+            modelBuilder.Entity("DvCms.Models.Tenancy.DominioSito", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -1220,7 +1220,7 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                         });
                 });
 
-            modelBuilder.Entity("DvCms.Domain.Tenancy.LinguaSito", b =>
+            modelBuilder.Entity("DvCms.Models.Tenancy.LinguaSito", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -1257,7 +1257,7 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.ToTable("LingueSito", (string)null);
                 });
 
-            modelBuilder.Entity("DvCms.Domain.Tenancy.ProfiloGuest", b =>
+            modelBuilder.Entity("DvCms.Models.Tenancy.ProfiloGuest", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -1276,7 +1276,7 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.ToTable("ProfiliGuest", (string)null);
                 });
 
-            modelBuilder.Entity("DvCms.Domain.Tenancy.Sito", b =>
+            modelBuilder.Entity("DvCms.Models.Tenancy.Sito", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -1325,7 +1325,7 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                         });
                 });
 
-            modelBuilder.Entity("DvCms.Domain.Tenancy.Tenant", b =>
+            modelBuilder.Entity("DvCms.Models.Tenancy.Tenant", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -1387,111 +1387,111 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.ToTable("ChiaviSegrete", (string)null);
                 });
 
-            modelBuilder.Entity("DvCms.Domain.Accessi.CodiceRecuperoUtenza", b =>
+            modelBuilder.Entity("DvCms.Models.Accessi.CodiceRecuperoUtenza", b =>
                 {
-                    b.HasOne("DvCms.Domain.Accessi.Utenza", null)
+                    b.HasOne("DvCms.Models.Accessi.Utenza", null)
                         .WithMany()
                         .HasForeignKey("IdUtenza")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("DvCms.Domain.Accessi.ConfermaEmailUtenza", b =>
+            modelBuilder.Entity("DvCms.Models.Accessi.ConfermaEmailUtenza", b =>
                 {
-                    b.HasOne("DvCms.Domain.Tenancy.Tenant", null)
+                    b.HasOne("DvCms.Models.Tenancy.Tenant", null)
                         .WithMany()
                         .HasForeignKey("IdTenant")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("DvCms.Domain.Accessi.Utenza", null)
+                    b.HasOne("DvCms.Models.Accessi.Utenza", null)
                         .WithMany()
                         .HasForeignKey("IdUtenza")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("DvCms.Domain.Accessi.InvitoAccount", b =>
+            modelBuilder.Entity("DvCms.Models.Accessi.InvitoAccount", b =>
                 {
-                    b.HasOne("DvCms.Domain.Accessi.Utenza", null)
+                    b.HasOne("DvCms.Models.Accessi.Utenza", null)
                         .WithMany()
                         .HasForeignKey("CreatoDaIdUtenza")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("DvCms.Domain.Tenancy.Tenant", null)
+                    b.HasOne("DvCms.Models.Tenancy.Tenant", null)
                         .WithMany()
                         .HasForeignKey("IdTenant")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("DvCms.Domain.Accessi.Utenza", null)
+                    b.HasOne("DvCms.Models.Accessi.Utenza", null)
                         .WithMany()
                         .HasForeignKey("IdUtenza")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("DvCms.Domain.Accessi.RegistroAudit", b =>
+            modelBuilder.Entity("DvCms.Models.Accessi.RegistroAudit", b =>
                 {
-                    b.HasOne("DvCms.Domain.Tenancy.Tenant", null)
+                    b.HasOne("DvCms.Models.Tenancy.Tenant", null)
                         .WithMany()
                         .HasForeignKey("IdTenant")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("DvCms.Domain.Accessi.Utenza", null)
+                    b.HasOne("DvCms.Models.Accessi.Utenza", null)
                         .WithMany()
                         .HasForeignKey("IdUtenzaAttore")
                         .OnDelete(DeleteBehavior.Restrict);
                 });
 
-            modelBuilder.Entity("DvCms.Domain.Accessi.RichiestaRecuperoPassword", b =>
+            modelBuilder.Entity("DvCms.Models.Accessi.RichiestaRecuperoPassword", b =>
                 {
-                    b.HasOne("DvCms.Domain.Tenancy.Tenant", null)
+                    b.HasOne("DvCms.Models.Tenancy.Tenant", null)
                         .WithMany()
                         .HasForeignKey("IdTenant")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("DvCms.Domain.Accessi.Utenza", null)
+                    b.HasOne("DvCms.Models.Accessi.Utenza", null)
                         .WithMany()
                         .HasForeignKey("IdUtenza")
                         .OnDelete(DeleteBehavior.Restrict);
                 });
 
-            modelBuilder.Entity("DvCms.Domain.Accessi.Utenza", b =>
+            modelBuilder.Entity("DvCms.Models.Accessi.Utenza", b =>
                 {
-                    b.HasOne("DvCms.Domain.Localizzazione.Lingua", null)
+                    b.HasOne("DvCms.Models.Localizzazione.Lingua", null)
                         .WithMany()
                         .HasForeignKey("IdLingua")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("DvCms.Domain.Tenancy.Tenant", null)
+                    b.HasOne("DvCms.Models.Tenancy.Tenant", null)
                         .WithMany()
                         .HasForeignKey("IdTenant")
                         .OnDelete(DeleteBehavior.Restrict);
                 });
 
-            modelBuilder.Entity("DvCms.Domain.Cms.Pagina", b =>
+            modelBuilder.Entity("DvCms.Models.Cms.Pagina", b =>
                 {
-                    b.HasOne("DvCms.Domain.Localizzazione.Lingua", null)
+                    b.HasOne("DvCms.Models.Localizzazione.Lingua", null)
                         .WithMany()
                         .HasForeignKey("IdLingua")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("DvCms.Domain.Cms.RevisionePagina", null)
+                    b.HasOne("DvCms.Models.Cms.RevisionePagina", null)
                         .WithMany()
                         .HasForeignKey("Id", "IdRevisionePubblicata")
                         .HasPrincipalKey("IdPagina", "Id")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("DvCms.Domain.Cms.RevisionePagina", null)
+                    b.HasOne("DvCms.Models.Cms.RevisionePagina", null)
                         .WithMany()
                         .HasForeignKey("Id", "IdUltimaRevisioneBozza")
                         .HasPrincipalKey("IdPagina", "Id")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("DvCms.Domain.Tenancy.Sito", null)
+                    b.HasOne("DvCms.Models.Tenancy.Sito", null)
                         .WithMany()
                         .HasForeignKey("IdTenant", "IdSito")
                         .HasPrincipalKey("IdTenant", "Id")
@@ -1499,15 +1499,15 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("DvCms.Domain.Cms.RedirectPagina", b =>
+            modelBuilder.Entity("DvCms.Models.Cms.RedirectPagina", b =>
                 {
-                    b.HasOne("DvCms.Domain.Localizzazione.Lingua", null)
+                    b.HasOne("DvCms.Models.Localizzazione.Lingua", null)
                         .WithMany()
                         .HasForeignKey("IdLingua")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("DvCms.Domain.Cms.Pagina", null)
+                    b.HasOne("DvCms.Models.Cms.Pagina", null)
                         .WithMany()
                         .HasForeignKey("IdTenant", "IdSito", "IdPagina")
                         .HasPrincipalKey("IdTenant", "IdSito", "Id")
@@ -1515,15 +1515,15 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("DvCms.Domain.Cms.RevisionePagina", b =>
+            modelBuilder.Entity("DvCms.Models.Cms.RevisionePagina", b =>
                 {
-                    b.HasOne("DvCms.Domain.Accessi.Utenza", null)
+                    b.HasOne("DvCms.Models.Accessi.Utenza", null)
                         .WithMany()
                         .HasForeignKey("CreatoDaIdUtenza")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("DvCms.Domain.Cms.Pagina", null)
+                    b.HasOne("DvCms.Models.Cms.Pagina", null)
                         .WithMany()
                         .HasForeignKey("IdTenant", "IdSito", "IdPagina")
                         .HasPrincipalKey("IdTenant", "IdSito", "Id")
@@ -1531,42 +1531,42 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("DvCms.Domain.Email.ImpostazioniEmailTenant", b =>
+            modelBuilder.Entity("DvCms.Models.Email.ImpostazioniEmailTenant", b =>
                 {
-                    b.HasOne("DvCms.Domain.Accessi.Utenza", null)
+                    b.HasOne("DvCms.Models.Accessi.Utenza", null)
                         .WithMany()
                         .HasForeignKey("AggiornatoDaIdUtenza")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("DvCms.Domain.Tenancy.Tenant", null)
+                    b.HasOne("DvCms.Models.Tenancy.Tenant", null)
                         .WithMany()
                         .HasForeignKey("IdTenant")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("DvCms.Domain.Localizzazione.TestoStatico", b =>
+            modelBuilder.Entity("DvCms.Models.Localizzazione.TestoStatico", b =>
                 {
-                    b.HasOne("DvCms.Domain.Accessi.Utenza", null)
+                    b.HasOne("DvCms.Models.Accessi.Utenza", null)
                         .WithMany()
                         .HasForeignKey("AggiornatoDaIdUtenza")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("DvCms.Domain.Localizzazione.Lingua", null)
+                    b.HasOne("DvCms.Models.Localizzazione.Lingua", null)
                         .WithMany()
                         .HasForeignKey("IdLingua")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("DvCms.Domain.Media.RisorsaMedia", b =>
+            modelBuilder.Entity("DvCms.Models.Media.RisorsaMedia", b =>
                 {
-                    b.HasOne("DvCms.Domain.Accessi.Utenza", null)
+                    b.HasOne("DvCms.Models.Accessi.Utenza", null)
                         .WithMany()
                         .HasForeignKey("CreatoDaIdUtenza")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("DvCms.Domain.Tenancy.Sito", null)
+                    b.HasOne("DvCms.Models.Tenancy.Sito", null)
                         .WithMany()
                         .HasForeignKey("IdTenant", "IdSito")
                         .HasPrincipalKey("IdTenant", "Id")
@@ -1574,15 +1574,15 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("DvCms.Domain.Media.TraduzioneRisorsaMedia", b =>
+            modelBuilder.Entity("DvCms.Models.Media.TraduzioneRisorsaMedia", b =>
                 {
-                    b.HasOne("DvCms.Domain.Localizzazione.Lingua", null)
+                    b.HasOne("DvCms.Models.Localizzazione.Lingua", null)
                         .WithMany()
                         .HasForeignKey("IdLingua")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("DvCms.Domain.Media.RisorsaMedia", null)
+                    b.HasOne("DvCms.Models.Media.RisorsaMedia", null)
                         .WithMany()
                         .HasForeignKey("IdTenant", "IdSito", "IdRisorsa")
                         .HasPrincipalKey("IdTenant", "IdSito", "Id")
@@ -1590,15 +1590,15 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("DvCms.Domain.Negozio.Carrello", b =>
+            modelBuilder.Entity("DvCms.Models.Negozio.Carrello", b =>
                 {
-                    b.HasOne("DvCms.Domain.Accessi.Utenza", null)
+                    b.HasOne("DvCms.Models.Accessi.Utenza", null)
                         .WithMany()
                         .HasForeignKey("IdUtenza")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("DvCms.Domain.Tenancy.Sito", null)
+                    b.HasOne("DvCms.Models.Tenancy.Sito", null)
                         .WithMany()
                         .HasForeignKey("IdTenant", "IdSito")
                         .HasPrincipalKey("IdTenant", "Id")
@@ -1606,9 +1606,9 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("DvCms.Domain.Negozio.Prodotto", b =>
+            modelBuilder.Entity("DvCms.Models.Negozio.Prodotto", b =>
                 {
-                    b.HasOne("DvCms.Domain.Tenancy.Sito", null)
+                    b.HasOne("DvCms.Models.Tenancy.Sito", null)
                         .WithMany()
                         .HasForeignKey("IdTenant", "IdSito")
                         .HasPrincipalKey("IdTenant", "Id")
@@ -1616,16 +1616,16 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("DvCms.Domain.Negozio.RigaCarrello", b =>
+            modelBuilder.Entity("DvCms.Models.Negozio.RigaCarrello", b =>
                 {
-                    b.HasOne("DvCms.Domain.Negozio.Carrello", null)
+                    b.HasOne("DvCms.Models.Negozio.Carrello", null)
                         .WithMany()
                         .HasForeignKey("IdTenant", "IdSito", "IdCarrello")
                         .HasPrincipalKey("IdTenant", "IdSito", "Id")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("DvCms.Domain.Negozio.VarianteProdotto", null)
+                    b.HasOne("DvCms.Models.Negozio.VarianteProdotto", null)
                         .WithMany()
                         .HasForeignKey("IdTenant", "IdSito", "IdVariante")
                         .HasPrincipalKey("IdTenant", "IdSito", "Id")
@@ -1633,15 +1633,15 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("DvCms.Domain.Negozio.TraduzioneProdotto", b =>
+            modelBuilder.Entity("DvCms.Models.Negozio.TraduzioneProdotto", b =>
                 {
-                    b.HasOne("DvCms.Domain.Localizzazione.Lingua", null)
+                    b.HasOne("DvCms.Models.Localizzazione.Lingua", null)
                         .WithMany()
                         .HasForeignKey("IdLingua")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("DvCms.Domain.Negozio.Prodotto", null)
+                    b.HasOne("DvCms.Models.Negozio.Prodotto", null)
                         .WithMany()
                         .HasForeignKey("IdTenant", "IdSito", "IdProdotto")
                         .HasPrincipalKey("IdTenant", "IdSito", "Id")
@@ -1649,15 +1649,15 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("DvCms.Domain.Negozio.TraduzioneVarianteProdotto", b =>
+            modelBuilder.Entity("DvCms.Models.Negozio.TraduzioneVarianteProdotto", b =>
                 {
-                    b.HasOne("DvCms.Domain.Localizzazione.Lingua", null)
+                    b.HasOne("DvCms.Models.Localizzazione.Lingua", null)
                         .WithMany()
                         .HasForeignKey("IdLingua")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("DvCms.Domain.Negozio.VarianteProdotto", null)
+                    b.HasOne("DvCms.Models.Negozio.VarianteProdotto", null)
                         .WithMany()
                         .HasForeignKey("IdTenant", "IdSito", "IdVariante")
                         .HasPrincipalKey("IdTenant", "IdSito", "Id")
@@ -1665,9 +1665,9 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("DvCms.Domain.Negozio.VarianteProdotto", b =>
+            modelBuilder.Entity("DvCms.Models.Negozio.VarianteProdotto", b =>
                 {
-                    b.HasOne("DvCms.Domain.Negozio.Prodotto", null)
+                    b.HasOne("DvCms.Models.Negozio.Prodotto", null)
                         .WithMany()
                         .HasForeignKey("IdTenant", "IdSito", "IdProdotto")
                         .HasPrincipalKey("IdTenant", "IdSito", "Id")
@@ -1675,23 +1675,23 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("DvCms.Domain.Outbox.MessaggioOutbox", b =>
+            modelBuilder.Entity("DvCms.Models.Outbox.MessaggioOutbox", b =>
                 {
-                    b.HasOne("DvCms.Domain.Tenancy.Tenant", null)
+                    b.HasOne("DvCms.Models.Tenancy.Tenant", null)
                         .WithMany()
                         .HasForeignKey("IdTenant")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("DvCms.Domain.Temi.ImpostazioniTemaSito", b =>
+            modelBuilder.Entity("DvCms.Models.Temi.ImpostazioniTemaSito", b =>
                 {
-                    b.HasOne("DvCms.Domain.Accessi.Utenza", null)
+                    b.HasOne("DvCms.Models.Accessi.Utenza", null)
                         .WithMany()
                         .HasForeignKey("AggiornatoDaIdUtenza")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("DvCms.Domain.Tenancy.Sito", null)
+                    b.HasOne("DvCms.Models.Tenancy.Sito", null)
                         .WithMany()
                         .HasForeignKey("IdTenant", "IdSito")
                         .HasPrincipalKey("IdTenant", "Id")
@@ -1699,14 +1699,14 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("DvCms.Domain.Tenancy.DominioSito", b =>
+            modelBuilder.Entity("DvCms.Models.Tenancy.DominioSito", b =>
                 {
-                    b.HasOne("DvCms.Domain.Accessi.Utenza", null)
+                    b.HasOne("DvCms.Models.Accessi.Utenza", null)
                         .WithMany()
                         .HasForeignKey("VerificatoDaIdUtenza")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("DvCms.Domain.Tenancy.Sito", null)
+                    b.HasOne("DvCms.Models.Tenancy.Sito", null)
                         .WithMany()
                         .HasForeignKey("IdTenant", "IdSito")
                         .HasPrincipalKey("IdTenant", "Id")
@@ -1714,15 +1714,15 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("DvCms.Domain.Tenancy.LinguaSito", b =>
+            modelBuilder.Entity("DvCms.Models.Tenancy.LinguaSito", b =>
                 {
-                    b.HasOne("DvCms.Domain.Localizzazione.Lingua", null)
+                    b.HasOne("DvCms.Models.Localizzazione.Lingua", null)
                         .WithMany()
                         .HasForeignKey("IdLingua")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("DvCms.Domain.Tenancy.Sito", null)
+                    b.HasOne("DvCms.Models.Tenancy.Sito", null)
                         .WithMany()
                         .HasForeignKey("IdTenant", "IdSito")
                         .HasPrincipalKey("IdTenant", "Id")
@@ -1730,18 +1730,18 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("DvCms.Domain.Tenancy.ProfiloGuest", b =>
+            modelBuilder.Entity("DvCms.Models.Tenancy.ProfiloGuest", b =>
                 {
-                    b.HasOne("DvCms.Domain.Tenancy.Tenant", null)
+                    b.HasOne("DvCms.Models.Tenancy.Tenant", null)
                         .WithMany()
                         .HasForeignKey("IdTenant")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("DvCms.Domain.Tenancy.Sito", b =>
+            modelBuilder.Entity("DvCms.Models.Tenancy.Sito", b =>
                 {
-                    b.HasOne("DvCms.Domain.Tenancy.Tenant", null)
+                    b.HasOne("DvCms.Models.Tenancy.Tenant", null)
                         .WithMany()
                         .HasForeignKey("IdTenant")
                         .OnDelete(DeleteBehavior.Restrict)

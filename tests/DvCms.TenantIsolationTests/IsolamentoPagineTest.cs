@@ -1,9 +1,9 @@
 using System.Net;
 using DvCms.Application.Cms;
 using DvCms.Application.Piattaforma;
-using DvCms.Domain.Cms;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Supporto;
+using DvCms.Models.Cms;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;

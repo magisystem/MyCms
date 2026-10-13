@@ -2,10 +2,10 @@ using System.Net;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using DvCms.Application.Piattaforma;
-using DvCms.Domain.Accessi;
 using DvCms.Infrastructure.Outbox;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Supporto;
+using DvCms.Models.Accessi;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
@@ -207,7 +207,7 @@ public partial class InvitoWebTest
             return [.. Server.Ricevute.Skip(prima)];
         }
 
-        public async Task<int> ContaAsync(System.Linq.Expressions.Expression<Func<DvCms.Domain.Outbox.MessaggioOutbox, bool>> condizione)
+        public async Task<int> ContaAsync(System.Linq.Expressions.Expression<Func<DvCms.Models.Outbox.MessaggioOutbox, bool>> condizione)
         {
             await using var ambito = Web.Fabbrica.Services.CreateAsyncScope();
             return await ambito.ServiceProvider.GetRequiredService<ContestoDatabase>().MessaggiOutbox.IgnoreQueryFilters().CountAsync(condizione, Ct);

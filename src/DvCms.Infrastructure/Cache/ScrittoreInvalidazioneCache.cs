@@ -1,6 +1,6 @@
 using DvCms.Application.Cms;
-using DvCms.Domain.Cms;
 using DvCms.Infrastructure.Persistenza;
+using DvCms.Models.Cms;
 
 namespace DvCms.Infrastructure.Cache;
 

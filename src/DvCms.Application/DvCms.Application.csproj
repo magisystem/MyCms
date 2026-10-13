@@ -5,7 +5,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DvCms.Domain\DvCms.Domain.csproj" />
+    <ProjectReference Include="..\DvCms.Models\DvCms.Models.csproj" />
   </ItemGroup>
 
 </Project>

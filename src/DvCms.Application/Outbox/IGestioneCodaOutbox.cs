@@ -1,5 +1,5 @@
 using DvCms.Application.Piattaforma;
-using DvCms.Domain.Outbox;
+using DvCms.Models.Outbox;
 
 namespace DvCms.Application.Outbox;
 

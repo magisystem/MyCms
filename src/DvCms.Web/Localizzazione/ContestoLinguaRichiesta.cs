@@ -1,5 +1,5 @@
 using DvCms.Application.Localizzazione;
-using DvCms.Domain.Localizzazione;
+using DvCms.Models.Localizzazione;
 
 namespace DvCms.Web.Localizzazione;
 

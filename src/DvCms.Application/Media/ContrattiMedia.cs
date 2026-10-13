@@ -1,5 +1,5 @@
 using DvCms.Application.Piattaforma;
-using DvCms.Domain.Media;
+using DvCms.Models.Media;
 
 namespace DvCms.Application.Media;
 

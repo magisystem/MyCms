@@ -1,7 +1,7 @@
 using DvCms.Application.Localizzazione;
-using DvCms.Domain.Localizzazione;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Supporto;
+using DvCms.Models.Localizzazione;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;

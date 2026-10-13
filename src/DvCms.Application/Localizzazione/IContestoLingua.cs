@@ -9,7 +9,7 @@ public interface IContestoLingua
 /// <summary>Contesto con lingua fissa; l'italiano è la lingua predefinita.</summary>
 public sealed class ContestoLinguaFisso : IContestoLingua
 {
-    public ContestoLinguaFisso(string codiceLingua = Domain.Localizzazione.Lingua.CodiceItaliano)
+    public ContestoLinguaFisso(string codiceLingua = Models.Localizzazione.Lingua.CodiceItaliano)
     {
         CodiceLingua = codiceLingua;
     }

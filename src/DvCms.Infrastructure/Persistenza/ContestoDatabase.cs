@@ -1,14 +1,14 @@
 using DvCms.Application.Tenancy;
-using DvCms.Domain.Accessi;
-using DvCms.Domain.Cms;
-using DvCms.Domain.Email;
-using DvCms.Domain.Localizzazione;
-using DvCms.Domain.Media;
-using DvCms.Domain.Negozio;
-using DvCms.Domain.Outbox;
-using DvCms.Domain.Temi;
-using DvCms.Domain.Tenancy;
 using DvCms.Infrastructure.Segreti;
+using DvCms.Models.Accessi;
+using DvCms.Models.Cms;
+using DvCms.Models.Email;
+using DvCms.Models.Localizzazione;
+using DvCms.Models.Media;
+using DvCms.Models.Negozio;
+using DvCms.Models.Outbox;
+using DvCms.Models.Temi;
+using DvCms.Models.Tenancy;
 using Microsoft.EntityFrameworkCore;
 
 namespace DvCms.Infrastructure.Persistenza;

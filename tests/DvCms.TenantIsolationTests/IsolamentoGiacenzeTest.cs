@@ -1,9 +1,9 @@
 using DvCms.Application.Negozio;
 using DvCms.Application.Piattaforma;
 using DvCms.Application.Tenancy;
-using DvCms.Domain.Negozio;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Supporto;
+using DvCms.Models.Negozio;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;

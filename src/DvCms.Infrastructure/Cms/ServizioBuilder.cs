@@ -3,10 +3,10 @@ using DvCms.Application.Builder;
 using DvCms.Application.Cms;
 using DvCms.Application.Piattaforma;
 using DvCms.Application.Tenancy;
-using DvCms.Domain.Accessi;
-using DvCms.Domain.Cms;
-using DvCms.Domain.Media;
 using DvCms.Infrastructure.Persistenza;
+using DvCms.Models.Accessi;
+using DvCms.Models.Cms;
+using DvCms.Models.Media;
 using Microsoft.EntityFrameworkCore;
 
 namespace DvCms.Infrastructure.Cms;
@@ -218,7 +218,7 @@ public sealed class ServizioBuilder : IServizioBuilder
         var idSito = _tenant.IdSito;
         var ids = richieste.Select(r => r.Prodotto).Distinct().ToList();
         var validi = (await _contesto.Prodotti.AsNoTracking()
-            .Where(prodotto => ids.Contains(prodotto.Id) && prodotto.IdSito == idSito && prodotto.Stato != DvCms.Domain.Negozio.StatoProdotto.Archiviato)
+            .Where(prodotto => ids.Contains(prodotto.Id) && prodotto.IdSito == idSito && prodotto.Stato != DvCms.Models.Negozio.StatoProdotto.Archiviato)
             .Select(prodotto => prodotto.Id)
             .ToListAsync(annullamento)).ToHashSet();
         return [.. richieste.Where(r => !validi.Contains(r.Prodotto)).Select(r => new ErroreBuilder("ProdottoNonDisponibile", r.Id, "idProdotto"))];

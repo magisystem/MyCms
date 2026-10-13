@@ -1,4 +1,4 @@
-using DvCms.Domain.Localizzazione;
+using DvCms.Models.Localizzazione;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

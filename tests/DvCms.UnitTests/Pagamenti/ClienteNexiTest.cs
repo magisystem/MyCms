@@ -2,8 +2,8 @@ using System.Globalization;
 using System.Net;
 using System.Text.Json;
 using DvCms.Application.Negozio;
-using DvCms.Domain.Negozio;
 using DvCms.Infrastructure.Pagamenti;
+using DvCms.Models.Negozio;
 using Xunit;
 
 namespace DvCms.UnitTests.Pagamenti;

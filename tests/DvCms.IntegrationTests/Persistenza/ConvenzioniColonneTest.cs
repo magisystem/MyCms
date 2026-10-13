@@ -101,15 +101,15 @@ public class ConvenzioniColonneTest
         {
             // Il contesto di prova non applica le configurazioni dell'applicazione: le entità con chiave composta, senza una
             // proprietà "Id" per convenzione, non hanno chiave e vanno escluse.
-            modelBuilder.Ignore<DvCms.Domain.Media.TraduzioneRisorsaMedia>();
-            modelBuilder.Ignore<DvCms.Domain.Negozio.TraduzioneProdotto>();
-            modelBuilder.Ignore<DvCms.Domain.Negozio.ImmagineProdotto>();
-            modelBuilder.Ignore<DvCms.Domain.Negozio.TraduzioneCategoria>();
-            modelBuilder.Ignore<DvCms.Domain.Negozio.ProdottoCategoria>();
-            modelBuilder.Ignore<DvCms.Domain.Negozio.TraduzioneVarianteProdotto>();
-            modelBuilder.Ignore<DvCms.Domain.Negozio.RigaCarrello>();
-            modelBuilder.Ignore<DvCms.Domain.Negozio.GiacenzaVariante>();
-            modelBuilder.Ignore<DvCms.Domain.Negozio.TermineRicercaProdotto>();
+            modelBuilder.Ignore<DvCms.Models.Media.TraduzioneRisorsaMedia>();
+            modelBuilder.Ignore<DvCms.Models.Negozio.TraduzioneProdotto>();
+            modelBuilder.Ignore<DvCms.Models.Negozio.ImmagineProdotto>();
+            modelBuilder.Ignore<DvCms.Models.Negozio.TraduzioneCategoria>();
+            modelBuilder.Ignore<DvCms.Models.Negozio.ProdottoCategoria>();
+            modelBuilder.Ignore<DvCms.Models.Negozio.TraduzioneVarianteProdotto>();
+            modelBuilder.Ignore<DvCms.Models.Negozio.RigaCarrello>();
+            modelBuilder.Ignore<DvCms.Models.Negozio.GiacenzaVariante>();
+            modelBuilder.Ignore<DvCms.Models.Negozio.TermineRicercaProdotto>();
             var entita = modelBuilder.Entity<ElementoProva>();
             entita.ToTable("ElementiProva");
             entita.Property(elemento => elemento.Id).ValueGeneratedNever();

@@ -1,7 +1,7 @@
 using System.Globalization;
 using DvCms.Application.Localizzazione;
 using DvCms.Application.Negozio;
-using DvCms.Domain.Negozio;
+using DvCms.Models.Negozio;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DvCms.Web.Pages.Admin.Negozio.Ordini;
@@ -79,7 +79,7 @@ public class IndexModel : PaginaAdmin
         return File(esportazione.Contenuto, "text/csv; charset=utf-8", esportazione.NomeFile);
     }
 
-    public string Modalita(DvCms.Domain.Negozio.ModalitaPagamento modalita) => EtichetteOrdine.Modalita(Localizzatore, modalita);
+    public string Modalita(DvCms.Models.Negozio.ModalitaPagamento modalita) => EtichetteOrdine.Modalita(Localizzatore, modalita);
 
-    public string Stato(DvCms.Domain.Negozio.StatoOrdine stato) => EtichetteOrdine.Stato(Localizzatore, stato);
+    public string Stato(DvCms.Models.Negozio.StatoOrdine stato) => EtichetteOrdine.Stato(Localizzatore, stato);
 }

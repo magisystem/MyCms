@@ -1,4 +1,4 @@
-using DvCms.Domain.Negozio;
+using DvCms.Models.Negozio;
 
 namespace DvCms.Application.Negozio;
 

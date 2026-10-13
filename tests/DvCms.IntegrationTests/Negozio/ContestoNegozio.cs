@@ -1,11 +1,11 @@
 using DvCms.Application.Negozio;
 using DvCms.Application.Piattaforma;
 using DvCms.Application.Tenancy;
-using DvCms.Domain.Accessi;
-using DvCms.Domain.Negozio;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Supporto;
 using DvCms.IntegrationTests.Web;
+using DvCms.Models.Accessi;
+using DvCms.Models.Negozio;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
@@ -204,7 +204,7 @@ internal sealed class ContestoNegozio : IAsyncDisposable
         Assert.True(esito.Riuscito, $"{esito.Codice} {string.Join(',', esito.CampiNonValidi ?? [])}");
     }
 
-    public async Task<List<DvCms.Domain.Accessi.RegistroAudit>> AuditAsync(string azione)
+    public async Task<List<DvCms.Models.Accessi.RegistroAudit>> AuditAsync(string azione)
     {
         await using var ambito = Web.Fabbrica.Services.CreateAsyncScope();
         return await ambito.ServiceProvider.GetRequiredService<ContestoDatabase>().RegistroAudit.IgnoreQueryFilters().AsNoTracking().Where(v => v.Azione == azione).ToListAsync(Ct);
@@ -268,13 +268,13 @@ internal sealed class ContestoNegozio : IAsyncDisposable
     }
 
     /// <summary>Carica un'immagine PNG nella libreria media del tenant (con le credenziali del suo amministratore).</summary>
-    public async Task<Guid> CaricaImmagineAsync(DatiProva.TenantCreato tenant, DvCms.Domain.Media.VisibilitaMedia visibilita = DvCms.Domain.Media.VisibilitaMedia.Pubblica)
+    public async Task<Guid> CaricaImmagineAsync(DatiProva.TenantCreato tenant, DvCms.Models.Media.VisibilitaMedia visibilita = DvCms.Models.Media.VisibilitaMedia.Pubblica)
     {
         return await InAsync<DvCms.Application.Media.IServizioMedia, Guid>(tenant, async media =>
         {
             var esito = await media.CaricaAsync(Attore(tenant), new DvCms.Application.Media.FileDaCaricare(new MemoryStream(ImmaginiProva.Png(8, 8)), "foto.png", "image/png"), Ct);
             Assert.True(esito.Riuscito, esito.Codice.ToString());
-            if (visibilita != DvCms.Domain.Media.VisibilitaMedia.Pubblica)
+            if (visibilita != DvCms.Models.Media.VisibilitaMedia.Pubblica)
             {
                 Assert.True((await media.ImpostaVisibilitaAsync(Attore(tenant), esito.Id!.Value, visibilita, Ct)).Riuscito);
             }

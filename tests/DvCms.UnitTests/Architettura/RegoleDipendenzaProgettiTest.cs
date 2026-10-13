@@ -1,7 +1,7 @@
 using System.Reflection;
 using DvCms.Application;
-using DvCms.Domain;
 using DvCms.Infrastructure;
+using DvCms.Models;
 using Xunit;
 
 namespace DvCms.UnitTests.Architettura;
@@ -27,7 +27,7 @@ public class RegoleDipendenzaProgettiTest
     [Fact]
     public void DominioNonDipendeDaFrameworkWebDatabaseOAltriProgetti()
     {
-        var riferimenti = Riferimenti(RiferimentoDominio.Assembly).ToList();
+        var riferimenti = Riferimenti(RiferimentoModelli.Assembly).ToList();
 
         Assert.DoesNotContain(riferimenti, nome =>
             _prefissiFrameworkVietatiNelDominio.Any(prefisso => nome.StartsWith(prefisso, StringComparison.Ordinal)));

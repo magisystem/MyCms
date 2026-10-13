@@ -1,5 +1,6 @@
 using System.Text;
 using DvCms.Application.Accessi.DueFattori;
+using DvCms.Extender;
 using Xunit;
 
 namespace DvCms.UnitTests.Accessi;

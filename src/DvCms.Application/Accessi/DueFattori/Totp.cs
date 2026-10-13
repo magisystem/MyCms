@@ -2,6 +2,7 @@ using System.Buffers.Binary;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Security.Cryptography;
+using DvCms.Extender;
 
 namespace DvCms.Application.Accessi.DueFattori;
 

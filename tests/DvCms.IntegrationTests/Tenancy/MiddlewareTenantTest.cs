@@ -1,6 +1,6 @@
 using System.Net;
-using DvCms.Domain.Tenancy;
 using DvCms.IntegrationTests.Supporto;
+using DvCms.Models.Tenancy;
 using Xunit;
 
 namespace DvCms.IntegrationTests.Tenancy;

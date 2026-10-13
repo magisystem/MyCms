@@ -25,7 +25,7 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("DvCms.Domain.Localizzazione.Lingua", b =>
+            modelBuilder.Entity("DvCms.Models.Localizzazione.Lingua", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -79,7 +79,7 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                         });
                 });
 
-            modelBuilder.Entity("DvCms.Domain.Localizzazione.TestoStatico", b =>
+            modelBuilder.Entity("DvCms.Models.Localizzazione.TestoStatico", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -118,9 +118,9 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.ToTable("TestiStatici", (string)null);
                 });
 
-            modelBuilder.Entity("DvCms.Domain.Localizzazione.TestoStatico", b =>
+            modelBuilder.Entity("DvCms.Models.Localizzazione.TestoStatico", b =>
                 {
-                    b.HasOne("DvCms.Domain.Localizzazione.Lingua", null)
+                    b.HasOne("DvCms.Models.Localizzazione.Lingua", null)
                         .WithMany()
                         .HasForeignKey("IdLingua")
                         .OnDelete(DeleteBehavior.Restrict)

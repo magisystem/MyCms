@@ -1,7 +1,7 @@
 using System.Text.Json;
 using DvCms.Application.Outbox;
-using DvCms.Domain.Outbox;
 using DvCms.Infrastructure.Persistenza;
+using DvCms.Models.Outbox;
 
 namespace DvCms.Infrastructure.Outbox;
 

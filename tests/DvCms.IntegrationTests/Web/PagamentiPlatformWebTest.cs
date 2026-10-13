@@ -1,9 +1,9 @@
 using System.Net;
 using System.Security.Cryptography;
 using DvCms.Application.Negozio;
-using DvCms.Domain.Negozio;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Supporto;
+using DvCms.Models.Negozio;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;

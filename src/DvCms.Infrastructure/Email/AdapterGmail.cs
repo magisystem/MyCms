@@ -2,7 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using DvCms.Application.Email;
-using DvCms.Domain.Email;
+using DvCms.Models.Email;
 
 namespace DvCms.Infrastructure.Email;
 

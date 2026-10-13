@@ -1,6 +1,6 @@
 using DvCms.Application.Tenancy;
-using DvCms.Domain.Tenancy;
 using DvCms.IntegrationTests.Supporto;
+using DvCms.Models.Tenancy;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 

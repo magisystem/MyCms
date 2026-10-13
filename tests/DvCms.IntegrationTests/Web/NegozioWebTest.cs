@@ -1,8 +1,8 @@
 using System.Net;
 using DvCms.Application.Piattaforma;
-using DvCms.Domain.Accessi;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Supporto;
+using DvCms.Models.Accessi;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
@@ -181,7 +181,7 @@ public class NegozioWebTest
             return await ambito.ServiceProvider.GetRequiredService<ContestoDatabase>().Siti.IgnoreQueryFilters().Where(s => s.Id == tenant.IdSito).Select(s => s.CommercioAttivo).SingleAsync(Ct);
         }
 
-        public async Task<DvCms.Domain.Negozio.VarianteProdotto> UnicaVarianteAsync()
+        public async Task<DvCms.Models.Negozio.VarianteProdotto> UnicaVarianteAsync()
         {
             await using var ambito = Web.Fabbrica.Services.CreateAsyncScope();
             return await ambito.ServiceProvider.GetRequiredService<ContestoDatabase>().VariantiProdotto.IgnoreQueryFilters().AsNoTracking().SingleAsync(Ct);

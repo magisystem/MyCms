@@ -1,8 +1,8 @@
 using System.Net;
 using System.Text.RegularExpressions;
-using DvCms.Domain.Cms;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Supporto;
+using DvCms.Models.Cms;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
@@ -187,7 +187,7 @@ public partial class PagineAdminWebTest
     {
         await using var scenario = await ScenarioWeb.CreaAsync();
         await scenario.CreaTenantAdminAsync("anna@esempio.it");
-        await DatiProva.CreaUtenzaAsync(scenario.Fabbrica.Services, DvCms.Domain.Accessi.RuoloUtenza.TenantAdmin, scenario.B.IdTenant, "bruno@esempio.it", annullamento: Ct);
+        await DatiProva.CreaUtenzaAsync(scenario.Fabbrica.Services, DvCms.Models.Accessi.RuoloUtenza.TenantAdmin, scenario.B.IdTenant, "bruno@esempio.it", annullamento: Ct);
         var anna = scenario.SessioneA();
         var bruno = scenario.SessioneB();
         await anna.AccediAsync("anna@esempio.it", DatiProva.PasswordProva);
@@ -247,7 +247,7 @@ public partial class PagineAdminWebTest
     {
         await using var scenario = await ScenarioWeb.CreaAsync();
         await scenario.CreaTenantAdminAsync("anna@esempio.it");
-        await DatiProva.CreaUtenzaAsync(scenario.Fabbrica.Services, DvCms.Domain.Accessi.RuoloUtenza.TenantAdmin, scenario.B.IdTenant, "bruno@esempio.it", annullamento: Ct);
+        await DatiProva.CreaUtenzaAsync(scenario.Fabbrica.Services, DvCms.Models.Accessi.RuoloUtenza.TenantAdmin, scenario.B.IdTenant, "bruno@esempio.it", annullamento: Ct);
         var anna = scenario.SessioneA();
         var bruno = scenario.SessioneB();
         await anna.AccediAsync("anna@esempio.it", DatiProva.PasswordProva);

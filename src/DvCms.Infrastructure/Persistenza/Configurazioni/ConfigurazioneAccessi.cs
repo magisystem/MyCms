@@ -1,6 +1,7 @@
-using DvCms.Domain.Accessi;
-using DvCms.Domain.Localizzazione;
-using DvCms.Domain.Tenancy;
+using DvCms.Extender;
+using DvCms.Models.Accessi;
+using DvCms.Models.Localizzazione;
+using DvCms.Models.Tenancy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

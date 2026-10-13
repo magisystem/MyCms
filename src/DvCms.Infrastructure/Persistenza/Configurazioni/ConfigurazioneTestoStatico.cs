@@ -1,5 +1,5 @@
-using DvCms.Domain.Accessi;
-using DvCms.Domain.Localizzazione;
+using DvCms.Models.Accessi;
+using DvCms.Models.Localizzazione;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

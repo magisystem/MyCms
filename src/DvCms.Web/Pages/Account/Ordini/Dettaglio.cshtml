@@ -1,6 +1,6 @@
 @page "/account/ordini/{id:guid}"
 @model DvCms.Web.Pages.Account.Ordini.DettaglioModel
-@using DvCms.Domain.Negozio
+@using DvCms.Models.Negozio
 @{
     ViewData["Titolo"] = _L["Ordine"] + " #" + Model.Ordine.Numero;
     string Importo(decimal valore) => $"{valore.ToString("N2", Model.Cultura)} {Model.Ordine.Valuta}";
@@ -80,7 +80,7 @@ else
         <dl>
             <dt>@_L["Importo"]</dt><dd>@Importo(o.TotaleLordo)</dd>
             <dt>@_L["Intestatario"]</dt><dd>@Model.Offline.Intestatario</dd>
-            <dt>IBAN</dt><dd>@(Model.Offline.Iban is null ? null : DvCms.Domain.Negozio.Iban.Formatta(Model.Offline.Iban))</dd>
+            <dt>IBAN</dt><dd>@(Model.Offline.Iban is null ? null : DvCms.Models.Negozio.Iban.Formatta(Model.Offline.Iban))</dd>
             @if (!string.IsNullOrEmpty(Model.Offline.Bic))
             {
                 <dt>BIC/SWIFT</dt><dd>@Model.Offline.Bic</dd>

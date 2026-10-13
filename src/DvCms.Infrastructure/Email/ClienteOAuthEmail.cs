@@ -2,8 +2,9 @@ using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using DvCms.Domain.Accessi;
-using DvCms.Domain.Email;
+using DvCms.Extender;
+using DvCms.Models.Accessi;
+using DvCms.Models.Email;
 
 namespace DvCms.Infrastructure.Email;
 

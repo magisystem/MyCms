@@ -36,14 +36,14 @@ public class DettaglioModel : PaginaAdmin
     public decimal Residuo => Ordine.TotaleLordo - Ordine.TotaleRimborsato;
 
     /// <summary>Incassato con Nexi: il rimborso dal pannello non c'è, si fa dal back office Nexi (ADR-0022).</summary>
-    public bool PagatoConNexi => Tentativi.Any(t => t.Provider == NomiProviderPagamento.Nexi && t.Stato is DvCms.Domain.Negozio.StatoTentativoPagamento.Catturato or DvCms.Domain.Negozio.StatoTentativoPagamento.DaRimborsare);
+    public bool PagatoConNexi => Tentativi.Any(t => t.Provider == NomiProviderPagamento.Nexi && t.Stato is DvCms.Models.Negozio.StatoTentativoPagamento.Catturato or DvCms.Models.Negozio.StatoTentativoPagamento.DaRimborsare);
 
     /// <summary>Pagamento manuale (bonifico, contrassegno): non passa da un provider, quindi nessun rimborso dal pannello (ADR-0023).</summary>
-    public bool PagamentoManuale => Ordine.ModalitaPagamento != DvCms.Domain.Negozio.ModalitaPagamento.Online;
+    public bool PagamentoManuale => Ordine.ModalitaPagamento != DvCms.Models.Negozio.ModalitaPagamento.Online;
 
-    public bool PuoRimborsare => !PagamentoManuale && Ordine.Stato is DvCms.Domain.Negozio.StatoOrdine.Pagato or DvCms.Domain.Negozio.StatoOrdine.Spedito or DvCms.Domain.Negozio.StatoOrdine.Ritirato && Residuo > 0 && !PagatoConNexi;
+    public bool PuoRimborsare => !PagamentoManuale && Ordine.Stato is DvCms.Models.Negozio.StatoOrdine.Pagato or DvCms.Models.Negozio.StatoOrdine.Spedito or DvCms.Models.Negozio.StatoOrdine.Ritirato && Residuo > 0 && !PagatoConNexi;
 
-    public bool DaRimborsare => Tentativi.Any(t => t.Stato == DvCms.Domain.Negozio.StatoTentativoPagamento.DaRimborsare);
+    public bool DaRimborsare => Tentativi.Any(t => t.Stato == DvCms.Models.Negozio.StatoTentativoPagamento.DaRimborsare);
 
     public CultureInfo Cultura { get; } = CultureInfo.GetCultureInfo("it-IT");
 
@@ -241,11 +241,11 @@ public class DettaglioModel : PaginaAdmin
         return EsitoRimborso(await _rimborsi.VerificaAsync(IdAttore, idRimborso, annullamento), id);
     }
 
-    public string StatoRimborso(DvCms.Domain.Negozio.StatoRimborso stato) => stato switch
+    public string StatoRimborso(DvCms.Models.Negozio.StatoRimborso stato) => stato switch
     {
-        DvCms.Domain.Negozio.StatoRimborso.InCorso => Localizzatore.Traduci("In corso"),
-        DvCms.Domain.Negozio.StatoRimborso.Completato => Localizzatore.Traduci("Completato"),
-        DvCms.Domain.Negozio.StatoRimborso.Fallito => Localizzatore.Traduci("Rifiutato"),
+        DvCms.Models.Negozio.StatoRimborso.InCorso => Localizzatore.Traduci("In corso"),
+        DvCms.Models.Negozio.StatoRimborso.Completato => Localizzatore.Traduci("Completato"),
+        DvCms.Models.Negozio.StatoRimborso.Fallito => Localizzatore.Traduci("Rifiutato"),
         _ => stato.ToString(),
     };
 
@@ -280,20 +280,20 @@ public class DettaglioModel : PaginaAdmin
         _ => Localizzatore.Traduci("Operazione non riuscita."),
     };
 
-    public string StatoTentativo(DvCms.Domain.Negozio.StatoTentativoPagamento stato) => stato switch
+    public string StatoTentativo(DvCms.Models.Negozio.StatoTentativoPagamento stato) => stato switch
     {
-        DvCms.Domain.Negozio.StatoTentativoPagamento.Creato => Localizzatore.Traduci("In attesa del cliente"),
-        DvCms.Domain.Negozio.StatoTentativoPagamento.InSospeso => Localizzatore.Traduci("Incasso in sospeso"),
-        DvCms.Domain.Negozio.StatoTentativoPagamento.Catturato => Localizzatore.Traduci("Incassato"),
-        DvCms.Domain.Negozio.StatoTentativoPagamento.Fallito => Localizzatore.Traduci("Rifiutato"),
-        DvCms.Domain.Negozio.StatoTentativoPagamento.Annullato => Localizzatore.Traduci("Non utilizzato"),
-        DvCms.Domain.Negozio.StatoTentativoPagamento.DaRimborsare => Localizzatore.Traduci("Incassato: da rimborsare"),
-        DvCms.Domain.Negozio.StatoTentativoPagamento.RimborsoInCorso => Localizzatore.Traduci("Rimborso in corso"),
-        DvCms.Domain.Negozio.StatoTentativoPagamento.Rimborsato => Localizzatore.Traduci("Rimborsato"),
+        DvCms.Models.Negozio.StatoTentativoPagamento.Creato => Localizzatore.Traduci("In attesa del cliente"),
+        DvCms.Models.Negozio.StatoTentativoPagamento.InSospeso => Localizzatore.Traduci("Incasso in sospeso"),
+        DvCms.Models.Negozio.StatoTentativoPagamento.Catturato => Localizzatore.Traduci("Incassato"),
+        DvCms.Models.Negozio.StatoTentativoPagamento.Fallito => Localizzatore.Traduci("Rifiutato"),
+        DvCms.Models.Negozio.StatoTentativoPagamento.Annullato => Localizzatore.Traduci("Non utilizzato"),
+        DvCms.Models.Negozio.StatoTentativoPagamento.DaRimborsare => Localizzatore.Traduci("Incassato: da rimborsare"),
+        DvCms.Models.Negozio.StatoTentativoPagamento.RimborsoInCorso => Localizzatore.Traduci("Rimborso in corso"),
+        DvCms.Models.Negozio.StatoTentativoPagamento.Rimborsato => Localizzatore.Traduci("Rimborsato"),
         _ => stato.ToString(),
     };
 
-    public string Modalita(DvCms.Domain.Negozio.ModalitaPagamento modalita) => EtichetteOrdine.Modalita(Localizzatore, modalita);
+    public string Modalita(DvCms.Models.Negozio.ModalitaPagamento modalita) => EtichetteOrdine.Modalita(Localizzatore, modalita);
 
-    public string Stato(DvCms.Domain.Negozio.StatoOrdine stato) => EtichetteOrdine.Stato(Localizzatore, stato);
+    public string Stato(DvCms.Models.Negozio.StatoOrdine stato) => EtichetteOrdine.Stato(Localizzatore, stato);
 }

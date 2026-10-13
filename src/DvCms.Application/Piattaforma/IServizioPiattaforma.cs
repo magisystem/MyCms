@@ -1,5 +1,5 @@
-using DvCms.Domain.Accessi;
-using DvCms.Domain.Tenancy;
+using DvCms.Models.Accessi;
+using DvCms.Models.Tenancy;
 
 namespace DvCms.Application.Piattaforma;
 

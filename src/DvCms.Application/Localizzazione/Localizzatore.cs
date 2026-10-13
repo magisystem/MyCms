@@ -1,5 +1,5 @@
 using System.Globalization;
-using DvCms.Domain.Localizzazione;
+using DvCms.Models.Localizzazione;
 
 namespace DvCms.Application.Localizzazione;
 

@@ -1,5 +1,5 @@
 using DvCms.Application.Piattaforma;
-using DvCms.Domain.Cms;
+using DvCms.Models.Cms;
 
 namespace DvCms.Application.Cms;
 

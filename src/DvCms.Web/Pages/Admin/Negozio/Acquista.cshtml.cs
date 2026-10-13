@@ -2,7 +2,7 @@ using DvCms.Application.Accessi;
 using DvCms.Application.Localizzazione;
 using DvCms.Application.Negozio;
 using DvCms.Application.Tenancy;
-using DvCms.Domain.Accessi;
+using DvCms.Models.Accessi;
 using DvCms.Web.Accessi;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;

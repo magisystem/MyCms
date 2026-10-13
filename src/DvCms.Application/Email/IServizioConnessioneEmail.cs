@@ -1,5 +1,5 @@
 using DvCms.Application.Piattaforma;
-using DvCms.Domain.Email;
+using DvCms.Models.Email;
 
 namespace DvCms.Application.Email;
 

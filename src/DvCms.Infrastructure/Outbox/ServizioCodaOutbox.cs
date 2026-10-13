@@ -1,9 +1,9 @@
 using DvCms.Application.Accessi;
 using DvCms.Application.Outbox;
 using DvCms.Application.Piattaforma;
-using DvCms.Domain.Accessi;
-using DvCms.Domain.Outbox;
 using DvCms.Infrastructure.Persistenza;
+using DvCms.Models.Accessi;
+using DvCms.Models.Outbox;
 using Microsoft.EntityFrameworkCore;
 
 namespace DvCms.Infrastructure.Outbox;

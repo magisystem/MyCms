@@ -1,10 +1,10 @@
 using System.Text.Json.Nodes;
 using DvCms.Application.Accessi;
 using DvCms.Application.Negozio;
-using DvCms.Domain.Negozio;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.IntegrationTests.Negozio;
 using DvCms.IntegrationTests.Supporto;
+using DvCms.Models.Negozio;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
@@ -87,7 +87,7 @@ public class RimborsiEsterniTest
         Assert.Equal((StatoOrdine.Rimborsato, 10m), (totale.Stato, totale.TotaleRimborsato));
         Assert.Equal(2, (await RimborsiAsync(c, ordine)).Count);
         await using var ambito = c.Web.Fabbrica.Services.CreateAsyncScope();
-        var audit = await ambito.ServiceProvider.GetRequiredService<ContestoDatabase>().RegistroAudit.IgnoreQueryFilters().CountAsync(a => a.Azione == AzioniAudit.RimborsoEsterno && a.Esito == DvCms.Domain.Accessi.RegistroAudit.EsitoRiuscito, Ct);
+        var audit = await ambito.ServiceProvider.GetRequiredService<ContestoDatabase>().RegistroAudit.IgnoreQueryFilters().CountAsync(a => a.Azione == AzioniAudit.RimborsoEsterno && a.Esito == DvCms.Models.Accessi.RegistroAudit.EsitoRiuscito, Ct);
         Assert.Equal(2, audit);
     }
 
@@ -159,7 +159,7 @@ public class RimborsiEsterniTest
         Assert.Equal((StatoOrdine.Pagato, 0m), ((await c.OrdineAsync(ordine)).Stato, (await c.OrdineAsync(ordine)).TotaleRimborsato));
         Assert.Empty(await RimborsiAsync(c, ordine));
         await using var ambito = c.Web.Fabbrica.Services.CreateAsyncScope();
-        var anomalie = await ambito.ServiceProvider.GetRequiredService<ContestoDatabase>().RegistroAudit.IgnoreQueryFilters().CountAsync(a => a.Azione == AzioniAudit.RimborsoEsterno && a.Esito == DvCms.Domain.Accessi.RegistroAudit.EsitoNegato, Ct);
+        var anomalie = await ambito.ServiceProvider.GetRequiredService<ContestoDatabase>().RegistroAudit.IgnoreQueryFilters().CountAsync(a => a.Azione == AzioniAudit.RimborsoEsterno && a.Esito == DvCms.Models.Accessi.RegistroAudit.EsitoNegato, Ct);
         Assert.Equal(1, anomalie);
     }
 

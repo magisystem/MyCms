@@ -1,7 +1,7 @@
 using DvCms.Application.Email;
 using DvCms.Application.Localizzazione;
 using DvCms.Application.Piattaforma;
-using DvCms.Domain.Email;
+using DvCms.Models.Email;
 using DvCms.Web.Accessi;
 using Microsoft.AspNetCore.Mvc;
 

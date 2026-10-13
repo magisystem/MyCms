@@ -8,11 +8,11 @@ using DvCms.Application.Negozio;
 using DvCms.Application.Piattaforma;
 using DvCms.Application.Temi;
 using DvCms.Application.Tenancy;
-using DvCms.Domain.Cms;
-using DvCms.Domain.Negozio;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.Infrastructure.Tenancy;
 using DvCms.IntegrationTests.Supporto;
+using DvCms.Models.Cms;
+using DvCms.Models.Negozio;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
@@ -194,7 +194,7 @@ public partial class BuilderWebTest
         var token = (await c.StatoAsync(id)).GetProperty("token").GetString()!;
         var propria = await c.CaricaAsync(c.Web.A);
         var altrui = await c.CaricaAsync(c.Web.B);
-        var privata = await c.CaricaAsync(c.Web.A, visibilita: DvCms.Domain.Media.VisibilitaMedia.Privata);
+        var privata = await c.CaricaAsync(c.Web.A, visibilita: DvCms.Models.Media.VisibilitaMedia.Privata);
 
         foreach (var risorsa in new[] { altrui, privata })
         {
@@ -700,7 +700,7 @@ public partial class BuilderWebTest
         {
             var web = await ScenarioWeb.CreaAsync();
             var admin = await web.CreaTenantAdminAsync("anna@esempio.it");
-            await DatiProva.CreaUtenzaAsync(web.Fabbrica.Services, DvCms.Domain.Accessi.RuoloUtenza.TenantAdmin, web.B.IdTenant, "bruno@esempio.it", annullamento: Ct);
+            await DatiProva.CreaUtenzaAsync(web.Fabbrica.Services, DvCms.Models.Accessi.RuoloUtenza.TenantAdmin, web.B.IdTenant, "bruno@esempio.it", annullamento: Ct);
             var sessione = web.SessioneA();
             await sessione.AccediAsync("anna@esempio.it", DatiProva.PasswordProva);
             return new Contesto(web, sessione, admin);
@@ -805,7 +805,7 @@ public partial class BuilderWebTest
             await contesto.SaveChangesAsync(Ct);
         }
 
-        public async Task<Guid> CaricaAsync(DatiProva.TenantCreato tenant, DvCms.Domain.Media.VisibilitaMedia visibilita = DvCms.Domain.Media.VisibilitaMedia.Pubblica)
+        public async Task<Guid> CaricaAsync(DatiProva.TenantCreato tenant, DvCms.Models.Media.VisibilitaMedia visibilita = DvCms.Models.Media.VisibilitaMedia.Pubblica)
         {
             await using var ambito = Web.Fabbrica.Services.CreateAsyncScope();
             ambito.ServiceProvider.GetRequiredService<ContestoTenant>().Imposta(new DatiTenantRisolto(tenant.IdTenant, tenant.IdSito, tenant.IdDominio, tenant.Host, false));
@@ -813,7 +813,7 @@ public partial class BuilderWebTest
             var media = ambito.ServiceProvider.GetRequiredService<IServizioMedia>();
             var esito = await media.CaricaAsync(attore, new FileDaCaricare(new MemoryStream(ImmaginiProva.Png(8, 8)), "foto.png", "image/png"), Ct);
             Assert.True(esito.Riuscito, esito.Codice.ToString());
-            if (visibilita != DvCms.Domain.Media.VisibilitaMedia.Pubblica)
+            if (visibilita != DvCms.Models.Media.VisibilitaMedia.Pubblica)
             {
                 Assert.True((await media.ImpostaVisibilitaAsync(attore, esito.Id!.Value, visibilita, Ct)).Riuscito);
             }

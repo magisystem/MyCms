@@ -1,7 +1,8 @@
 using DvCms.Application.Cms;
 using DvCms.Application.Temi;
 using DvCms.Application.Tenancy;
-using DvCms.Domain.Cms;
+using DvCms.Extender;
+using DvCms.Models.Cms;
 
 namespace DvCms.Infrastructure.Cache;
 

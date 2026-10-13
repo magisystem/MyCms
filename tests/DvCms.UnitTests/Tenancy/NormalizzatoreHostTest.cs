@@ -1,4 +1,5 @@
-using DvCms.Domain.Tenancy;
+using DvCms.Extender;
+using DvCms.Models.Tenancy;
 using Xunit;
 
 namespace DvCms.UnitTests.Tenancy;

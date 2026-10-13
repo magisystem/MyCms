@@ -3,11 +3,12 @@ using DvCms.Application.Accessi;
 using DvCms.Application.Media;
 using DvCms.Application.Piattaforma;
 using DvCms.Application.Tenancy;
-using DvCms.Domain;
-using DvCms.Domain.Accessi;
-using DvCms.Domain.Media;
+using DvCms.Extender;
 using DvCms.Infrastructure.Cms;
 using DvCms.Infrastructure.Persistenza;
+using DvCms.Models;
+using DvCms.Models.Accessi;
+using DvCms.Models.Media;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 

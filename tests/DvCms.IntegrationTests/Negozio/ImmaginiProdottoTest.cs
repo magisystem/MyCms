@@ -1,9 +1,9 @@
 using System.Net;
 using DvCms.Application.Negozio;
 using DvCms.Application.Piattaforma;
-using DvCms.Domain.Media;
-using DvCms.Domain.Negozio;
 using DvCms.IntegrationTests.Supporto;
+using DvCms.Models.Media;
+using DvCms.Models.Negozio;
 using Xunit;
 
 namespace DvCms.IntegrationTests.Negozio;

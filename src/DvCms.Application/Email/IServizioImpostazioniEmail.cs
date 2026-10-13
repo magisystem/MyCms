@@ -1,6 +1,6 @@
 using DvCms.Application.Piattaforma;
-using DvCms.Domain.Email;
-using DvCms.Domain.Outbox;
+using DvCms.Models.Email;
+using DvCms.Models.Outbox;
 
 namespace DvCms.Application.Email;
 

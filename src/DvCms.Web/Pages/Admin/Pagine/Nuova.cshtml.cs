@@ -1,6 +1,6 @@
 using DvCms.Application.Cms;
 using DvCms.Application.Localizzazione;
-using DvCms.Domain.Cms;
+using DvCms.Models.Cms;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DvCms.Web.Pages.Admin.Pagine;

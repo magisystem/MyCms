@@ -1,6 +1,6 @@
 using DvCms.Application.Accessi;
 using DvCms.Application.Tenancy;
-using DvCms.Domain.Accessi;
+using DvCms.Models.Accessi;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 

@@ -1,8 +1,8 @@
 using System.Net;
 using DvCms.Application.Cms;
 using DvCms.Application.Tenancy;
-using DvCms.Domain.Accessi;
 using DvCms.IntegrationTests.Supporto;
+using DvCms.Models.Accessi;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
