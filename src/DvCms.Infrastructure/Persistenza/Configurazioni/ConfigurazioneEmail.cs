@@ -1,6 +1,7 @@
 using DvCms.Infrastructure.Segreti;
 using DvCms.Models.Accessi;
 using DvCms.Models.Email;
+using DvCms.Models.Segreti;
 using DvCms.Models.Tenancy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;

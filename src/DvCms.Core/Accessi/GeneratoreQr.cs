@@ -1,6 +1,6 @@
 using QRCoder;
 
-namespace DvCms.Infrastructure.Accessi;
+namespace DvCms.Core.Accessi;
 
 /// <summary>Codice QR come SVG in linea (nessuna immagine esterna, nessuno script): serve a configurare l'app di autenticazione.</summary>
 public static class GeneratoreQr

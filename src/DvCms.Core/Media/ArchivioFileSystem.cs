@@ -1,7 +1,7 @@
 using System.Text.RegularExpressions;
 using DvCms.Contracts.Media;
 
-namespace DvCms.Infrastructure.Media;
+namespace DvCms.Core.Media;
 
 /// <summary>
 /// Archivio su file system locale (sviluppo e installazioni semplici). La chiave ha il formato fisso

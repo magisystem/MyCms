@@ -1,6 +1,6 @@
 using System.Diagnostics.Metrics;
 
-namespace DvCms.Infrastructure.Outbox;
+namespace DvCms.Core.Outbox;
 
 /// <summary>
 /// Metriche dell'outbox (G-001), raccoglibili con OpenTelemetry o <c>dotnet-counters</c> sul meter <c>DvCms.Outbox</c>:

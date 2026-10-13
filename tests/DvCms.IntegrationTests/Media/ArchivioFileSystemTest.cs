@@ -1,3 +1,4 @@
+using DvCms.Core.Media;
 using DvCms.Infrastructure.Media;
 using Xunit;
 

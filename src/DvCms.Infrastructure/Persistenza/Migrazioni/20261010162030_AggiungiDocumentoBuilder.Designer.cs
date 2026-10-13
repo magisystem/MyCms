@@ -1090,7 +1090,7 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.ToTable("Tenant", (string)null);
                 });
 
-            modelBuilder.Entity("DvCms.Infrastructure.Segreti.ChiaveSegreta", b =>
+            modelBuilder.Entity("DvCms.Models.Segreti.ChiaveSegreta", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");

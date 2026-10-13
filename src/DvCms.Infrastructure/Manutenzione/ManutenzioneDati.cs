@@ -1,5 +1,7 @@
 using DvCms.Contracts.Negozio;
+using DvCms.Core.Outbox;
 using DvCms.DTO.Accessi;
+using DvCms.DTO.Manutenzione;
 using DvCms.Infrastructure.Outbox;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.Models.Accessi;
@@ -9,19 +11,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace DvCms.Infrastructure.Manutenzione;
-
-/// <summary>Parametri della manutenzione (configurazione <c>Manutenzione:*</c>).</summary>
-public sealed record OpzioniManutenzione(
-    bool Abilitata,
-    TimeSpan Intervallo,
-    TimeSpan ConservazioneCompletati,
-    TimeSpan ConservazioneFalliti,
-    TimeSpan ConservazioneAccessi,
-    int DimensioneLotto)
-{
-    public static OpzioniManutenzione Predefinite { get; } =
-        new(true, TimeSpan.FromHours(1), TimeSpan.FromDays(7), TimeSpan.FromDays(90), TimeSpan.FromDays(30), 1000);
-}
 
 /// <summary>
 /// Elimina le righe che non servono più (G-001): messaggi dell'outbox completati o falliti da tempo, richieste di recupero

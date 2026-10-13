@@ -10,15 +10,22 @@ using DvCms.Contracts.Outbox;
 using DvCms.Contracts.Piattaforma;
 using DvCms.Contracts.Temi;
 using DvCms.Contracts.Tenancy;
+using DvCms.Core.Accessi;
 using DvCms.Core.Builder;
+using DvCms.Core.Cache;
 using DvCms.Core.Cms;
 using DvCms.Core.Localizzazione;
+using DvCms.Core.Media;
+using DvCms.Core.Segreti;
 using DvCms.Core.Temi;
 using DvCms.Core.Tenancy;
 using DvCms.DTO.Accessi;
 using DvCms.DTO.Accessi.DueFattori;
+using DvCms.DTO.Cache;
+using DvCms.DTO.Manutenzione;
 using DvCms.DTO.Media;
 using DvCms.DTO.Negozio;
+using DvCms.DTO.Outbox;
 using DvCms.Infrastructure.Accessi;
 using DvCms.Infrastructure.Cache;
 using DvCms.Infrastructure.Cms;
@@ -124,7 +131,11 @@ public static class EstensioniServizi
     private static void AggiungiEmail(IServiceCollection servizi, IConfiguration configurazione)
     {
         servizi.TryAddSingleton(new ChiaveMaestraSegreti(configurazione[ChiaveMaestraSegreti.NomeConfigurazione]));
-        servizi.TryAddSingleton<IProtettoreSegreti, ProtettoreSegreti>();
+        servizi.TryAddSingleton<RepositoryChiaviSegrete>();
+        servizi.TryAddSingleton<IProtettoreSegreti>(fornitore => new ProtettoreSegreti(
+            fornitore.GetRequiredService<RepositoryChiaviSegrete>(),
+            fornitore.GetRequiredService<ChiaveMaestraSegreti>(),
+            fornitore.GetRequiredService<TimeProvider>()));
         servizi.AddScoped<IAdapterEmail, AdapterSmtp>();
         servizi.AddHttpClient(ComunicazioneEmail.NomeClientHttp, client => client.Timeout = Timeout.InfiniteTimeSpan);
         servizi.AddScoped<IAdapterEmail, AdapterGraph>();

@@ -1,4 +1,4 @@
-namespace DvCms.Infrastructure.Segreti;
+namespace DvCms.Models.Segreti;
 
 /// <summary>
 /// Riga del key ring di Data Protection usato solo per i segreti dei tenant (ADR-0015). L'XML è cifrato con la chiave

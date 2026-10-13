@@ -1,4 +1,5 @@
 using DvCms.Contracts.Outbox;
+using DvCms.Core.Outbox;
 using DvCms.DTO.Outbox;
 using DvCms.Infrastructure.Persistenza;
 using DvCms.Models.Outbox;

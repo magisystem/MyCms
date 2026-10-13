@@ -1,13 +1,8 @@
 using System.Collections.Concurrent;
 using DvCms.Contracts.Cms;
+using DvCms.DTO.Cache;
 
-namespace DvCms.Infrastructure.Cache;
-
-/// <summary>Parametri della cache (configurazione <c>Cache:*</c>).</summary>
-public sealed record OpzioniCache(bool Abilitata, TimeSpan Durata, int VociMassime, TimeSpan IntervalloLettura)
-{
-    public static OpzioniCache Predefinite { get; } = new(true, TimeSpan.FromMinutes(5), 5000, TimeSpan.FromSeconds(2));
-}
+namespace DvCms.Core.Cache;
 
 /// <summary>
 /// Implementazione in memoria di <see cref="ICachePubblica"/>. Le voci sono immutabili e condivise fra le richieste. Se supera il

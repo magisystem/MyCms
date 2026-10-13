@@ -1,3 +1,4 @@
+using DvCms.DTO.Outbox;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 

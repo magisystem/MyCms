@@ -7,6 +7,7 @@ using DvCms.Models.Localizzazione;
 using DvCms.Models.Media;
 using DvCms.Models.Negozio;
 using DvCms.Models.Outbox;
+using DvCms.Models.Segreti;
 using DvCms.Models.Temi;
 using DvCms.Models.Tenancy;
 using Microsoft.EntityFrameworkCore;

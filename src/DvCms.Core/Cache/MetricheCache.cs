@@ -1,6 +1,6 @@
 using System.Diagnostics.Metrics;
 
-namespace DvCms.Infrastructure.Cache;
+namespace DvCms.Core.Cache;
 
 /// <summary>
 /// Metriche della cache dei contenuti pubblici (M6), sul meter <c>DvCms.Cache</c>: <c>dvcms.cache.accessi</c> con l'esito

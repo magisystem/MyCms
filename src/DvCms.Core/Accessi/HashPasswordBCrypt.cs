@@ -2,7 +2,7 @@ using BCrypt.Net;
 using DvCms.Contracts.Accessi;
 using DvCms.DTO.Accessi;
 
-namespace DvCms.Infrastructure.Accessi;
+namespace DvCms.Core.Accessi;
 
 /// <summary>
 /// Hash BCrypt (libreria BCrypt.Net-Next) nella variante "enhanced": la password è prima ridotta con SHA-384, così

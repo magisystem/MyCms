@@ -2,7 +2,7 @@ using DvCms.Core.Localizzazione;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace DvCms.Infrastructure.Localizzazione;
+namespace DvCms.Core.Localizzazione;
 
 /// <summary>
 /// Servizio in background dei testi statici: carica la cache all'avvio (riprovando se il database non è ancora

@@ -1,3 +1,4 @@
+using DvCms.DTO.Manutenzione;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 

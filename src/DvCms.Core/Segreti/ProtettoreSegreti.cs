@@ -1,18 +1,15 @@
 using System.Security.Cryptography;
 using System.Xml.Linq;
 using DvCms.Contracts.Email;
-using DvCms.Extender;
-using DvCms.Infrastructure.Persistenza;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.ConfigurationModel;
 using Microsoft.AspNetCore.DataProtection.KeyManagement;
 using Microsoft.AspNetCore.DataProtection.Repositories;
 using Microsoft.AspNetCore.DataProtection.XmlEncryption;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
-namespace DvCms.Infrastructure.Segreti;
+namespace DvCms.Core.Segreti;
 
 /// <summary>
 /// Chiave maestra dei segreti, letta dalla configurazione di ambiente (<c>Sicurezza:ChiaveSegreti</c>, 32 byte in base64,
@@ -60,7 +57,7 @@ public sealed class ChiaveMaestraSegreti
 
 /// <summary>
 /// Protezione dei segreti dei tenant con ASP.NET Core Data Protection (ADR-0015), in un'istanza dedicata e separata da
-/// quella di cookie e antiforgery: il key ring sta nella tabella <c>ChiaviSegrete</c> ed è cifrato con la chiave maestra
+/// quella di cookie e antiforgery: il key ring sta in un archivio di chiavi (la tabella <c>ChiaviSegrete</c>) ed è cifrato con la chiave maestra
 /// di ambiente. Le chiavi si ruotano da sole; quelle vecchie restano per leggere i segreti già cifrati.
 /// </summary>
 public sealed class ProtettoreSegreti : IProtettoreSegreti, IDisposable
@@ -70,12 +67,12 @@ public sealed class ProtettoreSegreti : IProtettoreSegreti, IDisposable
     private readonly ServiceProvider _fornitoreInterno;
     private readonly Lazy<IDataProtector> _protettore;
 
-    public ProtettoreSegreti(IServiceScopeFactory fabbricaAmbiti, ChiaveMaestraSegreti chiaveMaestra, TimeProvider orologio)
+    public ProtettoreSegreti(IXmlRepository repositoryChiavi, ChiaveMaestraSegreti chiaveMaestra, TimeProvider orologio)
     {
         var servizi = new ServiceCollection();
         servizi.AddSingleton(chiaveMaestra);
         servizi.AddSingleton(orologio);
-        servizi.AddSingleton<IXmlRepository>(new RepositoryChiaviSegrete(fabbricaAmbiti, orologio));
+        servizi.AddSingleton(repositoryChiavi);
         servizi.AddDataProtection().SetApplicationName("DvCms.Segreti");
         servizi.AddSingleton<IConfigureOptions<KeyManagementOptions>>(fornitore =>
             new ConfigureOptions<KeyManagementOptions>(opzioni =>
@@ -124,43 +121,8 @@ public sealed class ProtettoreSegreti : IProtettoreSegreti, IDisposable
     public void Dispose() => _fornitoreInterno.Dispose();
 }
 
-internal sealed class RepositoryChiaviSegrete : IXmlRepository
-{
-    private readonly IServiceScopeFactory _fabbricaAmbiti;
-    private readonly TimeProvider _orologio;
-
-    public RepositoryChiaviSegrete(IServiceScopeFactory fabbricaAmbiti, TimeProvider orologio)
-    {
-        _fabbricaAmbiti = fabbricaAmbiti;
-        _orologio = orologio;
-    }
-
-    public IReadOnlyCollection<XElement> GetAllElements()
-    {
-        using var ambito = _fabbricaAmbiti.CreateScope();
-        var contesto = ambito.ServiceProvider.GetRequiredService<ContestoDatabase>();
-        return [.. contesto.ChiaviSegrete.AsNoTracking().OrderBy(chiave => chiave.CreatoIlUtc).Select(chiave => chiave.Xml).AsEnumerable().Select(XElement.Parse)];
-    }
-
-    public void StoreElement(XElement element, string friendlyName)
-    {
-        ArgumentNullException.ThrowIfNull(element);
-
-        using var ambito = _fabbricaAmbiti.CreateScope();
-        var contesto = ambito.ServiceProvider.GetRequiredService<ContestoDatabase>();
-        contesto.ChiaviSegrete.Add(new ChiaveSegreta
-        {
-            Id = Identificativi.Nuovo(_orologio),
-            NomeAmichevole = friendlyName.Length > 200 ? friendlyName[..200] : friendlyName,
-            Xml = element.ToString(SaveOptions.DisableFormatting),
-            CreatoIlUtc = _orologio.GetUtcNow().UtcDateTime,
-        });
-        contesto.SaveChanges();
-    }
-}
-
 /// <summary>Cifra l'XML delle chiavi del key ring con AES-GCM e la chiave maestra di ambiente.</summary>
-internal sealed class CifraturaChiaveMaestra : IXmlEncryptor
+public sealed class CifraturaChiaveMaestra : IXmlEncryptor
 {
     private readonly ChiaveMaestraSegreti _chiave;
 
@@ -193,7 +155,7 @@ internal sealed class CifraturaChiaveMaestra : IXmlEncryptor
 }
 
 /// <summary>Istanziata da Data Protection con i servizi interni (vedi <see cref="ProtettoreSegreti"/>).</summary>
-internal sealed class DecifraturaChiaveMaestra : IXmlDecryptor
+public sealed class DecifraturaChiaveMaestra : IXmlDecryptor
 {
     private readonly ChiaveMaestraSegreti _chiave;
 
