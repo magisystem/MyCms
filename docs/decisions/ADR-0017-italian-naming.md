@@ -21,7 +21,7 @@ Sono in italiano:
 
 Restano in inglese, perché non sono nostri o per scelta del committente:
 
-- **i nomi dei progetti e dei loro namespace radice** (`DvCms.Web`, `DvCms.Domain`, `DvCms.Application`, `DvCms.Infrastructure`, `DvCms.Store`, `DvCms.Themes.*`, `DvCms.Worker`, `DvCms.UnitTests`, `DvCms.IntegrationTests`, `DvCms.TenantIsolationTests`) e la cartella `frontend/page-builder`: scelta confermata dal committente;
+- **i nomi dei progetti e dei loro namespace radice** (`DvCms.Web`, `DvCms.Models`, `DvCms.DTO`, `DvCms.Contracts`, `DvCms.Core`, `DvCms.Data`, `DvCms.SqlServer`, `DvCms.PostgreSql`, `DvCms.Emails`, `DvCms.Extender`, `DvCms.Services*`, `DvCms.Store`, `DvCms.Themes.*`, `DvCms.Worker`, `DvCms.UnitTests`, `DvCms.IntegrationTests`, `DvCms.TenantIsolationTests`) e la cartella `frontend/page-builder`: scelta confermata dal committente;
 - API, tipi e metodi del framework e delle librerie (`DbContext`, `ILogger`, `CancellationToken`, `ToTable`, `Guid`, ecc.) e i nomi imposti da convenzioni di ASP.NET (`appsettings.json`, `Program`, `Development`, `Production`, `wwwroot`);
 - nomi di prodotti e servizi (`Smtp`, `Graph`, `Gmail`, `SendGrid`, `GrapesJS`, `Tabler`, `BCrypt`);
 - i nomi dei ruoli stabiliti dal committente (`PlatformAdmin`, `TenantAdmin`, `Utente`, `Guest`), il termine `Tenant` (`IdTenant`, `ContestoTenant`), `Slug`, e il comando `seed` (`DvCms.Web seed`) già approvato;

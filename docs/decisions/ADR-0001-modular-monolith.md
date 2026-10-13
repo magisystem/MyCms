@@ -1,6 +1,6 @@
 # ADR-0001 — Monolite modulare
 
-- **Stato:** Accepted
+- **Stato:** Accepted; la suddivisione in progetti è ridefinita da [ADR-0024](ADR-0024-struttura-progetti.md)
 - **Data:** 2026-10-09
 
 ## Contesto

@@ -67,9 +67,10 @@ Solution `DvCms.sln`; progetti e namespace con prefisso `DvCms.`.
 ```text
 src/
   DvCms.Web/             (include wwwroot/lib/tabler e wwwroot/lib/tabler-icons)
-  DvCms.Domain/
-  DvCms.Application/
-  DvCms.Infrastructure/
+  DvCms.Extender/        DvCms.Models/      DvCms.DTO/        DvCms.Contracts/
+  DvCms.Core/            DvCms.Data/        DvCms.Emails/
+  DvCms.SqlServer/       DvCms.PostgreSql/  (segnaposto vuoto)
+  DvCms.Services/        DvCms.Services.Cms/   DvCms.Services.Negozio/
   DvCms.Themes.Abstractions/
   DvCms.Themes.Corporate/
   DvCms.Themes.Creative/
@@ -82,4 +83,4 @@ tests/
   DvCms.TenantIsolationTests/
 ```
 
-Non è necessario creare tutti questi progetti il primo giorno. Iniziare con pochi assembly e separare solo quando migliora i confini o i test.
+La struttura in progetti e le regole di dipendenza sono nell'[ADR-0024](../decisions/ADR-0024-struttura-progetti.md). Non è necessario creare tutti questi progetti il primo giorno. Iniziare con pochi assembly e separare solo quando migliora i confini o i test.

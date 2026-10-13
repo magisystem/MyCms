@@ -1,6 +1,6 @@
 # ADR-0012 — SQL Server come unico database supportato
 
-- **Stato:** Accepted
+- **Stato:** Accepted; integrato da [ADR-0024](ADR-0024-struttura-progetti.md) (esiste un progetto segnaposto vuoto `DvCms.PostgreSql`, nessun supporto implementato)
 - **Data:** 2026-10-09
 - **Supera:** ADR-0003 (parte relativa al supporto PostgreSQL e alla doppia serie di migrazioni)
 
