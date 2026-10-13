@@ -111,10 +111,10 @@ public class CheckoutModel : PageModel
 
         // Il totale visto è un controllo di coerenza; se manca o è illeggibile si usa uno impossibile e l'ordine non si crea.
         var modalita = Modulo.Modalita ?? ModalitaPagamento.Online;
-        var atteso = Modulo.Atteso.TryGetValue(string.Create(CultureInfo.InvariantCulture, $"{metodo:D}:{modalita}"), out var testo)
-            && decimal.TryParse(testo, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var letto)
-            ? letto
-            : -1m;
+        // Una cassa aperta prima dell'arrivo dei pagamenti manuali invia il totale con la sola chiave del metodo: vale per il pagamento online.
+        var trovato = Modulo.Atteso.TryGetValue(string.Create(CultureInfo.InvariantCulture, $"{metodo:D}:{modalita}"), out var testo)
+            || (modalita == ModalitaPagamento.Online && Modulo.Atteso.TryGetValue(metodo.ToString("D", CultureInfo.InvariantCulture), out testo));
+        var atteso = trovato && decimal.TryParse(testo, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var letto) ? letto : -1m;
         var dati = new DatiOrdine(metodo, Modulo.Destinatario, Modulo.IndirizzoRiga1, Modulo.IndirizzoRiga2, Modulo.Cap, Modulo.Citta, Modulo.Paese, atteso, modalita);
         var esito = await _ordini.CreaDaCarrelloAsync(IdAccount, _lingua.CodiceLingua, dati, annullamento);
         if (esito.Riuscito)
