@@ -1,3 +1,4 @@
+using System.Globalization;
 using DvCms.Contracts.Email;
 using DvCms.Contracts.Localizzazione;
 using DvCms.Core.Localizzazione;
@@ -16,11 +17,13 @@ public class EmailModel : PaginaPiattaforma
     private const string PrefissoRimozione = "r_";
 
     private readonly IServizioImpostazioniEmail _email;
+    private readonly IComponitoreEmail _modelli;
 
-    public EmailModel(IServizioImpostazioniEmail email, ILocalizzatore localizzatore)
+    public EmailModel(IServizioImpostazioniEmail email, IComponitoreEmail modelli, ILocalizzatore localizzatore)
         : base(localizzatore)
     {
         _email = email;
+        _modelli = modelli;
     }
 
     public Guid IdTenant { get; private set; }
@@ -112,11 +115,14 @@ public class EmailModel : PaginaPiattaforma
 
     public async Task<IActionResult> OnPostProvaAsync(Guid id, string? destinatario, CancellationToken annullamento)
     {
-        var messaggio = new MessaggioEmail(
+        var messaggio = await _modelli.ComponiAsync(
+            id,
+            CodiciModelloEmail.Prova,
+            CultureInfo.CurrentUICulture.TwoLetterISOLanguageName,
             destinatario ?? string.Empty,
             null,
-            Localizzatore.Traduci("Email di prova"),
-            Localizzatore.Traduci("Questa è un'email di prova inviata dalla configurazione del tenant. Se la ricevi, l'invio funziona."));
+            new Dictionary<string, object?>(),
+            annullamento);
         var esito = await _email.AccodaProvaAsync(IdAttore, id, destinatario, messaggio, annullamento);
         if (esito.Riuscito)
         {

@@ -33,7 +33,7 @@ public sealed class ServizioPiattaforma : IServizioPiattaforma
     private readonly IServizioAudit _audit;
     private readonly IHashPassword _hash;
     private readonly IAccodatoreEmail _email;
-    private readonly ILocalizzatore _localizzatore;
+    private readonly IComponitoreEmail _modelli;
     private readonly OpzioniInviti _opzioniInviti;
     private readonly IInvalidazioneCache _invalidazione;
     private readonly TimeProvider _orologio;
@@ -43,7 +43,7 @@ public sealed class ServizioPiattaforma : IServizioPiattaforma
         IServizioAudit audit,
         IHashPassword hash,
         IAccodatoreEmail email,
-        ILocalizzatore localizzatore,
+        IComponitoreEmail modelli,
         OpzioniInviti opzioniInviti,
         IInvalidazioneCache invalidazione,
         TimeProvider orologio)
@@ -53,7 +53,7 @@ public sealed class ServizioPiattaforma : IServizioPiattaforma
         _audit = audit;
         _hash = hash;
         _email = email;
-        _localizzatore = localizzatore;
+        _modelli = modelli;
         _opzioniInviti = opzioniInviti;
         _orologio = orologio;
     }
@@ -632,18 +632,23 @@ public sealed class ServizioPiattaforma : IServizioPiattaforma
 
         try
         {
+            var messaggio = await _modelli.ComponiAsync(
+                idTenant,
+                CodiciModelloEmail.InvitoAmministratore,
+                lingua,
+                invitato.Email,
+                invitato.NomeVisualizzato,
+                new Dictionary<string, object?>
+                {
+                    ["nome"] = invitato.NomeVisualizzato,
+                    ["nome_tenant"] = nomeTenant,
+                    ["link"] = url,
+                    ["ore_validita"] = (int)_opzioniInviti.Validita.TotalHours,
+                },
+                annullamento);
             _email.Accoda(
                 idTenant,
-                new MessaggioEmail(
-                    invitato.Email,
-                    invitato.NomeVisualizzato,
-                    _localizzatore.TraduciIn(lingua, "Invito come amministratore di {0}", nomeTenant),
-                    _localizzatore.TraduciIn(
-                        lingua,
-                        "Sei stato invitato a gestire il sito {0}. Per scegliere la tua password apri questo link entro {2} ore: {1}. Il link si può usare una sola volta.",
-                        nomeTenant,
-                        url,
-                        (int)_opzioniInviti.Validita.TotalHours)),
+                messaggio,
                 chiaveIdempotenza: $"invito:{invito.Id}",
                 riservato: true);
         }

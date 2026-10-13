@@ -102,6 +102,7 @@ public static class CatalogoModelliEmail
             "Nuovo ordine (avviso agli amministratori)",
             "Agli amministratori del tenant, quando arriva un nuovo ordine.",
             [
+                new("nome", "Nome dell'amministratore che riceve l'avviso."),
                 new("numero", "Numero dell'ordine."),
                 new("nome_sito", "Nome del sito."),
                 new("tipo", "Come si paga: pagato, bonifico o contrassegno."),
@@ -205,6 +206,7 @@ public static class CatalogoModelliEmail
             case CodiciModelloEmail.OrdineNuovoAmministratore:
                 return new Dictionary<string, object?>(StringComparer.Ordinal)
                 {
+                    ["nome"] = "Mario Rossi",
                     ["numero"] = "1042",
                     ["nome_sito"] = "Bottega Esempio",
                     ["tipo"] = "pagato",

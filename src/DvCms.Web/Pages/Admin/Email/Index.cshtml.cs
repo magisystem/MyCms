@@ -1,5 +1,7 @@
+using System.Globalization;
 using DvCms.Contracts.Email;
 using DvCms.Contracts.Localizzazione;
+using DvCms.Contracts.Tenancy;
 using DvCms.Core.Localizzazione;
 using DvCms.DTO.Email;
 using DvCms.DTO.Piattaforma;
@@ -26,12 +28,16 @@ public class IndexModel : PaginaAdmin
     public const int GiorniPreavvisoScadenza = 30;
 
     private readonly IServizioConnessioneEmail _email;
+    private readonly IComponitoreEmail _modelli;
+    private readonly IContestoTenant _tenant;
     private readonly TimeProvider _orologio;
 
-    public IndexModel(IServizioConnessioneEmail email, TimeProvider orologio, ILocalizzatore localizzatore)
+    public IndexModel(IServizioConnessioneEmail email, IComponitoreEmail modelli, IContestoTenant tenant, TimeProvider orologio, ILocalizzatore localizzatore)
         : base(localizzatore)
     {
         _email = email;
+        _modelli = modelli;
+        _tenant = tenant;
         _orologio = orologio;
     }
 
@@ -188,11 +194,14 @@ public class IndexModel : PaginaAdmin
 
     public async Task<IActionResult> OnPostProvaAsync(string? destinatario, CancellationToken annullamento)
     {
-        var messaggio = new MessaggioEmail(
+        var messaggio = await _modelli.ComponiAsync(
+            _tenant.IdTenant,
+            CodiciModelloEmail.Prova,
+            CultureInfo.CurrentUICulture.TwoLetterISOLanguageName,
             destinatario ?? string.Empty,
             null,
-            Localizzatore.Traduci("Email di prova"),
-            Localizzatore.Traduci("Questa è un'email di prova inviata dalla configurazione del tenant. Se la ricevi, l'invio funziona."));
+            new Dictionary<string, object?>(),
+            annullamento);
         var esito = await _email.AccodaProvaAsync(IdAttore, destinatario, messaggio, annullamento);
         if (esito.Riuscito)
         {

@@ -30,7 +30,7 @@ public sealed class ServizioAcquirenti : IServizioAcquirenti
     private readonly IContestoTenant _tenant;
     private readonly IHashPassword _hash;
     private readonly IAccodatoreEmail _email;
-    private readonly ILocalizzatore _localizzatore;
+    private readonly IComponitoreEmail _modelli;
     private readonly IServizioAudit _audit;
     private readonly OpzioniAcquirenti _opzioni;
     private readonly TimeProvider _orologio;
@@ -40,7 +40,7 @@ public sealed class ServizioAcquirenti : IServizioAcquirenti
         IContestoTenant tenant,
         IHashPassword hash,
         IAccodatoreEmail email,
-        ILocalizzatore localizzatore,
+        IComponitoreEmail modelli,
         IServizioAudit audit,
         OpzioniAcquirenti opzioni,
         TimeProvider orologio)
@@ -49,7 +49,7 @@ public sealed class ServizioAcquirenti : IServizioAcquirenti
         _tenant = tenant;
         _hash = hash;
         _email = email;
-        _localizzatore = localizzatore;
+        _modelli = modelli;
         _audit = audit;
         _opzioni = opzioni;
         _orologio = orologio;
@@ -228,18 +228,23 @@ public sealed class ServizioAcquirenti : IServizioAcquirenti
         var lingue = await LingueDelSito.ElencaAsync(_contesto, _tenant.IdSito, annullamento);
         var lingua = lingue.FirstOrDefault(l => l.Predefinita)?.Codice ?? Lingua.CodiceItaliano;
 
+        var messaggio = await _modelli.ComponiAsync(
+            idTenant,
+            CodiciModelloEmail.ConfermaRegistrazione,
+            lingua,
+            acquirente.Email,
+            acquirente.NomeVisualizzato,
+            new Dictionary<string, object?>
+            {
+                ["nome"] = acquirente.NomeVisualizzato,
+                ["nome_sito"] = nomeSito,
+                ["link"] = url,
+                ["ore_validita"] = (int)_opzioni.ValiditaConferma.TotalHours,
+            },
+            annullamento);
         _email.Accoda(
             idTenant,
-            new MessaggioEmail(
-                acquirente.Email,
-                acquirente.NomeVisualizzato,
-                _localizzatore.TraduciIn(lingua, "Conferma la tua registrazione a {0}", nomeSito),
-                _localizzatore.TraduciIn(
-                    lingua,
-                    "Per completare la registrazione a {0} apri questo link entro {2} ore e scegli la tua password: {1}. Il link si può usare una sola volta. Se non sei stato tu, ignora questo messaggio.",
-                    nomeSito,
-                    url,
-                    (int)_opzioni.ValiditaConferma.TotalHours)),
+            messaggio,
             chiaveIdempotenza: $"conferma:{conferma.Id}",
             riservato: true);
 

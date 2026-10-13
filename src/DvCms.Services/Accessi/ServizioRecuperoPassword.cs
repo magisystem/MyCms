@@ -31,7 +31,7 @@ public sealed partial class ServizioRecuperoPassword : IServizioRecuperoPassword
     private readonly IContestoTenant _tenant;
     private readonly IHashPassword _hash;
     private readonly IAccodatoreEmail _email;
-    private readonly ILocalizzatore _localizzatore;
+    private readonly IComponitoreEmail _modelli;
     private readonly IServizioAudit _audit;
     private readonly OpzioniRecuperoPassword _opzioni;
     private readonly TimeProvider _orologio;
@@ -42,7 +42,7 @@ public sealed partial class ServizioRecuperoPassword : IServizioRecuperoPassword
         IContestoTenant tenant,
         IHashPassword hash,
         IAccodatoreEmail email,
-        ILocalizzatore localizzatore,
+        IComponitoreEmail modelli,
         IServizioAudit audit,
         OpzioniRecuperoPassword opzioni,
         TimeProvider orologio,
@@ -52,7 +52,7 @@ public sealed partial class ServizioRecuperoPassword : IServizioRecuperoPassword
         _tenant = tenant;
         _hash = hash;
         _email = email;
-        _localizzatore = localizzatore;
+        _modelli = modelli;
         _audit = audit;
         _opzioni = opzioni;
         _orologio = orologio;
@@ -117,17 +117,22 @@ public sealed partial class ServizioRecuperoPassword : IServizioRecuperoPassword
             try
             {
                 var lingua = await CodiceLinguaAsync(utenza, annullamento);
+                var messaggio = await _modelli.ComponiAsync(
+                    idTenant,
+                    CodiciModelloEmail.RecuperoCodice,
+                    lingua,
+                    utenza.Email,
+                    utenza.NomeVisualizzato,
+                    new Dictionary<string, object?>
+                    {
+                        ["nome"] = utenza.NomeVisualizzato,
+                        ["codice"] = codice,
+                        ["minuti_validita"] = (int)_opzioni.ValiditaCodice.TotalMinutes,
+                    },
+                    annullamento);
                 _email.Accoda(
                     idTenant,
-                    new MessaggioEmail(
-                        utenza.Email,
-                        utenza.NomeVisualizzato,
-                        _localizzatore.TraduciIn(lingua, "Codice per reimpostare la password"),
-                        _localizzatore.TraduciIn(
-                            lingua,
-                            "Il tuo codice di verifica è {0}. Vale {1} minuti. Se non hai chiesto tu di reimpostare la password, ignora questo messaggio.",
-                            codice,
-                            (int)_opzioni.ValiditaCodice.TotalMinutes)),
+                    messaggio,
                     chiaveIdempotenza: $"recupero-codice:{richiesta.Id}",
                     riservato: true);
             }
@@ -192,17 +197,22 @@ public sealed partial class ServizioRecuperoPassword : IServizioRecuperoPassword
 
         var lingua = await CodiceLinguaAsync(utenza, annullamento);
         var link = $"{urlBase.TrimEnd('/')}/admin/recupero/reimposta?token={token}{(utenza.Ruolo == RuoloUtenza.Utente ? "&da=account" : string.Empty)}";
+        var messaggioLink = await _modelli.ComponiAsync(
+            idTenant,
+            CodiciModelloEmail.RecuperoLink,
+            lingua,
+            utenza.Email,
+            utenza.NomeVisualizzato,
+            new Dictionary<string, object?>
+            {
+                ["nome"] = utenza.NomeVisualizzato,
+                ["link"] = link,
+                ["minuti_validita"] = (int)_opzioni.ValiditaLink.TotalMinutes,
+            },
+            annullamento);
         _email.Accoda(
             idTenant,
-            new MessaggioEmail(
-                utenza.Email,
-                utenza.NomeVisualizzato,
-                _localizzatore.TraduciIn(lingua, "Link per reimpostare la password"),
-                _localizzatore.TraduciIn(
-                    lingua,
-                    "Per scegliere una nuova password apri questo link entro {1} minuti: {0}. Il link si può usare una sola volta. Se non sei stato tu, ignora questo messaggio.",
-                    link,
-                    (int)_opzioni.ValiditaLink.TotalMinutes)),
+            messaggioLink,
             chiaveIdempotenza: $"recupero-link:{richiesta.Id}",
             riservato: true);
         await _contesto.SaveChangesAsync(annullamento);
@@ -252,13 +262,17 @@ public sealed partial class ServizioRecuperoPassword : IServizioRecuperoPassword
         }
 
         var lingua = await CodiceLinguaAsync(utenza, annullamento);
+        var messaggioNotifica = await _modelli.ComponiAsync(
+            utenza.IdTenant!.Value,
+            CodiciModelloEmail.RecuperoNotifica,
+            lingua,
+            utenza.Email,
+            utenza.NomeVisualizzato,
+            new Dictionary<string, object?> { ["nome"] = utenza.NomeVisualizzato },
+            annullamento);
         _email.Accoda(
             utenza.IdTenant!.Value,
-            new MessaggioEmail(
-                utenza.Email,
-                utenza.NomeVisualizzato,
-                _localizzatore.TraduciIn(lingua, "La tua password è stata cambiata"),
-                _localizzatore.TraduciIn(lingua, "La password del tuo account è stata appena cambiata. Se non sei stato tu, contatta subito l'amministratore del sito.")),
+            messaggioNotifica,
             chiaveIdempotenza: $"recupero-notifica:{richiesta.Id}",
             riservato: false);
 
