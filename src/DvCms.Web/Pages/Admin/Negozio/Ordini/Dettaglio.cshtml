@@ -100,8 +100,12 @@
                     {
                         <li class="list-group-item">
                             @Model.StatoTentativo(tentativo.Stato)<br />
-                            <small class="text-secondary">@tentativo.IdProvider · @tentativo.CreatoIlUtc.ToString("yyyy-MM-dd HH:mm")</small>
-                            @if (tentativo.Stato == StatoTentativoPagamento.DaRimborsare)
+                            <small class="text-secondary">@tentativo.Provider · @tentativo.IdProvider · @tentativo.CreatoIlUtc.ToString("yyyy-MM-dd HH:mm")</small>
+                            @if (tentativo.Stato == StatoTentativoPagamento.DaRimborsare && tentativo.Provider != DvCms.Application.Negozio.NomiProviderPagamento.PayPal)
+                            {
+                                <div class="small mt-2">@_L["Restituisci l'incasso dal back office Nexi."] (@Importo(tentativo.Importo))</div>
+                            }
+                            else if (tentativo.Stato == StatoTentativoPagamento.DaRimborsare)
                             {
                                 <form method="post" asp-page-handler="RimborsaIncasso" asp-route-id="@o.Id" class="mt-2">
                                     <input type="hidden" name="idTentativo" value="@tentativo.Id" />
@@ -112,6 +116,10 @@
                     }
                 </ul>
             </div>
+        }
+        @if (Model.PagatoConNexi && Model.Ordine.Stato is DvCms.Domain.Negozio.StatoOrdine.Pagato or DvCms.Domain.Negozio.StatoOrdine.Spedito or DvCms.Domain.Negozio.StatoOrdine.Ritirato)
+        {
+            <div class="alert alert-info mt-3" role="status">@_L["Ordine pagato con Nexi: per rimborsare usa il back office Nexi."]</div>
         }
         @if (Model.PuoRimborsare)
         {

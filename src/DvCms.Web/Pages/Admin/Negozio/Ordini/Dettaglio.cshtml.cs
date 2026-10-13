@@ -35,7 +35,10 @@ public class DettaglioModel : PaginaAdmin
 
     public decimal Residuo => Ordine.TotaleLordo - Ordine.TotaleRimborsato;
 
-    public bool PuoRimborsare => Ordine.Stato is DvCms.Domain.Negozio.StatoOrdine.Pagato or DvCms.Domain.Negozio.StatoOrdine.Spedito or DvCms.Domain.Negozio.StatoOrdine.Ritirato && Residuo > 0;
+    /// <summary>Incassato con Nexi: il rimborso dal pannello non c'è, si fa dal back office Nexi (ADR-0022).</summary>
+    public bool PagatoConNexi => Tentativi.Any(t => t.Provider == NomiProviderPagamento.Nexi && t.Stato is DvCms.Domain.Negozio.StatoTentativoPagamento.Catturato or DvCms.Domain.Negozio.StatoTentativoPagamento.DaRimborsare);
+
+    public bool PuoRimborsare => Ordine.Stato is DvCms.Domain.Negozio.StatoOrdine.Pagato or DvCms.Domain.Negozio.StatoOrdine.Spedito or DvCms.Domain.Negozio.StatoOrdine.Ritirato && Residuo > 0 && !PagatoConNexi;
 
     public bool DaRimborsare => Tentativi.Any(t => t.Stato == DvCms.Domain.Negozio.StatoTentativoPagamento.DaRimborsare);
 

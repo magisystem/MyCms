@@ -32,8 +32,14 @@ public class DettaglioModel : PageModel
 
     public OrdineVista Ordine { get; private set; } = null!;
 
-    /// <summary>Dove proseguire il pagamento sulla pagina di PayPal (solo dopo l'avvio). Si mostra come collegamento: il cliente non viene reindirizzato da un modulo, perché la politica dei contenuti limita i moduli al sito stesso.</summary>
-    public Uri? UrlPayPal { get; private set; }
+    /// <summary>Dove proseguire il pagamento sulla pagina del provider (solo dopo l'avvio). Si mostra come collegamento: il cliente non viene reindirizzato da un modulo, perché la politica dei contenuti limita i moduli al sito stesso.</summary>
+    public Uri? UrlPagamento { get; private set; }
+
+    /// <summary>Il provider scelto dal cliente, quando <see cref="UrlPagamento"/> c'è.</summary>
+    public string ProviderAvviato { get; private set; } = NomiProviderPagamento.PayPal;
+
+    /// <summary>I provider con cui questo sito fa pagare adesso: un pulsante ciascuno.</summary>
+    public IReadOnlyList<string> ProviderDisponibili { get; private set; } = [];
 
     public bool PuoPagare => Ordine.Stato is StatoOrdine.InAttesaDiPagamento or StatoOrdine.PagamentoFallito && Ordine.TotaleLordo > 0;
 
@@ -53,12 +59,15 @@ public class DettaglioModel : PageModel
         }
 
         Ordine = ordine;
+        ProviderDisponibili = await _pagamenti.ProviderDisponibiliAsync(annullamento);
         return Page();
     }
 
-    public async Task<IActionResult> OnPostPagaAsync(Guid id, CancellationToken annullamento)
+    public async Task<IActionResult> OnPostPagaAsync(Guid id, string? provider, CancellationToken annullamento)
     {
-        var esito = await _pagamenti.AvviaAsync(IdAccount, id, new DatiLinkInvito(Request.Scheme, Request.Host.Port), annullamento);
+        // Senza una scelta esplicita (moduli di versioni precedenti) vale PayPal, come prima dell'arrivo di Nexi.
+        var scelto = string.IsNullOrWhiteSpace(provider) ? NomiProviderPagamento.PayPal : provider;
+        var esito = await _pagamenti.AvviaAsync(IdAccount, id, scelto, new DatiLinkInvito(Request.Scheme, Request.Host.Port), annullamento);
         if (esito.Risultato == RisultatoPagamento.NonTrovato)
         {
             return NotFound();
@@ -66,7 +75,8 @@ public class DettaglioModel : PageModel
 
         if (esito.Risultato == RisultatoPagamento.Avviato)
         {
-            UrlPayPal = esito.UrlApprovazione;
+            UrlPagamento = esito.UrlApprovazione;
+            ProviderAvviato = scelto;
             Ordine = (await _ordini.LeggiMioAsync(IdAccount, id, annullamento))!;
             return Page();
         }
@@ -78,13 +88,13 @@ public class DettaglioModel : PageModel
     public string TestoRisultato(RisultatoPagamento risultato) => risultato switch
     {
         RisultatoPagamento.Pagato => _localizzatore.Traduci("Pagamento ricevuto: grazie."),
-        RisultatoPagamento.InSospeso => _localizzatore.Traduci("Il pagamento è in attesa di conferma da PayPal: l'ordine si aggiornerà appena arriva."),
+        RisultatoPagamento.InSospeso => _localizzatore.Traduci("Il pagamento è in attesa di conferma: l'ordine si aggiornerà appena arriva."),
         RisultatoPagamento.Fallito => _localizzatore.Traduci("Il pagamento non è andato a buon fine: puoi riprovare."),
-        RisultatoPagamento.NonApprovato => _localizzatore.Traduci("Il pagamento non è stato approvato su PayPal: nulla è stato addebitato."),
+        RisultatoPagamento.NonApprovato => _localizzatore.Traduci("Il pagamento non è stato approvato: nulla è stato addebitato."),
         RisultatoPagamento.OrdineChiuso => _localizzatore.Traduci("Questo ordine non è più in attesa di pagamento."),
         RisultatoPagamento.DaRimborsare => _localizzatore.Traduci("Il pagamento è stato ricevuto ma l'ordine non si può completare: contatta il negozio per il rimborso."),
         RisultatoPagamento.NonConfigurato or RisultatoPagamento.ProduzioneBloccata => _localizzatore.Traduci("Il pagamento online non è disponibile per questo negozio."),
-        RisultatoPagamento.ErroreProvider => _localizzatore.Traduci("PayPal non risponde in questo momento: riprova tra poco."),
+        RisultatoPagamento.ErroreProvider => _localizzatore.Traduci("Il servizio di pagamento non risponde in questo momento: riprova tra poco."),
         _ => _localizzatore.Traduci("Operazione non riuscita."),
     };
 

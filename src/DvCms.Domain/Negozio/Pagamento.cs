@@ -62,6 +62,12 @@ public class TentativoPagamento
     /// <summary>Quanto il provider ha davvero incassato (può differire da <see cref="Importo"/> se qualcosa è andato storto): è l'importo massimo rimborsabile di questo incasso.</summary>
     public decimal? ImportoIncassato { get; set; }
 
+    /// <summary>
+    /// Impronta (SHA-256, esadecimale) del token di sicurezza che il provider ha restituito alla creazione del pagamento e che ripete nelle
+    /// notifiche (Nexi): serve a riconoscere una notifica autentica senza conservare il token. Nulla per PayPal, che firma i webhook.
+    /// </summary>
+    public string? HashTokenNotifica { get; set; }
+
     public DateTime CreatoIlUtc { get; set; }
 
     public DateTime AggiornatoIlUtc { get; set; }

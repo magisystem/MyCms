@@ -14,13 +14,15 @@ public sealed class ServizioProntezzaNegozio : IServizioProntezzaNegozio
 {
     private readonly ContestoDatabase _contesto;
     private readonly IArchivioCredenzialiPagamento _credenziali;
+    private readonly ServizioImpostazioniNexi _credenzialiNexi;
     private readonly OpzioniNegozio _opzioni;
     private readonly OpzioniManutenzione _manutenzione;
 
-    public ServizioProntezzaNegozio(ContestoDatabase contesto, IArchivioCredenzialiPagamento credenziali, OpzioniNegozio opzioni, OpzioniManutenzione manutenzione)
+    public ServizioProntezzaNegozio(ContestoDatabase contesto, IArchivioCredenzialiPagamento credenziali, ServizioImpostazioniNexi credenzialiNexi, OpzioniNegozio opzioni, OpzioniManutenzione manutenzione)
     {
         _contesto = contesto;
         _credenziali = credenziali;
+        _credenzialiNexi = credenzialiNexi;
         _opzioni = opzioni;
         _manutenzione = manutenzione;
     }
@@ -47,14 +49,25 @@ public sealed class ServizioProntezzaNegozio : IServizioProntezzaNegozio
         Aggiungi("NegozioAttivo", sito.CommercioAttivo, StatoControllo.Bloccante);
 
         var impostazioni = await _contesto.ImpostazioniPagamentoSiti.IgnoreQueryFilters().AsNoTracking().SingleOrDefaultAsync(i => i.IdSito == idSito && i.IdTenant == idTenant, annullamento);
-        var ambiente = impostazioni?.Ambiente ?? AmbientePagamento.Sandbox;
         var credenziali = await _credenziali.OttieniAsync(idTenant, idSito, annullamento);
-        Aggiungi("CredenzialiPayPal", credenziali is not null, StatoControllo.Bloccante, ambiente.ToString());
+        var credenzialiNexi = await _credenzialiNexi.OttieniAsync(idTenant, idSito, annullamento);
+
+        // Basta un provider pronto: quello non ancora configurato è solo un'attenzione, a meno che non ce ne sia nessuno.
+        var mancaPayPal = credenzialiNexi is null ? StatoControllo.Bloccante : StatoControllo.Attenzione;
+        var ambientePayPal = impostazioni?.Ambiente ?? AmbientePagamento.Sandbox;
+        Aggiungi("CredenzialiPayPal", credenziali is not null, mancaPayPal, ambientePayPal.ToString());
 
         // L'identificativo del webhook fa parte delle credenziali complete: se si leggono, c'è. Senza, i pagamenti non si concludono da soli.
-        Aggiungi("WebhookPayPal", credenziali is not null && !string.IsNullOrEmpty(credenziali.IdWebhook), StatoControllo.Bloccante);
+        Aggiungi("WebhookPayPal", credenziali is not null && !string.IsNullOrEmpty(credenziali.IdWebhook), mancaPayPal);
+        if (credenzialiNexi is not null || credenziali is null)
+        {
+            Aggiungi("CredenzialiNexi", credenzialiNexi is not null, StatoControllo.Attenzione, credenzialiNexi?.Ambiente.ToString());
+        }
 
-        if (ambiente == AmbientePagamento.Live)
+        // L'ambiente che conta è quello dei provider configurati: se uno è in produzione serve l'interruttore.
+        var ambiente = impostazioni is not null ? ambientePayPal : credenzialiNexi?.Ambiente ?? AmbientePagamento.Sandbox;
+        var inProduzione = impostazioni?.Ambiente == AmbientePagamento.Live || credenzialiNexi?.Ambiente == AmbientePagamento.Live;
+        if (inProduzione)
         {
             Aggiungi("InterruttoreProduzione", _opzioni.CheckoutProduzioneAbilitato, StatoControllo.Bloccante);
         }
@@ -98,7 +111,10 @@ public sealed class ServizioProntezzaNegozio : IServizioProntezzaNegozio
             .FirstOrDefaultAsync(annullamento);
         controlli.Add(dominio is null
             ? new ControlloProntezza("DominioPubblico", StatoControllo.Bloccante)
-            : new ControlloProntezza("DominioPubblico", StatoControllo.Ok, $"https://{dominio}/webhooks/paypal"));
+            : new ControlloProntezza(
+                "DominioPubblico",
+                StatoControllo.Ok,
+                credenzialiNexi is null ? $"https://{dominio}/webhooks/paypal" : $"https://{dominio}/webhooks/paypal, https://{dominio}{ServizioPagamenti.PercorsoNotificaNexi}"));
 
         return new RapportoProntezza(sito.Nome, ambiente, controlli);
     }

@@ -39,7 +39,7 @@ internal sealed class ContestoNegozio : IAsyncDisposable
 
     public Guid ClienteDiB { get; private set; }
 
-    public static async Task<ContestoNegozio> CreaAsync(PayPalFinto? payPal = null, bool produzioneAbilitata = false, bool conEmail = false, bool avvisoAmministratori = true)
+    public static async Task<ContestoNegozio> CreaAsync(PayPalFinto? payPal = null, bool produzioneAbilitata = false, bool conEmail = false, bool avvisoAmministratori = true, NexiFinto? nexi = null)
     {
         var impostazioni = new Dictionary<string, string?>
         {
@@ -47,7 +47,7 @@ internal sealed class ContestoNegozio : IAsyncDisposable
             ["Negozio:CheckoutProduzione"] = produzioneAbilitata ? "true" : "false",
             ["Negozio:AvvisoNuovoOrdineAmministratori"] = avvisoAmministratori ? "true" : "false",
         };
-        var c = new ContestoNegozio(await ScenarioWeb.CreaAsync(impostazioni: impostazioni, payPal: payPal));
+        var c = new ContestoNegozio(await ScenarioWeb.CreaAsync(impostazioni: impostazioni, payPal: payPal, nexi: nexi));
         if (conEmail)
         {
             // Il canale email del tenant A punta a un server SMTP finto in locale: nessuna email reale parte dai test.
@@ -317,6 +317,14 @@ internal sealed class ContestoNegozio : IAsyncDisposable
         await using var ambito = Web.Fabbrica.Services.CreateAsyncScope();
         var esito = await ambito.ServiceProvider.GetRequiredService<IServizioImpostazioniPagamento>()
             .SalvaAsync(Platform, tenant.IdTenant, tenant.IdSito, ambiente, "client-di-prova", "segreto-di-prova", "webhook-di-prova", null, Ct);
+        Assert.True(esito.Riuscito, $"{esito.Codice} {string.Join(',', esito.CampiNonValidi ?? [])}");
+    }
+
+    public async Task ConfiguraNexiAsync(DatiProva.TenantCreato tenant, AmbientePagamento ambiente = AmbientePagamento.Sandbox)
+    {
+        await using var ambito = Web.Fabbrica.Services.CreateAsyncScope();
+        var esito = await ambito.ServiceProvider.GetRequiredService<IServizioImpostazioniNexi>()
+            .SalvaAsync(Platform, tenant.IdTenant, tenant.IdSito, ambiente, NexiFinto.ChiaveValida, null, Ct);
         Assert.True(esito.Riuscito, $"{esito.Codice} {string.Join(',', esito.CampiNonValidi ?? [])}");
     }
 

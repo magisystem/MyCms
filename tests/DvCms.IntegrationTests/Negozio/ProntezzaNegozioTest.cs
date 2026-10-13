@@ -52,6 +52,30 @@ public class ProntezzaNegozioTest
     }
 
     [Fact]
+    public async Task BastaUnProviderProntoConSoloNexiPayPalNonBloccaEInProduzioneServeLInterruttore()
+    {
+        await using var c = await ContestoNegozio.CreaAsync(produzioneAbilitata: false);
+        await c.CreaProdottoAsync(c.A, "Libro", 4m, ("LIB-1", 10m, null));
+        await c.CreaRitiroAsync(c.A);
+
+        var nessuno = (await VerificaAsync(c, c.Platform, c.A))!;
+        Assert.Equal(StatoControllo.Bloccante, Stato(nessuno, "CredenzialiPayPal"));
+        Assert.Equal(StatoControllo.Attenzione, Stato(nessuno, "CredenzialiNexi"));
+
+        await c.ConfiguraNexiAsync(c.A);
+        var soloNexi = (await VerificaAsync(c, c.Platform, c.A))!;
+        Assert.Equal(StatoControllo.Attenzione, Stato(soloNexi, "CredenzialiPayPal"));
+        Assert.Equal(StatoControllo.Attenzione, Stato(soloNexi, "WebhookPayPal"));
+        Assert.Equal(StatoControllo.Ok, Stato(soloNexi, "CredenzialiNexi"));
+        Assert.DoesNotContain(soloNexi.Controlli, x => x.Stato == StatoControllo.Bloccante && x.Codice is "CredenzialiPayPal" or "WebhookPayPal" or "CredenzialiNexi");
+        Assert.Contains("/webhooks/nexi", soloNexi.Controlli.Single(x => x.Codice == "DominioPubblico").Dettaglio, StringComparison.Ordinal);
+
+        await c.ConfiguraNexiAsync(c.A, AmbientePagamento.Live);
+        var produzione = (await VerificaAsync(c, c.Platform, c.A))!;
+        Assert.Equal(StatoControllo.Bloccante, Stato(produzione, "InterruttoreProduzione"));
+    }
+
+    [Fact]
     public async Task InProduzioneSenzaInterruttoreEBloccanteMentreInProvaSoloUnAvviso()
     {
         await using var c = await ContestoNegozio.CreaAsync(produzioneAbilitata: false);

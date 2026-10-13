@@ -408,6 +408,26 @@ internal sealed class ConfigurazioneImpostazioniPagamentoSito : IEntityTypeConfi
     }
 }
 
+internal sealed class ConfigurazioneImpostazioniNexiSito : IEntityTypeConfiguration<ImpostazioniNexiSito>
+{
+    public void Configure(EntityTypeBuilder<ImpostazioniNexiSito> entita)
+    {
+        entita.ToTable("ImpostazioniNexiSiti");
+        entita.HasKey(impostazioni => impostazioni.Id);
+        entita.Property(impostazioni => impostazioni.Id).ValueGeneratedNever();
+        entita.Property(impostazioni => impostazioni.Ambiente).HasConversion<string>().HasMaxLength(20).IsRequired();
+        entita.Property(impostazioni => impostazioni.TokenConcorrenza).IsRowVersion();
+
+        entita.HasOne<Sito>()
+            .WithMany()
+            .HasForeignKey(impostazioni => new { impostazioni.IdTenant, impostazioni.IdSito })
+            .HasPrincipalKey(sito => new { sito.IdTenant, sito.Id })
+            .OnDelete(DeleteBehavior.Restrict);
+        entita.HasOne<DvCms.Domain.Accessi.Utenza>().WithMany().HasForeignKey(impostazioni => impostazioni.AggiornatoDaIdUtenza).OnDelete(DeleteBehavior.Restrict);
+        entita.HasIndex(impostazioni => impostazioni.IdSito).IsUnique();
+    }
+}
+
 internal sealed class ConfigurazioneTentativoPagamento : IEntityTypeConfiguration<TentativoPagamento>
 {
     public void Configure(EntityTypeBuilder<TentativoPagamento> entita)
@@ -418,6 +438,7 @@ internal sealed class ConfigurazioneTentativoPagamento : IEntityTypeConfiguratio
         entita.Property(tentativo => tentativo.Provider).HasMaxLength(20).IsRequired();
         entita.Property(tentativo => tentativo.IdProvider).HasMaxLength(64).IsRequired();
         entita.Property(tentativo => tentativo.IdCattura).HasMaxLength(64);
+        entita.Property(tentativo => tentativo.HashTokenNotifica).HasMaxLength(64);
         entita.Property(tentativo => tentativo.Importo).HasPrecision(18, 2);
         entita.Property(tentativo => tentativo.ImportoIncassato).HasPrecision(18, 2);
         entita.Property(tentativo => tentativo.Valuta).HasMaxLength(3).IsFixedLength().IsRequired();

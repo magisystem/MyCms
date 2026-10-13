@@ -3,18 +3,44 @@ using DvCms.Domain.Negozio;
 
 namespace DvCms.Application.Negozio;
 
+/// <summary>I provider di pagamento che il negozio sa usare (ADR-0020, ADR-0022). Il nome è anche quello salvato nei tentativi di pagamento.</summary>
+public static class NomiProviderPagamento
+{
+    public const string PayPal = "PayPal";
+    public const string Nexi = "Nexi";
+
+    public static IReadOnlyList<string> Tutti { get; } = [PayPal, Nexi];
+}
+
+/// <summary>Credenziali di un provider per un sito. Le classi derivate non mostrano mai i segreti in <see cref="object.ToString"/>.</summary>
+public abstract class CredenzialiGateway
+{
+    protected CredenzialiGateway(AmbientePagamento ambiente) => Ambiente = ambiente;
+
+    public AmbientePagamento Ambiente { get; }
+}
+
+/// <summary>Credenziali del terminale Nexi XPay di un sito: la chiave API (<c>X-API-KEY</c>).</summary>
+public sealed class CredenzialiNexi : CredenzialiGateway
+{
+    public CredenzialiNexi(AmbientePagamento ambiente, string chiaveApi)
+        : base(ambiente) => ChiaveApi = chiaveApi;
+
+    public string ChiaveApi { get; }
+
+    public override string ToString() => $"Nexi {Ambiente}";
+}
+
 /// <summary>Credenziali del conto PayPal di un sito. <see cref="ToString"/> non mostra mai i segreti.</summary>
-public sealed class CredenzialiPayPal
+public sealed class CredenzialiPayPal : CredenzialiGateway
 {
     public CredenzialiPayPal(AmbientePagamento ambiente, string idClient, string segretoClient, string idWebhook)
+        : base(ambiente)
     {
-        Ambiente = ambiente;
         IdClient = idClient;
         SegretoClient = segretoClient;
         IdWebhook = idWebhook;
     }
-
-    public AmbientePagamento Ambiente { get; }
 
     public string IdClient { get; }
 
@@ -58,6 +84,20 @@ public interface IServizioImpostazioniPagamento
         CancellationToken annullamento);
 }
 
+public sealed record SchedaNexiSito(string NomeSito, AmbientePagamento Ambiente, bool ChiaveImpostata, string? TokenConcorrenza, bool Configurato);
+
+/// <summary>
+/// Credenziali Nexi XPay per sito, gestite dal <c>PlatformAdmin</c> con la stessa protezione dei segreti delle altre (ADR-0022). La chiave API non
+/// torna mai all'interfaccia: si vede solo se è impostata.
+/// </summary>
+public interface IServizioImpostazioniNexi
+{
+    Task<SchedaNexiSito?> LeggiAsync(Guid idAttore, Guid idTenant, Guid idSito, CancellationToken annullamento);
+
+    /// <summary>Salva ambiente e chiave API (una chiave vuota lascia quella già salvata). Esiti: <c>DatiNonValidi</c>, <c>NonTrovato</c>, <c>Conflitto</c>, <c>ChiaveSegretiMancante</c>.</summary>
+    Task<EsitoOperazione> SalvaAsync(Guid idAttore, Guid idTenant, Guid idSito, AmbientePagamento ambiente, string? chiaveApi, string? tokenConcorrenza, CancellationToken annullamento);
+}
+
 /// <summary>Lettura delle credenziali per chi deve parlare con il provider (non per l'interfaccia).</summary>
 public interface IArchivioCredenzialiPagamento
 {
@@ -65,6 +105,9 @@ public interface IArchivioCredenzialiPagamento
     Task<CredenzialiPayPal?> OttieniAsync(Guid idTenant, Guid idSito, CancellationToken annullamento);
 }
 
+/// <param name="NumeroOrdine">Numero dell'ordine nel sito (Nexi lo usa per comporre un identificativo breve).</param>
+/// <param name="UrlNotifica">Dove il provider invia le notifiche server-to-server (Nexi).</param>
+/// <param name="Lingua">Codice lingua del sito dell'ordine (<c>it</c>, <c>en</c>…) per la pagina del provider.</param>
 public sealed record RichiestaOrdineProvider(
     Guid IdRichiesta,
     decimal Importo,
@@ -72,9 +115,18 @@ public sealed record RichiestaOrdineProvider(
     string Riferimento,
     string Descrizione,
     Uri UrlRitorno,
-    Uri UrlAnnullo);
+    Uri UrlAnnullo,
+    int NumeroOrdine = 0,
+    Uri? UrlNotifica = null,
+    string? EmailCliente = null,
+    string? NomeCliente = null,
+    string Lingua = "it");
 
-public sealed record OrdineProvider(string IdProvider, Uri UrlApprovazione);
+/// <param name="TokenSicurezza">Token che il provider ripeterà nelle notifiche (Nexi): il servizio ne conserva solo l'impronta.</param>
+public sealed record OrdineProvider(string IdProvider, Uri UrlApprovazione, string? TokenSicurezza = null)
+{
+    public override string ToString() => $"OrdineProvider({IdProvider})";
+}
 
 public enum StatoCatturaProvider
 {
@@ -146,4 +198,25 @@ public interface IProviderPagamento
 
     /// <summary>Verifica la firma di un webhook con il servizio del provider e l'identificativo del webhook del conto.</summary>
     Task<bool> VerificaWebhookAsync(CredenzialiPayPal credenziali, IntestazioniWebhook intestazioni, string corpo, CancellationToken annullamento);
+}
+
+/// <summary>
+/// Un provider di pagamento con pagina esterna (PayPal, Nexi XPay; ADR-0022): crea il pagamento, incassa o legge l'esito. Il servizio dei
+/// pagamenti sceglie il provider dal nome salvato nel tentativo. Importo e valuta li decide sempre il server.
+/// </summary>
+public interface IGatewayPagamento
+{
+    /// <summary>Uno dei <see cref="NomiProviderPagamento"/>.</summary>
+    string Nome { get; }
+
+    /// <summary>Le credenziali complete del sito, o <c>null</c> se mancano o non si leggono.</summary>
+    Task<CredenzialiGateway?> OttieniCredenzialiAsync(Guid idTenant, Guid idSito, CancellationToken annullamento);
+
+    Task<OrdineProvider> CreaOrdineAsync(CredenzialiGateway credenziali, RichiestaOrdineProvider richiesta, CancellationToken annullamento);
+
+    /// <summary>Al ritorno del cliente: incassa se il provider lo richiede (PayPal) oppure legge l'esito (Nexi, che incassa da sé).</summary>
+    Task<EsitoCatturaProvider> CatturaAsync(CredenzialiGateway credenziali, string idProvider, Guid idRichiesta, CancellationToken annullamento);
+
+    /// <summary>Stato attuale presso il provider, senza incassare (riconciliazione, notifiche, incassi orfani).</summary>
+    Task<EsitoCatturaProvider> LeggiOrdineAsync(CredenzialiGateway credenziali, string idProvider, CancellationToken annullamento);
 }

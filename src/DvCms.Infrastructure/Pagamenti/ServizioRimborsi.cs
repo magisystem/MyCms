@@ -63,7 +63,8 @@ public sealed partial class ServizioRimborsi : IServizioRimborsi
 
         var tentativo = await _contesto.TentativiPagamento.AsNoTracking()
             .SingleOrDefaultAsync(t => t.IdOrdine == idOrdine && t.Stato == StatoTentativoPagamento.Catturato, annullamento);
-        if (!_rimborsabili.Contains(ordine.Stato) || tentativo?.IdCattura is null)
+        // I rimborsi dal pannello esistono solo per PayPal: un incasso Nexi si restituisce dal back office Nexi (ADR-0022).
+        if (!_rimborsabili.Contains(ordine.Stato) || tentativo?.IdCattura is null || tentativo.Provider != NomiProviderPagamento.PayPal)
         {
             return RisultatoRimborso.NonRimborsabile;
         }
@@ -150,7 +151,7 @@ public sealed partial class ServizioRimborsi : IServizioRimborsi
             return RisultatoRimborso.DatiNonValidi;
         }
 
-        if (tentativo.Stato != StatoTentativoPagamento.DaRimborsare || tentativo.IdCattura is null)
+        if (tentativo.Stato != StatoTentativoPagamento.DaRimborsare || tentativo.IdCattura is null || tentativo.Provider != NomiProviderPagamento.PayPal)
         {
             return RisultatoRimborso.NonRimborsabile;
         }

@@ -181,6 +181,7 @@ public sealed class FabbricaApplicazioneConConnessione : FabbricaApplicazione
     private readonly bool _registraRisoluzioni;
     private readonly PayPalFinto? _payPal;
     private readonly ProviderOAuthFinto? _oauthEmail;
+    private readonly NexiFinto? _nexi;
 
     public FabbricaApplicazioneConConnessione(
         string connessione,
@@ -189,12 +190,14 @@ public sealed class FabbricaApplicazioneConConnessione : FabbricaApplicazione
         IPAddress? indirizzoRemoto = null,
         bool registraRisoluzioni = false,
         PayPalFinto? payPal = null,
-        ProviderOAuthFinto? oauthEmail = null)
+        ProviderOAuthFinto? oauthEmail = null,
+        NexiFinto? nexi = null)
         : base(connessione, ambiente, impostazioni, indirizzoRemoto)
     {
         _registraRisoluzioni = registraRisoluzioni;
         _payPal = payPal;
         _oauthEmail = oauthEmail;
+        _nexi = nexi;
     }
 
     protected override void ConfiguraServizi(IServiceCollection servizi)
@@ -208,6 +211,12 @@ public sealed class FabbricaApplicazioneConConnessione : FabbricaApplicazione
         {
             // Il client PayPal vero parla con il PayPal finto: nessuna richiesta esce dal processo.
             servizi.AddHttpClient(DvCms.Infrastructure.Pagamenti.ClientePayPal.NomeClientHttp).ConfigurePrimaryHttpMessageHandler(() => _payPal);
+        }
+
+        if (_nexi is not null)
+        {
+            // Il client Nexi vero parla con il Nexi finto: nessuna richiesta esce dal processo.
+            servizi.AddHttpClient(DvCms.Infrastructure.Pagamenti.ClienteNexi.NomeClientHttp).ConfigurePrimaryHttpMessageHandler(() => _nexi);
         }
 
         if (_oauthEmail is not null)

@@ -14,14 +14,21 @@ namespace DvCms.Web.Areas.Platform.Pages.Tenant;
 public class PagamentiModel : PaginaPiattaforma
 {
     private readonly IServizioImpostazioniPagamento _pagamenti;
+    private readonly IServizioImpostazioniNexi _nexi;
     private readonly IServizioProntezzaNegozio _prontezza;
 
-    public PagamentiModel(IServizioImpostazioniPagamento pagamenti, IServizioProntezzaNegozio prontezza, ILocalizzatore localizzatore)
+    public PagamentiModel(IServizioImpostazioniPagamento pagamenti, IServizioImpostazioniNexi nexi, IServizioProntezzaNegozio prontezza, ILocalizzatore localizzatore)
         : base(localizzatore)
     {
         _pagamenti = pagamenti;
+        _nexi = nexi;
         _prontezza = prontezza;
     }
+
+    /// <summary>Credenziali Nexi XPay del sito (la chiave API non c'è mai: solo se è impostata).</summary>
+    public SchedaNexiSito? SchedaNexi { get; private set; }
+
+    public AmbientePagamento AmbienteNexi { get; private set; } = AmbientePagamento.Sandbox;
 
     /// <summary>Verifica di prontezza del negozio del sito (sola lettura).</summary>
     public RapportoProntezza? Rapporto { get; private set; }
@@ -31,6 +38,7 @@ public class PagamentiModel : PaginaPiattaforma
         "NegozioAttivo" => Localizzatore.Traduci("Negozio attivo per il sito"),
         "CredenzialiPayPal" => Localizzatore.Traduci("Credenziali PayPal complete e leggibili"),
         "WebhookPayPal" => Localizzatore.Traduci("Identificativo del webhook impostato"),
+        "CredenzialiNexi" => Localizzatore.Traduci("Credenziali Nexi XPay (chiave API) complete e leggibili"),
         "InterruttoreProduzione" => Localizzatore.Traduci("Interruttore di produzione acceso (Negozio:CheckoutProduzione)"),
         "AmbienteProva" => Localizzatore.Traduci("Ambiente di prova (nessun denaro reale)"),
         "ProdottiPubblicati" => Localizzatore.Traduci("Almeno un prodotto pubblicato con una variante attiva"),
@@ -68,8 +76,33 @@ public class PagamentiModel : PaginaPiattaforma
 
         Ambiente = Scheda.Ambiente;
         IdClient = Scheda.IdClient;
+        SchedaNexi = await _nexi.LeggiAsync(IdAttore, id, idSito, annullamento);
+        AmbienteNexi = SchedaNexi?.Ambiente ?? AmbientePagamento.Sandbox;
         Rapporto = await _prontezza.VerificaAsync(IdAttore, id, idSito, annullamento);
         return Page();
+    }
+
+    public async Task<IActionResult> OnPostSalvaNexiAsync(Guid id, Guid idSito, string? ambiente, string? chiaveApi, string? tokenConcorrenza, CancellationToken annullamento)
+    {
+        if (!Enum.TryParse<AmbientePagamento>(ambiente, ignoreCase: true, out var scelto) || !Enum.IsDefined(scelto))
+        {
+            MessaggioErrore = TestoErrore(CodiceEsito.DatiNonValidi);
+            return RedirectToPage(new { id, idSito });
+        }
+
+        var esito = await _nexi.SalvaAsync(IdAttore, id, idSito, scelto, chiaveApi, tokenConcorrenza, annullamento);
+        if (esito.Riuscito)
+        {
+            Messaggio = Localizzatore.Traduci("Credenziali Nexi salvate.");
+        }
+        else
+        {
+            MessaggioErrore = esito.Codice == CodiceEsito.DatiNonValidi
+                ? Localizzatore.Traduci("La chiave API Nexi non è valida o manca.")
+                : TestoErrore(esito.Codice);
+        }
+
+        return RedirectToPage(new { id, idSito });
     }
 
     public async Task<IActionResult> OnPostSalvaAsync(Guid id, Guid idSito, string? ambiente, string? idClient, string? segretoClient, string? idWebhook, string? tokenConcorrenza, CancellationToken annullamento)
@@ -103,6 +136,8 @@ public class PagamentiModel : PaginaPiattaforma
         }
 
         Ambiente = scelto;
+        SchedaNexi = await _nexi.LeggiAsync(IdAttore, id, idSito, annullamento);
+        AmbienteNexi = SchedaNexi?.Ambiente ?? AmbientePagamento.Sandbox;
         Rapporto = await _prontezza.VerificaAsync(IdAttore, id, idSito, annullamento);
         IdClient = idClient ?? string.Empty;
         CampiNonValidi = esito.CampiNonValidi ?? [];

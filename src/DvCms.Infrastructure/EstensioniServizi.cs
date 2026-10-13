@@ -231,6 +231,12 @@ public static class EstensioniServizi
         servizi.TryAddScoped<IServizioGiacenze, ServizioGiacenze>();
         servizi.AddHttpClient(ClientePayPal.NomeClientHttp, client => client.Timeout = Timeout.InfiniteTimeSpan);
         servizi.TryAddScoped<IProviderPagamento, ClientePayPal>();
+        servizi.AddHttpClient(ClienteNexi.NomeClientHttp, client => client.Timeout = Timeout.InfiniteTimeSpan);
+        servizi.TryAddScoped<ClienteNexi>();
+        servizi.TryAddScoped<ServizioImpostazioniNexi>();
+        servizi.TryAddScoped<IServizioImpostazioniNexi>(f => f.GetRequiredService<ServizioImpostazioniNexi>());
+        servizi.AddScoped<IGatewayPagamento, GatewayPayPal>();
+        servizi.AddScoped<IGatewayPagamento, GatewayNexi>();
         servizi.TryAddSingleton(new OpzioniNegozio(configurazione.GetValue<bool>("Negozio:CheckoutProduzione"), configurazione.GetValue("Negozio:AvvisoNuovoOrdineAmministratori", true)));
         servizi.TryAddScoped<NotificheOrdine>();
         servizi.TryAddScoped<IServizioRimborsi, ServizioRimborsi>();

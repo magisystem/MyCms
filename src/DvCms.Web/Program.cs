@@ -135,6 +135,7 @@ applicazione.UseAuthorization();
 applicazione.MapSeo();
 applicazione.MapMedia();
 applicazione.MapWebhookPayPal();
+applicazione.MapNotificaNexi();
 applicazione.MapRazorPages();
 
 applicazione.Run();

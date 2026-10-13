@@ -13,10 +13,14 @@ using Microsoft.Extensions.Logging;
 
 namespace DvCms.Infrastructure.Pagamenti;
 
-/// <summary>Pagamenti con PayPal (vedi <see cref="IServizioPagamenti"/>). Lavora solo sul tenant e sul sito dell'host.</summary>
+/// <summary>Pagamenti con PayPal e Nexi (vedi <see cref="IServizioPagamenti"/>). Lavora solo sul tenant e sul sito dell'host.</summary>
 public sealed partial class ServizioPagamenti : IServizioPagamenti
 {
-    private const string NomeProvider = "PayPal";
+    /// <summary>Il provider dei webhook firmati (PayPal); le notifiche di Nexi hanno il loro percorso.</summary>
+    private const string NomeProvider = NomiProviderPagamento.PayPal;
+
+    /// <summary>Dove Nexi invia le notifiche server-to-server, sul dominio del sito (le credenziali sono per sito).</summary>
+    public const string PercorsoNotificaNexi = "/webhooks/nexi";
 
     private static readonly StatoTentativoPagamento[] _incassabili = [StatoTentativoPagamento.Creato, StatoTentativoPagamento.InSospeso, StatoTentativoPagamento.Fallito];
 
@@ -24,6 +28,7 @@ public sealed partial class ServizioPagamenti : IServizioPagamenti
     private readonly IContestoTenant _tenant;
     private readonly IProviderPagamento _provider;
     private readonly IArchivioCredenzialiPagamento _credenziali;
+    private readonly Dictionary<string, IGatewayPagamento> _gateway;
     private readonly IServizioGiacenze _giacenze;
     private readonly IServizioAudit _audit;
     private readonly NotificheOrdine _notifiche;
@@ -37,6 +42,7 @@ public sealed partial class ServizioPagamenti : IServizioPagamenti
         IContestoTenant tenant,
         IProviderPagamento provider,
         IArchivioCredenzialiPagamento credenziali,
+        IEnumerable<IGatewayPagamento> gateway,
         IServizioGiacenze giacenze,
         IServizioAudit audit,
         NotificheOrdine notifiche,
@@ -49,6 +55,7 @@ public sealed partial class ServizioPagamenti : IServizioPagamenti
         _tenant = tenant;
         _provider = provider;
         _credenziali = credenziali;
+        _gateway = gateway.ToDictionary(g => g.Nome, StringComparer.Ordinal);
         _giacenze = giacenze;
         _audit = audit;
         _notifiche = notifiche;
@@ -58,7 +65,23 @@ public sealed partial class ServizioPagamenti : IServizioPagamenti
         _logger = logger;
     }
 
-    public async Task<EsitoAvvioPagamento> AvviaAsync(Guid idAccount, Guid idOrdine, DatiLinkInvito link, CancellationToken annullamento)
+    public async Task<IReadOnlyList<string>> ProviderDisponibiliAsync(CancellationToken annullamento)
+    {
+        var disponibili = new List<string>();
+        foreach (var nome in NomiProviderPagamento.Tutti)
+        {
+            if (_gateway.TryGetValue(nome, out var gateway)
+                && await gateway.OttieniCredenzialiAsync(_tenant.IdTenant, _tenant.IdSito, annullamento) is { } credenziali
+                && (credenziali.Ambiente != AmbientePagamento.Live || _opzioni.CheckoutProduzioneAbilitato))
+            {
+                disponibili.Add(nome);
+            }
+        }
+
+        return disponibili;
+    }
+
+    public async Task<EsitoAvvioPagamento> AvviaAsync(Guid idAccount, Guid idOrdine, string provider, DatiLinkInvito link, CancellationToken annullamento)
     {
         ArgumentNullException.ThrowIfNull(link);
 
@@ -85,7 +108,12 @@ public sealed partial class ServizioPagamenti : IServizioPagamenti
             return new EsitoAvvioPagamento(RisultatoPagamento.NonDovuto, null);
         }
 
-        var credenziali = await _credenziali.OttieniAsync(_tenant.IdTenant, idSito, annullamento);
+        if (provider is null || !_gateway.TryGetValue(provider, out var gateway))
+        {
+            return new EsitoAvvioPagamento(RisultatoPagamento.NonConfigurato, null);
+        }
+
+        var credenziali = await gateway.OttieniCredenzialiAsync(_tenant.IdTenant, idSito, annullamento);
         if (credenziali is null)
         {
             return new EsitoAvvioPagamento(RisultatoPagamento.NonConfigurato, null);
@@ -118,7 +146,7 @@ public sealed partial class ServizioPagamenti : IServizioPagamenti
         OrdineProvider creato;
         try
         {
-            creato = await _provider.CreaOrdineAsync(
+            creato = await gateway.CreaOrdineAsync(
                 credenziali,
                 new RichiestaOrdineProvider(
                     idTentativo,
@@ -127,7 +155,12 @@ public sealed partial class ServizioPagamenti : IServizioPagamenti
                     ordine.Id.ToString("D"),
                     $"Ordine #{ordine.Numero}",
                     new Uri($"{baseUrl}/account/ordini/{ordine.Id:D}/pagamento"),
-                    new Uri($"{baseUrl}/account/ordini/{ordine.Id:D}")),
+                    new Uri($"{baseUrl}/account/ordini/{ordine.Id:D}"),
+                    ordine.Numero,
+                    new Uri($"{baseUrl}{PercorsoNotificaNexi}"),
+                    ordine.EmailAcquirente,
+                    ordine.NomeAcquirente,
+                    ordine.CodiceLingua),
                 annullamento);
         }
         catch (ProviderPagamentoException eccezione)
@@ -142,8 +175,9 @@ public sealed partial class ServizioPagamenti : IServizioPagamenti
             IdTenant = _tenant.IdTenant,
             IdSito = idSito,
             IdOrdine = ordine.Id,
-            Provider = NomeProvider,
+            Provider = gateway.Nome,
             IdProvider = creato.IdProvider,
+            HashTokenNotifica = creato.TokenSicurezza is null ? null : ImprontaToken(creato.TokenSicurezza),
             Importo = ordine.TotaleLordo,
             Valuta = ordine.Valuta,
             Stato = StatoTentativoPagamento.Creato,
@@ -166,7 +200,7 @@ public sealed partial class ServizioPagamenti : IServizioPagamenti
 
         var idSito = _tenant.IdSito;
         var idTentativo = await _contesto.TentativiPagamento.AsNoTracking()
-            .Where(t => t.IdOrdine == idOrdine && t.IdSito == idSito && t.Provider == NomeProvider && t.IdProvider == idProvider)
+            .Where(t => t.IdOrdine == idOrdine && t.IdSito == idSito && t.IdProvider == idProvider)
             .Join(_contesto.Ordini.Where(o => o.IdUtenza == idAccount), t => t.IdOrdine, o => o.Id, (t, _) => (Guid?)t.Id)
             .SingleOrDefaultAsync(annullamento);
         return idTentativo is null ? RisultatoPagamento.NonTrovato : await ElaboraTentativoAsync(idTentativo.Value, cattura: true, annullamento);
@@ -179,7 +213,7 @@ public sealed partial class ServizioPagamenti : IServizioPagamenti
         var fino = adesso - RiconciliazioneEta.Minima;
         var da = adesso - RiconciliazioneEta.Massima;
         var aperti = await _contesto.TentativiPagamento.AsNoTracking()
-            .Where(t => t.IdSito == idSito && t.Provider == NomeProvider
+            .Where(t => t.IdSito == idSito
                 && (t.Stato == StatoTentativoPagamento.Creato || t.Stato == StatoTentativoPagamento.InSospeso)
                 && t.CreatoIlUtc < fino && t.CreatoIlUtc > da)
             .OrderBy(t => t.CreatoIlUtc)
@@ -338,6 +372,94 @@ public sealed partial class ServizioPagamenti : IServizioPagamenti
         return risultato;
     }
 
+    public async Task<EsitoWebhook> ElaboraNotificaNexiAsync(string corpo, CancellationToken annullamento)
+    {
+        ArgumentNullException.ThrowIfNull(corpo);
+
+        string? idEvento;
+        string? token;
+        string? idOrdineNexi;
+        string tipo;
+        try
+        {
+            using var documento = JsonDocument.Parse(corpo);
+            var radice = documento.RootElement;
+            idEvento = Testo(radice, "eventId");
+            token = Testo(radice, "securityToken");
+            var operazione = radice.ValueKind == JsonValueKind.Object && radice.TryGetProperty("operation", out var op) ? op : default;
+            idOrdineNexi = Testo(operazione, "orderId");
+            tipo = $"{Testo(operazione, "operationType")}.{Testo(operazione, "operationResult")}";
+        }
+        catch (JsonException)
+        {
+            return EsitoWebhook.Malformato;
+        }
+
+        if (string.IsNullOrWhiteSpace(idEvento) || idEvento.Length > 100 || string.IsNullOrWhiteSpace(token) || token.Length > 200
+            || string.IsNullOrWhiteSpace(idOrdineNexi) || idOrdineNexi.Length > ClienteNexi.LunghezzaMassimaIdOrdine)
+        {
+            return EsitoWebhook.Malformato;
+        }
+
+        tipo = tipo.Length > 100 ? tipo[..100] : tipo;
+        var idSito = _tenant.IdSito;
+        var tentativo = await _contesto.TentativiPagamento.AsNoTracking()
+            .Where(t => t.IdSito == idSito && t.Provider == NomiProviderPagamento.Nexi && t.IdProvider == idOrdineNexi)
+            .Select(t => new { t.Id, t.HashTokenNotifica })
+            .SingleOrDefaultAsync(annullamento);
+        if (tentativo is null)
+        {
+            // Ordine che questo sito non conosce: nulla da fare, e il gateway non deve insistere.
+            return EsitoWebhook.Ignorato;
+        }
+
+        // Il token ricevuto alla creazione del pagamento dimostra che la notifica viene dal gateway: senza, non ha alcun effetto.
+        if (tentativo.HashTokenNotifica is null
+            || !System.Security.Cryptography.CryptographicOperations.FixedTimeEquals(System.Text.Encoding.ASCII.GetBytes(ImprontaToken(token)), System.Text.Encoding.ASCII.GetBytes(tentativo.HashTokenNotifica)))
+        {
+            return EsitoWebhook.FirmaNonValida;
+        }
+
+        var adesso = _orologio.GetUtcNow().UtcDateTime;
+        var evento = new EventoWebhook { Id = Identificativi.Nuovo(_orologio), IdTenant = _tenant.IdTenant, IdSito = idSito, Provider = NomiProviderPagamento.Nexi, IdEvento = idEvento, Tipo = tipo, Esito = EventoWebhook.EsitoRicevuto, RicevutoIlUtc = adesso };
+        _contesto.EventiWebhook.Add(evento);
+        try
+        {
+            await _contesto.SaveChangesAsync(annullamento);
+        }
+        catch (DbUpdateException)
+        {
+            _contesto.ChangeTracker.Clear();
+            var esistente = await _contesto.EventiWebhook.AsNoTracking().SingleOrDefaultAsync(e => e.IdSito == idSito && e.Provider == NomiProviderPagamento.Nexi && e.IdEvento == idEvento, annullamento);
+            if (esistente is null || esistente.Esito != EventoWebhook.EsitoRicevuto)
+            {
+                return EsitoWebhook.Duplicato;
+            }
+
+            evento = esistente;
+        }
+
+        // Il contenuto della notifica non decide nulla: l'esito vero si rilegge dal gateway.
+        var applicato = await ElaboraTentativoAsync(tentativo.Id, cattura: false, annullamento);
+        if (applicato == RisultatoPagamento.ErroreProvider)
+        {
+            return EsitoWebhook.ErroreProvider;
+        }
+
+        if (applicato == RisultatoPagamento.NonConfigurato)
+        {
+            return EsitoWebhook.NonConfigurato;
+        }
+
+        var idEventoRiga = evento.Id;
+        await _contesto.EventiWebhook.IgnoreQueryFilters().Where(e => e.Id == idEventoRiga).ExecuteUpdateAsync(s => s.SetProperty(e => e.Esito, EventoWebhook.EsitoElaborato), annullamento);
+        return EsitoWebhook.Elaborato;
+    }
+
+    /// <summary>Impronta (SHA-256 esadecimale) di un token di notifica: di quello ricevuto dal gateway si conserva solo questa.</summary>
+    internal static string ImprontaToken(string token) =>
+        Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(token)));
+
     public async Task<IReadOnlyList<TentativoPagamentoVista>> ElencaTentativiAsync(Guid idAttore, Guid idOrdine, CancellationToken annullamento)
     {
         var idTenant = _tenant.IdTenant;
@@ -355,7 +477,7 @@ public sealed partial class ServizioPagamenti : IServizioPagamenti
         return await _contesto.TentativiPagamento.AsNoTracking()
             .Where(t => t.IdOrdine == idOrdine && t.IdSito == idSito)
             .OrderBy(t => t.CreatoIlUtc)
-            .Select(t => new TentativoPagamentoVista(t.Id, t.IdProvider, t.Stato, t.Importo, t.Valuta, t.CreatoIlUtc, t.AggiornatoIlUtc))
+            .Select(t => new TentativoPagamentoVista(t.Id, t.IdProvider, t.Stato, t.Importo, t.Valuta, t.CreatoIlUtc, t.AggiornatoIlUtc, t.Provider))
             .ToListAsync(annullamento);
     }
 
@@ -396,8 +518,8 @@ public sealed partial class ServizioPagamenti : IServizioPagamenti
             return chiuso;
         }
 
-        var credenziali = await _credenziali.OttieniAsync(_tenant.IdTenant, _tenant.IdSito, annullamento);
-        if (credenziali is null)
+        if (!_gateway.TryGetValue(tentativo.Provider, out var gateway)
+            || await gateway.OttieniCredenzialiAsync(_tenant.IdTenant, _tenant.IdSito, annullamento) is not { } credenziali)
         {
             return RisultatoPagamento.NonConfigurato;
         }
@@ -406,8 +528,8 @@ public sealed partial class ServizioPagamenti : IServizioPagamenti
         try
         {
             esito = cattura
-                ? await _provider.CatturaAsync(credenziali, tentativo.IdProvider, tentativo.Id, annullamento)
-                : await _provider.LeggiOrdineAsync(credenziali, tentativo.IdProvider, annullamento);
+                ? await gateway.CatturaAsync(credenziali, tentativo.IdProvider, tentativo.Id, annullamento)
+                : await gateway.LeggiOrdineAsync(credenziali, tentativo.IdProvider, annullamento);
         }
         catch (ProviderPagamentoException eccezione)
         {
@@ -425,8 +547,8 @@ public sealed partial class ServizioPagamenti : IServizioPagamenti
     /// </summary>
     private async Task<RisultatoPagamento?> LeggiIncassoOrfanoAsync(TentativoPagamento tentativo, Ordine ordine, CancellationToken annullamento)
     {
-        var credenziali = await _credenziali.OttieniAsync(_tenant.IdTenant, _tenant.IdSito, annullamento);
-        if (credenziali is null)
+        if (!_gateway.TryGetValue(tentativo.Provider, out var gateway)
+            || await gateway.OttieniCredenzialiAsync(_tenant.IdTenant, _tenant.IdSito, annullamento) is not { } credenziali)
         {
             return null;
         }
@@ -434,7 +556,7 @@ public sealed partial class ServizioPagamenti : IServizioPagamenti
         EsitoCatturaProvider esito;
         try
         {
-            esito = await _provider.LeggiOrdineAsync(credenziali, tentativo.IdProvider, annullamento);
+            esito = await gateway.LeggiOrdineAsync(credenziali, tentativo.IdProvider, annullamento);
         }
         catch (ProviderPagamentoException eccezione)
         {

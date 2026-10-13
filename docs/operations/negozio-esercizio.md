@@ -27,6 +27,18 @@ Ogni tenant usa il **proprio** conto commerciante (ADR-0020, voce 2).
 3. Nell'amministrazione di piattaforma: tenant → **Pagamenti** → ambiente **Produzione**, client id, secret e identificativo del webhook. I segreti si cifrano e non si rivedono.
 4. Prima provare tutto in ambiente **Sandbox** con un'app Sandbox e un webhook Sandbox (stessa procedura, ambiente «Sandbox»): il Sandbox funziona sempre, senza interruttore.
 
+### 2 bis. Terminale Nexi XPay del tenant (opzionale, ADR-0022)
+
+Un sito può accettare anche carte con **Nexi** (il cliente sceglie alla cassa). Ogni tenant usa il **proprio** terminale.
+
+1. Dal contratto con Nexi (o dal loro back office) ottenere la **chiave API** del terminale (`X-API-KEY`); il terminale va configurato con incasso automatico o, in ogni caso, il negozio chiede l'incasso implicito a ogni pagamento.
+2. Nell'amministrazione di piattaforma: tenant → **Pagamenti** → riquadro **Nexi XPay** → ambiente e chiave API. La chiave si cifra e non si rivede.
+3. **Nessun webhook da registrare**: l'indirizzo delle notifiche (`https://<dominio del sito>/webhooks/nexi`) viene inviato a Nexi a ogni pagamento. Deve essere raggiungibile da Internet (HTTPS, nessun filtro che blocchi Nexi); Nexi non ripete le notifiche perse, ma il ritorno del cliente e la riconciliazione periodica recuperano gli incassi.
+4. Prima provare in ambiente **Sandbox** con la chiave di prova e le carte di prova della documentazione Nexi (*Test environment*): una carta che va a buon fine e una che viene rifiutata. Verificare che l'ordine diventi «Pagato» sia al ritorno sia con la sola notifica (chiudere la scheda prima del ritorno).
+5. **Rimborsi:** si fanno dal back office Nexi (e per PayPal dal pannello PayPal), non dal nostro pannello. Il dettaglio ordine lo ricorda. Lo stato dell'ordine nel nostro sistema non cambia da solo: annotarlo fuori dal sistema.
+
+La «Verifica di esercizio» considera pronto un sito con almeno un provider configurato.
+
 ## 3. Interruttore di produzione
 
 Con ambiente Produzione il pagamento non parte finché la configurazione dell'installazione non ha `Negozio:CheckoutProduzione=true` (predefinito falso). Impostarlo come variabile d'ambiente `Negozio__CheckoutProduzione=true` e riavviare. Altre opzioni utili:
@@ -59,4 +71,4 @@ Nella stessa pagina **Pagamenti** del tenant, sotto il modulo, la **Verifica di 
 
 ## Cosa non c'è ancora
 
-Rimborsi per singolo articolo, fatturazione, più valute, altri provider di pagamento (il contratto `IProviderPagamento` li ammette), ricerca full-text per cataloghi molto grandi.
+Rimborsi per singolo articolo, fatturazione, più valute, altri provider oltre a PayPal e Nexi (il contratto `IGatewayPagamento` li ammette), il riconoscimento dei rimborsi fatti a mano dai pannelli dei provider.

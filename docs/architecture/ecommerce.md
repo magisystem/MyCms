@@ -155,6 +155,14 @@ Gli stati sono un'enumerazione chiusa (`StatoOrdine`) e **ogni passaggio** passa
 - **Informative:** privacy e condizioni di reso sono **pagine normali del sito, scritte dal tenant**, con gli slug convenzionali `privacy` e `resi`: se la pagina è pubblicata nella lingua della richiesta, il piè di pagina della vetrina e dell'area cliente la collega (altrimenti nessun collegamento). Il sistema non fornisce testi legali.
 - **Non ancora:** esportazione in PDF, richiesta di cancellazione per email dal modulo di contatto, registro dei consensi per le comunicazioni commerciali (il negozio invia solo email transazionali).
 
+## Nexi XPay (M7.25, ADR-0022)
+
+- **Più provider, cassa a scelta del cliente.** `IGatewayPagamento` (`GatewayPayPal`, `GatewayNexi`) nasconde le differenze; il tentativo di pagamento salva il provider e `ServizioPagamenti` lo usa per creare, incassare/leggere e riconciliare. `IServizioPagamenti.AvviaAsync` riceve il provider; `ProviderDisponibiliAsync` elenca quelli pronti per il sito (credenziali complete; in produzione con l'interruttore acceso). La pagina `/account/ordini/{id}` mostra un pulsante per provider.
+- **Nexi con pagina ospitata (HPP).** Creazione (`POST /orders/hpp`, importo in centesimi, incasso implicito, lingua, URL di ritorno, di annullo e di notifica), ritorno del cliente (l'esito si rilegge con `GET /orders/{orderId}`), notifica server-to-server (`POST /webhooks/nexi`) riconosciuta dal token di sicurezza (solo l'impronta SHA-256 è salvata) e deduplicata per `eventId`. Pagato solo con `CAPTURE`/`EXECUTED` e importo uguale a quello dell'ordine. `orderId` presso Nexi: `NX<numero>-<10 caratteri>` (limite 27).
+- **Credenziali:** tabella `ImpostazioniNexiSiti` (ambiente + chiave API cifrata), gestite dal `PlatformAdmin` nella pagina «Pagamenti» del tenant.
+- **Rimborsi:** non dal pannello per Nexi (si fanno dal back office Nexi); il dettaglio ordine lo indica. Il rimborso fatto a mano su PayPal o Nexi non cambia lo stato dell'ordine.
+- **Riconciliazione:** ora vale per tutti i provider (rilegge i tentativi aperti oltre venti minuti).
+
 ## Esportazione degli ordini (M7.23)
 
 - **Dove:** `/admin/negozio/ordini`, sezione «Esporta gli ordini in CSV» (`IServizioEsportazioneOrdini`). `TenantAdmin` del tenant e `PlatformAdmin`, riverificati sul database a ogni richiesta; solo gli ordini del sito dell'host.

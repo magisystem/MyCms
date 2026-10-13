@@ -1,6 +1,6 @@
 # ADR-0020 — Politiche commerciali iniziali e pagamenti con PayPal
 
-- **Stato:** Accepted (decisioni del committente del 2026-10-11 per A1–A7; A5 e A7 approvate nella stessa data con le proposte predefinite)
+- **Stato:** Accepted; la voce 1 è integrata da [ADR-0022](ADR-0022-nexi-xpay.md) (secondo provider: Nexi) (decisioni del committente del 2026-10-11 per A1–A7; A5 e A7 approvate nella stessa data con le proposte predefinite)
 - **Data:** 2026-10-11
 
 ## Contesto

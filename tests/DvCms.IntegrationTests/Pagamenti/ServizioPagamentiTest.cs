@@ -46,7 +46,7 @@ public class ServizioPagamentiTest
 
     private static async Task<string> AvviaEApprovaAsync(ContestoNegozio c, PayPalFinto finto, Guid ordine)
     {
-        var avvio = await c.ComePagamentiAsync(c.A, s => s.AvviaAsync(c.Cliente, ordine, ContestoNegozio.Link, Ct));
+        var avvio = await c.ComePagamentiAsync(c.A, s => s.AvviaAsync(c.Cliente, ordine, NomiProviderPagamento.PayPal, ContestoNegozio.Link, Ct));
         Assert.Equal(RisultatoPagamento.Avviato, avvio.Risultato);
         var idProvider = (await c.TentativiAsync(ordine)).Last().IdProvider;
         finto.Approva(idProvider);
@@ -59,7 +59,7 @@ public class ServizioPagamentiTest
         var (c, finto, variante, ordine) = await PreparaAsync();
         await using var _ = c;
 
-        var avvio = await c.ComePagamentiAsync(c.A, s => s.AvviaAsync(c.Cliente, ordine, ContestoNegozio.Link, Ct));
+        var avvio = await c.ComePagamentiAsync(c.A, s => s.AvviaAsync(c.Cliente, ordine, NomiProviderPagamento.PayPal, ContestoNegozio.Link, Ct));
         var idProvider = (await c.TentativiAsync(ordine)).Single().IdProvider;
         finto.Approva(idProvider);
         var completa = await c.ComePagamentiAsync(c.A, s => s.CompletaAsync(c.Cliente, ordine, idProvider, Ct));
@@ -86,7 +86,7 @@ public class ServizioPagamentiTest
         var (c, finto, _, ordine) = await PreparaAsync();
         await using var _ = c;
 
-        await c.ComePagamentiAsync(c.A, s => s.AvviaAsync(c.Cliente, ordine, ContestoNegozio.Link, Ct));
+        await c.ComePagamentiAsync(c.A, s => s.AvviaAsync(c.Cliente, ordine, NomiProviderPagamento.PayPal, ContestoNegozio.Link, Ct));
 
         var creazione = finto.Richieste.Single(r => r.Percorso == "/v2/checkout/orders");
         Assert.Contains("\"value\":\"10.00\"", creazione.Corpo, StringComparison.Ordinal);
@@ -99,7 +99,7 @@ public class ServizioPagamentiTest
     {
         var (c, finto, variante, ordine) = await PreparaAsync();
         await using var _ = c;
-        await c.ComePagamentiAsync(c.A, s => s.AvviaAsync(c.Cliente, ordine, ContestoNegozio.Link, Ct));
+        await c.ComePagamentiAsync(c.A, s => s.AvviaAsync(c.Cliente, ordine, NomiProviderPagamento.PayPal, ContestoNegozio.Link, Ct));
         var idProvider = (await c.TentativiAsync(ordine)).Single().IdProvider;
 
         var esito = await c.ComePagamentiAsync(c.A, s => s.CompletaAsync(c.Cliente, ordine, idProvider, Ct));
@@ -178,7 +178,7 @@ public class ServizioPagamentiTest
         await c.ComeAsync(c.A, s => s.AnnullaMioAsync(c.Cliente, annullato, Ct));
 
         var daAnnullato = await c.ComePagamentiAsync(c.A, s => s.CompletaAsync(c.Cliente, annullato, idAnnullato, Ct));
-        var nuovoAvvio = await c.ComePagamentiAsync(c.A, s => s.AvviaAsync(c.Cliente, annullato, ContestoNegozio.Link, Ct));
+        var nuovoAvvio = await c.ComePagamentiAsync(c.A, s => s.AvviaAsync(c.Cliente, annullato, NomiProviderPagamento.PayPal, ContestoNegozio.Link, Ct));
 
         await c.AggiungiAsync(c.Cliente, variante, 1);
         var ritiro = (await c.ComeAsync(c.A, s => s.ElencaMieiAsync(c.Cliente, Ct))).Count;
@@ -214,11 +214,11 @@ public class ServizioPagamentiTest
         await c.AggiungiAsync(c.Cliente, varianti[0], 1);
         var ordine = (await c.ComeAsync(c.A, s => s.CreaDaCarrelloAsync(c.Cliente, "it", Ritiro(ritiro, 10m), Ct))).Id!.Value;
 
-        var senza = await c.ComePagamentiAsync(c.A, s => s.AvviaAsync(c.Cliente, ordine, ContestoNegozio.Link, Ct));
+        var senza = await c.ComePagamentiAsync(c.A, s => s.AvviaAsync(c.Cliente, ordine, NomiProviderPagamento.PayPal, ContestoNegozio.Link, Ct));
         await c.ConfiguraPagamentoAsync(c.A, AmbientePagamento.Live);
-        var live = await c.ComePagamentiAsync(c.A, s => s.AvviaAsync(c.Cliente, ordine, ContestoNegozio.Link, Ct));
+        var live = await c.ComePagamentiAsync(c.A, s => s.AvviaAsync(c.Cliente, ordine, NomiProviderPagamento.PayPal, ContestoNegozio.Link, Ct));
         await c.ConfiguraPagamentoAsync(c.A);
-        var sandbox = await c.ComePagamentiAsync(c.A, s => s.AvviaAsync(c.Cliente, ordine, ContestoNegozio.Link, Ct));
+        var sandbox = await c.ComePagamentiAsync(c.A, s => s.AvviaAsync(c.Cliente, ordine, NomiProviderPagamento.PayPal, ContestoNegozio.Link, Ct));
 
         Assert.Equal(RisultatoPagamento.NonConfigurato, senza.Risultato);
         Assert.Equal(RisultatoPagamento.ProduzioneBloccata, live.Risultato);
@@ -233,7 +233,7 @@ public class ServizioPagamentiTest
         await using var _ = c;
         await c.ConfiguraPagamentoAsync(c.A, AmbientePagamento.Live);
 
-        var avvio = await c.ComePagamentiAsync(c.A, s => s.AvviaAsync(c.Cliente, ordine, ContestoNegozio.Link, Ct));
+        var avvio = await c.ComePagamentiAsync(c.A, s => s.AvviaAsync(c.Cliente, ordine, NomiProviderPagamento.PayPal, ContestoNegozio.Link, Ct));
 
         Assert.Equal(RisultatoPagamento.Avviato, avvio.Risultato);
     }
@@ -245,9 +245,9 @@ public class ServizioPagamentiTest
         await using var _ = c;
         var idProvider = await AvviaEApprovaAsync(c, finto, ordine);
 
-        var avvioAltro = await c.ComePagamentiAsync(c.A, s => s.AvviaAsync(c.AltroCliente, ordine, ContestoNegozio.Link, Ct));
+        var avvioAltro = await c.ComePagamentiAsync(c.A, s => s.AvviaAsync(c.AltroCliente, ordine, NomiProviderPagamento.PayPal, ContestoNegozio.Link, Ct));
         var completaAltro = await c.ComePagamentiAsync(c.A, s => s.CompletaAsync(c.AltroCliente, ordine, idProvider, Ct));
-        var avvioAltroTenant = await c.ComePagamentiAsync(c.B, s => s.AvviaAsync(c.ClienteDiB, ordine, ContestoNegozio.Link, Ct));
+        var avvioAltroTenant = await c.ComePagamentiAsync(c.B, s => s.AvviaAsync(c.ClienteDiB, ordine, NomiProviderPagamento.PayPal, ContestoNegozio.Link, Ct));
         var accountAltroTenant = await c.ComePagamentiAsync(c.A, s => s.CompletaAsync(c.ClienteDiB, ordine, idProvider, Ct));
         var tokenSbagliato = await c.ComePagamentiAsync(c.A, s => s.CompletaAsync(c.Cliente, ordine, "ORD-9999", Ct));
         var tokenNullo = await c.ComePagamentiAsync(c.A, s => s.CompletaAsync(c.Cliente, ordine, null, Ct));
@@ -268,7 +268,7 @@ public class ServizioPagamentiTest
         await using var _ = c;
         finto.Eccezione = new HttpRequestException("giù");
 
-        var avvio = await c.ComePagamentiAsync(c.A, s => s.AvviaAsync(c.Cliente, ordine, ContestoNegozio.Link, Ct));
+        var avvio = await c.ComePagamentiAsync(c.A, s => s.AvviaAsync(c.Cliente, ordine, NomiProviderPagamento.PayPal, ContestoNegozio.Link, Ct));
 
         Assert.Equal(RisultatoPagamento.ErroreProvider, avvio.Risultato);
         Assert.Empty(await c.TentativiAsync(ordine));

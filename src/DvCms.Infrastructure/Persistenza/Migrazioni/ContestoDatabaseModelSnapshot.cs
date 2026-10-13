@@ -1071,6 +1071,49 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                     b.ToTable("ImmaginiProdotto", (string)null);
                 });
 
+            modelBuilder.Entity("DvCms.Domain.Negozio.ImpostazioniNexiSito", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("AggiornatoDaIdUtenza")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("AggiornatoIlUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Ambiente")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<Guid>("IdSito")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdTenant")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("SegretiProtetti")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<byte[]>("TokenConcorrenza")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AggiornatoDaIdUtenza");
+
+                    b.HasIndex("IdSito")
+                        .IsUnique();
+
+                    b.HasIndex("IdTenant", "IdSito");
+
+                    b.ToTable("ImpostazioniNexiSiti", (string)null);
+                });
+
             modelBuilder.Entity("DvCms.Domain.Negozio.ImpostazioniPagamentoSito", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1661,6 +1704,10 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
 
                     b.Property<DateTime>("CreatoIlUtc")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("HashTokenNotifica")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<string>("IdCattura")
                         .HasMaxLength(64)
@@ -2495,6 +2542,21 @@ namespace DvCms.Infrastructure.Persistenza.Migrazioni
                         .WithMany()
                         .HasForeignKey("IdTenant", "IdSito", "IdProdotto")
                         .HasPrincipalKey("IdTenant", "IdSito", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DvCms.Domain.Negozio.ImpostazioniNexiSito", b =>
+                {
+                    b.HasOne("DvCms.Domain.Accessi.Utenza", null)
+                        .WithMany()
+                        .HasForeignKey("AggiornatoDaIdUtenza")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("DvCms.Domain.Tenancy.Sito", null)
+                        .WithMany()
+                        .HasForeignKey("IdTenant", "IdSito")
+                        .HasPrincipalKey("IdTenant", "Id")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

@@ -65,15 +65,31 @@ else
 {
     <p>@_L["La merce è riservata per te fino alle"] @scade.ToString("HH:mm") UTC.</p>
 }
-@if (Model.UrlPayPal is not null)
+@if (Model.UrlPagamento is not null)
 {
-    <p role="status"><a href="@Model.UrlPayPal.AbsoluteUri" rel="noopener">@_L["Continua su PayPal per completare il pagamento"]</a></p>
+    <p role="status"><a href="@Model.UrlPagamento.AbsoluteUri" rel="noopener">@(Model.ProviderAvviato == DvCms.Application.Negozio.NomiProviderPagamento.Nexi ? _L["Continua su Nexi per completare il pagamento"] : _L["Continua su PayPal per completare il pagamento"])</a></p>
 }
 else if (Model.PuoPagare)
 {
-    <form method="post" asp-page-handler="Paga" asp-route-id="@o.Id">
-        <button type="submit">@(o.Stato == StatoOrdine.PagamentoFallito ? _L["Riprova a pagare con PayPal"] : _L["Paga con PayPal"])</button>
-    </form>
+    @if (Model.ProviderDisponibili.Count == 0)
+    {
+        <p>@_L["Il pagamento online non è disponibile per questo negozio."]</p>
+    }
+
+    @foreach (var provider in Model.ProviderDisponibili)
+    {
+        <form method="post" asp-page-handler="Paga" asp-route-id="@o.Id">
+            <input type="hidden" name="provider" value="@provider" />
+            @if (provider == DvCms.Application.Negozio.NomiProviderPagamento.Nexi)
+            {
+                <button type="submit">@(o.Stato == StatoOrdine.PagamentoFallito ? _L["Riprova a pagare con carta (Nexi)"] : _L["Paga con carta (Nexi)"])</button>
+            }
+            else
+            {
+                <button type="submit">@(o.Stato == StatoOrdine.PagamentoFallito ? _L["Riprova a pagare con PayPal"] : _L["Paga con PayPal"])</button>
+            }
+        </form>
+    }
 }
 @if (Model.PuoAnnullare)
 {
