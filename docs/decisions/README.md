@@ -32,6 +32,6 @@ Stato: `Proposed`, `Accepted`, `Superseded`, `Deprecated`.
 - [ADR-0024 — Struttura dei progetti: un assembly per responsabilità](ADR-0024-struttura-progetti.md)
 - [ADR-0025 — Modelli email nel database con Fluid (Liquid)](ADR-0025-modelli-email.md)
 - [ADR-0026 — ALTCHA sulle form pubbliche](ADR-0026-altcha.md)
-- [ADR-0027 — Moduli di contatto personalizzabili dal TenantAdmin](ADR-0027-moduli-di-contatto.md) (**Proposed**, da rivedere)
+- [ADR-0027 — Moduli di contatto personalizzabili dal TenantAdmin](ADR-0027-moduli-di-contatto.md) (accettato, da implementare)
 
 Per le regole operative della persistenza, vedere [`docs/architecture/database.md`](../architecture/database.md).

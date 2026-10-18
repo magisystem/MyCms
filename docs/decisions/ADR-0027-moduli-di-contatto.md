@@ -1,6 +1,6 @@
 # ADR-0027 — Moduli di contatto personalizzabili dal TenantAdmin
 
-- **Stato:** Proposed (da rivedere con il committente: nulla di questo è implementato)
+- **Stato:** Accepted (il committente ha confermato D1–D12 con le proposte predefinite il 2026-10-18; **nulla è ancora implementato**)
 - **Data:** 2026-10-18
 - **Origine:** richiesta del committente del 2026-10-18: i moduli di contatto saranno **custom**, definiti e gestiti dal `TenantAdmin` di ogni sito, e **quando sono pubblici vanno protetti con ALTCHA** ([ADR-0026](ADR-0026-altcha.md)).
 - **Modifica:** nessun ADR superato. Si appoggia su [ADR-0007](ADR-0007-grapesjs-page-builder.md) (componenti del page builder), [ADR-0010](ADR-0010-outbox-worker.md) (outbox), [ADR-0025](ADR-0025-modelli-email.md) (modelli email) e [ADR-0026](ADR-0026-altcha.md).
@@ -61,9 +61,9 @@ Cartella `/admin/moduli` con: elenco dei moduli del sito (stato, numero di richi
 
 Caricamento di file; logica condizionale fra campi; invio a servizi esterni (webhook, CRM, newsletter con doppio consenso); più passi; statistiche; risposte dall'admin; salvataggio di bozze del visitatore.
 
-## Decisioni da prendere
+## Decisioni (confermate il 2026-10-18 con le proposte predefinite)
 
-| # | Decisione | Proposta |
+| # | Decisione | Scelta |
 |---|---|---|
 | D1 | Il modulo è un'entità riusabile con componente `contenuto.modulo`? | **Sì** (entità separata); alternativa: campi come componenti dentro la pagina |
 | D2 | Elenco dei tipi di campo della v1 | Quelli del paragrafo 2, senza file né espressioni regolari |
@@ -87,7 +87,7 @@ Caricamento di file; logica condizionale fra campi; invio a servizi esterni (web
 - I dati dei visitatori sono personali: documento di esercizio e nota sulla conservazione da aggiungere a `docs/operations`.
 - Il tenant è titolare del trattamento: l'informativa privacy resta un suo testo (link obbligatorio se c'è un consenso), come per il negozio.
 
-## Piano per fette verticali (se approvato)
+## Piano per fette verticali
 
 1. **Modello e gestione:** entità `Modulo` e campi, servizio, pagine `/admin/moduli` (elenco, creazione, modifica, anteprima), audit, test di isolamento.
 2. **Componente e invio:** `contenuto.modulo` nel builder, rendering pubblico, endpoint di invio con ALTCHA, validazione contro la definizione, salvataggio con istantanea, limiti.
