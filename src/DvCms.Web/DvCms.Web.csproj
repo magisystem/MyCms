@@ -26,4 +26,6 @@
     <ProjectReference Include="..\DvCms.Services.Negozio\DvCms.Services.Negozio.csproj" />
   </ItemGroup>
 
+  <ProjectExtensions><VisualStudio><UserProperties appsettings_1json__JsonSchema="https://www.schemastore.org/ava.json" /></VisualStudio></ProjectExtensions>
+
 </Project>
