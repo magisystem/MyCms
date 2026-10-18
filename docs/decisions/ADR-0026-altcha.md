@@ -6,7 +6,7 @@
 
 ## Contesto
 
-Le form pubbliche del prodotto sono la **registrazione degli acquirenti** (`/account/registrazione`, ADR-0011) e la **richiesta di recupero password** (`/admin/recupero`, anche per gli acquirenti). Entrambe fanno partire un'email verso un indirizzo scelto da chi compila: senza un freno si prestano a invii automatici e a riempire le tabelle di account in attesa. Oggi hanno solo il limite di richieste per indirizzo IP. Non esiste ancora un modulo di contatto pubblico; quando ci sarà userà la stessa verifica.
+Le form pubbliche del prodotto sono la **registrazione degli acquirenti** (`/account/registrazione`, ADR-0011) e la **richiesta di recupero password** (`/admin/recupero`, anche per gli acquirenti). Entrambe fanno partire un'email verso un indirizzo scelto da chi compila: senza un freno si prestano a invii automatici e a riempire le tabelle di account in attesa. Oggi hanno solo il limite di richieste per indirizzo IP. Non esiste ancora un modulo di contatto pubblico: i moduli saranno custom, gestiti dal `TenantAdmin` ([ADR-0027](ADR-0027-moduli-di-contatto.md), proposto) e useranno la stessa verifica.
 
 Il committente ha scelto **ALTCHA**: prova di lavoro (proof-of-work) lato visitatore, senza servizi esterni, senza cookie di tracciamento, compatibile con il GDPR.
 

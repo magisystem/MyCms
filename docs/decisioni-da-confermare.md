@@ -56,3 +56,7 @@ Senza queste non si implementa il checkout di produzione (regola del progetto). 
 - **Prodotto:** piani commerciali, limiti e quote per tenant, billing SaaS; visibilità limitata per il `Guest`.
 - **Pulizia:** chiavi di testo statico non più usate; duplicati fra `admin-theme/` e `wwwroot` (li ripulisce il committente); HTMX solo se una schermata lo richiede.
 - **Integrazione continua:** gli smoke test con browser reale (`frontend/page-builder/smoke/*.mjs`) non girano in CI (servono un'istanza, un database popolato e Chromium); si può valutare un job dedicato quando conviene il costo.
+
+## D. Moduli di contatto personalizzabili (proposta del 2026-10-18)
+
+[ADR-0027](decisions/ADR-0027-moduli-di-contatto.md), stato **Proposed**: moduli definiti dal `TenantAdmin`, protetti da ALTCHA quando pubblici. Le dodici decisioni D1–D12 (entità riusabile e componente `contenuto.modulo`, tipi di campo, conservazione, IP, accesso alle richieste, comportamento con ALTCHA spento, risposta automatica, destinatari, limiti, lingue, dopo l'invio, esportazione) sono nella tabella dell'ADR, ciascuna con la proposta predefinita. Nulla è implementato finché non vengono confermate.
