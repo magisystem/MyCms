@@ -30,7 +30,7 @@
 
   <ItemGroup Label="Email">
     <PackageVersion Include="MailKit" Version="4.18.1" />
-    <PackageVersion Include="Fluid.Core" Version="2.31.0" />
+    <PackageVersion Include="Fluid.Core" Version="2.40.0" />
   </ItemGroup>
 
   <ItemGroup Label="Estensioni">
