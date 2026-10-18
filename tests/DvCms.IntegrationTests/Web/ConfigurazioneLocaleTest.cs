@@ -89,4 +89,23 @@ public class ConfigurazioneLocaleTest : IDisposable
 
         return cartella?.FullName ?? throw new InvalidOperationException("Radice del repository non trovata.");
     }
+
+    [Fact]
+    public void IFileSeedSiCaricanoPerAmbienteEIlLocaleLiBatte()
+    {
+        File.WriteAllText(Path.Combine(_cartella, "seed.json"), """{ "Seed": { "TenantPrimario": { "Nome": "Primario", "Sito": { "Nome": "Base" } } } }""");
+        File.WriteAllText(Path.Combine(_cartella, "seed.Development.json"), """{ "Seed": { "TenantPrimario": { "Sito": { "Nome": "Sviluppo" } } } }""");
+        File.WriteAllText(Path.Combine(_cartella, ConfigurazioneLocale.NomeFile), """{ "Seed": { "TenantPrimario": { "Nome": "Locale" } } }""");
+
+        var sviluppo = new ConfigurationManager();
+        sviluppo.SetBasePath(_cartella);
+        ConfigurazioneLocale.Aggiungi(sviluppo, [], "Development");
+        var produzione = new ConfigurationManager();
+        produzione.SetBasePath(_cartella);
+        ConfigurazioneLocale.Aggiungi(produzione, [], "Production");
+
+        Assert.Equal("Locale", sviluppo["Seed:TenantPrimario:Nome"]);
+        Assert.Equal("Sviluppo", sviluppo["Seed:TenantPrimario:Sito:Nome"]);
+        Assert.Equal("Base", produzione["Seed:TenantPrimario:Sito:Nome"]);
+    }
 }

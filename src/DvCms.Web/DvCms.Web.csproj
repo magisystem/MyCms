@@ -7,6 +7,8 @@
   <ItemGroup>
     <!-- Configurazione locale non versionata: mai nel pacchetto pubblicato (resta sul server, o sul computer di sviluppo). -->
     <Content Update="appsettings.Local.json" CopyToOutputDirectory="Never" CopyToPublishDirectory="Never" />
+    <!-- Tenant e utenti di prova: solo per lo sviluppo, mai nel pacchetto pubblicato. -->
+    <Content Update="seed.Development.json" CopyToPublishDirectory="Never" />
   </ItemGroup>
 
   <ItemGroup>

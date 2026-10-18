@@ -5,7 +5,7 @@ namespace DvCms.Web.Comandi;
 
 /// <summary>
 /// Comando <c>DvCms.Web migra</c>: applica al database le migrazioni EF Core non ancora applicate e termina.
-/// Le migrazioni non partono mai in automatico all'avvio dell'applicazione.
+/// All'avvio dell'applicazione partono solo se <c>Database:MigraAllAvvio</c> è vero (default falso, attivo solo in sviluppo); altrove si usa questo comando.
 /// </summary>
 public static partial class ComandoMigra
 {

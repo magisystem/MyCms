@@ -19,7 +19,7 @@ using DvCms.Web.Salute;
 var costruttore = WebApplication.CreateBuilder(args);
 
 // appsettings.Local.json (non versionato, facoltativo): stringa di connessione e valori dell'installazione.
-ConfigurazioneLocale.Aggiungi(costruttore.Configuration, args);
+ConfigurazioneLocale.Aggiungi(costruttore.Configuration, args, costruttore.Environment.EnvironmentName);
 
 costruttore.Services.AddRazorPages(opzioni =>
 {
@@ -117,6 +117,16 @@ if (!applicazione.Environment.IsDevelopment() && !usaProxyAttendibili)
 if (usaProxyAttendibili)
 {
     applicazione.UseForwardedHeaders();
+}
+
+// Migrazioni all'avvio: solo se richieste esplicitamente (default falso; attivo solo in appsettings.Development.json). In produzione si usa il comando `migra`.
+if (applicazione.Configuration.GetValue<bool>("Database:MigraAllAvvio"))
+{
+    var esitoMigrazioni = await ComandoMigra.EseguiAsync(applicazione.Services);
+    if (esitoMigrazioni != 0)
+    {
+        return esitoMigrazioni;
+    }
 }
 
 // Popolamento all'avvio: solo se richiesto esplicitamente (default falso); in produzione va disattivato dopo il primo successo.

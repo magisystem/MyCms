@@ -44,7 +44,7 @@ Le chiavi di configurazione sono in italiano (`ConnectionStrings:Predefinita`). 
 
 - Una sola serie di migrazioni EF Core in `src/DvCms.SqlServer/Migrazioni` (ADR-0024), con tabella di storico `StoricoMigrazioni`.
 - Creare una migrazione: `dotnet tool restore` e poi `dotnet ef migrations add NomeMigrazione --project src/DvCms.SqlServer --startup-project src/DvCms.SqlServer --output-dir Migrazioni`. Revisionare sempre il codice generato.
-- Applicarle: `dotnet run --project src/DvCms.Web -- migra` (comando `migra`, mai in automatico all'avvio).
+- Applicarle: `dotnet run --project src/DvCms.Web -- migra` (comando `migra`; all'avvio partono da sole solo con `Database:MigraAllAvvio`, attivo solo in `appsettings.Development.json`).
 - Un test di integrazione fallisce se il modello ha modifiche senza migrazione, e un altro applica tutte le migrazioni a un database vuoto.
 
 ## Test

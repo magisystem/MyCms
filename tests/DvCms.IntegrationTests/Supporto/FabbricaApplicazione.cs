@@ -48,6 +48,8 @@ public abstract class FabbricaApplicazione : WebApplicationFactory<Program>
 
         builder.UseEnvironment(_ambiente);
         builder.UseSetting("ConnectionStrings:Predefinita", _connessione);
+        // I test preparano da soli il database: nessuna migrazione automatica all'avvio (attiva in appsettings.Development.json).
+        builder.UseSetting("Database:MigraAllAvvio", "false");
         builder.UseSetting("Sicurezza:Password:FattoreLavoroBcrypt", "4");
         builder.UseSetting("Sicurezza:Accesso:RichiesteAlMinuto", "1000");
         // Il worker dell'outbox non parte da solo nei test: i test lo invocano direttamente.

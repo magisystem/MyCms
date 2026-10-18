@@ -1,0 +1,40 @@
+{
+  "Seed": {
+    "TenantPrimario": {
+      "Domini": [
+        {
+          "Host": "cms.davidemartelli.dev"
+        },
+        {
+          "Host": "localhost",
+          "SoloSviluppo": true
+        }
+      ]
+    },
+    "PlatformAdmin": {
+      "Email": "admin@cms.davidemartelli.dev",
+      "NomeVisualizzato": "Amministratore piattaforma",
+      "Password": "Sviluppo-Locale-2026!"
+    },
+    "TenantSviluppo": [
+      {
+        "Nome": "Cliente 1",
+        "Host": "cms1.davidemartelli.dev",
+        "TenantAdmin": {
+          "Email": "admin@cms1.esempio.it",
+          "NomeVisualizzato": "Amministratore Cliente 1",
+          "Password": "Sviluppo-Locale-2026!"
+        }
+      },
+      {
+        "Nome": "Cliente 2",
+        "Host": "cms2.davidemartelli.dev",
+        "TenantAdmin": {
+          "Email": "admin@cms2.esempio.it",
+          "NomeVisualizzato": "Amministratore Cliente 2",
+          "Password": "Sviluppo-Locale-2026!"
+        }
+      }
+    ]
+  }
+}

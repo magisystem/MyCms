@@ -20,7 +20,7 @@ Non introdurre Kubernetes, broker o servizi separati per moda. Scegliere l'hosti
 
 ## Seeding del tenant primario
 
-Prima del primo avvio in un ambiente si esegue il seeding (ADR-0014): configurazione `Seed:TenantPrimario` nel file di ambiente non versionato, password del `PlatformAdmin` da segreto o variabile d'ambiente, poi `DvCms.Web seed` o avvio con `Seed:EseguiAllAvvio`. Variabili: `Seed__PlatformAdmin__Email`, `Seed__PlatformAdmin__NomeVisualizzato`, `Seed__PlatformAdmin__Password`. Il seeding è idempotente e si può rilanciare; dopo il primo successo si disattiva `Seed:EseguiAllAvvio`. I tenant dei clienti non si seminano: li crea il `PlatformAdmin` dal menu "Platform".
+Prima del primo avvio in un ambiente si esegue il seeding (ADR-0014): configurazione `Seed:TenantPrimario` in `seed.json` (valori non segreti, versionato; `seed.{Ambiente}.json` per ambiente, `appsettings.Local.json`, variabili d'ambiente e riga di comando lo sovrascrivono), password del `PlatformAdmin` da segreto o variabile d'ambiente, poi `DvCms.Web seed` o avvio con `Seed:EseguiAllAvvio`. Variabili: `Seed__PlatformAdmin__Email`, `Seed__PlatformAdmin__NomeVisualizzato`, `Seed__PlatformAdmin__Password`. Il seeding è idempotente e si può rilanciare; dopo il primo successo si disattiva `Seed:EseguiAllAvvio`. I tenant dei clienti non si seminano: li crea il `PlatformAdmin` dal menu "Platform".
 
 ## Domini e certificati (procedura manuale)
 

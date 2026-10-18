@@ -1,0 +1,17 @@
+{
+  "Seed": {
+    "EseguiAllAvvio": true,
+    "TenantPrimario": {
+      "Nome": "Primario",
+      "Sito": {
+        "Nome": "Sito primario",
+        "FusoOrario": "Europe/Rome"
+      },
+      "Domini": [
+        {
+          "Host": "cms.davidemartelli.dev"
+        }
+      ]
+    }
+  }
+}
