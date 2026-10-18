@@ -955,6 +955,114 @@ namespace DvCms.SqlServer.Migrazioni
                     b.ToTable("TraduzioniRisorseMedia", (string)null);
                 });
 
+            modelBuilder.Entity("DvCms.Models.Moduli.InvioModulo", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CodiceLingua")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("ContenutoJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatoIlUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("IdModulo")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdSito")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdTenant")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Stato")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<byte[]>("TokenConcorrenza")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatoIlUtc");
+
+                    b.HasIndex("IdSito", "IdModulo", "CreatoIlUtc");
+
+                    b.HasIndex("IdTenant", "IdSito", "IdModulo");
+
+                    b.ToTable("InviiModulo", (string)null);
+                });
+
+            modelBuilder.Entity("DvCms.Models.Moduli.Modulo", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("AggiornatoDaIdUtenza")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("AggiornatoIlUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatoIlUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DefinizioneJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("GiorniConservazione")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("IdSito")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("IdTenant")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ImpostazioniJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Stato")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<byte[]>("TokenConcorrenza")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AggiornatoDaIdUtenza");
+
+                    b.HasIndex("IdSito", "Nome")
+                        .IsUnique();
+
+                    b.ToTable("Moduli", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Moduli_GiorniConservazione", "[GiorniConservazione] BETWEEN 30 AND 1825");
+                        });
+                });
+
             modelBuilder.Entity("DvCms.Models.Negozio.Carrello", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2671,6 +2779,31 @@ namespace DvCms.SqlServer.Migrazioni
                         .WithMany()
                         .HasForeignKey("IdTenant", "IdSito", "IdRisorsa")
                         .HasPrincipalKey("IdTenant", "IdSito", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DvCms.Models.Moduli.InvioModulo", b =>
+                {
+                    b.HasOne("DvCms.Models.Moduli.Modulo", null)
+                        .WithMany()
+                        .HasForeignKey("IdTenant", "IdSito", "IdModulo")
+                        .HasPrincipalKey("IdTenant", "IdSito", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DvCms.Models.Moduli.Modulo", b =>
+                {
+                    b.HasOne("DvCms.Models.Accessi.Utenza", null)
+                        .WithMany()
+                        .HasForeignKey("AggiornatoDaIdUtenza")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("DvCms.Models.Tenancy.Sito", null)
+                        .WithMany()
+                        .HasForeignKey("IdTenant", "IdSito")
+                        .HasPrincipalKey("IdTenant", "Id")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

@@ -5,6 +5,7 @@ using DvCms.Models.Cms;
 using DvCms.Models.Email;
 using DvCms.Models.Localizzazione;
 using DvCms.Models.Media;
+using DvCms.Models.Moduli;
 using DvCms.Models.Negozio;
 using DvCms.Models.Outbox;
 using DvCms.Models.Segreti;
@@ -78,6 +79,10 @@ public class ContestoDatabase : DbContext
     public DbSet<ConnessioneEmailOAuth> ConnessioniEmailOAuth => Set<ConnessioneEmailOAuth>();
 
     public DbSet<ModelloEmail> ModelliEmail => Set<ModelloEmail>();
+
+    public DbSet<Modulo> Moduli => Set<Modulo>();
+
+    public DbSet<InvioModulo> InviiModulo => Set<InvioModulo>();
 
     public DbSet<ChiaveSegreta> ChiaviSegrete => Set<ChiaveSegreta>();
 
@@ -167,6 +172,8 @@ public class ContestoDatabase : DbContext
         modelBuilder.Entity<TermineRicercaProdotto>().HasQueryFilter(termine => termine.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<ConnessioneEmailOAuth>().HasQueryFilter(connessione => connessione.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<ModelloEmail>().HasQueryFilter(modello => modello.IdTenant == IdTenantCorrente);
+        modelBuilder.Entity<Modulo>().HasQueryFilter(modulo => modulo.IdTenant == IdTenantCorrente);
+        modelBuilder.Entity<InvioModulo>().HasQueryFilter(invio => invio.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<RichiestaRecuperoPassword>().HasQueryFilter(richiesta => richiesta.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<RisorsaMedia>().HasQueryFilter(risorsa => risorsa.IdTenant == IdTenantCorrente);
         modelBuilder.Entity<TraduzioneRisorsaMedia>().HasQueryFilter(traduzione => traduzione.IdTenant == IdTenantCorrente);

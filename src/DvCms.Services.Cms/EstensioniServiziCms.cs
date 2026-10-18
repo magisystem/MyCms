@@ -5,6 +5,7 @@ using DvCms.Contracts.Cms;
 using DvCms.Contracts.Email;
 using DvCms.Contracts.Localizzazione;
 using DvCms.Contracts.Media;
+using DvCms.Contracts.Moduli;
 using DvCms.Contracts.Negozio;
 using DvCms.Contracts.Outbox;
 using DvCms.Contracts.Persistenza;
@@ -35,6 +36,7 @@ using DvCms.DTO.Media;
 using DvCms.DTO.Negozio;
 using DvCms.DTO.Outbox;
 using DvCms.Services.Cms.Media;
+using DvCms.Services.Cms.Moduli;
 using DvCms.Services.Cms.Temi;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -68,6 +70,7 @@ public static class EstensioniServiziCms
         servizi.AddScoped<IGestoreOutbox, GestorePaginaPubblicata>();
         servizi.AddScoped<IGestoreOutbox, GestorePaginaRitirata>();
         servizi.AddScoped<IGestoreOutbox, GestorePaginaRinominata>();
+        servizi.TryAddScoped<IServizioModuli, ServizioModuli>();
         AggiungiMedia(servizi, configurazione);
 
         return servizi;

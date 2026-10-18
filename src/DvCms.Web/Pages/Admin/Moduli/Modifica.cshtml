@@ -1,0 +1,213 @@
+@page "/admin/moduli/modifica/{id:guid?}"
+@model DvCms.Web.Pages.Admin.Moduli.ModificaModel
+@using System.Globalization
+@using DvCms.DTO.Moduli
+@using DvCms.Models.Moduli
+@{
+    ViewData["Titolo"] = Model.IdModulo is null ? _L["Nuovo modulo"] : _L["Modifica modulo"];
+    var input = Model.Input;
+    var multilingue = Model.Lingue.Count > 1;
+    string Suffisso(LinguaModulo lingua) => multilingue ? " (" + lingua.Codice + ")" : string.Empty;
+}
+@if (Model.Messaggio is not null)
+{
+    <div class="alert alert-success" role="status">@Model.Messaggio</div>
+}
+@if (Model.ErroreDaMostrare is not null)
+{
+    <div class="alert alert-danger" role="alert">@Model.ErroreDaMostrare</div>
+}
+@if (Model.ErroriModulo.Count > 0)
+{
+    <div class="alert alert-danger" role="alert">
+        <ul class="mb-0">
+            @foreach (var errore in Model.ErroriModulo)
+            {
+                <li>@errore</li>
+            }
+        </ul>
+    </div>
+}
+@if (!Model.ProtezioneAttiva)
+{
+    <div class="alert alert-warning" role="alert">@_L["La protezione ALTCHA è spenta su questa installazione: il modulo non accetterà invii (fuori dallo sviluppo)."]</div>
+}
+<form method="post" novalidate>
+    <input type="hidden" name="Input.TokenConcorrenza" value="@input.TokenConcorrenza" />
+    <div class="card mb-3">
+        <div class="card-header"><h3 class="card-title">@_L["Modulo"]</h3></div>
+        <div class="card-body row g-3">
+            <div class="col-md-8">
+                <label class="form-label required" for="nome">@_L["Nome interno"]</label>
+                <input class="form-control" id="nome" name="Input.Nome" value="@input.Nome" maxlength="@Modulo.LunghezzaMassimaNome" />
+                <div class="form-hint">@_L["Serve a riconoscere il modulo nell'elenco e nell'editor delle pagine."]</div>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" for="stato">@_L["Stato"]</label>
+                <select class="form-select" id="stato" name="Input.Stato">
+                    <option value="Bozza" selected="@(input.Stato == "Bozza")">@_L["Bozza"]</option>
+                    <option value="Attivo" selected="@(input.Stato == "Attivo")">@_L["Pubblicato"]</option>
+                    <option value="Archiviato" selected="@(input.Stato == "Archiviato")">@_L["Archiviato"]</option>
+                </select>
+            </div>
+            @foreach (var lingua in Model.Lingue)
+            {
+                <div class="col-md-6">
+                    <label class="form-label @(lingua.Predefinita ? "required" : null)" for="pulsante-@lingua.Codice">@_L["Testo del pulsante"]@Suffisso(lingua)</label>
+                    <input class="form-control" id="pulsante-@lingua.Codice" name="Input.Pulsante[@lingua.Codice]" value="@input.Pulsante.GetValueOrDefault(lingua.Codice)" maxlength="40" />
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header"><h3 class="card-title">@_L["Campi"]</h3></div>
+        <div class="card-body">
+            @if (input.Campi.Count == 0)
+            {
+                <p class="text-secondary mb-0">@_L["Nessun campo: aggiungine uno qui sotto."]</p>
+            }
+            @for (var i = 0; i < input.Campi.Count; i++)
+            {
+                var campo = input.Campi[i];
+                var tipo = Enum.TryParse<TipoCampoModulo>(campo.Tipo, out var letto) ? letto : TipoCampoModulo.TestoBreve;
+                var prefisso = $"Input.Campi[{i}]";
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h4 class="card-title">@_L["Campo"] @(i + 1) · @Model.NomeTipo(tipo)</h4>
+                        <div class="card-actions d-flex gap-1">
+                            <button type="submit" class="btn btn-sm" asp-page-handler="SpostaCampo" asp-route-indice="@i" asp-route-verso="-1" formnovalidate disabled="@(i == 0)" aria-label="@_L["Sposta su"]">↑</button>
+                            <button type="submit" class="btn btn-sm" asp-page-handler="SpostaCampo" asp-route-indice="@i" asp-route-verso="1" formnovalidate disabled="@(i == input.Campi.Count - 1)" aria-label="@_L["Sposta giù"]">↓</button>
+                            <button type="submit" class="btn btn-sm btn-outline-danger" asp-page-handler="RimuoviCampo" asp-route-indice="@i" formnovalidate>@_L["Togli"]</button>
+                        </div>
+                    </div>
+                    <div class="card-body row g-3">
+                        <input type="hidden" name="@(prefisso + ".Id")" value="@campo.Id" />
+                        <div class="col-md-4">
+                            <label class="form-label" for="tipo-@i">@_L["Tipo"]</label>
+                            <select class="form-select" id="tipo-@i" name="@(prefisso + ".Tipo")">
+                                @foreach (var t in ModificaModel.Tipi)
+                                {
+                                    <option value="@t" selected="@(t == tipo)">@Model.NomeTipo(t)</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" for="lunghezza-@i">@_L["Lunghezza massima"]</label>
+                            <input class="form-control" id="lunghezza-@i" name="@(prefisso + ".LunghezzaMassima")" value="@campo.LunghezzaMassima" inputmode="numeric" maxlength="4" disabled="@(tipo is not (TipoCampoModulo.TestoBreve or TipoCampoModulo.TestoLungo))" />
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <label class="form-check">
+                                <input class="form-check-input" type="checkbox" name="@(prefisso + ".Obbligatorio")" value="true" checked="@campo.Obbligatorio" />
+                                <input type="hidden" name="@(prefisso + ".Obbligatorio")" value="false" />
+                                <span class="form-check-label">@_L["Obbligatorio"]</span>
+                            </label>
+                        </div>
+                        @foreach (var lingua in Model.Lingue)
+                        {
+                            <div class="col-md-6">
+                                <label class="form-label @(lingua.Predefinita ? "required" : null)" for="etichetta-@i-@lingua.Codice">@(tipo == TipoCampoModulo.Consenso ? _L["Testo del consenso"] : _L["Etichetta"])@Suffisso(lingua)</label>
+                                <input class="form-control" id="etichetta-@i-@lingua.Codice" name="@(prefisso + ".Etichette[" + lingua.Codice + "]")" value="@campo.Etichette.GetValueOrDefault(lingua.Codice)" maxlength="@DvCms.Core.Moduli.ValidatoreModulo.LunghezzaMassimaEtichetta" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="aiuto-@i-@lingua.Codice">@_L["Testo di aiuto"]@Suffisso(lingua)</label>
+                                <input class="form-control" id="aiuto-@i-@lingua.Codice" name="@(prefisso + ".Aiuti[" + lingua.Codice + "]")" value="@campo.Aiuti.GetValueOrDefault(lingua.Codice)" maxlength="@DvCms.Core.Moduli.ValidatoreModulo.LunghezzaMassimaAiuto" />
+                            </div>
+                            @if (tipo is TipoCampoModulo.SceltaSingola or TipoCampoModulo.SceltaMultipla)
+                            {
+                                <div class="col-12">
+                                    <label class="form-label @(lingua.Predefinita ? "required" : null)" for="opzioni-@i-@lingua.Codice">@_L["Opzioni, una per riga"]@Suffisso(lingua)</label>
+                                    <textarea class="form-control" id="opzioni-@i-@lingua.Codice" name="@(prefisso + ".Opzioni[" + lingua.Codice + "]")" rows="4">@campo.Opzioni.GetValueOrDefault(lingua.Codice)</textarea>
+                                    @if (!lingua.Predefinita)
+                                    {
+                                        <div class="form-hint">@_L["Nello stesso ordine della lingua predefinita; una riga vuota o mancante usa il testo della lingua predefinita."]</div>
+                                    }
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+            }
+            <div class="row g-2 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label" for="nuovo-tipo">@_L["Nuovo campo"]</label>
+                    <select class="form-select" id="nuovo-tipo" name="nuovoTipo">
+                        @foreach (var t in ModificaModel.Tipi)
+                        {
+                            <option value="@t">@Model.NomeTipo(t)</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn" asp-page-handler="AggiungiCampo" formnovalidate>@_L["Aggiungi campo"]</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header"><h3 class="card-title">@_L["Dopo l'invio e informativa"]</h3></div>
+        <div class="card-body row g-3">
+            @foreach (var lingua in Model.Lingue)
+            {
+                <div class="col-12">
+                    <label class="form-label @(lingua.Predefinita ? "required" : null)" for="conferma-@lingua.Codice">@_L["Messaggio di conferma"]@Suffisso(lingua)</label>
+                    <input class="form-control" id="conferma-@lingua.Codice" name="Input.Conferma[@lingua.Codice]" value="@input.Conferma.GetValueOrDefault(lingua.Codice)" maxlength="500" />
+                </div>
+            }
+            <div class="col-md-6">
+                <label class="form-label" for="percorso">@_L["Oppure vai a una pagina del sito"]</label>
+                <input class="form-control" id="percorso" name="Input.PercorsoDopoInvio" value="@input.PercorsoDopoInvio" maxlength="200" placeholder="/grazie" />
+                <div class="form-hint">@_L["Se compilato, sostituisce il messaggio di conferma. Percorso che inizia con «/»."]</div>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="informativa">@_L["Link all'informativa privacy"]</label>
+                <input class="form-control" id="informativa" name="Input.UrlInformativa" value="@input.UrlInformativa" maxlength="500" placeholder="https://… oppure /privacy" />
+                <div class="form-hint">@_L["Obbligatorio se il modulo ha un campo di consenso. L'informativa resta un testo del titolare del sito."]</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header"><h3 class="card-title">@_L["Richieste ricevute"]</h3></div>
+        <div class="card-body row g-3">
+            <div class="col-md-6">
+                <label class="form-label" for="destinatari">@_L["Indirizzi che ricevono le richieste (al più 5, uno per riga)"]</label>
+                <textarea class="form-control" id="destinatari" name="Input.Destinatari" rows="3">@input.Destinatari</textarea>
+            </div>
+            <div class="col-md-6">
+                <label class="form-check">
+                    <input class="form-check-input" type="checkbox" name="Input.TuttiGliAmministratori" value="true" checked="@input.TuttiGliAmministratori" />
+                    <input type="hidden" name="Input.TuttiGliAmministratori" value="false" />
+                    <span class="form-check-label">@_L["Avvisa anche tutti gli amministratori del sito"]</span>
+                </label>
+                <label class="form-check mt-2">
+                    <input class="form-check-input" type="checkbox" name="Input.RispostaAutomatica" value="true" checked="@input.RispostaAutomatica" />
+                    <input type="hidden" name="Input.RispostaAutomatica" value="false" />
+                    <span class="form-check-label">@_L["Invia al visitatore una risposta automatica (serve un campo email)"]</span>
+                </label>
+                <div class="mt-3">
+                    <label class="form-label" for="giorni">@_L["Giorni di conservazione delle richieste"]</label>
+                    <input class="form-control" id="giorni" name="Input.GiorniConservazione" value="@input.GiorniConservazione" inputmode="numeric" maxlength="4" />
+                    <div class="form-hint">@_L["Da {0} a {1}: dopo questo periodo le richieste si cancellano da sole.", Modulo.GiorniConservazioneMinimi, Modulo.GiorniConservazioneMassimi]</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex gap-2 mb-3">
+        <button type="submit" class="btn btn-primary" asp-page-handler="Salva">@_L["Salva"]</button>
+        <button type="submit" class="btn" asp-page-handler="Anteprima">@_L["Anteprima"]</button>
+        <a class="btn btn-link ms-auto" href="/admin/moduli">@_L["Torna all'elenco"]</a>
+    </div>
+</form>
+@if (Model.Anteprima is { } anteprima)
+{
+    <link rel="stylesheet" href="~/css/pubblico.css" asp-append-version="true" />
+    <div class="card">
+        <div class="card-header"><h3 class="card-title">@_L["Anteprima"]</h3></div>
+        <div class="card-body">
+            <partial name="_FormModulo" model="anteprima" />
+        </div>
+    </div>
+}

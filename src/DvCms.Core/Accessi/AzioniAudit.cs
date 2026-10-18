@@ -40,6 +40,13 @@ public static class AzioniAudit
     public const string InvitoInviato = "InvitoInviato";
     public const string ModificaModelloEmail = "ModificaModelloEmail";
     public const string RipristinoModelloEmail = "RipristinoModelloEmail";
+    public const string CreazioneModulo = "CreazioneModulo";
+    public const string ModificaModulo = "ModificaModulo";
+    public const string CambioStatoModulo = "CambioStatoModulo";
+    public const string EliminazioneModulo = "EliminazioneModulo";
+    public const string EsportazioneModulo = "EsportazioneModulo";
+    public const string EliminazioneInvioModulo = "EliminazioneInvioModulo";
+    public const string ScadenzaInviiModulo = "ScadenzaInviiModulo";
     public const string InvitoAccettato = "InvitoAccettato";
     public const string ModificaTestoStatico = "ModificaTestoStatico";
     public const string ModificaImpostazioniEmail = "ModificaImpostazioniEmail";

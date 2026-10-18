@@ -1,0 +1,96 @@
+@page "/admin/moduli"
+@model DvCms.Web.Pages.Admin.Moduli.IndexModel
+@using DvCms.Models.Moduli
+@{
+    ViewData["Titolo"] = _L["Moduli di contatto"];
+}
+@if (Model.Messaggio is not null)
+{
+    <div class="alert alert-success" role="status">@Model.Messaggio</div>
+}
+@if (Model.ErroreDaMostrare is not null)
+{
+    <div class="alert alert-danger" role="alert">@Model.ErroreDaMostrare</div>
+}
+@if (!Model.ProtezioneAttiva)
+{
+    <div class="alert alert-warning" role="alert">@_L["La protezione ALTCHA è spenta su questa installazione: i moduli non accettano invii (fuori dallo sviluppo). Si accende con Altcha:Abilitato."]</div>
+}
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">@_L["Moduli del sito"]</h3>
+        <div class="card-actions"><a class="btn btn-primary" href="/admin/moduli/modifica">@_L["Nuovo modulo"]</a></div>
+    </div>
+    <div class="card-body">
+        <p class="text-secondary">@_L["Un modulo si inserisce in una pagina con il componente «Modulo di contatto» del page builder. Solo i moduli pubblicati accettano richieste, sempre dopo la verifica anti-spam. Al massimo {0} moduli per sito.", Model.Massimo]</p>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table">
+            <thead>
+                <tr>
+                    <th>@_L["Nome"]</th>
+                    <th>@_L["Stato"]</th>
+                    <th>@_L["Campi"]</th>
+                    <th>@_L["Richieste"]</th>
+                    <th>@_L["Aggiornato"]</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var modulo in Model.Elenco)
+                {
+                    <tr>
+                        <td><a href="/admin/moduli/modifica/@modulo.Id">@modulo.Nome</a></td>
+                        <td>
+                            @switch (modulo.Stato)
+                            {
+                                case StatoModulo.Attivo:
+                                    <span class="badge bg-green-lt">@_L["Pubblicato"]</span>
+                                    break;
+                                case StatoModulo.Archiviato:
+                                    <span class="badge bg-secondary-lt">@_L["Archiviato"]</span>
+                                    break;
+                                default:
+                                    <span class="badge bg-yellow-lt">@_L["Bozza"]</span>
+                                    break;
+                            }
+                        </td>
+                        <td>@modulo.NumeroCampi</td>
+                        <td>
+                            @if (modulo.RichiesteTotali > 0)
+                            {
+                                <a href="/admin/moduli/richieste/@modulo.Id">@modulo.RichiesteTotali@(modulo.RichiesteNuove > 0 ? " (" + modulo.RichiesteNuove + " " + _L["nuove"] + ")" : null)</a>
+                            }
+                            else
+                            {
+                                <span class="text-secondary">0</span>
+                            }
+                        </td>
+                        <td class="text-secondary">@modulo.AggiornatoIlUtc.ToString("yyyy-MM-dd HH:mm") UTC</td>
+                        <td class="text-end">
+                            <form method="post" class="d-inline-flex gap-1">
+                                @if (modulo.Stato != StatoModulo.Attivo)
+                                {
+                                    <button type="submit" class="btn btn-sm btn-outline-success" asp-page-handler="Pubblica" asp-route-id="@modulo.Id">@_L["Pubblica"]</button>
+                                }
+                                @if (modulo.Stato == StatoModulo.Attivo)
+                                {
+                                    <button type="submit" class="btn btn-sm" asp-page-handler="Bozza" asp-route-id="@modulo.Id">@_L["Metti in bozza"]</button>
+                                }
+                                @if (modulo.Stato != StatoModulo.Archiviato)
+                                {
+                                    <button type="submit" class="btn btn-sm" asp-page-handler="Archivia" asp-route-id="@modulo.Id">@_L["Archivia"]</button>
+                                }
+                                <button type="submit" class="btn btn-sm btn-outline-danger" asp-page-handler="Elimina" asp-route-id="@modulo.Id">@_L["Elimina"]</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+                @if (Model.Elenco.Count == 0)
+                {
+                    <tr><td colspan="6" class="text-secondary">@_L["Nessun modulo: creane uno per ricevere richieste dal sito."]</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

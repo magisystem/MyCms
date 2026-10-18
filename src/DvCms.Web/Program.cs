@@ -27,6 +27,8 @@ costruttore.Services.AddRazorPages(opzioni =>
     opzioni.Conventions.AuthorizeFolder("/Admin", Politiche.AmministratoreTenant);
     // Canale email con consenso OAuth: l'app del tenant la gestisce solo il suo TenantAdmin, non il PlatformAdmin (ADR-0021).
     opzioni.Conventions.AuthorizeFolder("/Admin/Email", Politiche.SoloAmministratoreTenant);
+    // Moduli di contatto e richieste dei visitatori (dati personali): solo il TenantAdmin del tenant (ADR-0027).
+    opzioni.Conventions.AuthorizeFolder("/Admin/Moduli", Politiche.SoloAmministratoreTenant);
     opzioni.Conventions.AllowAnonymousToPage("/Admin/Accesso");
     opzioni.Conventions.AllowAnonymousToPage("/Admin/Verifica");
     opzioni.Conventions.AllowAnonymousToFolder("/Admin/Recupero");

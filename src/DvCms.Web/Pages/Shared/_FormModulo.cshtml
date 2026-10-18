@@ -1,0 +1,93 @@
+@using DvCms.Core.Moduli
+@using DvCms.DTO.Moduli
+@model DvCms.Web.Pubblico.ModelloFormModulo
+@inject DvCms.Contracts.Localizzazione.ILocalizzatore _L
+@{
+    var d = Model.Definizione;
+    var prefisso = "modulo-" + (Model.IdModulo?.ToString("N") ?? "anteprima");
+    string T(IReadOnlyDictionary<string, string> testi) => TestiModulo.Per(testi, Model.Lingua, Model.LinguaPredefinita);
+}
+<form method="post" action="@Model.Azione" class="dv-modulo" id="@prefisso" asp-antiforgery="@(!Model.Anteprima)">
+    @if (Model.ErroreGenerale is not null)
+    {
+        <p class="dv-modulo-errore" role="alert">@Model.ErroreGenerale</p>
+    }
+    @foreach (var campo in d.Campi)
+    {
+        var id = prefisso + "-" + campo.Id;
+        var nome = "campo_" + campo.Id;
+        var errore = Model.ErroreDi(campo.Id);
+        var valori = Model.ValoriDi(campo.Id);
+        var valore = valori.Length > 0 ? valori[0] : string.Empty;
+        var etichetta = T(campo.Etichette);
+        var aiuto = T(campo.Aiuti);
+        var descritto = (aiuto.Length > 0 ? id + "-aiuto " : string.Empty) + (errore is not null ? id + "-errore" : string.Empty);
+        <div class="dv-modulo-campo">
+            @switch (campo.Tipo)
+            {
+                case TipoCampoModulo.SceltaSingola:
+                    <fieldset>
+                        <legend>@etichetta@(campo.Obbligatorio ? " *" : null)</legend>
+                        @for (var i = 0; i < campo.Opzioni.Count; i++)
+                        {
+                            var opzione = "o" + (i + 1).ToString(System.Globalization.CultureInfo.InvariantCulture);
+                            <label class="dv-modulo-scelta"><input type="radio" name="@nome" value="@opzione" checked="@(valore == opzione)" required="@campo.Obbligatorio" /> @T(campo.Opzioni[i])</label>
+                        }
+                    </fieldset>
+                    break;
+                case TipoCampoModulo.SceltaMultipla:
+                    <fieldset>
+                        <legend>@etichetta@(campo.Obbligatorio ? " *" : null)</legend>
+                        @for (var i = 0; i < campo.Opzioni.Count; i++)
+                        {
+                            var opzione = "o" + (i + 1).ToString(System.Globalization.CultureInfo.InvariantCulture);
+                            <label class="dv-modulo-scelta"><input type="checkbox" name="@nome" value="@opzione" checked="@valori.Contains(opzione)" /> @T(campo.Opzioni[i])</label>
+                        }
+                    </fieldset>
+                    break;
+                case TipoCampoModulo.Consenso:
+                    <label class="dv-modulo-scelta">
+                        <input type="checkbox" name="@nome" value="si" id="@id" checked="@(valore == "si")" required="@campo.Obbligatorio" aria-describedby="@(descritto.Length > 0 ? descritto : null)" />
+                        @etichetta@(campo.Obbligatorio ? " *" : null)
+                        @if (!string.IsNullOrWhiteSpace(d.UrlInformativa))
+                        {
+                            <a href="@d.UrlInformativa" target="_blank" rel="noopener noreferrer">@_L["Informativa privacy"]</a>
+                        }
+                    </label>
+                    break;
+                case TipoCampoModulo.TestoLungo:
+                    <label for="@id">@etichetta@(campo.Obbligatorio ? " *" : null)</label>
+                    <textarea id="@id" name="@nome" rows="5" maxlength="@campo.LunghezzaMassima" required="@campo.Obbligatorio" aria-describedby="@(descritto.Length > 0 ? descritto : null)">@valore</textarea>
+                    break;
+                default:
+                    var tipo = campo.Tipo switch
+                    {
+                        TipoCampoModulo.Email => "email",
+                        TipoCampoModulo.Telefono => "tel",
+                        TipoCampoModulo.Data => "date",
+                        _ => "text",
+                    };
+                    var modo = campo.Tipo == TipoCampoModulo.Numero ? "decimal" : null;
+                    <label for="@id">@etichetta@(campo.Obbligatorio ? " *" : null)</label>
+                    <input type="@tipo" id="@id" name="@nome" value="@valore" maxlength="@campo.LunghezzaMassima" inputmode="@modo" required="@campo.Obbligatorio" aria-describedby="@(descritto.Length > 0 ? descritto : null)" />
+                    break;
+            }
+            @if (aiuto.Length > 0)
+            {
+                <p class="dv-modulo-aiuto" id="@(id + "-aiuto")">@aiuto</p>
+            }
+            @if (errore is not null)
+            {
+                <p class="dv-modulo-errore" id="@(id + "-errore")" role="alert">@errore</p>
+            }
+        </div>
+    }
+    @if (Model.ConProvaAntiAbuso)
+    {
+        <partial name="_AltchaWidget" />
+    }
+    @{
+        var pulsante = T(d.Pulsante);
+    }
+    <button type="submit" disabled="@Model.Anteprima">@(pulsante.Length > 0 ? pulsante : _L["Invia"])</button>
+</form>

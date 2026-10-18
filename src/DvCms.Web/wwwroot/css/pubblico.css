@@ -90,3 +90,15 @@ h1 {
 .dv-variante form { display: flex; align-items: center; gap: 0.5rem; margin-left: auto; }
 .dv-variante input[type="number"] { width: 5rem; padding: 0.4rem; font: inherit; }
 .dv-vetrina button { padding: 0.5rem 1rem; font: inherit; font-weight: 600; cursor: pointer; }
+
+/* Moduli di contatto (ADR-0027) */
+.dv-modulo { max-width: 40rem; }
+.dv-modulo-campo { margin: 0 0 1rem; }
+.dv-modulo label, .dv-modulo legend { display: block; margin: 0 0 0.25rem; font-weight: 600; }
+.dv-modulo fieldset { border: 0; margin: 0; padding: 0; }
+.dv-modulo .dv-modulo-scelta { display: flex; gap: 0.5rem; align-items: baseline; font-weight: 400; }
+.dv-modulo input[type="text"], .dv-modulo input[type="email"], .dv-modulo input[type="tel"], .dv-modulo input[type="date"], .dv-modulo textarea { width: 100%; box-sizing: border-box; padding: 0.5rem; font: inherit; }
+.dv-modulo button { margin-top: 1rem; padding: 0.6rem 1.2rem; font: inherit; font-weight: 600; cursor: pointer; }
+.dv-modulo-aiuto { margin: 0.25rem 0 0; font-size: 0.875em; opacity: 0.8; }
+.dv-modulo-errore { margin: 0.25rem 0 0; padding: 0.4rem 0.6rem; color: #7f1d1d; background: #fee2e2; }
+.dv-modulo-conferma { padding: 0.75rem 1rem; color: #14532d; background: #dcfce7; }
