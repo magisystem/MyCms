@@ -70,6 +70,11 @@ public sealed class RegistroTemplateBuilder
         7,
         ["layout.colonne", "contenuto.titolo", "contenuto.testo", "contenuto.testo-ricco", "contenuto.immagine", "contenuto.pulsante", "contenuto.hero", "contenuto.cta", "contenuto.fisarmonica", "contenuto.caratteristiche", "contenuto.testimonianze", "negozio.griglia-prodotti", "negozio.scheda-prodotto", "negozio.griglia-categoria"]);
 
+    /// <summary>Versione 8 (ADR-0027): il corpo ammette anche un modulo di contatto scelto. Le versioni precedenti restano valide.</summary>
+    public static TemplateBuilder TemplateIntestazioneFissaV8 { get; } = CreaIntestazioneFissa(
+        8,
+        ["layout.colonne", "contenuto.titolo", "contenuto.testo", "contenuto.testo-ricco", "contenuto.immagine", "contenuto.pulsante", "contenuto.hero", "contenuto.cta", "contenuto.fisarmonica", "contenuto.caratteristiche", "contenuto.testimonianze", "negozio.griglia-prodotti", "negozio.scheda-prodotto", "negozio.griglia-categoria", "contenuto.modulo"]);
+
     private static TemplateBuilder CreaIntestazioneFissa(int versione, IReadOnlyList<string> tipiNelCorpo) => new(
         IntestazioneFissa,
         versione,
@@ -105,7 +110,7 @@ public sealed class RegistroTemplateBuilder
                 ]),
         ]);
 
-    public static IReadOnlyList<TemplateBuilder> Predefiniti { get; } = [TemplatePaginaLibera, TemplateIntestazioneFissa, TemplateIntestazioneFissaV2, TemplateIntestazioneFissaV3, TemplateIntestazioneFissaV4, TemplateIntestazioneFissaV5, TemplateIntestazioneFissaV6, TemplateIntestazioneFissaV7];
+    public static IReadOnlyList<TemplateBuilder> Predefiniti { get; } = [TemplatePaginaLibera, TemplateIntestazioneFissa, TemplateIntestazioneFissaV2, TemplateIntestazioneFissaV3, TemplateIntestazioneFissaV4, TemplateIntestazioneFissaV5, TemplateIntestazioneFissaV6, TemplateIntestazioneFissaV7, TemplateIntestazioneFissaV8];
 
     public IReadOnlyList<TemplateBuilder> Tutti => [.. _template.Values.OrderBy(t => t.Id, StringComparer.Ordinal).ThenBy(t => t.Versione)];
 

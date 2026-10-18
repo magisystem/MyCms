@@ -1,0 +1,8 @@
+@page "/moduli/{id:guid}/inviato"
+@model DvCms.Web.Pages.Pubblico.ModuloInviatoModel
+@{
+    Layout = "_LayoutAccount";
+    ViewData["Titolo"] = _L["Richiesta inviata"];
+}
+<p class="dv-modulo-conferma" role="status">@(Model.Messaggio.Length > 0 ? Model.Messaggio : _L["Grazie, la tua richiesta è stata inviata."])</p>
+<nav><a href="/">@_L["Torna al sito"]</a></nav>

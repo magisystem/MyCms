@@ -30,6 +30,7 @@ public class MatriceSicurezzaPagineTest
         "/Pages/Account/Registrazione.cshtml",
         "/Pages/Account/Conferma.cshtml",
         "/Pages/Account/Accesso.cshtml",
+        "/Pages/Pubblico/Modulo.cshtml",
     ];
 
     [Fact]

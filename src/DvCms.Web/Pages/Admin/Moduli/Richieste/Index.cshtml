@@ -1,0 +1,90 @@
+@page "/admin/moduli/richieste/{id:guid}"
+@model DvCms.Web.Pages.Admin.Moduli.Richieste.IndexModel
+@using DvCms.Models.Moduli
+@{
+    ViewData["Titolo"] = _L["Richieste ricevute"];
+}
+@if (Model.Messaggio is not null)
+{
+    <div class="alert alert-success" role="status">@Model.Messaggio</div>
+}
+@if (Model.ErroreDaMostrare is not null)
+{
+    <div class="alert alert-danger" role="alert">@Model.ErroreDaMostrare</div>
+}
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">@Model.Elenco.NomeModulo — @_L["richieste ricevute"] (@Model.Elenco.Totale)</h3>
+        <div class="card-actions d-flex gap-2">
+            <a class="btn" href="/admin/moduli">@_L["Torna ai moduli"]</a>
+            <a class="btn btn-outline-primary" href="/admin/moduli/richieste/@Model.Elenco.IdModulo?handler=Esporta&stato=@Model.Elenco.Filtro">@_L["Esporta in CSV"]</a>
+        </div>
+    </div>
+    <div class="card-body">
+        <form method="get" class="d-flex gap-2 align-items-end">
+            <div>
+                <label class="form-label" for="stato">@_L["Stato"]</label>
+                <select class="form-select" id="stato" name="stato">
+                    <option value="" selected="@(Model.Elenco.Filtro is null)">@_L["Tutte"]</option>
+                    @foreach (var stato in DvCms.Web.Pages.Admin.Moduli.Richieste.IndexModel.Stati)
+                    {
+                        <option value="@stato" selected="@(Model.Elenco.Filtro == stato)">@Model.NomeStato(stato)</option>
+                    }
+                </select>
+            </div>
+            <button type="submit" class="btn">@_L["Filtra"]</button>
+            <span class="text-secondary ms-auto">@_L["Nuove"]: @Model.Elenco.Nuove</span>
+        </form>
+        <p class="text-secondary mt-3 mb-0">@_L["Le richieste contengono dati personali dei visitatori: si cancellano da sole alla scadenza della conservazione scelta per il modulo."]</p>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table">
+            <thead>
+                <tr>
+                    <th>@_L["Ricevuta il"]</th>
+                    <th>@_L["Stato"]</th>
+                    <th>@_L["Lingua"]</th>
+                    <th>@_L["Contenuto"]</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var richiesta in Model.Elenco.Richieste)
+                {
+                    <tr>
+                        <td><a href="/admin/moduli/richieste/@Model.Elenco.IdModulo/@richiesta.Id">@richiesta.CreatoIlUtc.ToString("yyyy-MM-dd HH:mm") UTC</a></td>
+                        <td>
+                            @if (richiesta.Stato == StatoInvioModulo.Nuovo)
+                            {
+                                <span class="badge bg-blue-lt">@Model.NomeStato(richiesta.Stato)</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary-lt">@Model.NomeStato(richiesta.Stato)</span>
+                            }
+                        </td>
+                        <td>@richiesta.CodiceLingua</td>
+                        <td class="text-secondary">@richiesta.Anteprima</td>
+                    </tr>
+                }
+                @if (Model.Elenco.Richieste.Count == 0)
+                {
+                    <tr><td colspan="4" class="text-secondary">@_L["Nessuna richiesta."]</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    @if (Model.Elenco.Pagine > 1)
+    {
+        <div class="card-footer d-flex gap-2 align-items-center">
+            @if (Model.Elenco.Pagina > 1)
+            {
+                <a class="btn btn-sm" href="/admin/moduli/richieste/@Model.Elenco.IdModulo?pagina=@(Model.Elenco.Pagina - 1)&stato=@Model.Elenco.Filtro">@_L["Precedente"]</a>
+            }
+            <span class="text-secondary">@Model.Elenco.Pagina / @Model.Elenco.Pagine</span>
+            @if (Model.Elenco.Pagina < Model.Elenco.Pagine)
+            {
+                <a class="btn btn-sm" href="/admin/moduli/richieste/@Model.Elenco.IdModulo?pagina=@(Model.Elenco.Pagina + 1)&stato=@Model.Elenco.Filtro">@_L["Successiva"]</a>
+            }
+        </div>
+    }
+</div>

@@ -1,0 +1,15 @@
+@page "/moduli/{id:guid}"
+@model DvCms.Web.Pages.Pubblico.ModuloModel
+@{
+    Layout = "_LayoutAccount";
+    ViewData["Titolo"] = _L["Modulo di contatto"];
+}
+@if (Model.Avviso is not null)
+{
+    <p class="dv-modulo-errore" role="alert">@Model.Avviso</p>
+    <nav><a href="/">@_L["Torna al sito"]</a></nav>
+}
+else if (Model.Form is not null)
+{
+    <partial name="_FormModulo" model="Model.Form" />
+}

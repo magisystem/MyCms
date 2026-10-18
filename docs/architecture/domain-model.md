@@ -65,6 +65,10 @@ I template non devono sovrascrivere contenuti già creati quando viene pubblicat
 
 **Attuazione (D-003, D-004).** Tabella `RisorseMedia`: `IdTenant`, `IdSito` (chiave esterna composta verso `Siti`), `ChiaveOggetto` (unica, `{tenant}/{sito}/{risorsa}` in esadecimale, generata dal server), `NomeOriginale` (ripulito, solo etichetta), `TipoContenuto` (rilevato dalla firma), `Dimensione`, `HashSha256` (`binary(32)`), `Larghezza` e `Altezza`, `Visibilita` (`Pubblica`/`Privata`), `StatoScansione` (`NonEseguita`/`Pulito`/`InQuarantena`; la scansione antimalware non è ancora prevista, vedi G-005), `CreatoIlUtc`, `CreatoDaIdUtenza`, token di concorrenza. Il testo alternativo sta in `TraduzioniRisorseMedia` (chiave `(IdRisorsa, IdLingua)`, chiave esterna composta verso la risorsa, `TestoAlternativo` ≤ 500): nell'elenco si mostra quello della lingua predefinita del sito; se manca per una lingua la pagina che userà l'immagine ripiegherà su quello della lingua predefinita (ADR-0018). Filtri globali di tenant su entrambe le tabelle.
 
+## Moduli di contatto
+
+**Attuazione ([ADR-0027](../decisions/ADR-0027-moduli-di-contatto.md)).** Tabella `Moduli`: `IdTenant`, `IdSito` (chiave esterna composta verso `Siti`), `Nome` (≤ 100, unico per sito), `Stato` (`Bozza`/`Attivo`/`Archiviato`), `DefinizioneJson` (campi, testi per lingua, pulsante, conferma, pagina dopo l'invio, informativa) e `ImpostazioniJson` (destinatari, risposta automatica), `GiorniConservazione` (30–1825, vincolo nel database), `CreatoIlUtc`, `AggiornatoIlUtc`, `AggiornatoDaIdUtenza`, token di concorrenza; al massimo 50 per sito. Tabella `InviiModulo`: `IdTenant`, `IdSito`, `IdModulo` (chiave esterna composta, nessuna cancellazione a cascata), `CodiceLingua`, `Stato` (`Nuovo`/`Letto`/`Archiviato`), `ContenutoJson` (istantanea autodescrittiva: identificativo, etichetta nella lingua dell'invio, tipo e valori), `CreatoIlUtc`; né IP né User-Agent. Filtri globali di tenant su entrambe.
+
 ## Commerce
 
 - `Prodotto`, `VarianteProdotto`, `CategoriaProdotto`, `CollezioneProdotto`

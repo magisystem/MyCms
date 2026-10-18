@@ -53,6 +53,7 @@ Questo è un esempio, non lo schema completo. Ogni tipo deve avere schema versio
 
 - Layout: `layout.sezione`, `layout.contenitore`, `layout.colonne`, `layout.griglia`.
 - Contenuto: `contenuto.titolo`, `contenuto.testo-ricco`, `contenuto.immagine`, `contenuto.pulsante`, `contenuto.hero`, `contenuto.griglia-caratteristiche`, `contenuto.fisarmonica`, `contenuto.testimonianze`, `contenuto.cta`.
+- Moduli: `contenuto.modulo`.
 - Negozio: `negozio.griglia-prodotti`, `negozio.scheda-prodotto`, `negozio.dettaglio-prodotto`, `negozio.aggiungi-al-carrello`.
 
 Il catalogo concreto va scelto per il primo tema/prototipo, senza implementare decine di componenti prima di validare il modello.
@@ -154,4 +155,4 @@ Il canvas di GrapesJS è un iframe pensato per il mouse e resta tale. Tutto ciò
 - Scorciatoie che cancellano o spostano componenti restano disattivate; resta Ctrl+S.
 
 Verifica: `frontend/page-builder/smoke/tastiera.mjs` percorre da sola tastiera un'intera costruzione di pagina (libera e con nodi bloccati) in un browser vero. **Non coperto:** prova con uno screen reader reale e audit automatico WCAG (axe o simili, nuova dipendenza da valutare con la regola 11), contrasto dei colori dell'interfaccia dell'editor, spostamento da tastiera di un componente in un altro contenitore (oggi: duplica/inserisci nel contenitore e riordina; non si trasferisce un componente esistente), tabelle e drag-and-drop dall'esterno. La modalità guidata a form resta l'alternativa piena.
-
+- **Modulo di contatto (ADR-0027).** `contenuto.modulo` ha una sola proprietà obbligatoria, `idModulo` (tipo `IdModulo`, un GUID), scelta nell'editor da un elenco dei moduli non archiviati del sito (l'elenco è vuoto, e il blocco assente, se non esistono moduli). Ammesso nel corpo di una sezione e nelle colonne. Il server rifiuta il salvataggio (`ModuloNonDisponibile`) se il modulo non esiste nel sito dell'host o è archiviato; una bozza è ammessa (si prepara la pagina prima di pubblicare) ma non si vede. Il documento conserva solo l'identificativo: campi, testi e lingua si leggono alla visita (un modulo non pubblicato non produce nulla), la form invia a `POST /moduli/{id}` con prova ALTCHA e token antiforgery. Template e modello `pagina-con-intestazione-fissa` v8.

@@ -112,6 +112,23 @@ internal static class ModelliDiFabbrica
             + "{% if motivo %}Motivo: {{ motivo }}\n{% endif %}"
             + "L'accredito sul metodo di pagamento che hai usato può richiedere alcuni giorni.\nPuoi consultare l'ordine qui: {{ link_ordine }}");
         Aggiungi(
+            CodiciModelloEmail.NuovoInvioModulo, it,
+            "Nuova richiesta da «{{ nome_modulo }}» - {{ nome_sito }}",
+            "<p>Hai ricevuto una nuova richiesta dal modulo «{{ nome_modulo }}» di {{ nome_sito }}.</p>\n"
+            + "<ul>{% for campo in campi %}<li><strong>{{ campo.etichetta }}</strong>: {{ campo.valore | escape | newline_to_br | raw }}</li>{% endfor %}</ul>\n"
+            + "<p>Leggila e gestiscila qui: <a href=\"{{ link_richiesta }}\">{{ link_richiesta }}</a></p>",
+            "Hai ricevuto una nuova richiesta dal modulo «{{ nome_modulo }}» di {{ nome_sito }}.\n"
+            + "{% for campo in campi %}- {{ campo.etichetta }}: {{ campo.valore }}\n{% endfor %}"
+            + "Leggila e gestiscila qui: {{ link_richiesta }}");
+        Aggiungi(
+            CodiciModelloEmail.RispostaInvioModulo, it,
+            "Abbiamo ricevuto la tua richiesta - {{ nome_sito }}",
+            "<p>{{ messaggio | escape | newline_to_br | raw }}</p>\n"
+            + "<p>Ecco i dati che ci hai inviato dal modulo «{{ nome_modulo }}»:</p>\n"
+            + "<ul>{% for campo in campi %}<li><strong>{{ campo.etichetta }}</strong>: {{ campo.valore | escape | newline_to_br | raw }}</li>{% endfor %}</ul>",
+            "{{ messaggio }}\n\nEcco i dati che ci hai inviato dal modulo «{{ nome_modulo }}»:\n"
+            + "{% for campo in campi %}- {{ campo.etichetta }}: {{ campo.valore }}\n{% endfor %}");
+        Aggiungi(
             CodiciModelloEmail.Prova, it,
             "Email di prova",
             "<p>Questa è un'email di prova inviata dalla configurazione del tenant. Se la ricevi, l'invio funziona.</p>",
@@ -208,6 +225,23 @@ internal static class ModelliDiFabbrica
             "{% if totale %}We have fully refunded order no. {{ numero }} on {{ nome_sito }}: {{ importo }}.{% else %}We have refunded part of order no. {{ numero }} on {{ nome_sito }}: {{ importo }}.{% endif %}\n"
             + "{% if motivo %}Reason: {{ motivo }}\n{% endif %}"
             + "The credit to the payment method you used may take a few days.\nYou can see your order here: {{ link_ordine }}");
+        Aggiungi(
+            CodiciModelloEmail.NuovoInvioModulo, en,
+            "New request from \"{{ nome_modulo }}\" - {{ nome_sito }}",
+            "<p>You have received a new request from the \"{{ nome_modulo }}\" form of {{ nome_sito }}.</p>\n"
+            + "<ul>{% for campo in campi %}<li><strong>{{ campo.etichetta }}</strong>: {{ campo.valore | escape | newline_to_br | raw }}</li>{% endfor %}</ul>\n"
+            + "<p>Read and manage it here: <a href=\"{{ link_richiesta }}\">{{ link_richiesta }}</a></p>",
+            "You have received a new request from the \"{{ nome_modulo }}\" form of {{ nome_sito }}.\n"
+            + "{% for campo in campi %}- {{ campo.etichetta }}: {{ campo.valore }}\n{% endfor %}"
+            + "Read and manage it here: {{ link_richiesta }}");
+        Aggiungi(
+            CodiciModelloEmail.RispostaInvioModulo, en,
+            "We have received your request - {{ nome_sito }}",
+            "<p>{{ messaggio | escape | newline_to_br | raw }}</p>\n"
+            + "<p>Here is the information you sent through the \"{{ nome_modulo }}\" form:</p>\n"
+            + "<ul>{% for campo in campi %}<li><strong>{{ campo.etichetta }}</strong>: {{ campo.valore | escape | newline_to_br | raw }}</li>{% endfor %}</ul>",
+            "{{ messaggio }}\n\nHere is the information you sent through the \"{{ nome_modulo }}\" form:\n"
+            + "{% for campo in campi %}- {{ campo.etichetta }}: {{ campo.valore }}\n{% endfor %}");
         Aggiungi(
             CodiciModelloEmail.Prova, en,
             "Test email",

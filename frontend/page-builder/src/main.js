@@ -24,6 +24,7 @@ async function avvia() {
     risorse: JSON.parse(radice.dataset.risorse || '[]'),
     prodotti: JSON.parse(radice.dataset.prodotti || '[]'),
     categorie: JSON.parse(radice.dataset.categorie || '[]'),
+    moduli: JSON.parse(radice.dataset.moduli || '[]'),
     testi: JSON.parse(radice.dataset.testi || '{}'),
     tema: JSON.parse(radice.dataset.tema || '{}'),
     tokenAntiforgery: document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '',

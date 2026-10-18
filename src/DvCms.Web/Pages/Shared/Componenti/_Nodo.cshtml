@@ -7,6 +7,8 @@
 @model NodoCms
 @inject DvCms.Contracts.Negozio.IServizioVetrina Vetrina
 @inject DvCms.Contracts.Localizzazione.IContestoLingua ContestoLinguaNodo
+@inject DvCms.Contracts.Moduli.IServizioModuloPubblico ModuliPubblici
+@inject DvCms.Web.AntiAbuso.IVerificaAntiAbuso AntiAbusoNodo
 @functions {
     private static string Valore(IReadOnlyDictionary<string, string> valori, string nome, string predefinito) =>
         valori.TryGetValue(nome, out var valore) && valore.Length > 0 ? valore : predefinito;
@@ -315,6 +317,20 @@
                     </ul>
                     <p><a class="pulsante dv-pulsante dv-pulsante-primario" href="/negozio/@scelto.Id.ToString("D")">@(disponibile ? _L["Vedi e acquista"] : _L["Vedi il prodotto"])</a></p>
                 </article>
+            }
+        }
+        break;
+    case "contenuto.modulo":
+        {
+            // Il documento conserva solo l'identificativo: campi e testi si leggono alla visita, e un modulo non pubblicato non produce nulla.
+            var modulo = Guid.TryParseExact(Valore(Model.Proprieta, "idModulo", string.Empty), "D", out var idModulo)
+                ? await ModuliPubblici.LeggiAsync(idModulo, ContestoLinguaNodo.CodiceLingua, Context.RequestAborted)
+                : null;
+            if (modulo is not null)
+            {
+                <div class="@("dv-modulo-blocco" + Animazione(Model.Stili))">
+                    <partial name="_FormModulo" model="@(new DvCms.Web.Pubblico.ModelloFormModulo(modulo.Id, modulo.Definizione, modulo.Lingua, modulo.LinguaPredefinita, Anteprima: false, Azione: "/moduli/" + modulo.Id.ToString("D"), ConProvaAntiAbuso: AntiAbusoNodo.Attiva))" />
+                </div>
             }
         }
         break;

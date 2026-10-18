@@ -38,6 +38,8 @@ costruttore.Services.AddRazorPages(opzioni =>
     opzioni.Conventions.AllowAnonymousToPage("/Account/Registrazione");
     opzioni.Conventions.AllowAnonymousToPage("/Account/Conferma");
     opzioni.Conventions.AllowAnonymousToPage("/Account/Accesso");
+    // Invio dei moduli di contatto dal sito pubblico (ADR-0027): anonimo, ma con prova ALTCHA, antiforgery e limite di richieste.
+    opzioni.Conventions.AllowAnonymousToPage("/Pubblico/Modulo");
     // Il menu "Platform" è un'area dedicata: solo il PlatformAdmin, verificato lato server a ogni richiesta.
     opzioni.Conventions.AuthorizeAreaFolder("Platform", "/", Politiche.AmministratorePiattaforma);
     opzioni.Conventions.ConfigureFilter(new FiltroCambioPasswordObbligatorio());

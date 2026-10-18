@@ -25,6 +25,9 @@ public enum TipoProprieta
 
     /// <summary>Identificativo (GUID) di una categoria del negozio; l'esistenza nel sito la verifica il servizio, i prodotti visibili il renderer a ogni visita.</summary>
     IdCategoria = 9,
+
+    /// <summary>Identificativo (GUID) di un modulo di contatto del sito (ADR-0027); l'esistenza nel sito la verifica il servizio, la pubblicazione il renderer a ogni visita.</summary>
+    IdModulo = 10,
 }
 
 /// <summary>Una proprietà (o uno stile) ammessa da un componente. Gli stili sono sempre enumerazioni: token e varianti, mai CSS libero.</summary>

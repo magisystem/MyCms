@@ -15,6 +15,8 @@ public static class CodiciModelloEmail
     public const string OrdineRicevutoContrassegno = "ordine-ricevuto-contrassegno";
     public const string OrdineNuovoAmministratore = "ordine-nuovo-amministratore";
     public const string Rimborso = "rimborso";
+    public const string NuovoInvioModulo = "nuovo-invio-modulo";
+    public const string RispostaInvioModulo = "risposta-invio-modulo";
     public const string Prova = "prova-invio";
 }
 

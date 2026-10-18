@@ -91,6 +91,24 @@ public class IsolamentoModuliTest
         }
     }
 
+    [Fact]
+    public async Task UnModuloPubblicatoDiANonSiLeggeNeRiceveInviiDalSitoDiB()
+    {
+        await using var d = await DatiIsolamento.CreaAsync();
+        var idA = (await ComeAsync(d, d.A, s => s.CreaAsync(d.AdminA, Dati("Contatti di A") with { Stato = StatoModulo.Attivo }, Ct))).Id!.Value;
+        var valori = new Dictionary<string, string[]> { ["campo_c1"] = ["Anna"] };
+
+        Assert.NotNull(await ComeAsync(d, d.A, p => p.GetRequiredService<IServizioModuloPubblico>().LeggiAsync(idA, "it", Ct)));
+        Assert.Null(await ComeAsync(d, d.B, p => p.GetRequiredService<IServizioModuloPubblico>().LeggiAsync(idA, "it", Ct)));
+        var daB = await ComeAsync(d, d.B, p => p.GetRequiredService<IServizioModuloPubblico>().InviaAsync(idA, "it", valori, Ct));
+        var daA = await ComeAsync(d, d.A, p => p.GetRequiredService<IServizioModuloPubblico>().InviaAsync(idA, "it", valori, Ct));
+
+        Assert.Equal(EsitoInvioPubblico.NonTrovato, daB.Esito);
+        Assert.Equal(EsitoInvioPubblico.Accettato, daA.Esito);
+        Assert.Equal(1, await ComeAsync(d, d.A, p => p.GetRequiredService<ContestoDatabase>().InviiModulo.CountAsync(Ct)));
+        Assert.Equal(0, await ComeAsync(d, d.B, p => p.GetRequiredService<ContestoDatabase>().InviiModulo.CountAsync(Ct)));
+    }
+
     private static Modulo Riga(Guid idTenant, Guid idSito, string nome) => new()
     {
         Id = Guid.NewGuid(),

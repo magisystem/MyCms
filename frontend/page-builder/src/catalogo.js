@@ -6,7 +6,7 @@ import { consentito } from './vincoli.js';
 import { gruppoDi } from './proprieta.js';
 import { analizza, costruisci, urlConsentito } from './testoRicco.js';
 
-const FOGLIE = new Set(['contenuto.titolo', 'contenuto.testo', 'contenuto.testo-ricco', 'contenuto.immagine', 'contenuto.pulsante', 'contenuto.hero', 'contenuto.cta', 'contenuto.voce', 'contenuto.caratteristica', 'contenuto.testimonianza', 'negozio.griglia-prodotti', 'negozio.scheda-prodotto', 'negozio.griglia-categoria']);
+const FOGLIE = new Set(['contenuto.titolo', 'contenuto.testo', 'contenuto.testo-ricco', 'contenuto.immagine', 'contenuto.pulsante', 'contenuto.hero', 'contenuto.cta', 'contenuto.voce', 'contenuto.caratteristica', 'contenuto.testimonianza', 'negozio.griglia-prodotti', 'negozio.scheda-prodotto', 'negozio.griglia-categoria', 'contenuto.modulo']);
 
 const TAG = {
   'layout.sezione': 'section',
@@ -28,11 +28,13 @@ const TAG = {
   'negozio.griglia-prodotti': 'div',
   'negozio.scheda-prodotto': 'div',
   'negozio.griglia-categoria': 'div',
+  'contenuto.modulo': 'div',
 };
 
 // Nomi dei prodotti del catalogo per il segnaposto nel canvas (si imposta all'avvio dell'editor).
 let nomiProdotti = new Map();
 let nomiCategorie = new Map();
+let nomiModuli = new Map();
 
 // Testi modificabili direttamente nel canvas (doppio clic): solo testo semplice, nessun HTML. Gli altri campi restano nel pannello.
 const TESTI_IN_LINEA = {
@@ -187,6 +189,11 @@ function aspetto(tipo, el, modello) {
       impostaClassi(el, ['dv-griglia-prodotti-anteprima']);
       riempi(el, [['p', '', `${modello.get('name') ?? tipo} · ${nomiCategorie.get(p('data-p-id-categoria')) ?? '?'} · ${p('data-p-quanti', '6')}`]]);
       break;
+    case 'contenuto.modulo':
+      // Segnaposto: il modulo vero (con i suoi campi) si vede nell'anteprima e nella pagina pubblicata.
+      impostaClassi(el, ['dv-griglia-prodotti-anteprima']);
+      riempi(el, [['p', '', `${modello.get('name') ?? tipo} · ${nomiModuli.get(p('data-p-id-modulo')) ?? '?'}`]]);
+      break;
     case 'negozio.scheda-prodotto':
       impostaClassi(el, ['dv-griglia-prodotti-anteprima']);
       riempi(el, [['p', '', `${modello.get('name') ?? tipo} · ${nomiProdotti.get(p('data-p-id-prodotto')) ?? '?'}`]]);
@@ -227,6 +234,12 @@ function creaTrait(definizione, config, eStile) {
         type: 'select',
         options: [{ id: '', label: config.testi.nessunaCategoria }, ...config.categorie.map((r) => ({ id: r.id, label: r.nome || '—' }))],
       };
+    case 'IdModulo':
+      return {
+        ...base,
+        type: 'select',
+        options: [{ id: '', label: config.testi.nessunModulo }, ...config.moduli.map((r) => ({ id: r.id, label: r.nome || '—' }))],
+      };
     case 'IdProdotto':
       return {
         ...base,
@@ -247,6 +260,7 @@ function creaTrait(definizione, config, eStile) {
 export function registraComponenti(editor, catalogo, vincoli, config) {
   nomiProdotti = new Map(config.prodotti.map((r) => [r.id, r.nome]));
   nomiCategorie = new Map(config.categorie.map((r) => [r.id, r.nome]));
+  nomiModuli = new Map(config.moduli.map((r) => [r.id, r.nome]));
   // Campo di testo su più righe: GrapesJS non lo prevede tra i trait di base.
   editor.TraitManager.addType('dv-textarea', {
     createInput({ trait }) {
@@ -406,6 +420,8 @@ function contenutoBlocco(tipo, config) {
       return { type: tipo, components: [{ type: 'contenuto.caratteristica', attributes: { 'data-p-titolo': 'Caratteristica', 'data-p-descrizione': 'Descrizione' } }] };
     case 'negozio.griglia-categoria':
       return { type: tipo, attributes: { 'data-p-id-categoria': config.categorie[0]?.id ?? '' } };
+    case 'contenuto.modulo':
+      return { type: tipo, attributes: { 'data-p-id-modulo': config.moduli[0]?.id ?? '' } };
     case 'negozio.scheda-prodotto':
       return { type: tipo, attributes: { 'data-p-id-prodotto': config.prodotti[0]?.id ?? '' } };
     case 'contenuto.testimonianze':
@@ -422,6 +438,7 @@ export function creaBlocchi(editor, definizioni, config) {
     if (tipo === 'contenuto.immagine' && config.risorse.length === 0) continue;
     if (tipo === 'negozio.scheda-prodotto' && config.prodotti.length === 0) continue;
     if (tipo === 'negozio.griglia-categoria' && config.categorie.length === 0) continue;
+    if (tipo === 'contenuto.modulo' && config.moduli.length === 0) continue;
     editor.BlockManager.add(`dv-${tipo}`, {
       label: config.testi.componenti[tipo] ?? tipo,
       category: CATEGORIE[tipo.split('.')[0]] ?? '',

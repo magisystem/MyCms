@@ -2,6 +2,7 @@ using System.Text.Json;
 using DvCms.Contracts.Builder;
 using DvCms.Contracts.Localizzazione;
 using DvCms.Contracts.Media;
+using DvCms.Contracts.Moduli;
 using DvCms.Contracts.Negozio;
 using DvCms.Contracts.Temi;
 using DvCms.Core.Builder;
@@ -27,15 +28,17 @@ public class BuilderModel : PaginaAdmin
     private readonly IServizioMedia _media;
     private readonly IServizioCatalogo _catalogo;
     private readonly IServizioCategorie _categorie;
+    private readonly IServizioModuli _moduli;
     private readonly IRisolutoreTema _temi;
 
-    public BuilderModel(IServizioBuilder builder, IServizioMedia media, IServizioCatalogo catalogo, IServizioCategorie categorie, IRisolutoreTema temi, ILocalizzatore localizzatore)
+    public BuilderModel(IServizioBuilder builder, IServizioMedia media, IServizioCatalogo catalogo, IServizioCategorie categorie, IServizioModuli moduli, IRisolutoreTema temi, ILocalizzatore localizzatore)
         : base(localizzatore)
     {
         _builder = builder;
         _media = media;
         _catalogo = catalogo;
         _categorie = categorie;
+        _moduli = moduli;
         _temi = temi;
     }
 
@@ -94,6 +97,7 @@ public class BuilderModel : PaginaAdmin
         ["nessunaRisorsa"] = Localizzatore.Traduci("(nessuna immagine)"),
         ["nessunProdotto"] = Localizzatore.Traduci("(scegli un prodotto)"),
         ["nessunaCategoria"] = Localizzatore.Traduci("(scegli una categoria)"),
+        ["nessunModulo"] = Localizzatore.Traduci("(scegli un modulo)"),
         ["componenti"] = JsonSerializer.Serialize(new Dictionary<string, string>
         {
             ["layout.sezione"] = Localizzatore.Traduci("Sezione"),
@@ -115,6 +119,7 @@ public class BuilderModel : PaginaAdmin
             ["negozio.griglia-prodotti"] = Localizzatore.Traduci("Griglia di prodotti"),
             ["negozio.scheda-prodotto"] = Localizzatore.Traduci("Scheda prodotto"),
             ["negozio.griglia-categoria"] = Localizzatore.Traduci("Prodotti di una categoria"),
+            ["contenuto.modulo"] = Localizzatore.Traduci("Modulo di contatto"),
         }),
         ["campoObbligatorio"] = Localizzatore.Traduci("Campo obbligatorio"),
         ["gruppi"] = JsonSerializer.Serialize(new Dictionary<string, string>
@@ -151,6 +156,7 @@ public class BuilderModel : PaginaAdmin
             ["quanti"] = Localizzatore.Traduci("Quanti prodotti"),
             ["idProdotto"] = Localizzatore.Traduci("Prodotto"),
             ["idCategoria"] = Localizzatore.Traduci("Categoria"),
+            ["idModulo"] = Localizzatore.Traduci("Modulo"),
             ["altezza"] = Localizzatore.Traduci("Altezza"),
             ["animazione"] = Localizzatore.Traduci("Animazione"),
             ["ritardoAnimazione"] = Localizzatore.Traduci("Ritardo (ms)"),
@@ -170,6 +176,9 @@ public class BuilderModel : PaginaAdmin
 
     /// <summary>Categorie del negozio scelte nella griglia di categoria (identificativo e nome nella lingua predefinita); vuoto se il negozio non è attivo.</summary>
     public string CategorieJson { get; private set; } = "[]";
+
+    /// <summary>Moduli di contatto non archiviati che si possono inserire nella pagina (identificativo e nome).</summary>
+    public string ModuliJson { get; private set; } = "[]";
 
     public async Task<IActionResult> OnGetAsync(Guid id, CancellationToken annullamento)
     {
@@ -192,6 +201,9 @@ public class BuilderModel : PaginaAdmin
         RisorseJson = JsonSerializer.Serialize(risorse
             .Where(r => r.TipoContenuto.StartsWith("image/", StringComparison.Ordinal) && r.Visibilita == Models.Media.VisibilitaMedia.Pubblica)
             .Select(r => new { id = r.Id, nome = r.NomeOriginale, alt = r.TestoAlternativoPredefinito }));
+        ModuliJson = JsonSerializer.Serialize((await _moduli.ElencaAsync(IdAttore, annullamento))
+            .Where(m => m.Stato != Models.Moduli.StatoModulo.Archiviato)
+            .Select(m => new { id = m.Id, nome = m.Nome }));
         ProdottiJson = "[]";
         CategorieJson = "[]";
         if (await _catalogo.CommercioAttivoAsync(annullamento))

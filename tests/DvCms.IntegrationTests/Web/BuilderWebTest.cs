@@ -69,8 +69,8 @@ public partial class BuilderWebTest
         Assert.True(System.Text.Json.Nodes.JsonNode.DeepEquals(
             System.Text.Json.Nodes.JsonNode.Parse(stato.GetProperty("progetto").GetRawText()),
             System.Text.Json.Nodes.JsonNode.Parse(Progetto(Iniziale()))));
-        Assert.Equal(19, stato.GetProperty("catalogo").GetArrayLength());
-        Assert.Equal(7, stato.GetProperty("versioneTemplate").GetInt32());
+        Assert.Equal(20, stato.GetProperty("catalogo").GetArrayLength());
+        Assert.Equal(8, stato.GetProperty("versioneTemplate").GetInt32());
         Assert.True(stato.GetProperty("vincoli").GetProperty("nodi").GetProperty("avviso").GetProperty("bloccato").GetBoolean());
         Assert.Equal(30, stato.GetProperty("vincoli").GetProperty("nodi").GetProperty("corpo").GetProperty("slot").GetProperty("figliMassimi").GetInt32());
 
@@ -455,10 +455,10 @@ public partial class BuilderWebTest
         Assert.True(SessioneProva.EReindirizzamento(passaggio));
 
         var revisioni = await c.RevisioniAsync(id);
-        Assert.Equal(7, revisioni[^1].VersioneModello);
+        Assert.Equal(8, revisioni[^1].VersioneModello);
         Assert.Equal(revisioni[^2].DocumentoRenderJson, revisioni[^1].DocumentoRenderJson);
         var dopo = await c.StatoAsync(id);
-        Assert.Equal(7, dopo.GetProperty("versioneTemplate").GetInt32());
+        Assert.Equal(8, dopo.GetProperty("versioneTemplate").GetInt32());
         using var oraAccettato = await c.SalvaAsync(id, dopo.GetProperty("token").GetString()!, Progetto(ConCorpo(Iniziale(), Nodo("h", "contenuto.hero", new() { ["titolo"] = "x" }))));
         Assert.Equal(HttpStatusCode.OK, oraAccettato.StatusCode);
     }
@@ -699,9 +699,9 @@ public partial class BuilderWebTest
 
         public Guid AdminA { get; }
 
-        public static async Task<Contesto> CreaAsync()
+        public static async Task<Contesto> CreaAsync(IReadOnlyDictionary<string, string?>? impostazioni = null)
         {
-            var web = await ScenarioWeb.CreaAsync();
+            var web = await ScenarioWeb.CreaAsync(impostazioni: impostazioni);
             var admin = await web.CreaTenantAdminAsync("anna@esempio.it");
             await DatiProva.CreaUtenzaAsync(web.Fabbrica.Services, DvCms.Models.Accessi.RuoloUtenza.TenantAdmin, web.B.IdTenant, "bruno@esempio.it", annullamento: Ct);
             var sessione = web.SessioneA();
@@ -835,7 +835,7 @@ public partial class BuilderWebTest
 
         public async ValueTask DisposeAsync() => await Web.DisposeAsync();
 
-        private async Task<Guid> IdAdminBAsync()
+        public async Task<Guid> IdAdminBAsync()
         {
             await using var ambito = Web.Fabbrica.Services.CreateAsyncScope();
             return await ambito.ServiceProvider.GetRequiredService<ContestoDatabase>().Utenze.IgnoreQueryFilters()

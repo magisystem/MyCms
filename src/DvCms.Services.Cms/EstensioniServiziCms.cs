@@ -4,6 +4,7 @@ using DvCms.Contracts.Builder;
 using DvCms.Contracts.Cms;
 using DvCms.Contracts.Email;
 using DvCms.Contracts.Localizzazione;
+using DvCms.Contracts.Manutenzione;
 using DvCms.Contracts.Media;
 using DvCms.Contracts.Moduli;
 using DvCms.Contracts.Negozio;
@@ -33,6 +34,7 @@ using DvCms.DTO.Accessi.DueFattori;
 using DvCms.DTO.Cache;
 using DvCms.DTO.Manutenzione;
 using DvCms.DTO.Media;
+using DvCms.DTO.Moduli;
 using DvCms.DTO.Negozio;
 using DvCms.DTO.Outbox;
 using DvCms.Services.Cms.Media;
@@ -71,6 +73,11 @@ public static class EstensioniServiziCms
         servizi.AddScoped<IGestoreOutbox, GestorePaginaRitirata>();
         servizi.AddScoped<IGestoreOutbox, GestorePaginaRinominata>();
         servizi.TryAddScoped<IServizioModuli, ServizioModuli>();
+        servizi.TryAddSingleton(new OpzioniModuli(configurazione.LeggiIntero("Moduli:InviiMassimiAlGiorno", OpzioniModuli.InviiMassimiPredefiniti, 1, 100_000)));
+        servizi.TryAddScoped<NotificheModulo>();
+        servizi.TryAddScoped<IServizioModuloPubblico, ServizioModuloPubblico>();
+        servizi.TryAddScoped<IServizioRichiesteModulo, ServizioRichiesteModulo>();
+        servizi.AddScoped<IAttivitaManutenzione, ManutenzioneModuli>();
         AggiungiMedia(servizi, configurazione);
 
         return servizi;

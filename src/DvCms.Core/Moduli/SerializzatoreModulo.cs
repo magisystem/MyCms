@@ -17,6 +17,21 @@ public static class SerializzatoreModulo
 
     public static string Scrivi(ImpostazioniModulo impostazioni) => JsonSerializer.Serialize(impostazioni, _opzioni);
 
+    public static string ScriviContenuto(IReadOnlyList<ValoreInviato> contenuto) => JsonSerializer.Serialize(contenuto, _opzioni);
+
+    /// <summary>Legge il contenuto di una richiesta; se il JSON è guasto restituisce un elenco vuoto.</summary>
+    public static IReadOnlyList<ValoreInviato> LeggiContenuto(string json)
+    {
+        try
+        {
+            return JsonSerializer.Deserialize<List<ValoreInviato>>(json, _opzioni) ?? [];
+        }
+        catch (JsonException)
+        {
+            return [];
+        }
+    }
+
     /// <summary>Legge la definizione salvata; se il JSON è guasto restituisce un modulo vuoto invece di far fallire la pagina.</summary>
     public static DefinizioneModulo LeggiDefinizione(string json, string linguaPredefinita)
     {

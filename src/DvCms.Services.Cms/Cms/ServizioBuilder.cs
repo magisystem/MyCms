@@ -124,6 +124,7 @@ public sealed class ServizioBuilder : IServizioBuilder
             errori.AddRange(await VerificaRisorseAsync(documento, annullamento));
             errori.AddRange(await VerificaProdottiAsync(documento, annullamento));
             errori.AddRange(await VerificaCategorieAsync(documento, annullamento));
+            errori.AddRange(await VerificaModuliAsync(documento, annullamento));
         }
 
         if (errori.Count > 0)
@@ -246,6 +247,27 @@ public sealed class ServizioBuilder : IServizioBuilder
             .Select(categoria => categoria.Id)
             .ToListAsync(annullamento)).ToHashSet();
         return [.. richieste.Where(r => !valide.Contains(r.Categoria)).Select(r => new ErroreBuilder("CategoriaNonDisponibile", r.Id, "idCategoria"))];
+    }
+
+    /// <summary>I moduli di contatto scelti devono esistere nel sito dell'host e non essere archiviati (bozze sì: il renderer mostra solo gli attivi).</summary>
+    private async Task<List<ErroreBuilder>> VerificaModuliAsync(DocumentoCms documento, CancellationToken annullamento)
+    {
+        var richieste = documento.Visita()
+            .Where(nodo => nodo.Tipo == "contenuto.modulo" && nodo.Proprieta.ContainsKey("idModulo"))
+            .Select(nodo => (nodo.Id, Modulo: Guid.Parse(nodo.Proprieta["idModulo"])))
+            .ToList();
+        if (richieste.Count == 0)
+        {
+            return [];
+        }
+
+        var idSito = _tenant.IdSito;
+        var ids = richieste.Select(r => r.Modulo).Distinct().ToList();
+        var validi = (await _contesto.Moduli.AsNoTracking()
+            .Where(modulo => ids.Contains(modulo.Id) && modulo.IdSito == idSito && modulo.Stato != DvCms.Models.Moduli.StatoModulo.Archiviato)
+            .Select(modulo => modulo.Id)
+            .ToListAsync(annullamento)).ToHashSet();
+        return [.. richieste.Where(r => !validi.Contains(r.Modulo)).Select(r => new ErroreBuilder("ModuloNonDisponibile", r.Id, "idModulo"))];
     }
 
     private Task<Utenza?> TrovaAttoreAsync(Guid idAttore, CancellationToken annullamento)

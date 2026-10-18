@@ -60,15 +60,15 @@ public sealed partial class RegistroComponenti
     /// </summary>
     public static IReadOnlyList<DefinizioneComponente> Predefiniti { get; } =
     [
-        new("layout.sezione", 3, [],
+        new("layout.sezione", 4, [],
             [
                 new("spaziatura", TipoProprieta.Enumerazione, Valori: ["compatta", "normale", "ampia"], Predefinito: "normale"),
                 new("sfondo", TipoProprieta.Enumerazione, Valori: ["nessuno", "chiaro", "scuro"], Predefinito: "nessuno"),
                 .. _animazione,
             ],
-            ["layout.colonne", .. _contenutoBase, "contenuto.hero", "contenuto.cta", "contenuto.fisarmonica", "contenuto.caratteristiche", "contenuto.testimonianze", "negozio.griglia-prodotti", "negozio.scheda-prodotto", "negozio.griglia-categoria"], FigliMassimi: 50),
+            ["layout.colonne", .. _contenutoBase, "contenuto.hero", "contenuto.cta", "contenuto.fisarmonica", "contenuto.caratteristiche", "contenuto.testimonianze", "negozio.griglia-prodotti", "negozio.scheda-prodotto", "negozio.griglia-categoria", "contenuto.modulo"], FigliMassimi: 50),
         new("layout.colonne", 2, [], [.. _animazione], ["layout.colonna"], FigliMinimi: 2, FigliMassimi: 3),
-        new("layout.colonna", 2, [], [], [.. _contenutoBase, "contenuto.fisarmonica"], FigliMassimi: 20),
+        new("layout.colonna", 3, [], [], [.. _contenutoBase, "contenuto.fisarmonica", "contenuto.modulo"], FigliMassimi: 20),
         new("contenuto.titolo", 2,
             [
                 new("testo", TipoProprieta.TestoBreve, Obbligatoria: true, LunghezzaMassima: 200),
@@ -160,6 +160,9 @@ public sealed partial class RegistroComponenti
             [new("colonne", TipoProprieta.Enumerazione, Valori: ["2", "3"], Predefinito: "3"), .. _animazione], []),
         // Un prodotto scelto dall'editor: il documento conserva solo il suo identificativo; nome, prezzo e disponibilità si leggono alla visita.
         new("negozio.scheda-prodotto", 1, [new("idProdotto", TipoProprieta.IdProdotto, Obbligatoria: true)], [.. _animazione], []),
+        // Un modulo di contatto del sito, scelto dall'editor (ADR-0027): il documento conserva solo l'identificativo; campi e testi si leggono
+        // alla visita e solo un modulo pubblicato si mostra. L'invio passa sempre dalla verifica anti-spam.
+        new("contenuto.modulo", 1, [new("idModulo", TipoProprieta.IdModulo, Obbligatoria: true)], [.. _animazione], []),
     ];
 
     public IReadOnlyList<DefinizioneComponente> Tutti => [.. _componenti.Values.OrderBy(c => c.Tipo, StringComparer.Ordinal)];
@@ -378,7 +381,7 @@ public sealed partial class RegistroComponenti
         TipoProprieta.TestoLungo => valore.Length <= definizione.LunghezzaMassima && !valore.Any(c => char.IsControl(c) && c is not ('\n' or '\t')),
         TipoProprieta.Url => valore.Length <= definizione.LunghezzaMassima && RegistroModelliPagina.UrlConsentito(valore),
         TipoProprieta.Enumerazione => definizione.Valori?.Contains(valore, StringComparer.Ordinal) == true,
-        TipoProprieta.IdRisorsa or TipoProprieta.IdProdotto or TipoProprieta.IdCategoria => Guid.TryParseExact(valore, "D", out var guid) && guid != Guid.Empty && guid.ToString("D") == valore,
+        TipoProprieta.IdRisorsa or TipoProprieta.IdProdotto or TipoProprieta.IdCategoria or TipoProprieta.IdModulo => Guid.TryParseExact(valore, "D", out var guid) && guid != Guid.Empty && guid.ToString("D") == valore,
         TipoProprieta.Booleano => valore is "si" or "no",
         TipoProprieta.TestoRicco => valore.Length <= definizione.LunghezzaMassima && TestoRicco.TentaAnalizza(valore, out _),
         _ => false,

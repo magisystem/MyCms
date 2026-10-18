@@ -28,7 +28,7 @@ public sealed class DocumentoCmsTest
 
     [Fact]
     public void LeDefinizioniDeiComponentiHannoUnImprontaFissata() =>
-        Assert.Equal("6F8048E79CD0C8C2D73B87F08E810A616777AA017655CD62BA6429D576843180", _registro.Impronta);
+        Assert.Equal("0F96C9F8350A49FD98812A259858D319EA606934EA4A7BC1E413C07D25A2060B", _registro.Impronta);
 
     [Fact]
     public void IlRegistroRifiutaDefinizioniDuplicateOFigliSconosciuti()
@@ -321,5 +321,24 @@ public sealed class DocumentoCmsTest
         var documento = new DocumentoCms(1, [Nodo("r", "contenuto.testo-ricco", new() { ["testo"] = "<img src=x onerror=alert(1)> & \"ok\"" })]);
 
         Assert.Empty(_registro.Valida(documento));
+    }
+
+    [Fact]
+    public void UnModuloDiContattoSiScegliePerIdentificativoESiAnnidaInSezioneEColonna()
+    {
+        var id = Guid.NewGuid().ToString("D");
+        var inSezione = new DocumentoCms(1, [Nodo("s", "layout.sezione", null, null, Nodo("m", "contenuto.modulo", new() { ["idModulo"] = id }, new() { ["animazione"] = "sale" }))]);
+        var inColonna = new DocumentoCms(1, [Nodo("s", "layout.sezione", null, null, Nodo("k", "layout.colonne", null, null, Nodo("c1", "layout.colonna", null, null, Nodo("m", "contenuto.modulo", new() { ["idModulo"] = id })), Nodo("c2", "layout.colonna")))]);
+        var senzaId = new DocumentoCms(1, [Nodo("s", "layout.sezione", null, null, Nodo("m", "contenuto.modulo"))]);
+        var idNonValido = new DocumentoCms(1, [Nodo("s", "layout.sezione", null, null, Nodo("m", "contenuto.modulo", new() { ["idModulo"] = "non-un-guid" }))]);
+        var idVuoto = new DocumentoCms(1, [Nodo("s", "layout.sezione", null, null, Nodo("m", "contenuto.modulo", new() { ["idModulo"] = Guid.Empty.ToString("D") }))]);
+        var conFigli = new DocumentoCms(1, [Nodo("s", "layout.sezione", null, null, Nodo("m", "contenuto.modulo", new() { ["idModulo"] = id }, null, Nodo("t", "contenuto.testo", new() { ["testo"] = "x" })))]);
+
+        Assert.Empty(_registro.Valida(inSezione));
+        Assert.Empty(_registro.Valida(inColonna));
+        Assert.Contains(_registro.Valida(senzaId), e => e.Codice == "ProprietaMancante");
+        Assert.Contains(_registro.Valida(idNonValido), e => e.Codice == "ProprietaNonValida");
+        Assert.Contains(_registro.Valida(idVuoto), e => e.Codice == "ProprietaNonValida");
+        Assert.NotEmpty(_registro.Valida(conFigli));
     }
 }

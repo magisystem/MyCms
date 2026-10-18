@@ -126,6 +126,28 @@ public static class CatalogoModelliEmail
                 new("link_ordine", "Indirizzo della pagina dell'ordine."),
             ]),
         new(
+            CodiciModelloEmail.NuovoInvioModulo,
+            "Nuova richiesta da un modulo di contatto",
+            "Ai destinatari del modulo, quando un visitatore invia una richiesta. Contiene i dati inseriti dal visitatore.",
+            [
+                new("nome", "Nome di chi riceve l'avviso."),
+                new("nome_modulo", "Nome del modulo."),
+                new("nome_sito", "Nome del sito."),
+                new("lingua", "Lingua in cui il visitatore ha compilato il modulo."),
+                new("campi", "Elenco dei dati inviati: ognuno ha etichetta e valore."),
+                new("link_richiesta", "Indirizzo della richiesta nell'area di amministrazione."),
+            ]),
+        new(
+            CodiciModelloEmail.RispostaInvioModulo,
+            "Risposta automatica a un modulo di contatto",
+            "Al visitatore che ha inviato il modulo, se il modulo prevede la risposta automatica. Conferma la ricezione e riepiloga i dati.",
+            [
+                new("nome_modulo", "Nome del modulo."),
+                new("nome_sito", "Nome del sito."),
+                new("messaggio", "Messaggio di conferma scelto per il modulo."),
+                new("campi", "Elenco dei dati inviati: ognuno ha etichetta e valore."),
+            ]),
+        new(
             CodiciModelloEmail.Prova,
             "Email di prova",
             "Il messaggio di prova che si manda dalla pagina delle impostazioni email.",
@@ -217,6 +239,24 @@ public static class CatalogoModelliEmail
                     ["consegna_nome"] = "Corriere espresso",
                     ["link_ordine"] = "https://www.esempio.it/admin/negozio/ordini/2f6b1c0e",
                 };
+            case CodiciModelloEmail.NuovoInvioModulo:
+                return new Dictionary<string, object?>(StringComparer.Ordinal)
+                {
+                    ["nome"] = "Mario Rossi",
+                    ["nome_modulo"] = "Contatti",
+                    ["nome_sito"] = "Bottega Esempio",
+                    ["lingua"] = "it",
+                    ["campi"] = EsempioCampiModulo(),
+                    ["link_richiesta"] = "https://www.esempio.it/admin/moduli/richieste/2f6b1c0e/9a1d4c7b",
+                };
+            case CodiciModelloEmail.RispostaInvioModulo:
+                return new Dictionary<string, object?>(StringComparer.Ordinal)
+                {
+                    ["nome_modulo"] = "Contatti",
+                    ["nome_sito"] = "Bottega Esempio",
+                    ["messaggio"] = "Grazie, ti risponderemo il prima possibile.",
+                    ["campi"] = EsempioCampiModulo(),
+                };
             case CodiciModelloEmail.Rimborso:
                 return new Dictionary<string, object?>(StringComparer.Ordinal)
                 {
@@ -231,4 +271,11 @@ public static class CatalogoModelliEmail
 
         return valori;
     }
+
+    private static List<object?> EsempioCampiModulo() =>
+    [
+        new Dictionary<string, object?> { ["etichetta"] = "Il tuo nome", ["valore"] = "Anna Bianchi" },
+        new Dictionary<string, object?> { ["etichetta"] = "Email", ["valore"] = "anna.bianchi@esempio.it" },
+        new Dictionary<string, object?> { ["etichetta"] = "Messaggio", ["valore"] = "Vorrei maggiori informazioni.\nGrazie." },
+    ];
 }

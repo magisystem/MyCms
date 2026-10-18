@@ -39,6 +39,7 @@ public sealed class TemplateEAdapterTest
         Assert.Equal("83D7DD8130B017A0D147FC3246075A0231BFABF593989C4A08AB1C9D598EB2A9", RegistroTemplateBuilder.TemplateIntestazioneFissaV5.Impronta);
         Assert.Equal("00709206401235A1FDBF62B9303DAD2523514F265315569892BCBB884BEA6952", RegistroTemplateBuilder.TemplateIntestazioneFissaV6.Impronta);
         Assert.Equal("6773633167C14A2FAFF870A0D0F94485A326C67975210CE7DF6CFD909DB914C4", RegistroTemplateBuilder.TemplateIntestazioneFissaV7.Impronta);
+        Assert.Equal("E1955B7D647F2E0625508CD2546178C5FCE26AC525080E1585E1E9FFD845DE02", RegistroTemplateBuilder.TemplateIntestazioneFissaV8.Impronta);
     }
 
     [Fact]
@@ -71,7 +72,7 @@ public sealed class TemplateEAdapterTest
         Assert.Empty(ValidatoreTemplate.Valida(RegistroTemplateBuilder.TemplateIntestazioneFissaV3, conTestoRicco));
         Assert.Empty(_registro.Valida(conTestoRicco));
         Assert.Empty(ValidatoreTemplate.Valida(RegistroTemplateBuilder.TemplateIntestazioneFissaV3, Iniziale()));
-        Assert.Same(RegistroTemplateBuilder.TemplateIntestazioneFissaV7, _template.Ultimo(RegistroTemplateBuilder.IntestazioneFissa));
+        Assert.Same(RegistroTemplateBuilder.TemplateIntestazioneFissaV8, _template.Ultimo(RegistroTemplateBuilder.IntestazioneFissa));
     }
 
     [Fact]
@@ -374,5 +375,20 @@ public sealed class TemplateEAdapterTest
     {
         Assert.Equal("data-p-id-risorsa", AdapterGrapesJs.NomeAttributoProprieta("idRisorsa"));
         Assert.Equal("data-s-allineamento", AdapterGrapesJs.NomeAttributoStile("allineamento"));
+    }
+
+    [Fact]
+    public void LaVersione8AmmetteUnModuloDiContattoELeVersioniPrecedentiNo()
+    {
+        var modulo = Nodo("m", "contenuto.modulo", new() { ["idModulo"] = Guid.NewGuid().ToString("D") });
+        var documento = Sostituisci(Iniziale(), "corpo", corpo => Con(corpo, figli: [modulo]));
+
+        foreach (var precedente in new[] { RegistroTemplateBuilder.TemplateIntestazioneFissa, RegistroTemplateBuilder.TemplateIntestazioneFissaV2, RegistroTemplateBuilder.TemplateIntestazioneFissaV3, RegistroTemplateBuilder.TemplateIntestazioneFissaV4, RegistroTemplateBuilder.TemplateIntestazioneFissaV5, RegistroTemplateBuilder.TemplateIntestazioneFissaV6, RegistroTemplateBuilder.TemplateIntestazioneFissaV7 })
+        {
+            Assert.Contains(ValidatoreTemplate.Valida(precedente, documento), e => e.Codice == "TipoNonAmmessoNelloSlot");
+        }
+
+        Assert.Empty(ValidatoreTemplate.Valida(RegistroTemplateBuilder.TemplateIntestazioneFissaV8, documento));
+        Assert.Empty(_registro.Valida(documento));
     }
 }

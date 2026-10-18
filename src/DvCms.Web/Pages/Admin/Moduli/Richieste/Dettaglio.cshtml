@@ -1,0 +1,55 @@
+@page "/admin/moduli/richieste/{id:guid}/{idRichiesta:guid}"
+@model DvCms.Web.Pages.Admin.Moduli.Richieste.DettaglioModel
+@using DvCms.Models.Moduli
+@{
+    ViewData["Titolo"] = _L["Richiesta ricevuta"];
+}
+@if (Model.Messaggio is not null)
+{
+    <div class="alert alert-success" role="status">@Model.Messaggio</div>
+}
+@if (Model.ErroreDaMostrare is not null)
+{
+    <div class="alert alert-danger" role="alert">@Model.ErroreDaMostrare</div>
+}
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">@Model.Richiesta.NomeModulo</h3>
+        <div class="card-actions"><a class="btn" href="/admin/moduli/richieste/@Model.Richiesta.IdModulo">@_L["Torna alle richieste"]</a></div>
+    </div>
+    <div class="card-body">
+        <dl class="row mb-0">
+            <dt class="col-sm-3">@_L["Ricevuta il"]</dt>
+            <dd class="col-sm-9">@Model.Richiesta.CreatoIlUtc.ToString("yyyy-MM-dd HH:mm:ss") UTC</dd>
+            <dt class="col-sm-3">@_L["Stato"]</dt>
+            <dd class="col-sm-9">@Model.NomeStato(Model.Richiesta.Stato)</dd>
+            <dt class="col-sm-3">@_L["Lingua"]</dt>
+            <dd class="col-sm-9">@Model.Richiesta.CodiceLingua</dd>
+        </dl>
+        <hr />
+        <dl class="row">
+            @foreach (var valore in Model.Richiesta.Valori)
+            {
+                <dt class="col-sm-3">@valore.Etichetta</dt>
+                <dd class="col-sm-9" style="white-space: pre-wrap;">@string.Join(", ", valore.Valori)</dd>
+            }
+        </dl>
+    </div>
+    <div class="card-footer">
+        <form method="post" class="d-flex gap-2">
+            @if (Model.Richiesta.Stato != StatoInvioModulo.Letto)
+            {
+                <button type="submit" class="btn" asp-page-handler="Letta">@_L["Segna come letta"]</button>
+            }
+            @if (Model.Richiesta.Stato != StatoInvioModulo.Nuovo)
+            {
+                <button type="submit" class="btn" asp-page-handler="Nuova">@_L["Segna come nuova"]</button>
+            }
+            @if (Model.Richiesta.Stato != StatoInvioModulo.Archiviato)
+            {
+                <button type="submit" class="btn" asp-page-handler="Archivia">@_L["Archivia"]</button>
+            }
+            <button type="submit" class="btn btn-outline-danger ms-auto" asp-page-handler="Elimina">@_L["Elimina definitivamente"]</button>
+        </form>
+    </div>
+</div>

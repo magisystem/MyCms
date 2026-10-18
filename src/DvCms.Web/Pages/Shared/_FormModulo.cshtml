@@ -8,6 +8,7 @@
     string T(IReadOnlyDictionary<string, string> testi) => TestiModulo.Per(testi, Model.Lingua, Model.LinguaPredefinita);
 }
 <form method="post" action="@Model.Azione" class="dv-modulo" id="@prefisso" asp-antiforgery="@(!Model.Anteprima)">
+    <input type="hidden" name="lingua" value="@Model.Lingua" />
     @if (Model.ErroreGenerale is not null)
     {
         <p class="dv-modulo-errore" role="alert">@Model.ErroreGenerale</p>
@@ -85,6 +86,13 @@
     @if (Model.ConProvaAntiAbuso)
     {
         <partial name="_AltchaWidget" />
+        @* Stili e script del widget una volta sola per richiesta, anche con più moduli nella stessa pagina. *@
+        @if (Context.Items["dv-altcha-risorse"] is null)
+        {
+            Context.Items["dv-altcha-risorse"] = true;
+            <partial name="_AltchaStili" />
+            <partial name="_AltchaScript" />
+        }
     }
     @{
         var pulsante = T(d.Pulsante);
