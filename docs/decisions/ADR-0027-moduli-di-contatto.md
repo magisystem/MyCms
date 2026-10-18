@@ -1,6 +1,6 @@
 # ADR-0027 — Moduli di contatto personalizzabili dal TenantAdmin
 
-- **Stato:** Accepted (il committente ha confermato D1–D12 con le proposte predefinite il 2026-10-18; **nulla è ancora implementato**)
+- **Stato:** Accepted e **implementato** il 2026-10-18 (il committente aveva confermato D1–D12 con le proposte predefinite; le cinque fette del piano sono completate)
 - **Data:** 2026-10-18
 - **Origine:** richiesta del committente del 2026-10-18: i moduli di contatto saranno **custom**, definiti e gestiti dal `TenantAdmin` di ogni sito, e **quando sono pubblici vanno protetti con ALTCHA** ([ADR-0026](ADR-0026-altcha.md)).
 - **Modifica:** nessun ADR superato. Si appoggia su [ADR-0007](ADR-0007-grapesjs-page-builder.md) (componenti del page builder), [ADR-0010](ADR-0010-outbox-worker.md) (outbox), [ADR-0025](ADR-0025-modelli-email.md) (modelli email) e [ADR-0026](ADR-0026-altcha.md).
@@ -101,3 +101,10 @@ Caricamento di file; logica condizionale fra campi; invio a servizi esterni (web
 - **Servizi esterni** (Formspree, Google Forms…): dati dei visitatori fuori dal prodotto, nessun isolamento, dipendenza di terzi nelle pagine pubbliche.
 - **Campi come componenti dentro il documento della pagina:** un solo flusso di modifica, ma ogni cambio crea una revisione della pagina, gli invii non hanno un'entità a cui legarsi e lo stesso modulo non si riusa; si potrebbe riprendere in seguito per la sola presentazione.
 - **Espressioni regolari scelte dal tenant:** flessibili ma pericolose (ReDoS) e fragili; i tipi predefiniti coprono i casi comuni.
+
+## Attuazione
+
+Tutte le fette sono implementate e verificate con test unitari, di integrazione e di isolamento tenant, oltre che nel browser (Chromium: creazione del modulo, inserimento nella pagina con l'editor, invio con prova ALTCHA risolta dal widget, errori per campo con valori conservati, conferma, casella delle richieste, dettaglio ed esportazione CSV). Dettagli di esercizio e privacy in [`moduli-di-contatto.md`](../operations/moduli-di-contatto.md).
+
+- **Scelte di dettaglio.** Definizione e impostazioni sono JSON nelle colonne del modulo (non una tabella dei campi); l'istantanea di un invio è autodescrittiva. Il componente è `contenuto.modulo` (registro dei componenti con nuova impronta, template e modello `pagina-con-intestazione-fissa` v8). Con ALTCHA spento fuori da Development l'invio risponde 503. L'avviso va ai destinatari scelti (fino a 5) oppure a tutti i `TenantAdmin` attivi (al massimo 10); la risposta automatica parte solo se il modulo la prevede e il visitatore ha compilato un campo email, ed è soggetta al tetto giornaliero del modulo.
+- **Limite noto.** Il replay store ALTCHA è in memoria di processo (ADR-0026): con più istanze una prova potrebbe essere riusata su un'altra istanza entro la sua scadenza; il tetto giornaliero per modulo e il limite di richieste restano comunque in vigore.
