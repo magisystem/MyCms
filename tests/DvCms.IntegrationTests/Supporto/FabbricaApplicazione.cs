@@ -56,6 +56,8 @@ public abstract class FabbricaApplicazione : WebApplicationFactory<Program>
         builder.UseSetting("Cache:IntervalloLetturaSecondi", "600");
         // La 2FA obbligatoria (predefinita in produzione) è attivata solo dai test che la verificano.
         builder.UseSetting("Sicurezza:DueFattori:Obbligo", "Nessuno");
+        // La prova anti-abuso delle form pubbliche (ALTCHA) è accesa solo dai test che la verificano.
+        builder.UseSetting("Altcha:Abilitato", "false");
         if (_impostazioni is not null)
         {
             foreach (var coppia in _impostazioni)

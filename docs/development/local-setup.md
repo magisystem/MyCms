@@ -53,6 +53,12 @@ docker run -d --name sqldvcms -e ACCEPT_EULA=Y -e 'MSSQL_SA_PASSWORD=<password-l
 
 Ordine di precedenza (vince l'ultimo): `appsettings.json` → `appsettings.{Ambiente}.json` → user-secrets (solo in sviluppo) → variabili d'ambiente → **`appsettings.Local.json`** → variabili d'ambiente e riga di comando di nuovo (restano le più forti). In alternativa al file valgono ancora `dotnet user-secrets set "ConnectionStrings:Predefinita" "..." --project src/DvCms.Web` e la variabile d'ambiente `ConnectionStrings__Predefinita`. Il file contiene segreti: tenerlo fuori dai backup condivisi e con permessi di lettura limitati all'utente del servizio.
 
+**ALTCHA (form pubbliche).** Registrazione degli acquirenti e recupero password richiedono la prova di lavoro ALTCHA ([ADR-0026](../decisions/ADR-0026-altcha.md)). In sviluppo, senza configurazione, la chiave di firma si genera a ogni avvio; in produzione serve `Altcha:HmacSignatureSecret` (stesso modo dei segreti: `appsettings.Local.json`, user-secrets o variabile `Altcha__HmacSignatureSecret`; si genera con `openssl rand -base64 32`). Senza chiave l'applicazione parte ma scrive un errore nel log e le due form rifiutano ogni invio. `Altcha:Abilitato=false` spegne la protezione (comodo per prove manuali).
+
+```json
+{ "Altcha": { "HmacSignatureSecret": "<base64 di 32 byte>" } }
+```
+
 **Migrazioni.** Si applicano solo con il comando esplicito, mai in automatico all'avvio:
 
 ```bash

@@ -1,0 +1,8 @@
+@inject DvCms.Contracts.Localizzazione.IContestoLingua ContestoLingua
+@* Widget ALTCHA (ADR-0026): file della stessa origine, nell'ordine in cui devono girare (i moduli sono eseguiti in sequenza). *@
+<script type="module" src="~/lib/altcha/altcha.min.js" asp-append-version="true"></script>
+@if (ContestoLingua.CodiceLingua == "it")
+{
+    <script type="module" src="~/lib/altcha/i18n/it.js" asp-append-version="true"></script>
+}
+<script type="module" src="~/js/altcha-avvio.js" asp-append-version="true"></script>

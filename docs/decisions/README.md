@@ -31,5 +31,6 @@ Stato: `Proposed`, `Accepted`, `Superseded`, `Deprecated`.
 - [ADR-0023 — Pagamenti manuali: bonifico bancario e contrassegno](ADR-0023-pagamenti-manuali.md)
 - [ADR-0024 — Struttura dei progetti: un assembly per responsabilità](ADR-0024-struttura-progetti.md)
 - [ADR-0025 — Modelli email nel database con Fluid (Liquid)](ADR-0025-modelli-email.md)
+- [ADR-0026 — ALTCHA sulle form pubbliche](ADR-0026-altcha.md)
 
 Per le regole operative della persistenza, vedere [`docs/architecture/database.md`](../architecture/database.md).

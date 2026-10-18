@@ -75,7 +75,7 @@ public partial class ConvenzioniCodiceTest
     }
 
     [Fact]
-    public void SottoWwwrootLibCiSonoSoloTablerTablerIconsEIlBundleDelPageBuilder()
+    public void SottoWwwrootLibCiSonoSoloAltchaTablerTablerIconsEIlBundleDelPageBuilder()
     {
         var radice = TrovaRadiceRepository();
         var cartellaLib = Path.Combine(radice, "src", "DvCms.Web", "wwwroot", "lib");
@@ -86,8 +86,9 @@ public partial class ConvenzioniCodiceTest
             .ToList();
 
         // ADR-0013: tabler-emails, tabler-illustrations e tabler-avatars non vanno in wwwroot.
+        // ADR-0026: altcha è il widget di prova di lavoro delle form pubbliche, copiato dal pacchetto npm (file elencati in LICENZE-TERZE.txt).
         // ADR-0007: page-builder è il bundle compilato dell'editor, caricato solo dalla sua pagina (sorgenti in frontend/page-builder).
-        Assert.Equal(["page-builder", "tabler", "tabler-icons"], presenti);
+        Assert.Equal(["altcha", "page-builder", "tabler", "tabler-icons"], presenti);
     }
 
     private static string TrovaRadiceRepository()

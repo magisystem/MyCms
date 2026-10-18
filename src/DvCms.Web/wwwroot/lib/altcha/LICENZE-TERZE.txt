@@ -1,0 +1,11 @@
+ALTCHA widget (pacchetto npm "altcha", versione 3.4.0)
+Licenza: MIT (testo in LICENSE.txt) - https://altcha.org - https://github.com/altcha-org/altcha
+
+File copiati senza modifiche dal pacchetto, cartella dist/:
+  altcha.min.js        <- dist/external/altcha.min.js   (versione "external": senza worker incorporati, adatta alla CSP stretta)
+  altcha.css           <- dist/external/altcha.css
+  workers/pbkdf2.js    <- dist/workers/pbkdf2.js
+  i18n/it.js           <- dist/i18n/it.js
+
+L'inglese è già incluso nel widget. Il file di avvio dell'applicazione è wwwroot/js/altcha-avvio.js (registra i worker PBKDF2).
+Per aggiornare: scaricare il pacchetto da npm, verificare la licenza, sostituire i file sopra e aggiornare la versione qui e nell'ADR-0026.

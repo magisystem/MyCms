@@ -18,6 +18,16 @@
     <PackageVersion Include="QRCoder" Version="1.8.0" />
   </ItemGroup>
 
+  <!-- Dipendenze transitive di DataProtection (e di altre librerie) fissate alla versione senza le vulnerabilità note (GHSA-846f-f764-76mx, GHSA-2fmv-rv2c-59x7, GHSA-7hqp-7c5m-4vq6). -->
+  <ItemGroup Label="Sicurezza (versioni fissate)">
+    <PackageVersion Include="System.Security.Cryptography.Pkcs" Version="10.0.13" />
+    <PackageVersion Include="System.Security.Cryptography.Xml" Version="10.0.13" />
+  </ItemGroup>
+
+  <ItemGroup Label="Anti-abuso">
+    <PackageVersion Include="Altcha.AspNetCore" Version="1.1.0" />
+  </ItemGroup>
+
   <ItemGroup Label="Email">
     <PackageVersion Include="MailKit" Version="4.18.1" />
     <PackageVersion Include="Fluid.Core" Version="2.31.0" />

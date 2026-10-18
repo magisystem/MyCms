@@ -3,6 +3,7 @@ using DvCms.Contracts.Localizzazione;
 using DvCms.DTO.Accessi;
 using DvCms.DTO.Piattaforma;
 using DvCms.Web.Accessi;
+using DvCms.Web.AntiAbuso;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.RateLimiting;
@@ -19,11 +20,13 @@ public class RegistrazioneModel : PageModel
 {
     private readonly IServizioAcquirenti _acquirenti;
     private readonly ILocalizzatore _localizzatore;
+    private readonly IVerificaAntiAbuso _antiAbuso;
 
-    public RegistrazioneModel(IServizioAcquirenti acquirenti, ILocalizzatore localizzatore)
+    public RegistrazioneModel(IServizioAcquirenti acquirenti, ILocalizzatore localizzatore, IVerificaAntiAbuso antiAbuso)
     {
         _acquirenti = acquirenti;
         _localizzatore = localizzatore;
+        _antiAbuso = antiAbuso;
     }
 
     [BindProperty]
@@ -31,6 +34,9 @@ public class RegistrazioneModel : PageModel
 
     [BindProperty]
     public string? Nome { get; set; }
+
+    /// <summary>Vero se la form porta il widget anti-abuso (ADR-0026).</summary>
+    public bool AntiAbuso => _antiAbuso.Attiva;
 
     public bool Disponibile { get; private set; }
 
@@ -54,6 +60,13 @@ public class RegistrazioneModel : PageModel
         if (!await _acquirenti.RegistrazioneAbilitataAsync(annullamento))
         {
             return NotFound();
+        }
+
+        if (!await _antiAbuso.VerificaAsync(Request, annullamento))
+        {
+            Disponibile = await _acquirenti.RegistrazioneDisponibileAsync(annullamento);
+            Errore = _localizzatore.Traduci("Non siamo riusciti a verificare che tu non sia un programma automatico. Riprova.");
+            return Page();
         }
 
         var risultato = await _acquirenti.RegistraAsync(new DatiRegistrazioneAcquirente(Email, Nome), new DatiLinkInvito(Request.Scheme, Request.Host.Port), annullamento);

@@ -10,6 +10,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Altcha.AspNetCore" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\DvCms.Contracts\DvCms.Contracts.csproj" />
     <ProjectReference Include="..\DvCms.DTO\DvCms.DTO.csproj" />
     <ProjectReference Include="..\DvCms.Core\DvCms.Core.csproj" />

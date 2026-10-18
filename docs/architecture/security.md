@@ -17,7 +17,7 @@ La sicurezza è un requisito di progetto, con particolare attenzione a isolament
 - **Domini inseriti dal menu.** Devono essere nomi DNS con almeno un punto (mai `localhost` né indirizzi IP, che arrivano solo dal popolamento in sviluppo). Un dominio nasce verificato solo se l'operatore dichiara di averne verificato il possesso; chi e quando sono conservati in `DominiSito`.
 - **Recupero password** (`TenantAdmin` e `Utente`; il `PlatformAdmin` non lo ha, la sua password è gestita a mano dall'operatore): account cercato nel tenant dell'host; risposta identica a prescindere dall'esistenza dell'account; **prima email** con codice OTP (6 cifre, 10 minuti, 5 tentativi, salvato come hash), **seconda email distinta** con link monouso (30 minuti), invalidato all'uso e da nuove richieste; rate limiting (3 richieste/ora per account e IP); al cambio password sessioni e token sono invalidati e arriva una notifica. I valori sono iniziali e configurabili (ADR-0011).
 - **Two-factor authentication (G-006, ADR-0019):** vedi la sezione "Autenticazione a due fattori" più sotto.
-- **Registrazione acquirenti:** solo su siti con e-commerce attivo; conferma email, rate limiting e protezione anti-abuso.
+- **Registrazione acquirenti:** solo su siti con e-commerce attivo; conferma email, rate limiting e protezione anti-abuso (prova di lavoro ALTCHA, [ADR-0026](../decisions/ADR-0026-altcha.md)).
 - Separare privilegi globali da ruoli tenant.
 - Proteggere form mutanti con antiforgery; applicare policy session/cookie appropriate.
 - Evitare IDOR: conoscere un GUID non equivale ad avere accesso.
@@ -62,6 +62,7 @@ La sicurezza è un requisito di progetto, con particolare attenzione a isolament
 
 - HTTPS obbligatorio in produzione, terminato dall'hosting sul reverse proxy; l'app dietro il proxy accetta gli header forwarded solo dai proxy configurati e i cookie di autenticazione sono `Secure` (la politica meno restrittiva è ammessa solo in sviluppo, dove si usa solo HTTP).
 - Rate limiting sugli endpoint sensibili (accesso, recupero, inviti): per IPv4 per indirizzo, per IPv6 per rete /64.
+- **Form pubbliche (ALTCHA, [ADR-0026](../decisions/ADR-0026-altcha.md)):** registrazione degli acquirenti e richiesta di recupero password richiedono una prova di lavoro firmata dal server (sfida su `/altcha/sfida`, con limite di richieste per indirizzo), valida una volta sola. La chiave di firma è `Altcha:HmacSignatureSecret` (segreto di installazione, non nel repository); `Altcha:Abilitato=false` spegne la protezione.
 - **Intestazioni e CSP (G-005):** su ogni risposta `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, `Cross-Origin-Opener-Policy` e una CSP con solo risorse della stessa origine e nessuno script in linea; per l'admin anche `frame-ancestors 'none'`, `X-Frame-Options: DENY` e `Cache-Control: no-store`; HSTS fuori da Development. Dettagli e verifica in `docs/operations/revisione-sicurezza.md`.
 - **Chiavi dei cookie e dell'antiforgery:** `Sicurezza:ChiaviCookie:Percorso` (cartella persistente e condivisa fra le istanze, permessi riservati: contiene chiavi in chiaro); senza, le sessioni non sopravvivono a un contenitore ricreato.
 - Protezione dei proxy forwarded configurando proxy noti.

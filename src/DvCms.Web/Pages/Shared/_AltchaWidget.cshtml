@@ -1,0 +1,5 @@
+@inject DvCms.Contracts.Localizzazione.IContestoLingua ContestoLingua
+@inject DvCms.Contracts.Localizzazione.ILocalizzatore _L
+@* La prova si calcola al momento dell'invio; senza JavaScript la form non può essere inviata, e lo si dice. *@
+<altcha-widget auto="onsubmit" display="standard" type="checkbox" language="@(ContestoLingua.CodiceLingua == "it" ? "it" : "en")"></altcha-widget>
+<noscript><p class="errore" role="alert">@_L["Per inviare questo modulo serve JavaScript: serve a dimostrare che non sei un programma automatico."]</p></noscript>

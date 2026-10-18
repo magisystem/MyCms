@@ -8,6 +8,7 @@
     <title>@(ViewData["Titolo"] is string titolo ? titolo + " - " : string.Empty)DvCms</title>
     <link href="~/lib/tabler/dashboard/dist/css/tabler.min.css" rel="stylesheet" />
     <link href="~/lib/tabler-icons/webfont/tabler-icons.min.css" rel="stylesheet" />
+    @await RenderSectionAsync("Stili", required: false)
 </head>
 <body class="d-flex flex-column">
     <script src="~/lib/tabler/dashboard/dist/js/tabler-theme.min.js"></script>
@@ -20,5 +21,6 @@
         </div>
     </div>
     <script src="~/lib/tabler/dashboard/dist/js/tabler.min.js"></script>
+    @await RenderSectionAsync("Script", required: false)
 </body>
 </html>

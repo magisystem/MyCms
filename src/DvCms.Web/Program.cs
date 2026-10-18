@@ -6,6 +6,7 @@ using DvCms.Services;
 using DvCms.Services.Cms;
 using DvCms.Services.Negozio;
 using DvCms.Web.Accessi;
+using DvCms.Web.AntiAbuso;
 using DvCms.Web.Comandi;
 using DvCms.Web.Configurazione;
 using DvCms.Web.Database;
@@ -48,6 +49,7 @@ costruttore.Services.AggiungiServiziCms(costruttore.Configuration);
 costruttore.Services.AggiungiServiziNegozio(costruttore.Configuration);
 costruttore.Services.AggiungiEmails();
 costruttore.Services.AddHttpContextAccessor();
+costruttore.Services.AggiungiAltcha(costruttore.Configuration, costruttore.Environment);
 costruttore.Services.AggiungiSalute();
 var usaProxyAttendibili = ConfigurazioneProxy.Aggiungi(costruttore.Services, costruttore.Configuration);
 costruttore.Services.AddScoped<IContestoLingua, ContestoLinguaRichiesta>();
@@ -101,6 +103,8 @@ if (!applicazione.Environment.IsDevelopment())
     }
 }
 
+ConfigurazioneAltcha.AvvisaSeMancaLaChiave(applicazione.Configuration, applicazione.Environment, applicazione.Logger);
+
 if (!applicazione.Environment.IsDevelopment() && !usaProxyAttendibili)
 {
     AvvisiAvvio.ProxyNonConfigurato(applicazione.Logger);
@@ -151,6 +155,7 @@ applicazione.MapSeo();
 applicazione.MapMedia();
 applicazione.MapWebhookPayPal();
 applicazione.MapNotificaNexi();
+applicazione.MapSfidaAltcha(applicazione.Configuration);
 applicazione.MapRazorPages();
 
 applicazione.Run();

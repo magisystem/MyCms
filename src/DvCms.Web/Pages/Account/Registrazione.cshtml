@@ -23,7 +23,23 @@ else
         <input type="text" id="Nome" name="Nome" value="@Model.Nome" maxlength="100" autocomplete="name" required />
         <label for="Email">@_L["Email"]</label>
         <input type="email" id="Email" name="Email" value="@Model.Email" autocomplete="email" required />
+        @if (Model.AntiAbuso)
+        {
+            <partial name="_AltchaWidget" />
+        }
         <button type="submit">@_L["Registrati"]</button>
     </form>
 }
 <nav><a href="/account/accesso">@_L["Hai già un account? Accedi"]</a></nav>
+@section Stili {
+    @if (Model.AntiAbuso)
+    {
+        <partial name="_AltchaStili" />
+    }
+}
+@section Script {
+    @if (Model.AntiAbuso)
+    {
+        <partial name="_AltchaScript" />
+    }
+}
