@@ -278,10 +278,11 @@ public class PopolamentoTest
                 impostazioni["Seed:TenantPrimario:Nome"] = nomeTenant;
             }
 
-            if (conDatiSviluppo && !senzaPasswordCliente)
+            if (conDatiSviluppo)
             {
-                impostazioni["Seed:TenantSviluppo:0:TenantAdmin:Password"] = PasswordCliente;
-                impostazioni["Seed:TenantSviluppo:1:TenantAdmin:Password"] = PasswordCliente;
+                // seed.Development.json (versionato) porta password di prova: il test le sovrascrive, con quella scelta o con un valore vuoto.
+                impostazioni["Seed:TenantSviluppo:0:TenantAdmin:Password"] = senzaPasswordCliente ? string.Empty : PasswordCliente;
+                impostazioni["Seed:TenantSviluppo:1:TenantAdmin:Password"] = senzaPasswordCliente ? string.Empty : PasswordCliente;
             }
 
             var fabbrica = new FabbricaApplicazioneConConnessione(database.Connessione, ambiente, impostazioni);

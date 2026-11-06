@@ -11,7 +11,7 @@
     "test": "node --test test/testo-ricco.test.mjs"
   },
   "dependencies": {
-    "grapesjs": "0.23.6"
+    "grapesjs": "0.23.8"
   },
   "devDependencies": {
     "esbuild": "0.28.2"
