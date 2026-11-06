@@ -84,19 +84,24 @@ public partial class DueFattoriWebTest
         var id = await c.Web.CreaTenantAdminAsync(EmailAnna);
         var attivazione = await c.AttivaAsync(id);
 
+        // Il passo si fissa una volta sola: ricalcolare il codice dall'orologio a ogni uso lascerebbe al caso se il confine dei 30 secondi cade tra i due usi
+        // (il codice del passo dopo è nuovo e il server lo accetta a ragione).
+        var passo = Totp.PassoDi(DateTimeOffset.UtcNow);
+        var codice = Totp.CalcolaCodice(attivazione.Segreto, passo);
+
         var prima = c.Web.SessioneA();
         await prima.AccediAsync(EmailAnna, DatiProva.PasswordProva);
-        using var riuscito = await Verifica(prima, Codice(attivazione.Segreto));
+        using var riuscito = await Verifica(prima, codice);
         Assert.Equal("/admin", SessioneProva.Destinazione(riuscito));
 
         var seconda = c.Web.SessioneA();
         await seconda.AccediAsync(EmailAnna, DatiProva.PasswordProva);
-        using var riuso = await Verifica(seconda, Codice(attivazione.Segreto));
+        using var riuso = await Verifica(seconda, codice);
         Assert.Equal(HttpStatusCode.OK, riuso.StatusCode);
         Assert.Null(seconda.CookieAdmin);
 
         // Il passo successivo, invece, vale (finestra di tolleranza).
-        using var successivo = await Verifica(seconda, Codice(attivazione.Segreto, passiAvanti: 1));
+        using var successivo = await Verifica(seconda, Totp.CalcolaCodice(attivazione.Segreto, passo + 1));
         Assert.Equal("/admin", SessioneProva.Destinazione(successivo));
     }
 
