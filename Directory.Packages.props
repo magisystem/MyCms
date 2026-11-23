@@ -25,7 +25,7 @@
   </ItemGroup>
 
   <ItemGroup Label="Anti-abuso">
-    <PackageVersion Include="Altcha.AspNetCore" Version="1.1.0" />
+    <PackageVersion Include="Altcha.AspNetCore" Version="1.2.0" />
   </ItemGroup>
 
   <ItemGroup Label="Email">
